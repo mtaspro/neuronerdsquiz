@@ -16,6 +16,7 @@
     "express": "^4.19.2",
     "framer-motion": "^12.23.9",
     "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.6.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.1"
