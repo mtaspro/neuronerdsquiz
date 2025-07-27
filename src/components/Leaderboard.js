@@ -12,11 +12,13 @@ const Leaderboard = () => {
     score: ''
   });
 
+  const API_URL = import.meta.env.VITE_API_URL || '';
+
   // Fetch leaderboard data
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await axios.get('/api/leaderboard');
+        const response = await axios.get(`${API_URL}/api/leaderboard`);
         setLeaderboard(response.data);
         setLoading(false);
       } catch (err) {
@@ -39,13 +41,13 @@ const Leaderboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/score', {
+      await axios.post(`${API_URL}/api/score`, {
         username: formData.username,
         avatar: formData.avatar,
         score: Number(formData.score)
       });
       // Refresh leaderboard after submission
-      const response = await axios.get('/api/leaderboard');
+      const response = await axios.get(`${API_URL}/api/leaderboard`);
       setLeaderboard(response.data);
       // Reset form
       setFormData({ username: '', avatar: '', score: '' });

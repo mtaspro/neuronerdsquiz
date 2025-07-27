@@ -1,11 +1,16 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors'); // Added for CORS support
+import dotenv from 'dotenv';
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+
+import leaderboardRouter from './routes/leaderboard.js';
+import authRouter from './routes/auth.js';
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
-app.use(cors()); // Enable CORS for all routes
+app.use(cors());
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
@@ -18,13 +23,9 @@ mongoose.connect(process.env.MONGO_URI, {
     process.exit(1);
   });
 
-// Import leaderboard and auth routers
-const leaderboardRouter = require('./routes/leaderboard');
-const authRouter = require('./routes/auth'); // Import auth routes
-
 // Mount the routers with /api prefix
 app.use('/api', leaderboardRouter);
-app.use('/api/auth', authRouter); // Mount auth routes
+app.use('/api/auth', authRouter);
 
 // Example route
 app.get('/', (req, res) => {
