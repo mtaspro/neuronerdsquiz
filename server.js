@@ -27,6 +27,11 @@ mongoose.connect(process.env.MONGO_URI, {
 app.use('/api', leaderboardRouter);
 app.use('/api/auth', authRouter);
 
+// Test route for API connectivity
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API is working!' });
+});
+
 // Example route
 app.get('/', (req, res) => {
   res.send('Express + MongoDB Atlas backend is running!');
