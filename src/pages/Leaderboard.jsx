@@ -1,39 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-
-// Dummy data
-const players = [
-  {
-    name: "Alice",
-    score: 980,
-    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-  },
-  {
-    name: "Bob",
-    score: 920,
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-  },
-  {
-    name: "Charlie",
-    score: 870,
-    avatar: "https://randomuser.me/api/portraits/men/45.jpg",
-  },
-  {
-    name: "Diana",
-    score: 850,
-    avatar: "https://randomuser.me/api/portraits/women/65.jpg",
-  },
-  {
-    name: "Ethan",
-    score: 830,
-    avatar: "https://randomuser.me/api/portraits/men/23.jpg",
-  },
-  {
-    name: "Fay",
-    score: 800,
-    avatar: "https://randomuser.me/api/portraits/women/12.jpg",
-  },
-];
+import axios from "axios";
 
 // Utility for rank badge and card styles
 const rankStyles = [
@@ -79,20 +46,175 @@ function getCardStyle(rank) {
 }
 
 export default function Leaderboard() {
+  // State management
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    username: '',
+    avatar: '',
+    score: ''
+  });
+
+  const API_URL = import.meta.env.VITE_API_URL || '';
+
+  // Fetch leaderboard data
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${API_URL}/api/leaderboard`);
+        setLeaderboard(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch leaderboard:', err);
+        setError('Failed to fetch leaderboard data');
+        // Fallback to dummy data if API fails
+        setLeaderboard([
+          {
+            username: "Alice",
+            score: 980,
+            avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+          },
+          {
+            username: "Bob",
+            score: 920,
+            avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+          },
+          {
+            username: "Charlie",
+            score: 870,
+            avatar: "https://randomuser.me/api/portraits/men/45.jpg",
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLeaderboard();
+  }, [API_URL]);
+
+  // Handle form input changes
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API_URL}/api/score`, {
+        username: formData.username,
+        avatar: formData.avatar,
+        score: Number(formData.score)
+      });
+      // Refresh leaderboard after submission
+      const response = await axios.get(`${API_URL}/api/leaderboard`);
+      setLeaderboard(response.data);
+      // Reset form and hide it
+      setFormData({ username: '', avatar: '', score: '' });
+      setShowForm(false);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to submit score:', err);
+      setError('Failed to submit score');
+    }
+  };
+
   // Sort players by score descending
-  const sorted = [...players].sort((a, b) => b.score - a.score);
+  const sortedPlayers = [...leaderboard].sort((a, b) => b.score - a.score);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading leaderboard...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 py-10 px-4 flex flex-col items-center">
-      <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-10 text-center drop-shadow-lg">
+      <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-6 text-center drop-shadow-lg">
         Leaderboard
       </h1>
+
+      {/* Error message */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-200 text-center max-w-md">
+          {error}
+        </div>
+      )}
+
+      {/* Add Score Button */}
+      <button
+        onClick={() => setShowForm(!showForm)}
+        className="mb-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors duration-200"
+      >
+        {showForm ? 'Cancel' : 'Add Your Score'}
+      </button>
+
+      {/* Submit Score Form */}
+      {showForm && (
+        <motion.form
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          onSubmit={handleSubmit}
+          className="mb-8 bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full space-y-4"
+        >
+          <div>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Username"
+              className="w-full p-3 bg-gray-700 text-white border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none"
+              required
+            />
+          </div>
+          <div>
+            <input
+              type="url"
+              name="avatar"
+              value={formData.avatar}
+              onChange={handleChange}
+              placeholder="Avatar URL"
+              className="w-full p-3 bg-gray-700 text-white border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none"
+              required
+            />
+          </div>
+          <div>
+            <input
+              type="number"
+              name="score"
+              value={formData.score}
+              onChange={handleChange}
+              placeholder="Score"
+              className="w-full p-3 bg-gray-700 text-white border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none"
+              required
+            />
+          </div>
+          <button 
+            type="submit" 
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors duration-200"
+          >
+            Submit Score
+          </button>
+        </motion.form>
+      )}
+
+      {/* Leaderboard Grid */}
       <div className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {sorted.map((player, i) => {
+        {sortedPlayers.map((player, i) => {
           const style = getCardStyle(i);
           return (
             <motion.div
-              key={player.name}
+              key={`${player.username}-${player.score}-${i}`}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.08, type: "spring", stiffness: 120 }}
@@ -107,12 +229,15 @@ export default function Leaderboard() {
               <div className={`w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 ${style.border} shadow-lg mb-4 ${i < 3 ? "ring-4 ring-white/40 animate-pulse" : ""}`}>
                 <img
                   src={player.avatar}
-                  alt={player.name}
+                  alt={player.username}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(player.username)}&background=random`;
+                  }}
                 />
               </div>
               {/* Name */}
-              <div className={`text-xl md:text-2xl font-bold mb-1 ${style.text}`}>{player.name}</div>
+              <div className={`text-xl md:text-2xl font-bold mb-1 ${style.text}`}>{player.username}</div>
               {/* Score */}
               <div className="text-lg md:text-xl font-mono text-white/80 mb-2">{player.score} pts</div>
               {/* Subtle hover effect for non-top3 */}
@@ -123,6 +248,14 @@ export default function Leaderboard() {
           );
         })}
       </div>
+
+      {/* Empty state */}
+      {sortedPlayers.length === 0 && !loading && (
+        <div className="text-center text-gray-400 mt-8">
+          <p className="text-xl mb-4">No scores yet!</p>
+          <p>Be the first to add your score to the leaderboard.</p>
+        </div>
+      )}
     </div>
   );
-} 
+}
