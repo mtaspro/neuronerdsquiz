@@ -139,7 +139,7 @@ export default function IntroScreen() {
             transition={{ duration: 2, delay: 1.5 }}
             className="inline-block overflow-hidden whitespace-nowrap border-r-2 border-cyan-400"
           >
-            Test Your Neural Networks...
+            Because Neurons deserve some exercise too...
           </motion.span>
         </motion.p>
 
