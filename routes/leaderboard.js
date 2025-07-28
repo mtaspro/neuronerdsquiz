@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import UserScore from '../models/UserScore.js';
+
 const leaderboardRouter = express.Router();
-const UserScore = require('../models/UserScore');
 
 // GET /leaderboard - returns top 10 users sorted by score (highest first)
 leaderboardRouter.get('/leaderboard', async (req, res) => {
@@ -42,4 +43,4 @@ leaderboardRouter.post('/score', async (req, res) => {
   }
 });
 
-module.exports = leaderboardRouter;
+export default leaderboardRouter;
