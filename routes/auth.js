@@ -6,6 +6,11 @@ import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// Test route to verify auth router is working
+router.get('/test', (req, res) => {
+  res.json({ message: 'Auth router is working!' });
+});
+
 // Registration route
 router.post('/register', async (req, res) => {
   const { email, password } = req.body;
@@ -109,13 +114,16 @@ router.get('/me', authMiddleware, async (req, res) => {
 
 // Debug route to list all users (remove this in production)
 router.get('/debug/users', async (req, res) => {
+  console.log('Debug route accessed');
   try {
+    console.log('Attempting to find users...');
     const users = await User.find({}, 'email isAdmin createdAt');
     console.log('All users in database:', users);
     res.json({ users });
   } catch (err) {
     console.error('Debug route error:', err);
-    res.status(500).json({ error: 'Failed to fetch users' });
+    console.error('Error details:', err.message);
+    res.status(500).json({ error: 'Failed to fetch users', details: err.message });
   }
 });
 
