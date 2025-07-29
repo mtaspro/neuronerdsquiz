@@ -28,7 +28,8 @@ export default function QuizPage() {
           setLoading(false);
           return;
         }
-        const res = await axios.get(`/api/quizzes?chapter=${encodeURIComponent(chapter)}`);
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const res = await axios.get(`${apiUrl}/api/quizzes?chapter=${encodeURIComponent(chapter)}`);
         const quizzes = Array.isArray(res.data) ? res.data : [];
         setQuestions(quizzes);
         setDuration(quizzes[0]?.duration || 60);

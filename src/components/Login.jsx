@@ -46,7 +46,8 @@ const Login = () => {
     if (!validateForm()) return;
     setIsLoading(true);
     try {
-      const res = await axios.post('/api/auth/login', {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const res = await axios.post(`${apiUrl}/api/auth/login`, {
         email: formData.email,
         password: formData.password
       });

@@ -24,7 +24,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (tab !== 'Users') return;
     setLoading(true);
-    axios.get('/api/admin/users', { headers: authHeader() })
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.get(`${apiUrl}/api/admin/users`, { headers: authHeader() })
       .then(res => setUsers(res.data))
       .catch(() => setError('Failed to load users'))
       .finally(() => setLoading(false));
@@ -34,7 +35,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (tab !== 'Questions') return;
     setLoading(true);
-    axios.get('/api/admin/questions', { headers: authHeader() })
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.get(`${apiUrl}/api/admin/questions`, { headers: authHeader() })
       .then(res => setQuestions(res.data))
       .catch(() => setError('Failed to load questions'))
       .finally(() => setLoading(false));
@@ -49,7 +51,8 @@ export default function AdminDashboard() {
   function handleAddQuestion(e) {
     e.preventDefault();
     setLoading(true);
-    axios.post('/api/admin/questions', newQuestion, { headers: authHeader() })
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.post(`${apiUrl}/api/admin/questions`, newQuestion, { headers: authHeader() })
       .then(res => {
         setQuestions(qs => [...qs, res.data]);
         setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: '', chapter: '', duration: 60 });
@@ -62,7 +65,8 @@ export default function AdminDashboard() {
   function handleEditQuestion(e) {
     e.preventDefault();
     setLoading(true);
-    axios.put(`/api/admin/questions/${editingId}`, editQuestion, { headers: authHeader() })
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.put(`${apiUrl}/api/admin/questions/${editingId}`, editQuestion, { headers: authHeader() })
       .then(res => {
         setQuestions(qs => qs.map(q => q._id === editingId ? res.data : q));
         setEditingId(null);
@@ -76,7 +80,8 @@ export default function AdminDashboard() {
   function handleDeleteQuestion(id) {
     if (!window.confirm('Delete this question?')) return;
     setLoading(true);
-    axios.delete(`/api/admin/questions/${id}`, { headers: authHeader() })
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.delete(`${apiUrl}/api/admin/questions/${id}`, { headers: authHeader() })
       .then(() => setQuestions(qs => qs.filter(q => q._id !== id)))
       .catch(() => setError('Failed to delete question'))
       .finally(() => setLoading(false));
@@ -86,7 +91,8 @@ export default function AdminDashboard() {
   function handleResetLeaderboard() {
     if (!window.confirm('Reset the leaderboard? This cannot be undone.')) return;
     setLoading(true);
-    axios.post('/api/admin/leaderboard/reset', {}, { headers: authHeader() })
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.post(`${apiUrl}/api/admin/leaderboard/reset`, {}, { headers: authHeader() })
       .then(() => setResetMsg('Leaderboard reset!'))
       .catch(() => setError('Failed to reset leaderboard'))
       .finally(() => setLoading(false));
@@ -129,7 +135,8 @@ export default function AdminDashboard() {
                         onClick={() => {
                           if (window.confirm('Reset this user\'s score?')) {
                             setLoading(true);
-                            axios.post(`/api/admin/users/${u._id}/reset-score`, {}, { headers: authHeader() })
+                            const apiUrl = import.meta.env.VITE_API_URL || '';
+                            axios.post(`${apiUrl}/api/admin/users/${u._id}/reset-score`, {}, { headers: authHeader() })
                               .then(() => alert('Score reset!'))
                               .catch(() => setError('Failed to reset score'))
                               .finally(() => setLoading(false));
