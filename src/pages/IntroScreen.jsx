@@ -123,6 +123,27 @@ export default function IntroScreen() {
           </motion.span>
         </motion.h1>
 
+        {/* Authentication Buttons */}
+        <motion.div
+          className="flex gap-6 justify-center mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.9 }}
+        >
+          <button
+            onClick={() => navigate('/login')}
+            className="px-6 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-semibold shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2"
+          >
+            Login
+          </button>
+          <button
+            onClick={() => navigate('/register')}
+            className="px-6 py-2 rounded-lg bg-pink-600 hover:bg-pink-700 text-white font-semibold shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2"
+          >
+            Register
+          </button>
+        </motion.div>
+
         {/* Subtitle with Typewriter Effect */}
         <motion.p
           className="text-cyan-400 text-lg md:text-xl mb-8 text-center font-mono"
