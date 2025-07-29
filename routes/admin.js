@@ -1,9 +1,10 @@
-const express = require('express');
+import express from 'express';
+import { requireAdmin } from '../middleware/authMiddleware.js';
+import User from '../models/User.js';
+import UserScore from '../models/UserScore.js';
+import Quiz from '../models/Quiz.js';
+
 const router = express.Router();
-const { requireAdmin } = require('../middleware/authMiddleware');
-const User = require('../models/User');
-const UserScore = require('../models/UserScore');
-const Quiz = require('../models/Quiz');
 
 // List all users
 router.get('/users', requireAdmin, async (req, res) => {
