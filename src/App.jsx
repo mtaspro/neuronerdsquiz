@@ -9,6 +9,8 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from './components/AdminRoute';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Optional Navbar
 function Navbar() {
@@ -49,6 +51,14 @@ function AnimatedRoutes() {
                 <Dashboard />
               </ProtectedRoute>
             } 
+          />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
           />
         </Routes>
       </motion.div>
