@@ -5,6 +5,8 @@ import cors from 'cors';
 
 import leaderboardRouter from './routes/leaderboard.js';
 import authRouter from './routes/auth.js';
+import quizRouter from './routes/quiz.js';
+import adminRouter from './routes/admin.js';
 
 dotenv.config();
 
@@ -26,6 +28,8 @@ mongoose.connect(process.env.MONGO_URI, {
 // Mount the routers with /api prefix
 app.use('/api', leaderboardRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/quizzes', quizRouter);
+app.use('/api/admin', adminRouter);
 
 // Test route for API connectivity
 app.get('/api/test', (req, res) => {

@@ -1,77 +1,111 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-
-const QUESTIONS = [
-  {
-    question: "What is the capital of France?",
-    options: ["Berlin", "London", "Paris", "Madrid"],
-    correctAnswerIndex: 2,
-  },
-  {
-    question: "Which planet is known as the Red Planet?",
-    options: ["Earth", "Mars", "Jupiter", "Venus"],
-    correctAnswerIndex: 1,
-  },
-  {
-    question: "What is the largest mammal?",
-    options: ["Elephant", "Blue Whale", "Giraffe", "Hippopotamus"],
-    correctAnswerIndex: 1,
-  },
-  {
-    question: "Who wrote 'Hamlet'?",
-    options: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"],
-    correctAnswerIndex: 1,
-  },
-  {
-    question: "What is the boiling point of water?",
-    options: ["90°C", "100°C", "80°C", "120°C"],
-    correctAnswerIndex: 1,
-  },
-];
-
-const TOTAL_QUESTIONS = QUESTIONS.length;
-const TIMER_DURATION = 30;
+import axios from "axios";
 
 export default function QuizPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  // Quiz data can be passed via navigation state or fetched by ID
+  const quizData = location.state?.quizData || null;
+  const [questions, setQuestions] = useState([]);
+  const [duration, setDuration] = useState(60); // default fallback
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
-  const [score, setScore] = useState(0);
-  const [timer, setTimer] = useState(TIMER_DURATION);
-  const navigate = useNavigate();
+  const [answers, setAnswers] = useState([]); // store selected answers
+  const [timer, setTimer] = useState(60);
+  const [warning, setWarning] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+  // Fetch quiz data if not passed via navigation
   useEffect(() => {
+    async function fetchQuiz() {
+      setLoading(true);
+      try {
+        // Example: fetch quizzes for a chapter (customize as needed)
+        // You may want to fetch by quiz ID or chapter from location.state
+        const chapter = location.state?.chapter;
+        const res = await axios.get(`/api/quizzes${chapter ? `?chapter=${encodeURIComponent(chapter)}` : ''}`);
+        const quizzes = Array.isArray(res.data) ? res.data : [];
+        setQuestions(quizzes);
+        // Use the first quiz's duration or fallback
+        setDuration(quizzes[0]?.duration || 60);
+        setTimer(quizzes[0]?.duration || 60);
+      } catch {
+        setQuestions([]);
+        setDuration(60);
+        setTimer(60);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (quizData) {
+      setQuestions(quizData.questions);
+      setDuration(quizData.duration || 60);
+      setTimer(quizData.duration || 60);
+      setLoading(false);
+    } else {
+      fetchQuiz();
+    }
+  }, [quizData, location.state]);
+
+  // Timer logic
+  useEffect(() => {
+    if (loading || questions.length === 0) return;
     if (timer === 0) {
-      handleNext();
+      handleSubmit();
       return;
     }
+    if (timer === 10) setWarning(true);
     const interval = setInterval(() => setTimer((t) => t - 1), 1000);
     return () => clearInterval(interval);
-  }, [timer]);
-
-  useEffect(() => {
-    setTimer(TIMER_DURATION);
-    setSelectedOption(null);
-  }, [currentQuestionIndex]);
+  }, [timer, loading, questions]);
 
   function handleOptionSelect(idx) {
     setSelectedOption(idx);
   }
 
   function handleNext() {
-    if (selectedOption === QUESTIONS[currentQuestionIndex].correctAnswerIndex) {
-      setScore((s) => s + 1);
-    }
-    if (currentQuestionIndex === TOTAL_QUESTIONS - 1) {
-      setTimeout(() => {
-        navigate("/result", { state: { score, total: TOTAL_QUESTIONS } });
-      }, 400);
+    const updatedAnswers = [...answers];
+    updatedAnswers[currentQuestionIndex] = selectedOption;
+    setAnswers(updatedAnswers);
+    setSelectedOption(null);
+    setWarning(false);
+    if (currentQuestionIndex === questions.length - 1) {
+      handleSubmit(updatedAnswers);
       return;
     }
     setCurrentQuestionIndex((i) => i + 1);
+    setTimer(duration); // reset timer for next question if per-question timer, else keep running
   }
 
-  const q = QUESTIONS[currentQuestionIndex];
+  function handleSubmit(finalAnswers = answers) {
+    // Calculate score
+    let score = 0;
+    questions.forEach((q, i) => {
+      // Support both correctAnswer (string) and correctAnswerIndex (number)
+      if (
+        (typeof q.correctAnswerIndex === 'number' && finalAnswers[i] === q.correctAnswerIndex) ||
+        (typeof q.correctAnswer === 'string' && q.options[finalAnswers[i]] === q.correctAnswer)
+      ) {
+        score++;
+      }
+    });
+    navigate("/result", { state: { score, total: questions.length } });
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-cyan-300 text-xl">Loading quiz...</div>
+    );
+  }
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-pink-400 text-xl">No quiz found.</div>
+    );
+  }
+
+  const q = questions[currentQuestionIndex];
 
   const containerVariants = {
     hidden: { opacity: 0, y: 30 },
@@ -88,11 +122,13 @@ export default function QuizPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 px-4 py-8">
       <div className="w-full max-w-2xl flex justify-between items-center mb-8">
         <div className="text-white text-lg font-semibold">
-          Question {currentQuestionIndex + 1}/{TOTAL_QUESTIONS}
+          Question {currentQuestionIndex + 1}/{questions.length}
         </div>
-        <div className="text-white text-lg font-mono flex items-center gap-2">
+        <div className={`text-lg font-mono flex items-center gap-2 px-4 py-2 rounded-lg ${warning ? 'bg-pink-700 text-white animate-pulse' : 'bg-gray-800 text-cyan-300'}`}
+             aria-live="polite">
           <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse" />
           <span>{timer}s</span>
+          {warning && <span className="ml-2 text-yellow-300 font-bold">Hurry up! 10s left</span>}
         </div>
       </div>
       <AnimatePresence mode="wait">
@@ -128,18 +164,37 @@ export default function QuizPage() {
               </motion.button>
             ))}
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-between">
+            <motion.button
+              variants={itemVariants}
+              className="px-8 py-3 rounded-lg bg-gray-500 text-white font-bold text-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              disabled={currentQuestionIndex === 0}
+              onClick={() => {
+                setCurrentQuestionIndex((i) => i - 1);
+                setSelectedOption(answers[currentQuestionIndex - 1] ?? null);
+                setWarning(false);
+                setTimer(duration);
+              }}
+            >
+              Previous
+            </motion.button>
             <motion.button
               variants={itemVariants}
               className="px-8 py-3 rounded-lg bg-green-500 text-white font-bold text-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               disabled={selectedOption === null}
               onClick={handleNext}
             >
-              {currentQuestionIndex === TOTAL_QUESTIONS - 1 ? "Finish" : "Next"}
+              {currentQuestionIndex === questions.length - 1 ? "Finish" : "Next"}
             </motion.button>
           </div>
         </motion.div>
       </AnimatePresence>
+      <button
+        className="mt-8 px-6 py-2 rounded bg-pink-600 text-white font-semibold shadow hover:bg-pink-700 transition-all"
+        onClick={() => handleSubmit([...answers.slice(0, currentQuestionIndex), selectedOption])}
+      >
+        Submit Now
+      </button>
     </div>
   );
 } 
