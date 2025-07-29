@@ -14,12 +14,34 @@ import AdminDashboard from './pages/AdminDashboard';
 
 // Optional Navbar
 function Navbar() {
+  const [isAdmin, setIsAdmin] = React.useState(false);
+  React.useEffect(() => {
+    function checkAdmin() {
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          setIsAdmin(user.isAdmin === true);
+        } catch {
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+    }
+    checkAdmin();
+    window.addEventListener('storage', checkAdmin);
+    return () => window.removeEventListener('storage', checkAdmin);
+  }, []);
   return (
     <nav className="w-full bg-gray-900 py-3 px-4 flex justify-center gap-4 shadow-md z-20">
       <Link to="/" className="text-white font-semibold hover:text-blue-400 transition">Intro</Link>
       <Link to="/quiz" className="text-white font-semibold hover:text-blue-400 transition">Quiz</Link>
       <Link to="/result" className="text-white font-semibold hover:text-blue-400 transition">Result</Link>
       <Link to="/leaderboard" className="text-white font-semibold hover:text-blue-400 transition">Leaderboard</Link>
+      {isAdmin && (
+        <Link to="/admin" className="text-white font-semibold hover:text-pink-400 transition">Admin</Link>
+      )}
     </nav>
   );
 }

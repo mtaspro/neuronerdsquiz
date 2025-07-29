@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -9,24 +10,20 @@ const Login = () => {
     rememberMe: false
   });
   const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const validateForm = () => {
     const newErrors = {};
-
-    // Email validation
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email format is invalid';
     }
-
-    // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required';
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -37,36 +34,35 @@ const Login = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
-    // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
+    setServerError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
+    setServerError('');
+    if (!validateForm()) return;
     setIsLoading(true);
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Login data:', formData);
-      // Mock successful login: set token & user data then redirect
-      localStorage.setItem('authToken', 'dummy_token');
-      const existingUser = JSON.parse(localStorage.getItem('userData')) || { email: formData.email };
-      localStorage.setItem('userData', JSON.stringify(existingUser));
-      navigate('/dashboard');
+      const res = await axios.post('/api/auth/login', {
+        email: formData.email,
+        password: formData.password
+      });
+      if (res.data && res.data.token && res.data.user) {
+        localStorage.setItem('authToken', res.data.token);
+        localStorage.setItem('userData', JSON.stringify(res.data.user));
+        navigate('/dashboard');
+      } else {
+        setServerError('Invalid response from server.');
+      }
     } catch (error) {
-      console.error('Login failed:', error);
+      if (error.response && error.response.data && error.response.data.error) {
+        setServerError(error.response.data.error);
+      } else {
+        setServerError('Login failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -103,8 +99,16 @@ const Login = () => {
             Sign in to your Neuronerds Quiz account
           </motion.p>
         </div>
-
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {serverError && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mb-4 text-red-600 text-center font-semibold"
+            >
+              {serverError}
+            </motion.div>
+          )}
           <div className="space-y-4">
             {/* Email Field */}
             <motion.div
@@ -137,7 +141,6 @@ const Login = () => {
                 </motion.p>
               )}
             </motion.div>
-
             {/* Password Field */}
             <motion.div
               initial={{ x: -20, opacity: 0 }}
@@ -170,7 +173,6 @@ const Login = () => {
               )}
             </motion.div>
           </div>
-
           {/* Remember Me & Forgot Password */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -191,7 +193,6 @@ const Login = () => {
                 Remember me
               </label>
             </div>
-
             <div className="text-sm">
               <a
                 href="#"
@@ -201,7 +202,6 @@ const Login = () => {
               </a>
             </div>
           </motion.div>
-
           {/* Submit Button */}
           <motion.div
             initial={{ y: 20, opacity: 0 }}
@@ -250,7 +250,6 @@ const Login = () => {
               )}
             </button>
           </motion.div>
-
           {/* Social Login Options */}
           <motion.div
             initial={{ opacity: 0 }}

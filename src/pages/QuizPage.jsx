@@ -6,8 +6,7 @@ import axios from "axios";
 export default function QuizPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  // Quiz data can be passed via navigation state or fetched by ID
-  const quizData = location.state?.quizData || null;
+  const chapter = location.state?.chapter;
   const [questions, setQuestions] = useState([]);
   const [duration, setDuration] = useState(60); // default fallback
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -16,38 +15,35 @@ export default function QuizPage() {
   const [timer, setTimer] = useState(60);
   const [warning, setWarning] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Fetch quiz data if not passed via navigation
   useEffect(() => {
     async function fetchQuiz() {
       setLoading(true);
+      setError('');
       try {
-        // Example: fetch quizzes for a chapter (customize as needed)
-        // You may want to fetch by quiz ID or chapter from location.state
-        const chapter = location.state?.chapter;
-        const res = await axios.get(`/api/quizzes${chapter ? `?chapter=${encodeURIComponent(chapter)}` : ''}`);
+        if (!chapter) {
+          setError('No chapter selected. Please go back and select a chapter.');
+          setQuestions([]);
+          setLoading(false);
+          return;
+        }
+        const res = await axios.get(`/api/quizzes?chapter=${encodeURIComponent(chapter)}`);
         const quizzes = Array.isArray(res.data) ? res.data : [];
         setQuestions(quizzes);
-        // Use the first quiz's duration or fallback
         setDuration(quizzes[0]?.duration || 60);
         setTimer(quizzes[0]?.duration || 60);
       } catch {
         setQuestions([]);
         setDuration(60);
         setTimer(60);
+        setError('Failed to load quiz questions.');
       } finally {
         setLoading(false);
       }
     }
-    if (quizData) {
-      setQuestions(quizData.questions);
-      setDuration(quizData.duration || 60);
-      setTimer(quizData.duration || 60);
-      setLoading(false);
-    } else {
-      fetchQuiz();
-    }
-  }, [quizData, location.state]);
+    fetchQuiz();
+  }, [chapter]);
 
   // Timer logic
   useEffect(() => {

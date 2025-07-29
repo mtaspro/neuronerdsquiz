@@ -2,10 +2,18 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
+const CHAPTERS = [
+  'Chapter-1',
+  'Chapter-2',
+  'Chapter-3',
+  'Chapter-4',
+];
+
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const [selectedChapter, setSelectedChapter] = useState('');
 
   // Mock user data - in real app, this would come from authentication context/API
   const mockUser = {
@@ -51,7 +59,11 @@ const Dashboard = () => {
   };
 
   const handleStartQuiz = () => {
-    navigate('/quiz');
+    if (!selectedChapter) {
+      alert('Please select a chapter to start the quiz.');
+      return;
+    }
+    navigate('/quiz', { state: { chapter: selectedChapter } });
   };
 
   if (isLoading) {
@@ -160,20 +172,33 @@ const Dashboard = () => {
             {/* Quick Actions */}
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
               <h4 className="text-lg font-semibold text-white mb-4">Quick Actions</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                
-                {/* Start Quiz Button */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleStartQuiz}
-                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
+              {/* Chapter Dropdown */}
+              <div className="mb-4">
+                <label htmlFor="chapter-select" className="text-cyan-300 font-semibold mb-1 block">Select Chapter</label>
+                <select
+                  id="chapter-select"
+                  className="px-4 py-2 rounded bg-gray-800 text-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  value={selectedChapter}
+                  onChange={e => setSelectedChapter(e.target.value)}
                 >
-                  <div className="flex items-center justify-center space-x-2">
-                    <span className="text-2xl">🚀</span>
-                    <span>Start Quiz</span>
-                  </div>
-                </motion.button>
+                  <option value="">-- Choose a chapter --</option>
+                  {CHAPTERS.map(ch => (
+                    <option key={ch} value={ch}>{ch}</option>
+                  ))}
+                </select>
+              </div>
+              {/* Start Quiz Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleStartQuiz}
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <span className="text-2xl">🚀</span>
+                  <span>Start Quiz</span>
+                </div>
+              </motion.button>
 
                 {/* View Leaderboard */}
                 <motion.button
