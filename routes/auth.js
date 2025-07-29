@@ -9,16 +9,32 @@ const router = express.Router();
 // Registration route
 router.post('/register', async (req, res) => {
   const { email, password } = req.body;
+  console.log('Registration attempt for email:', email);
+  console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
+  console.log('MONGO_URI exists:', !!process.env.MONGO_URI);
+  
   if (!email || !password)
     return res.status(400).json({ error: 'Email and password required.' });
 
   try {
     const existingUser = await User.findOne({ email });
+    console.log('Existing user check:', existingUser ? 'Found existing user' : 'No existing user');
+    
     if (existingUser)
       return res.status(409).json({ error: 'Email already registered.' });
 
     const user = new User({ email, password });
+    console.log('Creating new user with email:', email);
+    console.log('User object before save:', { email: user.email, hasPassword: !!user.password });
+    
     await user.save();
+    console.log('User saved successfully with ID:', user._id);
+    console.log('User object after save:', { _id: user._id, email: user.email, isAdmin: user.isAdmin });
+
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is not set!');
+      return res.status(500).json({ error: 'Server configuration error.' });
+    }
 
     const token = jwt.sign({ userId: user._id, email: user.email, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '1d' });
     
@@ -29,8 +45,11 @@ router.post('/register', async (req, res) => {
       isAdmin: user.isAdmin
     };
     
+    console.log('Registration successful for user:', email);
     res.status(201).json({ token, user: userData });
   } catch (err) {
+    console.error('Registration error:', err);
+    console.error('Error details:', err.message);
     res.status(500).json({ error: 'Registration failed.' });
   }
 });
@@ -85,6 +104,18 @@ router.get('/me', authMiddleware, async (req, res) => {
     res.json({ user });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch user.' });
+  }
+});
+
+// Debug route to list all users (remove this in production)
+router.get('/debug/users', async (req, res) => {
+  try {
+    const users = await User.find({}, 'email isAdmin createdAt');
+    console.log('All users in database:', users);
+    res.json({ users });
+  } catch (err) {
+    console.error('Debug route error:', err);
+    res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
 
