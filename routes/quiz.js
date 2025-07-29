@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import Quiz from '../models/Quiz.js';
+
 const router = express.Router();
-const Quiz = require('../models/Quiz');
 
 // GET /api/quizzes?chapter=Chapter-1&subject=Math&difficulty=Easy
 router.get('/', async (req, res) => {
