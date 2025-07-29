@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const Register = () => {
@@ -10,6 +11,7 @@ const Register = () => {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   // Predefined avatar options
   const avatarOptions = [
@@ -32,6 +34,26 @@ const Register = () => {
       id: 'avatar4',
       url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Garfield&backgroundColor=ffb3ba',
       name: 'Avatar 4'
+    },
+    {
+      id: 'avatar5',
+      url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Luna&backgroundColor=ffd5dc',
+      name: 'Avatar 5'
+    },
+    {
+      id: 'avatar6',
+      url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Oscar&backgroundColor=d1d4f9',
+      name: 'Avatar 6'
+    },
+    {
+      id: 'avatar7',
+      url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Zara&backgroundColor=ebf8ff',
+      name: 'Avatar 7'
+    },
+    {
+      id: 'avatar8',
+      url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rex&backgroundColor=ffe4c2',
+      name: 'Avatar 8'
     }
   ];
 
@@ -110,7 +132,14 @@ const Register = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       console.log('Registration data:', formData);
-      // Handle successful registration here
+      // Store dummy auth token & user data then redirect to dashboard
+      localStorage.setItem('authToken', 'dummy_token');
+      localStorage.setItem('userData', JSON.stringify({
+        username: formData.username,
+        email: formData.email,
+        avatar: formData.avatar,
+      }));
+      navigate('/dashboard');
     } catch (error) {
       console.error('Registration failed:', error);
     } finally {
@@ -339,9 +368,13 @@ const Register = () => {
           >
             <p className="text-sm text-gray-600">
               Already have an account?{' '}
-              <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
+              <button
+                type="button"
+                onClick={() => navigate('/login')}
+                className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+              >
                 Sign in here
-              </a>
+              </button>
             </p>
           </motion.div>
         </form>

@@ -7,8 +7,24 @@ export default function IntroScreen() {
   const [showVideo, setShowVideo] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const [particles, setParticles] = useState([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
   const videoRef = useRef(null);
+
+  // Check auth state on mount & storage changes
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem('authToken');
+      const userData = localStorage.getItem('userData');
+      setIsAuthenticated(Boolean(token && userData));
+    };
+
+    checkAuth();
+    // Listen to storage events (multi-tab)
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
+  }, []);
+
 
   // Generate floating particles
   useEffect(() => {
@@ -123,7 +139,8 @@ export default function IntroScreen() {
           </motion.span>
         </motion.h1>
 
-        {/* Authentication Buttons */}
+        {/* Authentication Buttons (visible when NOT logged in) */}
+        {!isAuthenticated && (
         <motion.div
           className="flex gap-6 justify-center mb-8"
           initial={{ opacity: 0, y: 20 }}
@@ -143,6 +160,7 @@ export default function IntroScreen() {
             Register
           </button>
         </motion.div>
+        )}
 
         {/* Subtitle with Typewriter Effect */}
         <motion.p
@@ -161,42 +179,44 @@ export default function IntroScreen() {
           </motion.span>
         </motion.p>
 
-        {/* Animated Start Button */}
-        <motion.button
-          className="relative px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold rounded-lg shadow-2xl text-lg md:text-xl focus:outline-none overflow-hidden group"
-          onClick={() => navigate("/quiz")}
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ duration: 0.8, delay: 1.8, type: "spring", stiffness: 200 }}
-          whileHover={{ 
-            scale: 1.05,
-            boxShadow: "0 0 30px rgba(6, 182, 212, 0.5)",
-          }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <motion.span
-            className="relative z-10"
-            animate={{
-              color: ["#ffffff", "#00fff7", "#ff00ea", "#ffffff"],
+        {/* Dashboard Button (visible when logged in) */}
+        {isAuthenticated && (
+          <motion.button
+            className="relative px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold rounded-lg shadow-2xl text-lg md:text-xl focus:outline-none overflow-hidden group"
+            onClick={() => navigate('/dashboard')}
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ duration: 0.8, delay: 1.8, type: "spring", stiffness: 200 }}
+            whileHover={{ 
+              scale: 1.05,
+              boxShadow: "0 0 30px rgba(6, 182, 212, 0.5)",
             }}
-            transition={{ duration: 3, repeat: Infinity }}
+            whileTap={{ scale: 0.95 }}
           >
-            Start Quiz
-          </motion.span>
-          
-          {/* Button Glow Effect */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20"
-            animate={{
-              x: ["-100%", "100%"],
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              repeatDelay: 2,
-            }}
-          />
-        </motion.button>
+            <motion.span
+              className="relative z-10"
+              animate={{
+                color: ["#ffffff", "#00fff7", "#ff00ea", "#ffffff"],
+              }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              Go to Dashboard
+            </motion.span>
+            
+            {/* Button Glow Effect */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20"
+              animate={{
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                repeatDelay: 2,
+              }}
+            />
+          </motion.button>
+        )}
 
         {/* Floating Icons */}
         <div className="absolute inset-0 pointer-events-none">
