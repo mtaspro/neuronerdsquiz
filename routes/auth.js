@@ -20,8 +20,16 @@ router.post('/register', async (req, res) => {
     const user = new User({ email, password });
     await user.save();
 
-    const token = jwt.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.status(201).json({ token });
+    const token = jwt.sign({ userId: user._id, email: user.email, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    
+    // Return both token and user data (excluding password)
+    const userData = {
+      _id: user._id,
+      email: user.email,
+      isAdmin: user.isAdmin
+    };
+    
+    res.status(201).json({ token, user: userData });
   } catch (err) {
     res.status(500).json({ error: 'Registration failed.' });
   }
@@ -30,21 +38,41 @@ router.post('/register', async (req, res) => {
 // Login route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log('Login attempt for email:', email);
+  
   if (!email || !password)
     return res.status(400).json({ error: 'Email and password required.' });
 
   try {
     const user = await User.findOne({ email });
-    if (!user)
+    console.log('User found:', user ? 'Yes' : 'No');
+    
+    if (!user) {
+      console.log('No user found with email:', email);
       return res.status(401).json({ error: 'Invalid credentials.' });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
+    console.log('Password match:', isMatch ? 'Yes' : 'No');
+    
+    if (!isMatch) {
+      console.log('Password does not match for user:', email);
       return res.status(401).json({ error: 'Invalid credentials.' });
+    }
 
-    const token = jwt.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.json({ token });
+    const token = jwt.sign({ userId: user._id, email: user.email, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    
+    // Return both token and user data (excluding password)
+    const userData = {
+      _id: user._id,
+      email: user.email,
+      isAdmin: user.isAdmin
+    };
+    
+    console.log('Login successful for user:', email);
+    res.json({ token, user: userData });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ error: 'Login failed.' });
   }
 });
