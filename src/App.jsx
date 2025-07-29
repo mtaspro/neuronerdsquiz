@@ -5,6 +5,10 @@ import IntroScreen from "./pages/IntroScreen";
 import QuizPage from "./pages/QuizPage";
 import ResultScreen from "./pages/ResultScreen";
 import Leaderboard from "./pages/Leaderboard";
+import Dashboard from "./pages/Dashboard";
+import Login from "./components/Login";
+import Register from "./components/Register";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Optional Navbar
 function Navbar() {
@@ -36,6 +40,16 @@ function AnimatedRoutes() {
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/result" element={<ResultScreen />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </motion.div>
     </AnimatePresence>

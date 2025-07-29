@@ -118,9 +118,6 @@ export default function IntroScreen() {
           <br />
           <motion.span
             className="inline-block quiz-text"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
           >
             QUIZ
           </motion.span>
