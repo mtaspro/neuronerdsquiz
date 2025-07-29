@@ -199,20 +199,18 @@ const Dashboard = () => {
                   <span>Start Quiz</span>
                 </div>
               </motion.button>
-
-                {/* View Leaderboard */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate('/leaderboard')}
-                  className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
-                >
-                  <div className="flex items-center justify-center space-x-2">
-                    <span className="text-2xl">🏆</span>
-                    <span>Leaderboard</span>
-                  </div>
-                </motion.button>
-              </div>
+              {/* View Leaderboard */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/leaderboard')}
+                className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 mt-4"
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <span className="text-2xl">🏆</span>
+                  <span>Leaderboard</span>
+                </div>
+              </motion.button>
             </div>
 
             {/* Recent Activity */}
