@@ -17,37 +17,37 @@ const Register = () => {
   const avatarOptions = [
     {
       id: 'avatar1',
-      url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4',
+      url: 'https://avatar.iran.liara.run/public/40',
       name: 'Avatar 1'
     },
     {
       id: 'avatar2', 
-      url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka&backgroundColor=c0aede',
+      url: 'https://avatar.iran.liara.run/public/43',
       name: 'Avatar 2'
     },
     {
       id: 'avatar3',
-      url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Milo&backgroundColor=ffd93d',
+      url: 'https://avatar.iran.liara.run/public/17',
       name: 'Avatar 3'
     },
     {
       id: 'avatar4',
-      url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Garfield&backgroundColor=ffb3ba',
+      url: 'https://avatar.iran.liara.run/public/88',
       name: 'Avatar 4'
     },
     {
       id: 'avatar5',
-      url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Luna&backgroundColor=ffd5dc',
+      url: 'https://avatar.iran.liara.run/public/64',
       name: 'Avatar 5'
     },
     {
       id: 'avatar6',
-      url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Oscar&backgroundColor=d1d4f9',
+      url: 'https://avatar.iran.liara.run/public/50',
       name: 'Avatar 6'
     },
     {
       id: 'avatar7',
-      url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Zara&backgroundColor=ebf8ff',
+      url: 'https://avatar.iran.liara.run/public/67',
       name: 'Avatar 7'
     },
     {

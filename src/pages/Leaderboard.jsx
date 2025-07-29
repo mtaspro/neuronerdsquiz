@@ -50,14 +50,8 @@ export default function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    username: '',
-    avatar: '',
-    score: ''
-  });
 
-  const API_URL = import.meta.env.VITE_API_URL || '';
+  const API_URL = import.meta.env.VITE_API_URL || "";
 
   // Fetch leaderboard data
   useEffect(() => {
@@ -68,8 +62,8 @@ export default function Leaderboard() {
         setLeaderboard(response.data);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch leaderboard:', err);
-        setError('Failed to fetch leaderboard data');
+        console.error("Failed to fetch leaderboard:", err);
+        setError("Failed to fetch leaderboard data");
         // Fallback to dummy data if API fails
         setLeaderboard([
           {
@@ -86,7 +80,7 @@ export default function Leaderboard() {
             username: "Charlie",
             score: 870,
             avatar: "https://randomuser.me/api/portraits/men/45.jpg",
-          }
+          },
         ]);
       } finally {
         setLoading(false);
@@ -94,36 +88,6 @@ export default function Leaderboard() {
     };
     fetchLeaderboard();
   }, [API_URL]);
-
-  // Handle form input changes
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(`${API_URL}/api/score`, {
-        username: formData.username,
-        avatar: formData.avatar,
-        score: Number(formData.score)
-      });
-      // Refresh leaderboard after submission
-      const response = await axios.get(`${API_URL}/api/leaderboard`);
-      setLeaderboard(response.data);
-      // Reset form and hide it
-      setFormData({ username: '', avatar: '', score: '' });
-      setShowForm(false);
-      setError(null);
-    } catch (err) {
-      console.error('Failed to submit score:', err);
-      setError('Failed to submit score');
-    }
-  };
 
   // Sort players by score descending
   const sortedPlayers = [...leaderboard].sort((a, b) => b.score - a.score);
@@ -147,65 +111,6 @@ export default function Leaderboard() {
         <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-200 text-center max-w-md">
           {error}
         </div>
-      )}
-
-      {/* Add Score Button */}
-      <button
-        onClick={() => setShowForm(!showForm)}
-        className="mb-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors duration-200"
-      >
-        {showForm ? 'Cancel' : 'Add Your Score'}
-      </button>
-
-      {/* Submit Score Form */}
-      {showForm && (
-        <motion.form
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          onSubmit={handleSubmit}
-          className="mb-8 bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full space-y-4"
-        >
-          <div>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Username"
-              className="w-full p-3 bg-gray-700 text-white border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none"
-              required
-            />
-          </div>
-          <div>
-            <input
-              type="url"
-              name="avatar"
-              value={formData.avatar}
-              onChange={handleChange}
-              placeholder="Avatar URL"
-              className="w-full p-3 bg-gray-700 text-white border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none"
-              required
-            />
-          </div>
-          <div>
-            <input
-              type="number"
-              name="score"
-              value={formData.score}
-              onChange={handleChange}
-              placeholder="Score"
-              className="w-full p-3 bg-gray-700 text-white border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none"
-              required
-            />
-          </div>
-          <button 
-            type="submit" 
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors duration-200"
-          >
-            Submit Score
-          </button>
-        </motion.form>
       )}
 
       {/* Leaderboard Grid */}

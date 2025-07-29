@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const Login = () => {
@@ -9,6 +10,7 @@ const Login = () => {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const validateForm = () => {
     const newErrors = {};
@@ -58,7 +60,11 @@ const Login = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       console.log('Login data:', formData);
-      // Handle successful login here
+      // Mock successful login: set token & user data then redirect
+      localStorage.setItem('authToken', 'dummy_token');
+      const existingUser = JSON.parse(localStorage.getItem('userData')) || { email: formData.email };
+      localStorage.setItem('userData', JSON.stringify(existingUser));
+      navigate('/dashboard');
     } catch (error) {
       console.error('Login failed:', error);
     } finally {
@@ -301,9 +307,13 @@ const Login = () => {
           >
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
-              <a href="#" className="font-medium text-purple-600 hover:text-purple-500 transition-colors">
+              <button
+                type="button"
+                onClick={() => navigate('/register')}
+                className="font-medium text-purple-600 hover:text-purple-500 transition-colors"
+              >
                 Create one here
-              </a>
+              </button>
             </p>
           </motion.div>
         </form>
