@@ -10,4 +10,4 @@ const quizSchema = new mongoose.Schema({
   duration: { type: Number } // in seconds
 });
 
-module.exports = mongoose.model('Quiz', quizSchema);
+export default mongoose.model('Quiz', quizSchema);
