@@ -48,4 +48,4 @@ router.post('/leaderboard/reset', requireAdmin, async (req, res) => {
   res.json({ message: 'Leaderboard reset' });
 });
 
-module.exports = router;
+export default router;
