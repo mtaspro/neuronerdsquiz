@@ -8,6 +8,9 @@ import authRouter from './routes/auth.js';
 import quizRouter from './routes/quiz.js';
 import adminRouter from './routes/admin.js';
 
+console.log('Auth router imported:', !!authRouter);
+console.log('Auth router type:', typeof authRouter);
+
 dotenv.config();
 
 const app = express();
@@ -26,10 +29,15 @@ mongoose.connect(process.env.MONGO_URI, {
   });
 
 // Mount the routers with /api prefix
+console.log('Mounting leaderboard router...');
 app.use('/api', leaderboardRouter);
+console.log('Mounting auth router...');
 app.use('/api/auth', authRouter);
+console.log('Mounting quiz router...');
 app.use('/api/quizzes', quizRouter);
+console.log('Mounting admin router...');
 app.use('/api/admin', adminRouter);
+console.log('All routers mounted successfully');
 
 // Test route for API connectivity
 app.get('/api/test', (req, res) => {
