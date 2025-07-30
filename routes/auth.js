@@ -11,6 +11,28 @@ router.get('/test', (req, res) => {
   res.json({ message: 'Auth router is working!' });
 });
 
+// Test registration route (for debugging only)
+router.post('/test-register', async (req, res) => {
+  console.log('Test registration route accessed');
+  console.log('Request body:', req.body);
+  
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password required' });
+  }
+  
+  try {
+    console.log('Creating test user...');
+    const user = new User({ email, password });
+    await user.save();
+    console.log('Test user saved with ID:', user._id);
+    res.json({ success: true, userId: user._id });
+  } catch (err) {
+    console.error('Test registration error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Registration route
 router.post('/register', async (req, res) => {
   const { email, password } = req.body;
