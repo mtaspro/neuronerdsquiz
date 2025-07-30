@@ -1,9 +1,20 @@
 import express from 'express';
 import Quiz from '../models/Quiz.js';
+import Chapter from '../models/Chapter.js';
 
 const router = express.Router();
 
-// GET /api/quizzes?chapter=Chapter-1&subject=Math&difficulty=Easy
+// Get all active chapters
+router.get('/chapters', async (req, res) => {
+  try {
+    const chapters = await Chapter.find({ isActive: true }).sort('order');
+    res.json(chapters);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get quizzes with filters
 router.get('/', async (req, res) => {
   try {
     const { chapter, subject, difficulty } = req.query;
