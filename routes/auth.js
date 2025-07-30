@@ -35,7 +35,7 @@ router.post('/test-register', async (req, res) => {
 
 // Registration route
 router.post('/register', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, username, avatar } = req.body;
   console.log('Registration attempt for email:', email);
   console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
   console.log('MONGO_URI exists:', !!process.env.MONGO_URI);
@@ -50,13 +50,18 @@ router.post('/register', async (req, res) => {
     if (existingUser)
       return res.status(409).json({ error: 'Email already registered.' });
 
-    const user = new User({ email, password });
+    const user = new User({ 
+      email, 
+      password,
+      username: username || email.split('@')[0], // Use email prefix if no username
+      avatar: avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(email)}&background=random`
+    });
     console.log('Creating new user with email:', email);
-    console.log('User object before save:', { email: user.email, hasPassword: !!user.password });
+    console.log('User object before save:', { email: user.email, hasPassword: !!user.password, username: user.username });
     
     await user.save();
     console.log('User saved successfully with ID:', user._id);
-    console.log('User object after save:', { _id: user._id, email: user.email, isAdmin: user.isAdmin });
+    console.log('User object after save:', { _id: user._id, email: user.email, isAdmin: user.isAdmin, username: user.username });
 
     if (!process.env.JWT_SECRET) {
       console.error('JWT_SECRET is not set!');
@@ -69,7 +74,9 @@ router.post('/register', async (req, res) => {
     const userData = {
       _id: user._id,
       email: user.email,
-      isAdmin: user.isAdmin
+      isAdmin: user.isAdmin,
+      username: user.username,
+      avatar: user.avatar
     };
     
     console.log('Registration successful for user:', email);

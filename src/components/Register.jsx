@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -10,6 +11,7 @@ const Register = () => {
     avatar: ''
   });
   const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -121,6 +123,7 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setServerError('');
     
     if (!validateForm()) {
       return;
@@ -129,19 +132,31 @@ const Register = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Registration data:', formData);
-      // Store dummy auth token & user data then redirect to dashboard
-      localStorage.setItem('authToken', 'dummy_token');
-      localStorage.setItem('userData', JSON.stringify({
-        username: formData.username,
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const res = await axios.post(`${apiUrl}/api/auth/register`, {
         email: formData.email,
-        avatar: formData.avatar,
-      }));
-      navigate('/dashboard');
+        password: formData.password,
+        username: formData.username,
+        avatar: formData.avatar
+      });
+      
+      if (res.data && res.data.token && res.data.user) {
+        localStorage.setItem('authToken', res.data.token);
+        localStorage.setItem('userData', JSON.stringify({
+          ...res.data.user,
+          username: formData.username,
+          avatar: formData.avatar
+        }));
+        navigate('/dashboard');
+      } else {
+        setServerError('Invalid response from server.');
+      }
     } catch (error) {
-      console.error('Registration failed:', error);
+      if (error.response && error.response.data && error.response.data.error) {
+        setServerError(error.response.data.error);
+      } else {
+        setServerError('Registration failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -180,6 +195,15 @@ const Register = () => {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {serverError && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mb-4 text-red-600 text-center font-semibold"
+            >
+              {serverError}
+            </motion.div>
+          )}
           <div className="space-y-4">
             {/* Username Field */}
             <motion.div

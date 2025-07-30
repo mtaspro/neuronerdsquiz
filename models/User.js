@@ -12,6 +12,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  username: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  avatar: {
+    type: String,
+    default: ''
+  },
   isAdmin: { type: Boolean, default: false },
 });
 
