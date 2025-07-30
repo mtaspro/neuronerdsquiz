@@ -1,0 +1,600 @@
+import React, { useEffect, useState, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { io } from 'socket.io-client';
+import { FaPlay, FaTrophy, FaUsers, FaClock, FaCheck, FaTimes } from 'react-icons/fa';
+import BattleNotification from '../components/BattleNotification';
+
+const QuizBattleRoom = () => {
+  const { roomId } = useParams();
+  const navigate = useNavigate();
+  const socketRef = useRef(null);
+  const [connected, setConnected] = useState(false);
+  const [roomData, setRoomData] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [battleStarted, setBattleStarted] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [questions, setQuestions] = useState([]);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [answered, setAnswered] = useState(false);
+  const [timeSpent, setTimeSpent] = useState(0);
+  const [questionStartTime, setQuestionStartTime] = useState(null);
+  const [battleEnded, setBattleEnded] = useState(false);
+  const [results, setResults] = useState([]);
+  const [error, setError] = useState(null);
+  const [isReady, setIsReady] = useState(false);
+  const [isRoomCreator, setIsRoomCreator] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+
+  // Get user data from localStorage
+  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+
+  useEffect(() => {
+    if (!userData._id) {
+      navigate('/login');
+      return;
+    }
+
+    // Initialize Socket.IO connection
+    socketRef.current = io(process.env.REACT_APP_API_URL || 'http://localhost:5000');
+
+    socketRef.current.on('connect', () => {
+      console.log('Connected to Socket.IO server');
+      setConnected(true);
+      
+      // Join the battle room
+      socketRef.current.emit('joinBattleRoom', {
+        roomId,
+        userId: userData._id,
+        username: userData.username
+      });
+    });
+
+    socketRef.current.on('roomJoined', (data) => {
+      console.log('Joined room:', data);
+      setRoomData(data);
+      setUsers(data.users);
+      
+      // Check if current user is the room creator (first user)
+      if (data.users.length > 0 && data.users[0].id === userData._id) {
+        setIsRoomCreator(true);
+      }
+    });
+
+    socketRef.current.on('userJoined', (data) => {
+      console.log('User joined:', data);
+      setUsers(prev => [...prev, { id: data.userId, username: data.username, isReady: false }]);
+      addNotification('user-joined', 'Player Joined', `${data.username} joined the battle!`);
+    });
+
+    socketRef.current.on('userLeft', (data) => {
+      console.log('User left:', data);
+      setUsers(prev => prev.filter(user => user.id !== data.userId));
+      addNotification('user-left', 'Player Left', `${data.username} left the battle.`);
+    });
+
+    socketRef.current.on('userReadyStatus', (data) => {
+      setUsers(prev => prev.map(user => 
+        user.id === data.userId ? { ...user, isReady: data.isReady } : user
+      ));
+    });
+
+    socketRef.current.on('battleStarted', (data) => {
+      console.log('Battle started:', data);
+      setBattleStarted(true);
+      setQuestions(data.questions);
+      setCurrentQuestion(0);
+      setQuestionStartTime(Date.now());
+      addNotification('battle-started', 'Battle Started!', 'The quiz battle has begun!');
+    });
+
+    socketRef.current.on('updateProgress', (data) => {
+      console.log('Progress update:', data);
+      setUsers(prev => prev.map(user => 
+        user.id === data.userId 
+          ? { ...user, currentQuestion: data.currentQuestion, score: data.score }
+          : user
+      ));
+    });
+
+    socketRef.current.on('userFinished', (data) => {
+      console.log('User finished:', data);
+      addNotification('user-finished', 'Player Finished!', `${data.username} completed the quiz!`);
+    });
+
+    socketRef.current.on('battleEnded', (data) => {
+      console.log('Battle ended:', data);
+      setBattleEnded(true);
+      setResults(data.results);
+      addNotification('battle-ended', 'Battle Complete!', 'The quiz battle has ended!');
+    });
+
+    socketRef.current.on('error', (data) => {
+      console.error('Socket error:', data);
+      setError(data.message);
+    });
+
+    socketRef.current.on('disconnect', () => {
+      console.log('Disconnected from server');
+      setConnected(false);
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, [roomId, userData, navigate]);
+
+  // Timer effect for tracking time spent on current question
+  useEffect(() => {
+    let interval;
+    if (battleStarted && questionStartTime && !answered) {
+      interval = setInterval(() => {
+        setTimeSpent(Date.now() - questionStartTime);
+      }, 100);
+    }
+    return () => clearInterval(interval);
+  }, [battleStarted, questionStartTime, answered]);
+
+  const handleReadyToggle = () => {
+    const newReadyState = !isReady;
+    setIsReady(newReadyState);
+    socketRef.current.emit('setReady', {
+      roomId,
+      userId: userData._id,
+      isReady: newReadyState
+    });
+  };
+
+  const handleStartBattle = () => {
+    // For demo purposes, using sample questions
+    const sampleQuestions = [
+      {
+        question: "What is the capital of France?",
+        options: ["London", "Berlin", "Paris", "Madrid"],
+        correctAnswer: 2
+      },
+      {
+        question: "Which planet is known as the Red Planet?",
+        options: ["Venus", "Mars", "Jupiter", "Saturn"],
+        correctAnswer: 1
+      },
+      {
+        question: "What is 2 + 2?",
+        options: ["3", "4", "5", "6"],
+        correctAnswer: 1
+      },
+      {
+        question: "Who painted the Mona Lisa?",
+        options: ["Van Gogh", "Da Vinci", "Picasso", "Rembrandt"],
+        correctAnswer: 1
+      },
+      {
+        question: "What is the largest ocean on Earth?",
+        options: ["Atlantic", "Indian", "Arctic", "Pacific"],
+        correctAnswer: 3
+      }
+    ];
+
+    socketRef.current.emit('startBattle', {
+      roomId,
+      questions: sampleQuestions
+    });
+  };
+
+  const handleAnswerSelect = (answerIndex) => {
+    if (answered) return;
+    setSelectedAnswer(answerIndex);
+  };
+
+  const handleSubmitAnswer = () => {
+    if (selectedAnswer === null || answered) return;
+
+    const isCorrect = selectedAnswer === questions[currentQuestion].correctAnswer;
+    const finalTimeSpent = Date.now() - questionStartTime;
+
+    socketRef.current.emit('answerQuestion', {
+      roomId,
+      userId: userData._id,
+      questionIndex: currentQuestion,
+      answer: selectedAnswer,
+      isCorrect,
+      timeSpent: finalTimeSpent
+    });
+
+    setAnswered(true);
+    setTimeSpent(finalTimeSpent);
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(prev => prev + 1);
+      setSelectedAnswer(null);
+      setAnswered(false);
+      setQuestionStartTime(Date.now());
+      setTimeSpent(0);
+    }
+  };
+
+  const handleLeaveRoom = () => {
+    socketRef.current.emit('leaveRoom', {
+      roomId,
+      userId: userData._id
+    });
+    navigate('/dashboard');
+  };
+
+  const addNotification = (type, title, message) => {
+    const id = Date.now() + Math.random();
+    const notification = { id, type, title, message };
+    setNotifications(prev => [...prev, notification]);
+    
+    // Auto-remove notification after 5 seconds
+    setTimeout(() => {
+      removeNotification(id);
+    }, 5000);
+  };
+
+  const removeNotification = (id) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const getProgressPercentage = (user) => {
+    if (!battleStarted || !questions.length) return 0;
+    return (user.currentQuestion / questions.length) * 100;
+  };
+
+  const formatTime = (ms) => {
+    const seconds = Math.floor(ms / 1000);
+    const milliseconds = Math.floor((ms % 1000) / 10);
+    return `${seconds}.${milliseconds.toString().padStart(2, '0')}`;
+  };
+
+  if (!connected) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
+          <h2 className="text-white text-xl font-bold">Connecting to Battle Room...</h2>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-700 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center bg-white rounded-lg p-8 shadow-2xl"
+        >
+          <FaTimes className="text-red-500 text-4xl mx-auto mb-4" />
+          <h2 className="text-red-600 text-xl font-bold mb-2">Error</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition-colors"
+          >
+            Back to Dashboard
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
+      {/* Notifications */}
+      <BattleNotification 
+        notifications={notifications} 
+        onRemove={removeNotification} 
+      />
+      
+      {/* Header */}
+      <div className="bg-black bg-opacity-30 backdrop-blur-sm border-b border-white border-opacity-20">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                🔥 Quiz Battle
+              </h1>
+              <div className="flex items-center space-x-2 text-sm">
+                <FaUsers className="text-blue-400" />
+                <span>{users.length}/6 Players</span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-sm">
+                Room: <span className="font-mono bg-white bg-opacity-20 px-2 py-1 rounded">{roomId}</span>
+              </div>
+              <button
+                onClick={handleLeaveRoom}
+                className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition-colors"
+              >
+                Leave Room
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
+        {!battleStarted ? (
+          /* Waiting Room */
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-4xl mx-auto"
+          >
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-2">Waiting for Players</h2>
+              <p className="text-gray-300">Get ready for an epic quiz battle!</p>
+            </div>
+
+            {/* Players List */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {users.map((user, index) => (
+                <motion.div
+                  key={user.id}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 border-2 transition-all duration-300 ${
+                    user.isReady ? 'border-green-400 bg-green-400 bg-opacity-20' : 'border-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center font-bold text-lg">
+                      {user.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{user.username}</h3>
+                      <div className="flex items-center space-x-2 text-sm">
+                        {user.isReady ? (
+                          <>
+                            <FaCheck className="text-green-400" />
+                            <span className="text-green-400">Ready</span>
+                          </>
+                        ) : (
+                          <span className="text-gray-400">Waiting...</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Ready Button */}
+            <div className="text-center mb-8">
+              <button
+                onClick={handleReadyToggle}
+                className={`px-8 py-3 rounded-lg font-semibold transition-all duration-300 ${
+                  isReady
+                    ? 'bg-green-500 hover:bg-green-600 text-white'
+                    : 'bg-gray-600 hover:bg-gray-700 text-white'
+                }`}
+              >
+                {isReady ? '✓ Ready' : 'Get Ready'}
+              </button>
+            </div>
+
+            {/* Start Battle Button (Room Creator Only) */}
+            {isRoomCreator && users.length >= 2 && users.every(user => user.isReady) && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center"
+              >
+                <button
+                  onClick={handleStartBattle}
+                  className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl"
+                >
+                  <FaPlay className="inline mr-2" />
+                  Start Battle!
+                </button>
+              </motion.div>
+            )}
+          </motion.div>
+        ) : battleEnded ? (
+          /* Results Screen */
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-4xl mx-auto"
+          >
+            <div className="text-center mb-8">
+              <FaTrophy className="text-6xl text-yellow-400 mx-auto mb-4" />
+              <h2 className="text-3xl font-bold mb-2">Battle Results</h2>
+            </div>
+
+            <div className="space-y-4">
+              {results.map((result, index) => (
+                <motion.div
+                  key={result.userId}
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border-2 ${
+                    index === 0 ? 'border-yellow-400 bg-yellow-400 bg-opacity-20' : 'border-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                        index === 0 ? 'bg-yellow-400 text-black' : 'bg-gray-600'
+                      }`}>
+                        {index + 1}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg">{result.username}</h3>
+                        <p className="text-gray-300">
+                          {result.correctAnswers}/{result.totalQuestions} correct
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-yellow-400">{result.score}</div>
+                      <div className="text-sm text-gray-300">
+                        {formatTime(result.totalTime)}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="text-center mt-8">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="bg-blue-500 hover:bg-blue-600 px-8 py-3 rounded-lg font-semibold transition-colors"
+              >
+                Back to Dashboard
+              </button>
+            </div>
+          </motion.div>
+        ) : (
+          /* Battle Interface */
+          <div className="max-w-6xl mx-auto">
+            {/* Progress Track */}
+            <div className="mb-8">
+              <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full h-4 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-30"></div>
+                {users.map((user, index) => (
+                  <motion.div
+                    key={user.id}
+                    className="absolute top-0 h-full flex items-center"
+                    style={{ left: `${getProgressPercentage(user)}%` }}
+                    animate={{ left: `${getProgressPercentage(user)}%` }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  >
+                    <div className="relative">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg border-2 border-white">
+                        {user.username.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                        <div className="text-xs font-semibold">{user.username}</div>
+                        <div className="text-xs text-gray-300">{user.score} pts</div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Question Interface */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Question Panel */}
+              <div className="lg:col-span-2">
+                <motion.div
+                  key={currentQuestion}
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-white border-opacity-20"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-sm text-gray-300">
+                      Question {currentQuestion + 1} of {questions.length}
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm">
+                      <FaClock className="text-yellow-400" />
+                      <span>{formatTime(timeSpent)}</span>
+                    </div>
+                  </div>
+
+                  <h3 className="text-xl font-semibold mb-6">{questions[currentQuestion]?.question}</h3>
+
+                  <div className="space-y-3">
+                    {questions[currentQuestion]?.options.map((option, index) => (
+                      <motion.button
+                        key={index}
+                        onClick={() => handleAnswerSelect(index)}
+                        disabled={answered}
+                        className={`w-full p-4 rounded-lg text-left transition-all duration-200 ${
+                          selectedAnswer === index
+                            ? 'bg-blue-500 text-white shadow-lg'
+                            : answered && index === questions[currentQuestion].correctAnswer
+                            ? 'bg-green-500 text-white'
+                            : answered && selectedAnswer === index && index !== questions[currentQuestion].correctAnswer
+                            ? 'bg-red-500 text-white'
+                            : 'bg-white bg-opacity-10 hover:bg-opacity-20 text-white'
+                        }`}
+                        whileHover={{ scale: answered ? 1 : 1.02 }}
+                        whileTap={{ scale: answered ? 1 : 0.98 }}
+                      >
+                        <span className="font-semibold mr-3">{String.fromCharCode(65 + index)}.</span>
+                        {option}
+                      </motion.button>
+                    ))}
+                  </div>
+
+                  {!answered && selectedAnswer !== null && (
+                    <motion.button
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onClick={handleSubmitAnswer}
+                      className="w-full mt-6 bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"
+                    >
+                      Submit Answer
+                    </motion.button>
+                  )}
+
+                  {answered && currentQuestion < questions.length - 1 && (
+                    <motion.button
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onClick={handleNextQuestion}
+                      className="w-full mt-6 bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"
+                    >
+                      Next Question
+                    </motion.button>
+                  )}
+                </motion.div>
+              </div>
+
+              {/* Players Panel */}
+              <div className="lg:col-span-1">
+                <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-white border-opacity-20">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center">
+                    <FaUsers className="mr-2" />
+                    Players
+                  </h3>
+                  <div className="space-y-3">
+                    {users.map((user) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-xs font-bold">
+                            {user.username.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="font-medium">{user.username}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold text-yellow-400">{user.score}</div>
+                          <div className="text-xs text-gray-300">
+                            Q{user.currentQuestion + 1}/{questions.length}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default QuizBattleRoom; 

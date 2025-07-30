@@ -5,87 +5,37 @@ import axios from 'axios';
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    username: '',
     email: '',
     password: '',
-    avatar: ''
+    confirmPassword: '',
+    username: '',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4'
   });
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Predefined avatar options
-  const avatarOptions = [
-    {
-      id: 'avatar1',
-      url: 'https://avatar.iran.liara.run/public/40',
-      name: 'Avatar 1'
-    },
-    {
-      id: 'avatar2', 
-      url: 'https://avatar.iran.liara.run/public/43',
-      name: 'Avatar 2'
-    },
-    {
-      id: 'avatar3',
-      url: 'https://avatar.iran.liara.run/public/17',
-      name: 'Avatar 3'
-    },
-    {
-      id: 'avatar4',
-      url: 'https://avatar.iran.liara.run/public/88',
-      name: 'Avatar 4'
-    },
-    {
-      id: 'avatar5',
-      url: 'https://avatar.iran.liara.run/public/64',
-      name: 'Avatar 5'
-    },
-    {
-      id: 'avatar6',
-      url: 'https://avatar.iran.liara.run/public/50',
-      name: 'Avatar 6'
-    },
-    {
-      id: 'avatar7',
-      url: 'https://avatar.iran.liara.run/public/67',
-      name: 'Avatar 7'
-    },
-    {
-      id: 'avatar8',
-      url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rex&backgroundColor=ffe4c2',
-      name: 'Avatar 8'
-    }
-  ];
-
   const validateForm = () => {
     const newErrors = {};
-
-    // Username validation
-    if (!formData.username.trim()) {
-      newErrors.username = 'Username is required';
-    }
-
-    // Email validation
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email format is invalid';
     }
-
-    // Password validation
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    } else if (formData.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters';
+    }
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
-
-    // Avatar validation
-    if (!formData.avatar) {
-      newErrors.avatar = 'Please select an avatar';
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -96,41 +46,17 @@ const Register = () => {
       ...prev,
       [name]: value
     }));
-    
-    // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
-  };
-
-  const handleAvatarSelect = (avatarId) => {
-    setFormData(prev => ({
-      ...prev,
-      avatar: avatarId
-    }));
-    
-    // Clear avatar error
-    if (errors.avatar) {
-      setErrors(prev => ({
-        ...prev,
-        avatar: ''
-      }));
-    }
+    setServerError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError('');
-    
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setIsLoading(true);
-    
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const res = await axios.post(`${apiUrl}/api/auth/register`, {
@@ -139,7 +65,7 @@ const Register = () => {
         username: formData.username,
         avatar: formData.avatar
       });
-      
+
       if (res.data && res.data.token && res.data.user) {
         localStorage.setItem('authToken', res.data.token);
         localStorage.setItem('userData', JSON.stringify({
@@ -147,8 +73,7 @@ const Register = () => {
           username: formData.username,
           avatar: formData.avatar
         }));
-        // Dispatch custom event to update navbar
-        window.dispatchEvent(new Event('userAuthChange'));
+        window.dispatchEvent(new Event('userAuthChange')); // Dispatch event
         navigate('/dashboard');
       } else {
         setServerError('Invalid response from server.');
@@ -169,20 +94,20 @@ const Register = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8"
+      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-purple-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200"
     >
       <motion.div
         initial={{ scale: 0.9 }}
         animate={{ scale: 1 }}
         transition={{ duration: 0.4, delay: 0.2 }}
-        className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg"
+        className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700"
       >
         <div>
           <motion.h2
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="mt-6 text-center text-3xl font-extrabold text-gray-900"
+            className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white"
           >
             Create Account
           </motion.h2>
@@ -190,220 +115,159 @@ const Register = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="mt-2 text-center text-sm text-gray-600"
+            className="mt-2 text-center text-sm text-gray-600 dark:text-gray-300"
           >
-            Join Neuronerds Quiz today!
+            Join Neuronerds Quiz and start learning
           </motion.p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <motion.form
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-8 space-y-6"
+          onSubmit={handleSubmit}
+        >
           {serverError && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mb-4 text-red-600 text-center font-semibold"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-md text-sm"
             >
               {serverError}
             </motion.div>
           )}
+
           <div className="space-y-4">
-            {/* Username Field */}
-            <motion.div
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Username
               </label>
               <input
                 id="username"
                 name="username"
                 type="text"
+                autoComplete="username"
+                required
                 value={formData.username}
                 onChange={handleInputChange}
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  errors.username ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm transition-colors`}
+                className={`appearance-none relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 sm:text-sm transition-colors ${
+                  errors.username 
+                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
+                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                }`}
                 placeholder="Enter your username"
               />
               {errors.username && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-1 text-sm text-red-600"
-                >
-                  {errors.username}
-                </motion.p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.username}</p>
               )}
-            </motion.div>
+            </div>
 
-            {/* Email Field */}
-            <motion.div
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.6 }}
-            >
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Email Address
               </label>
               <input
                 id="email"
                 name="email"
                 type="email"
+                autoComplete="email"
+                required
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  errors.email ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm transition-colors`}
+                className={`appearance-none relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 sm:text-sm transition-colors ${
+                  errors.email 
+                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
+                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                }`}
                 placeholder="Enter your email"
               />
               {errors.email && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-1 text-sm text-red-600"
-                >
-                  {errors.email}
-                </motion.p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
               )}
-            </motion.div>
+            </div>
 
-            {/* Password Field */}
-            <motion.div
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.7 }}
-            >
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Password
               </label>
               <input
                 id="password"
                 name="password"
                 type="password"
+                autoComplete="new-password"
+                required
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  errors.password ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm transition-colors`}
-                placeholder="Enter your password (min 6 chars)"
+                className={`appearance-none relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 sm:text-sm transition-colors ${
+                  errors.password 
+                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
+                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                }`}
+                placeholder="Enter your password"
               />
               {errors.password && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-1 text-sm text-red-600"
-                >
-                  {errors.password}
-                </motion.p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
               )}
-            </motion.div>
+            </div>
 
-            {/* Avatar Selection */}
-            <motion.div
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.8 }}
-            >
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Choose Your Avatar
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Confirm Password
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                {avatarOptions.map((avatar) => (
-                  <motion.div
-                    key={avatar.id}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`relative cursor-pointer rounded-lg p-3 border-2 transition-all ${
-                      formData.avatar === avatar.id
-                        ? 'border-indigo-500 bg-indigo-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => handleAvatarSelect(avatar.id)}
-                  >
-                    <div className="flex flex-col items-center">
-                      <img
-                        src={avatar.url}
-                        alt={avatar.name}
-                        className="w-12 h-12 rounded-full mb-2"
-                      />
-                      <span className="text-xs text-gray-600">{avatar.name}</span>
-                    </div>
-                    {formData.avatar === avatar.id && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute top-1 right-1 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center"
-                      >
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </motion.div>
-                    )}
-                  </motion.div>
-                ))}
-              </div>
-              {errors.avatar && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-2 text-sm text-red-600"
-                >
-                  {errors.avatar}
-                </motion.p>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                className={`appearance-none relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 sm:text-sm transition-colors ${
+                  errors.confirmPassword 
+                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
+                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                }`}
+                placeholder="Confirm your password"
+              />
+              {errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword}</p>
               )}
-            </motion.div>
+            </div>
           </div>
 
-          {/* Submit Button */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.9 }}
-          >
-            <button
+          <div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={isLoading}
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-                isLoading
-                  ? 'bg-indigo-400 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
-              } transition-colors`}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {isLoading ? (
                 <div className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creating Account...
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Creating account...
                 </div>
               ) : (
                 'Create Account'
               )}
-            </button>
-          </motion.div>
+            </motion.button>
+          </div>
 
-          {/* Login Link */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.0 }}
-            className="text-center"
-          >
-            <p className="text-sm text-gray-600">
+          <div className="text-center">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               Already have an account?{' '}
               <button
                 type="button"
                 onClick={() => navigate('/login')}
-                className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+                className="font-medium text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300 transition-colors"
               >
                 Sign in here
               </button>
             </p>
-          </motion.div>
-        </form>
+          </div>
+        </motion.form>
       </motion.div>
     </motion.div>
   );

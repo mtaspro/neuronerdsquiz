@@ -93,105 +93,142 @@ export default function QuizPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-cyan-300 text-xl">Loading quiz...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-cyan-300 text-xl transition-colors duration-200">
+        Loading quiz...
+      </div>
     );
   }
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-pink-400 text-xl">No quiz found.</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
+        <div className="text-center">
+          <div className="text-red-500 dark:text-red-400 text-xl mb-4">⚠️</div>
+          <div className="text-gray-800 dark:text-white text-xl mb-4">
+            {error || 'No questions available for this chapter.'}
+          </div>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-lg transition-colors"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
     );
   }
 
-  const q = questions[currentQuestionIndex];
-
-  const containerVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.08 } },
-    exit: { opacity: 0, y: -30 },
-  };
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 },
-  };
+  const currentQuestion = questions[currentQuestionIndex];
+  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 px-4 py-8">
-      <div className="w-full max-w-2xl flex justify-between items-center mb-8">
-        <div className="text-white text-lg font-semibold">
-          Question {currentQuestionIndex + 1}/{questions.length}
-        </div>
-        <div className={`text-lg font-mono flex items-center gap-2 px-4 py-2 rounded-lg ${warning ? 'bg-pink-700 text-white animate-pulse' : 'bg-gray-800 text-cyan-300'}`}
-             aria-live="polite">
-          <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          <span>{timer}s</span>
-          {warning && <span className="ml-2 text-yellow-300 font-bold">Hurry up! 10s left</span>}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+              Quiz: {chapter}
+            </h1>
+            <div className="text-right">
+              <div className={`text-2xl font-bold ${warning ? 'text-red-500 dark:text-red-400' : 'text-gray-800 dark:text-white'}`}>
+                {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')}
+              </div>
+              {warning && (
+                <div className="text-sm text-red-500 dark:text-red-400 font-semibold">
+                  Time's running out!
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <motion.div
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 h-2 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.3 }}
+            />
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+            Question {currentQuestionIndex + 1} of {questions.length}
+          </div>
         </div>
       </div>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentQuestionIndex}
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          className="w-full max-w-2xl bg-gray-800 rounded-2xl shadow-xl p-8 flex flex-col"
-        >
-          <motion.h2
-            variants={itemVariants}
-            className="text-2xl md:text-3xl font-bold text-white mb-8 text-center"
+
+      {/* Question Content */}
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentQuestionIndex}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 border border-gray-200 dark:border-gray-700"
           >
-            {q.question}
-          </motion.h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            {q.options.map((opt, idx) => (
+            {/* Question */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+                {currentQuestion.question}
+              </h2>
+            </div>
+
+            {/* Options */}
+            <div className="space-y-4 mb-8">
+              {currentQuestion.options.map((option, index) => (
+                <motion.button
+                  key={index}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleOptionSelect(index)}
+                  className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ${
+                    selectedOption === index
+                      ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-800 dark:text-cyan-200'
+                      : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500 text-gray-800 dark:text-white'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <div className={`w-6 h-6 rounded-full border-2 mr-3 flex items-center justify-center ${
+                      selectedOption === index
+                        ? 'border-cyan-500 bg-cyan-500'
+                        : 'border-gray-300 dark:border-gray-500'
+                    }`}>
+                      {selectedOption === index && (
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      )}
+                    </div>
+                    <span className="font-medium">{option}</span>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+
+            {/* Navigation */}
+            <div className="flex justify-between items-center">
               <motion.button
-                key={idx}
-                variants={itemVariants}
-                whileTap={{ scale: 0.97 }}
-                className={`py-4 px-6 rounded-xl font-semibold text-lg border-2 transition-colors focus:outline-none
-                  ${selectedOption === idx
-                    ? "bg-blue-600 text-white border-blue-400 shadow-lg"
-                    : "bg-gray-700 text-gray-200 border-gray-600 hover:bg-blue-700 hover:text-white"}
-                `}
-                onClick={() => handleOptionSelect(idx)}
-                disabled={selectedOption !== null}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
+                disabled={currentQuestionIndex === 0}
+                className="px-6 py-2 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
               >
-                {opt}
+                Previous
               </motion.button>
-            ))}
-          </div>
-          <div className="flex justify-between">
-            <motion.button
-              variants={itemVariants}
-              className="px-8 py-3 rounded-lg bg-gray-500 text-white font-bold text-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              disabled={currentQuestionIndex === 0}
-              onClick={() => {
-                setCurrentQuestionIndex((i) => i - 1);
-                setSelectedOption(answers[currentQuestionIndex - 1] ?? null);
-                setWarning(false);
-                setTimer(duration);
-              }}
-            >
-              Previous
-            </motion.button>
-            <motion.button
-              variants={itemVariants}
-              className="px-8 py-3 rounded-lg bg-green-500 text-white font-bold text-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              disabled={selectedOption === null}
-              onClick={handleNext}
-            >
-              {currentQuestionIndex === questions.length - 1 ? "Finish" : "Next"}
-            </motion.button>
-          </div>
-        </motion.div>
-      </AnimatePresence>
-      <button
-        className="mt-8 px-6 py-2 rounded bg-pink-600 text-white font-semibold shadow hover:bg-pink-700 transition-all"
-        onClick={() => handleSubmit([...answers.slice(0, currentQuestionIndex), selectedOption])}
-      >
-        Submit Now
-      </button>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleNext}
+                disabled={selectedOption === null}
+                className="px-6 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
+              >
+                {currentQuestionIndex === questions.length - 1 ? 'Submit Quiz' : 'Next'}
+              </motion.button>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 } 

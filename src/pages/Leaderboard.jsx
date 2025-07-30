@@ -36,12 +36,12 @@ function getCardStyle(rank) {
     };
   }
   return {
-    gradient: "from-slate-800 via-slate-700 to-slate-900",
-    glow: "shadow-slate-600/40",
-    border: "border-slate-700",
+    gradient: "from-slate-800 via-slate-700 to-slate-900 dark:from-gray-700 dark:via-gray-600 dark:to-gray-800",
+    glow: "shadow-slate-600/40 dark:shadow-gray-600/40",
+    border: "border-slate-700 dark:border-gray-600",
     badge: rank + 1,
     size: "",
-    text: "text-gray-200",
+    text: "text-gray-200 dark:text-gray-100",
   };
 }
 
@@ -94,73 +94,123 @@ export default function Leaderboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading leaderboard...</div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center transition-colors duration-200">
+        <div className="text-gray-800 dark:text-white text-xl">Loading leaderboard...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center transition-colors duration-200">
+        <div className="text-center">
+          <div className="text-red-500 dark:text-red-400 text-xl mb-4">⚠️</div>
+          <div className="text-gray-800 dark:text-white text-xl mb-4">{error}</div>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-lg transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 py-10 px-4 flex flex-col items-center">
-      <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-6 text-center drop-shadow-lg">
-        Leaderboard
-      </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 py-12 px-4 transition-colors duration-200">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-800 dark:text-white mb-4">
+            🏆 Leaderboard
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300">
+            Top performers in Neuronerds Quiz
+          </p>
+        </motion.div>
 
-      {/* Error message */}
-      {error && (
-        <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-200 text-center max-w-md">
-          {error}
+        {/* Leaderboard Cards */}
+        <div className="space-y-6">
+          {sortedPlayers.map((player, index) => {
+            const style = getCardStyle(index);
+            return (
+              <motion.div
+                key={player.username}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 ${style.size} transition-all duration-300 hover:shadow-xl`}
+              >
+                <div className="flex items-center justify-between">
+                  {/* Rank Badge */}
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${style.gradient} flex items-center justify-center text-2xl font-bold ${style.text} shadow-lg ${style.glow} border ${style.border}`}>
+                      {style.badge}
+                    </div>
+                    
+                    {/* Player Info */}
+                    <div className="flex items-center space-x-4">
+                      <img
+                        src={player.avatar}
+                        alt={player.username}
+                        className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-600"
+                      />
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                          {player.username}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-300">
+                          Rank #{index + 1}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Score */}
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-cyan-600 dark:text-cyan-400">
+                      {player.score}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      points
+                    </div>
+                  </div>
+                </div>
+
+                {/* Special styling for top 3 */}
+                {index < 3 && (
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                    {index + 1}
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
         </div>
-      )}
 
-      {/* Leaderboard Grid */}
-      <div className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {sortedPlayers.map((player, i) => {
-          const style = getCardStyle(i);
-          return (
-            <motion.div
-              key={`${player.username}-${player.score}-${i}`}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.08, type: "spring", stiffness: 120 }}
-              className={`relative flex flex-col items-center rounded-2xl border-4 ${style.border} bg-gradient-to-br ${style.gradient} ${style.glow} ${style.size} shadow-xl p-6 pt-8 group hover:scale-105 transition-transform duration-300`}
-              style={{ minHeight: i < 3 ? 270 : 220 }}
-            >
-              {/* Rank Badge */}
-              <div className={`absolute -top-5 left-1/2 -translate-x-1/2 z-10 text-3xl md:text-4xl font-bold ${i < 3 ? "drop-shadow-lg" : ""}`}>
-                {style.badge}
-              </div>
-              {/* Avatar */}
-              <div className={`w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 ${style.border} shadow-lg mb-4 ${i < 3 ? "ring-4 ring-white/40 animate-pulse" : ""}`}>
-                <img
-                  src={player.avatar}
-                  alt={player.username}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(player.username)}&background=random`;
-                  }}
-                />
-              </div>
-              {/* Name */}
-              <div className={`text-xl md:text-2xl font-bold mb-1 ${style.text}`}>{player.username}</div>
-              {/* Score */}
-              <div className="text-lg md:text-xl font-mono text-white/80 mb-2">{player.score} pts</div>
-              {/* Subtle hover effect for non-top3 */}
-              {i >= 3 && (
-                <div className="absolute inset-0 rounded-2xl bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-              )}
-            </motion.div>
-          );
-        })}
+        {/* Empty State */}
+        {sortedPlayers.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12"
+          >
+            <div className="text-6xl mb-4">📊</div>
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+              No scores yet
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              Be the first to take a quiz and appear on the leaderboard!
+            </p>
+          </motion.div>
+        )}
       </div>
-
-      {/* Empty state */}
-      {sortedPlayers.length === 0 && !loading && (
-        <div className="text-center text-gray-400 mt-8">
-          <p className="text-xl mb-4">No scores yet!</p>
-          <p>Be the first to add your score to the leaderboard.</p>
-        </div>
-      )}
     </div>
   );
 }

@@ -6,11 +6,14 @@ import QuizPage from "./pages/QuizPage";
 import ResultScreen from "./pages/ResultScreen";
 import Leaderboard from "./pages/Leaderboard";
 import Dashboard from "./pages/Dashboard";
+import QuizBattleRoom from "./pages/QuizBattleRoom";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from './components/AdminRoute';
 import AdminDashboard from './pages/AdminDashboard';
+import DarkModeToggle from './components/DarkModeToggle';
+import { DarkModeProvider } from './contexts/DarkModeContext';
 
 // Optional Navbar
 function Navbar() {
@@ -51,14 +54,17 @@ function Navbar() {
   }, []);
   
   return (
-    <nav className="w-full bg-gray-900 py-3 px-4 flex justify-center gap-4 shadow-md z-20">
-      <Link to="/" className="text-white font-semibold hover:text-blue-400 transition">Intro</Link>
-      <Link to="/quiz" className="text-white font-semibold hover:text-blue-400 transition">Quiz</Link>
-      <Link to="/result" className="text-white font-semibold hover:text-blue-400 transition">Result</Link>
-      <Link to="/leaderboard" className="text-white font-semibold hover:text-blue-400 transition">Leaderboard</Link>
+    <nav className="w-full bg-white dark:bg-gray-900 py-3 px-4 flex justify-center items-center gap-4 shadow-md z-20 border-b border-gray-200 dark:border-gray-700">
+      <Link to="/" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Intro</Link>
+      <Link to="/quiz" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Quiz</Link>
+      <Link to="/result" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Result</Link>
+      <Link to="/leaderboard" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Leaderboard</Link>
       {isAdmin && (
-        <Link to="/admin" className="text-white font-semibold hover:text-pink-400 transition">Admin</Link>
+        <Link to="/admin" className="text-gray-800 dark:text-white font-semibold hover:text-pink-600 dark:hover:text-pink-400 transition">Admin</Link>
       )}
+      <div className="ml-auto">
+        <DarkModeToggle />
+      </div>
     </nav>
   );
 }
@@ -92,6 +98,14 @@ function AnimatedRoutes() {
             } 
           />
           <Route
+            path="/battle/:roomId"
+            element={
+              <ProtectedRoute>
+                <QuizBattleRoom />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin"
             element={
               <AdminRoute>
@@ -107,9 +121,11 @@ function AnimatedRoutes() {
 
 export default function App() {
   return (
-    <div className="flex flex-col min-h-screen bg-gray-950">
-      <Navbar />
-      <AnimatedRoutes />
-    </div>
+    <DarkModeProvider>
+      <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
+        <Navbar />
+        <AnimatedRoutes />
+      </div>
+    </DarkModeProvider>
   );
 }

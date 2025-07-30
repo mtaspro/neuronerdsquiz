@@ -54,13 +54,13 @@ export default function IntroScreen() {
   }, []);
 
   return (
-    <div className="relative min-h-screen min-w-full flex flex-col items-center justify-center bg-black overflow-hidden">
+    <div className="relative min-h-screen min-w-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 overflow-hidden transition-colors duration-300">
       {/* Animated Background Particles */}
       <div className="absolute inset-0 overflow-hidden">
         {particles.map((particle) => (
           <motion.div
             key={particle.id}
-            className="absolute w-1 h-1 bg-cyan-400 rounded-full"
+            className="absolute w-1 h-1 bg-cyan-400 dark:bg-cyan-300 rounded-full"
             style={{
               left: `${particle.x}%`,
               top: `${particle.y}%`,
@@ -98,244 +98,101 @@ export default function IntroScreen() {
         />
       </motion.div>
 
-      {/* Animated Grid Overlay */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="grid-pattern"></div>
-      </div>
-
-      {/* Main Content with Staggered Animations */}
-      <motion.div
-        className="relative z-10 flex flex-col items-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: showContent ? 1 : 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        {/* Animated Title with Multiple Effects */}
+      {/* Content Container */}
+      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+        {/* Main Title */}
         <motion.h1
-          className="relative text-white text-3xl sm:text-5xl md:text-7xl font-extrabold text-center select-none mb-4"
           initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
+          animate={{ y: showContent ? 0 : 50, opacity: showContent ? 1 : 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 dark:from-cyan-400 dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent"
         >
-          <motion.span
-            className="inline-block glitch-text"
-            animate={{
-              textShadow: [
-                "0 0 10px #00fff7, 0 0 20px #00fff7, 0 0 30px #00fff7",
-                "0 0 5px #ff00ea, 0 0 10px #ff00ea, 0 0 15px #ff00ea",
-                "0 0 10px #00fff7, 0 0 20px #00fff7, 0 0 30px #00fff7",
-              ],
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            NEURONERDS
-          </motion.span>
-          <br />
-          <motion.span
-            className="inline-block quiz-text"
-          >
-            QUIZ
-          </motion.span>
+          Neuronerds Quiz
         </motion.h1>
 
-        {/* Authentication Buttons (visible when NOT logged in) */}
-        {!isAuthenticated && (
-        <motion.div
-          className="flex gap-6 justify-center mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.9 }}
-        >
-          <button
-            onClick={() => navigate('/login')}
-            className="px-6 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-semibold shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2"
-          >
-            Login
-          </button>
-          <button
-            onClick={() => navigate('/register')}
-            className="px-6 py-2 rounded-lg bg-pink-600 hover:bg-pink-700 text-white font-semibold shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2"
-          >
-            Register
-          </button>
-        </motion.div>
-        )}
-
-        {/* Subtitle with Typewriter Effect */}
+        {/* Subtitle */}
         <motion.p
-          className="text-cyan-400 text-lg md:text-xl mb-8 text-center font-mono"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 1.2 }}
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: showContent ? 0 : 30, opacity: showContent ? 1 : 0 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          className="text-xl md:text-2xl text-gray-700 dark:text-gray-200 mb-8 font-medium"
         >
-          <motion.span
-            initial={{ width: 0 }}
-            animate={{ width: "auto" }}
-            transition={{ duration: 2, delay: 1.5 }}
-            className="inline-block overflow-hidden whitespace-nowrap border-r-2 border-cyan-400"
-          >
-            Because Neurons deserve some exercise too...
-          </motion.span>
+          Challenge Your Mind, Expand Your Knowledge
         </motion.p>
 
-        {/* Dashboard Button (visible when logged in) */}
-        {isAuthenticated && (
-          <motion.button
-            className="relative px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold rounded-lg shadow-2xl text-lg md:text-xl focus:outline-none overflow-hidden group"
-            onClick={() => navigate('/dashboard')}
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ duration: 0.8, delay: 1.8, type: "spring", stiffness: 200 }}
-            whileHover={{ 
-              scale: 1.05,
-              boxShadow: "0 0 30px rgba(6, 182, 212, 0.5)",
-            }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <motion.span
-              className="relative z-10"
-              animate={{
-                color: ["#ffffff", "#00fff7", "#ff00ea", "#ffffff"],
-              }}
-              transition={{ duration: 3, repeat: Infinity }}
+        {/* Description */}
+        <motion.p
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: showContent ? 0 : 30, opacity: showContent ? 1 : 0 }}
+          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+          className="text-lg text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed"
+        >
+          Embark on an exciting journey through interactive quizzes designed to test your knowledge 
+          and push your cognitive boundaries. Join thousands of learners in this engaging educational experience.
+        </motion.p>
+
+        {/* Action Buttons */}
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: showContent ? 0 : 30, opacity: showContent ? 1 : 0 }}
+          transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+        >
+          {isAuthenticated ? (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/dashboard')}
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 text-lg"
             >
-              Go to Dashboard
-            </motion.span>
-            
-            {/* Button Glow Effect */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20"
-              animate={{
-                x: ["-100%", "100%"],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                repeatDelay: 2,
-              }}
-            />
-          </motion.button>
-        )}
+              🚀 Go to Dashboard
+            </motion.button>
+          ) : (
+            <>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/login')}
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 text-lg"
+              >
+                🔐 Get Started
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/register')}
+                className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 text-lg"
+              >
+                ✨ Create Account
+              </motion.button>
+            </>
+          )}
+        </motion.div>
 
-        {/* Floating Icons */}
-        <div className="absolute inset-0 pointer-events-none">
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute text-cyan-400 text-2xl opacity-30"
-              style={{
-                left: `${20 + (i * 10)}%`,
-                top: `${30 + (i * 8)}%`,
-              }}
-              animate={{
-                y: [0, -20, 0],
-                rotate: [0, 360],
-                opacity: [0.3, 0.7, 0.3],
-              }}
-              transition={{
-                duration: 3 + i,
-                repeat: Infinity,
-                delay: i * 0.5,
-              }}
-            >
-              {["⚡", "🧠", "💡", "🔬", "⚙️", "🚀", "💻", "🔥"][i]}
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Enhanced Styles */}
-      <style>{`
-        .grid-pattern {
-          background-image: 
-            linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px);
-          background-size: 50px 50px;
-          width: 100%;
-          height: 100%;
-          animation: gridMove 20s linear infinite;
-        }
-
-        @keyframes gridMove {
-          0% { transform: translate(0, 0); }
-          100% { transform: translate(50px, 50px); }
-        }
-
-        .glitch-text {
-          position: relative;
-          animation: glitchPulse 3s ease-in-out infinite;
-        }
-
-        .glitch-text::before,
-        .glitch-text::after {
-          content: 'NEURONERDS';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-        }
-
-        .glitch-text::before {
-          animation: glitchTop 2s linear infinite;
-          color: #00fff7;
-          z-index: -1;
-        }
-
-        .glitch-text::after {
-          animation: glitchBottom 2.5s linear infinite;
-          color: #ff00ea;
-          z-index: -2;
-        }
-
-        @keyframes glitchPulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.02); }
-        }
-
-        @keyframes glitchTop {
-          0% { transform: translate(0, 0); }
-          10% { transform: translate(-2px, -2px); }
-          20% { transform: translate(2px, 2px); }
-          30% { transform: translate(-1px, 1px); }
-          40% { transform: translate(1px, -1px); }
-          50% { transform: translate(-2px, 2px); }
-          60% { transform: translate(2px, -2px); }
-          70% { transform: translate(-1px, -1px); }
-          80% { transform: translate(1px, 1px); }
-          90% { transform: translate(-2px, -2px); }
-          100% { transform: translate(0, 0); }
-        }
-
-        @keyframes glitchBottom {
-          0% { transform: translate(0, 0); }
-          15% { transform: translate(2px, 2px); }
-          25% { transform: translate(-2px, -2px); }
-          35% { transform: translate(1px, -1px); }
-          45% { transform: translate(-1px, 1px); }
-          55% { transform: translate(2px, -2px); }
-          65% { transform: translate(-2px, 2px); }
-          75% { transform: translate(1px, 1px); }
-          85% { transform: translate(-1px, -1px); }
-          95% { transform: translate(2px, 2px); }
-          100% { transform: translate(0, 0); }
-        }
-
-        .quiz-text {
-          background: linear-gradient(45deg, #00fff7, #ff00ea, #00fff7);
-          background-size: 200% 200%;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          animation: gradientShift 3s ease infinite;
-        }
-
-        @keyframes gradientShift {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-      `}</style>
+        {/* Features */}
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: showContent ? 0 : 30, opacity: showContent ? 1 : 0 }}
+          transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
+          className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
+          <div className="bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm rounded-lg p-6 border border-white/30 dark:border-gray-700/30">
+            <div className="text-3xl mb-3">🧠</div>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">Smart Learning</h3>
+            <p className="text-gray-600 dark:text-gray-300">Adaptive quizzes that challenge your knowledge and help you grow.</p>
+          </div>
+          <div className="bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm rounded-lg p-6 border border-white/30 dark:border-gray-700/30">
+            <div className="text-3xl mb-3">🏆</div>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">Track Progress</h3>
+            <p className="text-gray-600 dark:text-gray-300">Monitor your performance and compete with others on the leaderboard.</p>
+          </div>
+          <div className="bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm rounded-lg p-6 border border-white/30 dark:border-gray-700/30">
+            <div className="text-3xl mb-3">⚡</div>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">Instant Feedback</h3>
+            <p className="text-gray-600 dark:text-gray-300">Get immediate results and detailed explanations for every question.</p>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }
