@@ -54,6 +54,9 @@ const Dashboard = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
     
+    // Dispatch custom event to update navbar
+    window.dispatchEvent(new Event('userAuthChange'));
+    
     // Navigate to login page
     navigate('/login');
   };

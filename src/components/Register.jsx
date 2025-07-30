@@ -147,6 +147,8 @@ const Register = () => {
           username: formData.username,
           avatar: formData.avatar
         }));
+        // Dispatch custom event to update navbar
+        window.dispatchEvent(new Event('userAuthChange'));
         navigate('/dashboard');
       } else {
         setServerError('Invalid response from server.');

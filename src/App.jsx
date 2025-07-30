@@ -18,21 +18,38 @@ function Navbar() {
   React.useEffect(() => {
     function checkAdmin() {
       const userData = localStorage.getItem('userData');
-      if (userData) {
+      const token = localStorage.getItem('authToken');
+      
+      if (userData && token) {
         try {
           const user = JSON.parse(userData);
-          setIsAdmin(user.isAdmin === true);
-        } catch {
+          // Check both user data and JWT token for admin status
+          const isUserAdmin = user.isAdmin === true;
+          setIsAdmin(isUserAdmin);
+          console.log('Admin check - User data:', user, 'Is admin:', isUserAdmin);
+        } catch (error) {
+          console.error('Error parsing user data:', error);
           setIsAdmin(false);
         }
       } else {
         setIsAdmin(false);
       }
     }
+    
     checkAdmin();
+    
+    // Listen for storage changes (when user logs in/out in another tab)
     window.addEventListener('storage', checkAdmin);
-    return () => window.removeEventListener('storage', checkAdmin);
+    
+    // Also listen for custom events (when user logs in/out in same tab)
+    window.addEventListener('userAuthChange', checkAdmin);
+    
+    return () => {
+      window.removeEventListener('storage', checkAdmin);
+      window.removeEventListener('userAuthChange', checkAdmin);
+    };
   }, []);
+  
   return (
     <nav className="w-full bg-gray-900 py-3 px-4 flex justify-center gap-4 shadow-md z-20">
       <Link to="/" className="text-white font-semibold hover:text-blue-400 transition">Intro</Link>

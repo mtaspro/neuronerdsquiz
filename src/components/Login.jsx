@@ -54,6 +54,8 @@ const Login = () => {
       if (res.data && res.data.token && res.data.user) {
         localStorage.setItem('authToken', res.data.token);
         localStorage.setItem('userData', JSON.stringify(res.data.user));
+        // Dispatch custom event to update navbar
+        window.dispatchEvent(new Event('userAuthChange'));
         navigate('/dashboard');
       } else {
         setServerError('Invalid response from server.');

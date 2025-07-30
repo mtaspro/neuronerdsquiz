@@ -3,23 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import techVideo from "../assets/tech-bg.mp4";
 
-// Static list of chapters
-const CHAPTERS = [
-  'Chapter-1',
-  'Chapter-2',
-  'Chapter-3',
-  'Chapter-4',
-];
-
 export default function IntroScreen() {
   const [showVideo, setShowVideo] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const [particles, setParticles] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [selectedChapter, setSelectedChapter] = useState('');
-  const [quizzes, setQuizzes] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [quizError, setQuizError] = useState('');
   const navigate = useNavigate();
   const videoRef = useRef(null);
 
@@ -36,7 +24,6 @@ export default function IntroScreen() {
     window.addEventListener('storage', checkAuth);
     return () => window.removeEventListener('storage', checkAuth);
   }, []);
-
 
   // Generate floating particles
   useEffect(() => {
@@ -66,44 +53,8 @@ export default function IntroScreen() {
     };
   }, []);
 
-  // Fetch quizzes when chapter changes
-  useEffect(() => {
-    if (!selectedChapter) {
-      setQuizzes([]);
-      setQuizError('');
-      return;
-    }
-    setLoading(true);
-    setQuizError('');
-    fetch(`/api/quizzes?chapter=${encodeURIComponent(selectedChapter)}`)
-      .then(res => res.json())
-      .then(data => {
-        setQuizzes(Array.isArray(data) ? data : []);
-        if (!Array.isArray(data) || data.length === 0) {
-          setQuizError('No quizzes available for this chapter.');
-        }
-      })
-      .catch(() => setQuizError('Failed to load quizzes.'))
-      .finally(() => setLoading(false));
-  }, [selectedChapter]);
-
   return (
     <div className="relative min-h-screen min-w-full flex flex-col items-center justify-center bg-black overflow-hidden">
-      {/* Chapter Dropdown */}
-      <div className="z-20 mt-8 mb-4 flex flex-col items-center">
-        <label htmlFor="chapter-select" className="text-cyan-300 font-semibold mb-1">Select Chapter</label>
-        <select
-          id="chapter-select"
-          className="px-4 py-2 rounded bg-gray-800 text-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-          value={selectedChapter}
-          onChange={e => setSelectedChapter(e.target.value)}
-        >
-          <option value="">-- Choose a chapter --</option>
-          {CHAPTERS.map(ch => (
-            <option key={ch} value={ch}>{ch}</option>
-          ))}
-        </select>
-      </div>
       {/* Animated Background Particles */}
       <div className="absolute inset-0 overflow-hidden">
         {particles.map((particle) => (
@@ -264,30 +215,6 @@ export default function IntroScreen() {
               }}
             />
           </motion.button>
-        )}
-
-        {/* Quiz List (only if chapter selected) */}
-        {selectedChapter && (
-          <div className="w-full max-w-xl mt-8 bg-gray-900 bg-opacity-80 rounded-lg p-6 shadow-lg">
-            {loading ? (
-              <div className="text-cyan-400 text-center">Loading quizzes...</div>
-            ) : quizError ? (
-              <div className="text-pink-400 text-center">{quizError}</div>
-            ) : (
-              <ul className="space-y-6">
-                {quizzes.map((quiz, idx) => (
-                  <li key={quiz._id || idx} className="border-b border-gray-700 pb-4">
-                    <div className="text-white font-semibold mb-2">Q{idx + 1}: {quiz.question}</div>
-                    <ul className="ml-4">
-                      {quiz.options.map((opt, i) => (
-                        <li key={i} className="text-cyan-200">{String.fromCharCode(65 + i)}. {opt}</li>
-                      ))}
-                    </ul>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
         )}
 
         {/* Floating Icons */}
