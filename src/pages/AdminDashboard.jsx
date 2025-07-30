@@ -44,6 +44,10 @@ export default function AdminDashboard() {
 
   function authHeader() {
     const token = localStorage.getItem('authToken');
+    console.log('AdminDashboard - Token from localStorage:', token ? 'Present' : 'Missing');
+    if (token) {
+      console.log('AdminDashboard - Token length:', token.length);
+    }
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
