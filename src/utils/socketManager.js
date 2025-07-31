@@ -94,6 +94,10 @@ class SocketManager {
           console.log('✅ Connected to Socket.IO server');
           console.log('🆔 Socket ID:', this.socket.id);
           console.log('🚀 Transport:', this.socket.io.engine.transport.name);
+          
+          // Attach all queued event listeners
+          this.attachQueuedListeners();
+          
           this.isConnecting = false;
           resolve(this.socket);
         });
@@ -178,9 +182,12 @@ class SocketManager {
     
     componentListeners.set(event, handler);
     
-    // Add listener to socket if connected
+    // Add listener to socket immediately if socket exists, or queue it for when socket connects
     if (this.socket) {
       this.socket.on(event, handler);
+      console.log(`📡 Added listener for '${event}' (component: ${componentId})`);
+    } else {
+      console.log(`📋 Queued listener for '${event}' (component: ${componentId}) - will add when socket connects`);
     }
   }
 
@@ -210,10 +217,29 @@ class SocketManager {
     }
   }
 
+  // Attach all queued event listeners to the socket
+  attachQueuedListeners() {
+    if (!this.socket) return;
+    
+    console.log('🔗 Attaching queued event listeners...');
+    let listenerCount = 0;
+    
+    for (const [componentId, componentListeners] of this.eventListeners) {
+      for (const [event, handler] of componentListeners) {
+        this.socket.on(event, handler);
+        listenerCount++;
+        console.log(`📡 Attached listener for '${event}' (component: ${componentId})`);
+      }
+    }
+    
+    console.log(`✅ Attached ${listenerCount} queued event listeners`);
+  }
+
   // Emit event
   async emit(event, data) {
     try {
       const socket = await this.getSocket();
+      console.log(`📤 Emitting event '${event}' with data:`, data);
       socket.emit(event, data);
     } catch (error) {
       console.error('❌ Failed to emit event:', event, error);
