@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client';
+import getEnvironmentConfig from '../config/environment.js';
 
 // Socket Manager - Singleton pattern to prevent multiple connections
 class SocketManager {
@@ -11,17 +12,16 @@ class SocketManager {
 
   // Get socket configuration
   getSocketConfig() {
-    // Validate environment variables
-    const socketUrl = import.meta.env.VITE_SOCKET_SERVER_URL || 
-                     import.meta.env.VITE_API_URL || 
-                     'http://localhost:5000';
+    // Get environment configuration
+    const envConfig = getEnvironmentConfig();
+    const socketUrl = envConfig.socketUrl;
 
     // Log configuration for debugging
     console.log('🔧 Socket Config:', {
-      VITE_SOCKET_SERVER_URL: import.meta.env.VITE_SOCKET_SERVER_URL,
-      VITE_API_URL: import.meta.env.VITE_API_URL,
-      finalUrl: socketUrl,
-      mode: import.meta.env.MODE
+      ...envConfig,
+      hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+      origin: typeof window !== 'undefined' ? window.location.origin : 'server',
+      finalUrl: socketUrl
     });
 
     // Validate URL
@@ -29,6 +29,8 @@ class SocketManager {
       console.error('❌ Socket URL is undefined or empty!');
       throw new Error('Socket server URL is not configured properly');
     }
+
+    const isSecure = socketUrl.startsWith('https://');
 
     return {
       url: socketUrl,
@@ -39,10 +41,10 @@ class SocketManager {
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
-        timeout: 10000,
+        timeout: 15000, // Increased timeout for production
         
-        // Transport settings
-        transports: ['websocket', 'polling'],
+        // Transport settings - try polling first in production for better compatibility
+        transports: isSecure ? ['polling', 'websocket'] : ['websocket', 'polling'],
         upgrade: true,
         
         // CORS and security
@@ -51,7 +53,13 @@ class SocketManager {
         
         // Additional options for stability
         pingTimeout: 60000,
-        pingInterval: 25000
+        pingInterval: 25000,
+        
+        // Production-specific options
+        ...(isSecure && {
+          secure: true, // Force HTTPS in production
+          rejectUnauthorized: false // Allow self-signed certificates if needed
+        })
       }
     };
   }
