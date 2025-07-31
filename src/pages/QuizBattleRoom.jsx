@@ -47,12 +47,9 @@ const QuizBattleRoom = () => {
     // Initialize connection and set up event handlers
     const initializeSocket = async () => {
       try {
-        // Connect to socket
-        await socket.connect();
-        
-        // Set up event handlers
+        // Set up event handlers first
         socket.addListener('connect', () => {
-          console.log('✅ Connected to Socket.IO server');
+          console.log('✅ Socket connect event fired');
           setConnected(true);
           info('Connected to battle server');
           
@@ -145,6 +142,20 @@ const QuizBattleRoom = () => {
             showError('Disconnected from battle server');
           }
         });
+
+        // Connect to socket
+        await socket.connect();
+        
+        // Check if socket is already connected and manually trigger room joining
+        const connectionInfo = socket.getConnectionInfo();
+        if (connectionInfo.connected) {
+          console.log('🔄 Socket already connected, manually joining room...');
+          setConnected(true);
+          info('Connected to battle server');
+          
+          // Join the battle room using helper
+          socket.battleHelpers.joinRoom(roomId, userData._id, userData.username);
+        }
 
       } catch (error) {
         console.error('💥 Failed to initialize socket:', error);
