@@ -1,7 +1,7 @@
 // Simple Socket.IO client test
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:5000');
+const socket = io(process.env.VITE_SOCKET_SERVER_URL || 'http://localhost:5000');
 
 socket.on('connect', () => {
   console.log('✅ Connected to server');

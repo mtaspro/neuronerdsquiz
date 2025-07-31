@@ -1,13 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { io } from 'socket.io-client';
 import { FaPlay, FaTrophy, FaUsers, FaClock, FaCheck, FaTimes } from 'react-icons/fa';
 import BattleNotification from '../components/BattleNotification';
+import { createSocket, disconnectSocket, battleSocketHelpers, addSocketListeners, getSocketInfo } from '../utils/socket';
+import { useNotification } from '../components/NotificationSystem';
 
 const QuizBattleRoom = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const { success, error: showError, info } = useNotification();
   const socketRef = useRef(null);
   const [connected, setConnected] = useState(false);
   const [roomData, setRoomData] = useState(null);
@@ -36,96 +38,120 @@ const QuizBattleRoom = () => {
       return;
     }
 
-    // Initialize Socket.IO connection
-    socketRef.current = io(process.env.REACT_APP_API_URL || 'http://localhost:5000');
+    // Log socket connection info for debugging
+    console.log('🔌 Socket connection info:', getSocketInfo());
 
-    socketRef.current.on('connect', () => {
-      console.log('Connected to Socket.IO server');
-      setConnected(true);
-      
-      // Join the battle room
-      socketRef.current.emit('joinBattleRoom', {
-        roomId,
-        userId: userData._id,
-        username: userData.username
-      });
-    });
+    // Initialize Socket.IO connection using the new utility
+    socketRef.current = createSocket();
 
-    socketRef.current.on('roomJoined', (data) => {
-      console.log('Joined room:', data);
-      setRoomData(data);
-      setUsers(data.users);
-      
-      // Check if current user is the room creator (first user)
-      if (data.users.length > 0 && data.users[0].id === userData._id) {
-        setIsRoomCreator(true);
-      }
-    });
+    // Set up event handlers
+    const eventHandlers = {
+      connect: () => {
+        console.log('✅ Connected to Socket.IO server');
+        setConnected(true);
+        info('Connected to battle server');
+        
+        // Join the battle room using helper
+        battleSocketHelpers.joinRoom(roomId, userData._id, userData.username);
+      },
 
-    socketRef.current.on('userJoined', (data) => {
-      console.log('User joined:', data);
-      setUsers(prev => [...prev, { id: data.userId, username: data.username, isReady: false }]);
-      addNotification('user-joined', 'Player Joined', `${data.username} joined the battle!`);
-    });
+      roomJoined: (data) => {
+        console.log('🏠 Joined room:', data);
+        setRoomData(data);
+        setUsers(data.users);
+        success(`Joined battle room: ${roomId}`);
+        
+        // Check if current user is the room creator (first user)
+        if (data.users.length > 0 && data.users[0].id === userData._id) {
+          setIsRoomCreator(true);
+          info('You are the room creator');
+        }
+      },
 
-    socketRef.current.on('userLeft', (data) => {
-      console.log('User left:', data);
-      setUsers(prev => prev.filter(user => user.id !== data.userId));
-      addNotification('user-left', 'Player Left', `${data.username} left the battle.`);
-    });
+      userJoined: (data) => {
+        console.log('👤 User joined:', data);
+        setUsers(prev => [...prev, { id: data.userId, username: data.username, isReady: false }]);
+        addNotification('user-joined', 'Player Joined', `${data.username} joined the battle!`);
+        info(`${data.username} joined the battle`);
+      },
 
-    socketRef.current.on('userReadyStatus', (data) => {
-      setUsers(prev => prev.map(user => 
-        user.id === data.userId ? { ...user, isReady: data.isReady } : user
-      ));
-    });
+      userLeft: (data) => {
+        console.log('👋 User left:', data);
+        setUsers(prev => prev.filter(user => user.id !== data.userId));
+        addNotification('user-left', 'Player Left', `${data.username} left the battle.`);
+        info(`${data.username} left the battle`);
+      },
 
-    socketRef.current.on('battleStarted', (data) => {
-      console.log('Battle started:', data);
-      setBattleStarted(true);
-      setQuestions(data.questions);
-      setCurrentQuestion(0);
-      setQuestionStartTime(Date.now());
-      addNotification('battle-started', 'Battle Started!', 'The quiz battle has begun!');
-    });
+      userReadyStatus: (data) => {
+        setUsers(prev => prev.map(user => 
+          user.id === data.userId ? { ...user, isReady: data.isReady } : user
+        ));
+      },
 
-    socketRef.current.on('updateProgress', (data) => {
-      console.log('Progress update:', data);
-      setUsers(prev => prev.map(user => 
-        user.id === data.userId 
-          ? { ...user, currentQuestion: data.currentQuestion, score: data.score }
-          : user
-      ));
-    });
+      battleStarted: (data) => {
+        console.log('🚀 Battle started:', data);
+        setBattleStarted(true);
+        setQuestions(data.questions);
+        setCurrentQuestion(0);
+        setQuestionStartTime(Date.now());
+        addNotification('battle-started', 'Battle Started!', 'The quiz battle has begun!');
+        success('Battle has started! Good luck!');
+      },
 
-    socketRef.current.on('userFinished', (data) => {
-      console.log('User finished:', data);
-      addNotification('user-finished', 'Player Finished!', `${data.username} completed the quiz!`);
-    });
+      updateProgress: (data) => {
+        console.log('📊 Progress update:', data);
+        setUsers(prev => prev.map(user => 
+          user.id === data.userId 
+            ? { ...user, currentQuestion: data.currentQuestion, score: data.score }
+            : user
+        ));
+      },
 
-    socketRef.current.on('battleEnded', (data) => {
-      console.log('Battle ended:', data);
-      setBattleEnded(true);
-      setResults(data.results);
-      addNotification('battle-ended', 'Battle Complete!', 'The quiz battle has ended!');
-    });
+      userFinished: (data) => {
+        console.log('🏁 User finished:', data);
+        addNotification('user-finished', 'Player Finished!', `${data.username} completed the quiz!`);
+        info(`${data.username} finished the quiz!`);
+      },
 
-    socketRef.current.on('error', (data) => {
-      console.error('Socket error:', data);
-      setError(data.message);
-    });
+      battleEnded: (data) => {
+        console.log('🏆 Battle ended:', data);
+        setBattleEnded(true);
+        setResults(data.results);
+        addNotification('battle-ended', 'Battle Complete!', 'The quiz battle has ended!');
+        success('Battle completed! Check your results!');
+      },
 
-    socketRef.current.on('disconnect', () => {
-      console.log('Disconnected from server');
-      setConnected(false);
-    });
+      error: (data) => {
+        console.error('❌ Socket error:', data);
+        setError(data.message);
+        showError(`Battle error: ${data.message}`);
+      },
 
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
+      connect_error: (error) => {
+        console.error('🔥 Connection error:', error);
+        setError('Failed to connect to battle server');
+        showError('Failed to connect to battle server. Please check your connection.');
+      },
+
+      disconnect: (reason) => {
+        console.log('❌ Disconnected from server:', reason);
+        setConnected(false);
+        if (reason !== 'io client disconnect') {
+          showError('Disconnected from battle server');
+        }
       }
     };
-  }, [roomId, userData, navigate]);
+
+    // Add all event listeners
+    const cleanup = addSocketListeners(eventHandlers);
+
+    return () => {
+      // Clean up event listeners
+      cleanup();
+      // Disconnect socket
+      disconnectSocket();
+    };
+  }, [roomId, userData, navigate, success, showError, info]);
 
   // Timer effect for tracking time spent on current question
   useEffect(() => {
@@ -141,11 +167,7 @@ const QuizBattleRoom = () => {
   const handleReadyToggle = () => {
     const newReadyState = !isReady;
     setIsReady(newReadyState);
-    socketRef.current.emit('setReady', {
-      roomId,
-      userId: userData._id,
-      isReady: newReadyState
-    });
+    battleSocketHelpers.setReady(roomId, userData._id, newReadyState);
   };
 
   const handleStartBattle = () => {
@@ -178,10 +200,7 @@ const QuizBattleRoom = () => {
       }
     ];
 
-    socketRef.current.emit('startBattle', {
-      roomId,
-      questions: sampleQuestions
-    });
+    battleSocketHelpers.startBattle(roomId, sampleQuestions);
   };
 
   const handleAnswerSelect = (answerIndex) => {
@@ -195,14 +214,14 @@ const QuizBattleRoom = () => {
     const isCorrect = selectedAnswer === questions[currentQuestion].correctAnswer;
     const finalTimeSpent = Date.now() - questionStartTime;
 
-    socketRef.current.emit('answerQuestion', {
+    battleSocketHelpers.submitAnswer(
       roomId,
-      userId: userData._id,
-      questionIndex: currentQuestion,
-      answer: selectedAnswer,
+      userData._id,
+      currentQuestion,
+      selectedAnswer,
       isCorrect,
-      timeSpent: finalTimeSpent
-    });
+      finalTimeSpent
+    );
 
     setAnswered(true);
     setTimeSpent(finalTimeSpent);
@@ -219,10 +238,7 @@ const QuizBattleRoom = () => {
   };
 
   const handleLeaveRoom = () => {
-    socketRef.current.emit('leaveRoom', {
-      roomId,
-      userId: userData._id
-    });
+    battleSocketHelpers.leaveRoom(roomId, userData._id);
     navigate('/dashboard');
   };
 

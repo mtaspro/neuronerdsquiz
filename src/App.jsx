@@ -13,6 +13,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from './components/AdminRoute';
 import AdminDashboard from './pages/AdminDashboard';
 import DarkModeToggle from './components/DarkModeToggle';
+import ErrorBoundary from './components/ErrorBoundary';
+import { NotificationProvider } from './components/NotificationSystem';
 import { DarkModeProvider } from './contexts/DarkModeContext';
 
 // Optional Navbar
@@ -121,11 +123,15 @@ function AnimatedRoutes() {
 
 export default function App() {
   return (
-    <DarkModeProvider>
-      <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
-        <Navbar />
-        <AnimatedRoutes />
-      </div>
-    </DarkModeProvider>
+    <ErrorBoundary>
+      <DarkModeProvider>
+        <NotificationProvider>
+          <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
+            <Navbar />
+            <AnimatedRoutes />
+          </div>
+        </NotificationProvider>
+      </DarkModeProvider>
+    </ErrorBoundary>
   );
 }

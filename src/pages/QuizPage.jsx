@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+import { apiHelpers } from "../utils/api";
+import { useNotification } from "../components/NotificationSystem";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function QuizPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const chapter = location.state?.chapter;
+  const { error: showError } = useNotification();
   const [questions, setQuestions] = useState([]);
   const [duration, setDuration] = useState(60); // default fallback
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -28,23 +31,31 @@ export default function QuizPage() {
           setLoading(false);
           return;
         }
-        const apiUrl = import.meta.env.VITE_API_URL || '';
-        const res = await axios.get(`${apiUrl}/api/quizzes?chapter=${encodeURIComponent(chapter)}`);
-        const quizzes = Array.isArray(res.data) ? res.data : [];
-        setQuestions(quizzes);
-        setDuration(quizzes[0]?.duration || 60);
-        setTimer(quizzes[0]?.duration || 60);
-      } catch {
+        
+        const response = await apiHelpers.getQuizByChapter(chapter);
+        const quizzes = Array.isArray(response.data) ? response.data : [];
+        
+        if (quizzes.length === 0) {
+          setError('No questions available for this chapter.');
+          showError('No questions found for the selected chapter');
+        } else {
+          setQuestions(quizzes);
+          setDuration(quizzes[0]?.duration || 60);
+          setTimer(quizzes[0]?.duration || 60);
+        }
+      } catch (err) {
+        console.error('Failed to fetch quiz:', err);
         setQuestions([]);
         setDuration(60);
         setTimer(60);
         setError('Failed to load quiz questions.');
+        showError('Failed to load quiz questions. Please try again.');
       } finally {
         setLoading(false);
       }
     }
     fetchQuiz();
-  }, [chapter]);
+  }, [chapter, showError]);
 
   // Timer logic
   useEffect(() => {
@@ -93,9 +104,12 @@ export default function QuizPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-cyan-300 text-xl transition-colors duration-200">
-        Loading quiz...
-      </div>
+      <LoadingSpinner 
+        fullScreen={true} 
+        text="Loading quiz questions..." 
+        size="large" 
+        color="cyan" 
+      />
     );
   }
   if (questions.length === 0) {
