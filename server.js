@@ -18,15 +18,56 @@ dotenv.config();
 
 const app = express();
 const server = createServer(app);
+
+// CORS origins configuration - Allow all Vercel and localhost origins
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:5000",
+  "https://neuronerdsquiz.vercel.app",
+  process.env.CLIENT_URL
+].filter(Boolean);
+
+// Add dynamic Vercel domain support
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Allow any Vercel app domain
+    if (origin.includes('.vercel.app')) {
+      return callback(null, true);
+    }
+    
+    // Allow localhost with any port
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    
+    console.log('❌ CORS blocked origin:', origin);
+    callback(new Error('Not allowed by CORS'));
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: false
+};
+
+console.log('🌐 CORS configuration:', {
+  allowedOrigins,
+  dynamicVercelSupport: true,
+  localhostSupport: true
+});
+
 const io = new Server(server, {
-  cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    methods: ["GET", "POST"]
-  }
+  cors: corsOptions
 });
 
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
@@ -44,7 +85,8 @@ const battleService = new BattleService();
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
+  console.log(`✅ User connected: ${socket.id} from ${socket.handshake.address}`);
+  console.log(`📊 Total connected clients: ${io.engine.clientsCount}`);
 
   // Join battle room
   socket.on('joinBattleRoom', ({ roomId, userId, username }) => {
@@ -197,6 +239,15 @@ console.log('All routers mounted successfully');
 // Test route for API connectivity
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working!' });
+});
+
+// Socket.IO health check
+app.get('/socket.io/health', (req, res) => {
+  res.json({ 
+    message: 'Socket.IO server is running',
+    timestamp: new Date().toISOString(),
+    connectedClients: io.engine.clientsCount || 0
+  });
 });
 
 // Battle rooms status endpoint
