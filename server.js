@@ -70,6 +70,9 @@ const io = new Server(server, {
 app.use(express.json());
 app.use(cors(corsOptions));
 
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
+
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,

@@ -198,21 +198,47 @@ export default function AdminDashboard() {
                       <td className="p-4 text-gray-600 dark:text-gray-300">{u.email}</td>
                       <td className="p-4">{u.isAdmin ? '✅' : ''}</td>
                       <td className="p-4">
-                        <button
-                          className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors"
-                          onClick={() => {
-                            if (window.confirm('Reset this user\'s score?')) {
-                              setLoading(true);
-                              const apiUrl = import.meta.env.VITE_API_URL || '';
-                              axios.post(`${apiUrl}/api/admin/users/${u._id}/reset-score`, {}, { headers: authHeader() })
-                                .then(() => alert('Score reset!'))
-                                .catch(() => setError('Failed to reset score'))
-                                .finally(() => setLoading(false));
-                            }
-                          }}
-                        >
-                          Reset Score
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm transition-colors"
+                            onClick={() => {
+                              if (window.confirm('Reset this user\'s score?')) {
+                                setLoading(true);
+                                const apiUrl = import.meta.env.VITE_API_URL || '';
+                                axios.post(`${apiUrl}/api/admin/users/${u._id}/reset-score`, {}, { headers: authHeader() })
+                                  .then(() => alert('Score reset!'))
+                                  .catch(() => setError('Failed to reset score'))
+                                  .finally(() => setLoading(false));
+                              }
+                            }}
+                          >
+                            Reset Score
+                          </button>
+                          {!u.isAdmin && (
+                            <button
+                              className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors"
+                              onClick={() => {
+                                if (window.confirm(`Are you sure you want to delete user "${u.username}"? This action cannot be undone and the user will need to register again.`)) {
+                                  setLoading(true);
+                                  const apiUrl = import.meta.env.VITE_API_URL || '';
+                                  axios.delete(`${apiUrl}/api/admin/users/${u._id}`, { headers: authHeader() })
+                                    .then(() => {
+                                      alert('User deleted successfully!');
+                                      // Refresh users list
+                                      setUsers(users => users.filter(user => user._id !== u._id));
+                                    })
+                                    .catch((err) => {
+                                      const errorMsg = err.response?.data?.error || 'Failed to delete user';
+                                      setError(errorMsg);
+                                    })
+                                    .finally(() => setLoading(false));
+                                }
+                              }}
+                            >
+                              Delete User
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

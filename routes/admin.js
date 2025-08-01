@@ -19,6 +19,37 @@ router.post('/users/:id/reset-score', authMiddleware, requireAdmin, async (req, 
   res.json({ message: 'User score reset' });
 });
 
+// Delete a user completely
+router.delete('/users/:id', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    
+    // Find the user first
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Don't allow deleting admin users
+    if (user.isAdmin) {
+      return res.status(403).json({ error: 'Cannot delete admin users' });
+    }
+    
+    // Delete user's scores from leaderboard
+    await UserScore.deleteMany({ username: user.username });
+    
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+    
+    console.log(`Admin deleted user: ${user.email} (${user.username})`);
+    res.json({ message: 'User deleted successfully' });
+    
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
 // List all chapters
 router.get('/chapters', authMiddleware, requireAdmin, async (req, res) => {
   const chapters = await Chapter.find().sort('order');

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlay, FaTrophy, FaUsers, FaClock, FaCheck, FaTimes } from 'react-icons/fa';
 import BattleNotification from '../components/BattleNotification';
@@ -9,7 +9,11 @@ import { useNotification } from '../components/NotificationSystem';
 const QuizBattleRoom = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { success, error: showError, info } = useNotification();
+  
+  // Get selected chapter from navigation state
+  const selectedChapter = location.state?.chapter;
   
   // Use the new socket hook with component-specific ID
   const socket = useSocket(`battle-room-${roomId}`);
@@ -197,37 +201,76 @@ const QuizBattleRoom = () => {
     battleSocketHelpers.setReady(roomId, userData._id, newReadyState);
   };
 
-  const handleStartBattle = () => {
-    // For demo purposes, using sample questions
-    const sampleQuestions = [
-      {
-        question: "What is the capital of France?",
-        options: ["London", "Berlin", "Paris", "Madrid"],
-        correctAnswer: 2
-      },
-      {
-        question: "Which planet is known as the Red Planet?",
-        options: ["Venus", "Mars", "Jupiter", "Saturn"],
-        correctAnswer: 1
-      },
-      {
-        question: "What is 2 + 2?",
-        options: ["3", "4", "5", "6"],
-        correctAnswer: 1
-      },
-      {
-        question: "Who painted the Mona Lisa?",
-        options: ["Van Gogh", "Da Vinci", "Picasso", "Rembrandt"],
-        correctAnswer: 1
-      },
-      {
-        question: "What is the largest ocean on Earth?",
-        options: ["Atlantic", "Indian", "Arctic", "Pacific"],
-        correctAnswer: 3
+  const handleStartBattle = async () => {
+    try {
+      let questionsToUse = [];
+      
+      // Try to fetch questions from the selected chapter
+      if (selectedChapter) {
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || '';
+          const response = await fetch(`${apiUrl}/api/quizzes/questions?chapter=${encodeURIComponent(selectedChapter)}`);
+          
+          if (response.ok) {
+            const chapterQuestions = await response.json();
+            
+            if (chapterQuestions && chapterQuestions.length > 0) {
+              // Transform questions to match battle format
+              questionsToUse = chapterQuestions.slice(0, 10).map(q => ({
+                question: q.question,
+                options: q.options,
+                correctAnswer: q.options.indexOf(q.correctAnswer)
+              }));
+              
+              info(`Loaded ${questionsToUse.length} questions from ${selectedChapter}`);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch chapter questions:', error);
+          showError(`Failed to load questions from ${selectedChapter}. Using sample questions.`);
+        }
       }
-    ];
+      
+      // Fallback to sample questions if no chapter questions found
+      if (questionsToUse.length === 0) {
+        questionsToUse = [
+          {
+            question: "What is the capital of France?",
+            options: ["London", "Berlin", "Paris", "Madrid"],
+            correctAnswer: 2
+          },
+          {
+            question: "Which planet is known as the Red Planet?",
+            options: ["Venus", "Mars", "Jupiter", "Saturn"],
+            correctAnswer: 1
+          },
+          {
+            question: "What is 2 + 2?",
+            options: ["3", "4", "5", "6"],
+            correctAnswer: 1
+          },
+          {
+            question: "Who painted the Mona Lisa?",
+            options: ["Van Gogh", "Da Vinci", "Picasso", "Rembrandt"],
+            correctAnswer: 1
+          },
+          {
+            question: "What is the largest ocean on Earth?",
+            options: ["Atlantic", "Indian", "Arctic", "Pacific"],
+            correctAnswer: 3
+          }
+        ];
+        
+        if (!selectedChapter) {
+          info('Using sample questions for battle');
+        }
+      }
 
-    battleSocketHelpers.startBattle(roomId, sampleQuestions);
+      battleSocketHelpers.startBattle(roomId, questionsToUse);
+    } catch (error) {
+      console.error('Error starting battle:', error);
+      showError('Failed to start battle. Please try again.');
+    }
   };
 
   const handleAnswerSelect = (answerIndex) => {
@@ -350,7 +393,7 @@ const QuizBattleRoom = () => {
               </h1>
               <div className="flex items-center space-x-2 text-sm">
                 <FaUsers className="text-blue-400" />
-                <span>{users.length}/6 Players</span>
+                <span>{users.length}/30 Players</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -379,6 +422,11 @@ const QuizBattleRoom = () => {
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-2">Waiting for Players</h2>
               <p className="text-gray-300">Get ready for an epic quiz battle!</p>
+              {selectedChapter && (
+                <div className="mt-4 inline-block bg-orange-500 bg-opacity-20 border border-orange-400 rounded-lg px-4 py-2">
+                  <span className="text-orange-300 text-sm font-semibold">Chapter: {selectedChapter}</span>
+                </div>
+              )}
             </div>
 
             {/* Players List */}

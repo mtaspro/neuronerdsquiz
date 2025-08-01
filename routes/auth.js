@@ -1,10 +1,44 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import User from '../models/User.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
 
 // Test route to verify auth router is working
 router.get('/test', (req, res) => {
@@ -140,6 +174,117 @@ router.get('/me', authMiddleware, async (req, res) => {
     res.json({ user });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch user.' });
+  }
+});
+
+// Profile update route
+router.put('/profile', authMiddleware, upload.single('profilePicture'), async (req, res) => {
+  try {
+    const { username, email, currentPassword, newPassword, avatar } = req.body;
+    const userId = req.user.userId;
+    
+    console.log('Profile update request for user:', userId);
+    console.log('Request body:', { username, email, hasCurrentPassword: !!currentPassword, hasNewPassword: !!newPassword, avatar });
+    console.log('Uploaded file:', req.file ? req.file.filename : 'None');
+    
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    
+    // Validate required fields
+    if (!username || !email) {
+      return res.status(400).json({ error: 'Username and email are required.' });
+    }
+    
+    // Check if email is already taken by another user
+    if (email !== user.email) {
+      const existingUser = await User.findOne({ email, _id: { $ne: userId } });
+      if (existingUser) {
+        return res.status(409).json({ error: 'Email is already taken by another user.' });
+      }
+    }
+    
+    // Handle password change
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: 'Current password is required to change password.' });
+      }
+      
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ error: 'Current password is incorrect.' });
+      }
+      
+      if (newPassword.length < 6) {
+        return res.status(400).json({ error: 'New password must be at least 6 characters long.' });
+      }
+      
+      // Hash new password
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+    }
+    
+    // Update basic info
+    user.username = username;
+    user.email = email;
+    
+    // Handle avatar/profile picture
+    if (req.file) {
+      // Delete old profile picture if it exists and is a file
+      if (user.avatar && user.avatar.startsWith('/uploads/')) {
+        const oldFilePath = path.join(process.cwd(), user.avatar);
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      }
+      
+      // Set new profile picture path
+      user.avatar = `/uploads/${req.file.filename}`;
+    } else if (avatar) {
+      // Using predefined avatar
+      // Delete old profile picture if it was a custom upload
+      if (user.avatar && user.avatar.startsWith('/uploads/')) {
+        const oldFilePath = path.join(process.cwd(), user.avatar);
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      }
+      
+      user.avatar = avatar;
+    }
+    
+    // Save updated user
+    await user.save();
+    
+    // Return updated user data (excluding password)
+    const updatedUserData = {
+      _id: user._id,
+      email: user.email,
+      username: user.username,
+      avatar: user.avatar,
+      isAdmin: user.isAdmin
+    };
+    
+    console.log('Profile updated successfully for user:', userId);
+    res.json({ 
+      message: 'Profile updated successfully',
+      user: updatedUserData 
+    });
+    
+  } catch (error) {
+    console.error('Profile update error:', error);
+    
+    // Clean up uploaded file if there was an error
+    if (req.file) {
+      const filePath = path.join(uploadsDir, req.file.filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+    
+    res.status(500).json({ error: 'Failed to update profile.' });
   }
 });
 

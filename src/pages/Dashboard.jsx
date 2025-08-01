@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { FaFire, FaUsers, FaPlay, FaPlus } from 'react-icons/fa';
+import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog } from 'react-icons/fa';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -13,6 +13,7 @@ const Dashboard = () => {
   const [chaptersLoading, setChaptersLoading] = useState(true);
   const [battleRoomId, setBattleRoomId] = useState('');
   const [showBattleModal, setShowBattleModal] = useState(false);
+  const [selectedBattleChapter, setSelectedBattleChapter] = useState('');
 
   useEffect(() => {
     const userData = localStorage.getItem('userData');
@@ -73,8 +74,12 @@ const Dashboard = () => {
   };
 
   const handleCreateBattle = () => {
+    if (!selectedBattleChapter) {
+      alert('Please select a chapter for the battle.');
+      return;
+    }
     const roomId = `battle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    navigate(`/battle/${roomId}`);
+    navigate(`/battle/${roomId}`, { state: { chapter: selectedBattleChapter } });
   };
 
   const handleJoinBattle = () => {
@@ -171,6 +176,19 @@ const Dashboard = () => {
                 <span>View Leaderboard</span>
               </div>
             </motion.button>
+
+            {/* Edit Profile Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/profile/edit')}
+              className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full mt-4"
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <FaUser className="text-lg" />
+                <span>Edit Profile</span>
+              </div>
+            </motion.button>
           </div>
 
           {/* Quiz Battle Section */}
@@ -183,19 +201,48 @@ const Dashboard = () => {
               Challenge your friends in real-time multiplayer quiz battles!
             </p>
             
-            {/* Admin-only Create Battle Button */}
+            {/* Admin-only Create Battle Section */}
             {user?.isAdmin && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleCreateBattle}
-                className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 w-full mb-4"
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  <FaPlus className="text-lg" />
-                  <span>Create Battle Room</span>
+              <div className="mb-4">
+                {/* Chapter Selection for Battle */}
+                <div className="mb-3">
+                  <label htmlFor="battle-chapter-select" className="text-orange-600 dark:text-orange-300 font-semibold mb-1 block text-sm">
+                    Select Chapter for Battle
+                  </label>
+                  <select 
+                    id="battle-chapter-select" 
+                    className="px-3 py-2 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-400 border border-gray-300 dark:border-gray-600 w-full transition-colors text-sm"
+                    value={selectedBattleChapter}
+                    onChange={e => setSelectedBattleChapter(e.target.value)}
+                    disabled={chaptersLoading}
+                  >
+                    <option value="">-- Choose chapter for battle --</option>
+                    {chapters.map(chapter => (
+                      <option key={chapter._id || chapter.name} value={chapter.name}>
+                        {chapter.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              </motion.button>
+                
+                {/* Create Battle Button */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleCreateBattle}
+                  disabled={!selectedBattleChapter}
+                  className={`w-full py-4 px-6 rounded-lg font-bold shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
+                    selectedBattleChapter 
+                      ? 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white' 
+                      : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <FaPlus className="text-lg" />
+                    <span>Create Battle Room</span>
+                  </div>
+                </motion.button>
+              </div>
             )}
 
             {/* Join Battle */}

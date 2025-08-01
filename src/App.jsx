@@ -7,6 +7,7 @@ import ResultScreen from "./pages/ResultScreen";
 import Leaderboard from "./pages/Leaderboard";
 import Dashboard from "./pages/Dashboard";
 import QuizBattleRoom from "./pages/QuizBattleRoom";
+import ProfileEdit from "./pages/ProfileEdit";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -104,6 +105,14 @@ function AnimatedRoutes() {
             element={
               <ProtectedRoute>
                 <QuizBattleRoom />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/edit"
+            element={
+              <ProtectedRoute>
+                <ProfileEdit />
               </ProtectedRoute>
             }
           />

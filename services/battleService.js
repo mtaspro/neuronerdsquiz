@@ -2,7 +2,7 @@
 class BattleService {
   constructor() {
     this.battleRooms = new Map();
-    this.maxUsersPerRoom = 6;
+    this.maxUsersPerRoom = 30;
     this.minUsersToStart = 2;
   }
 
