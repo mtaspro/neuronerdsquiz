@@ -5,6 +5,9 @@ import { FaPlay, FaTrophy, FaUsers, FaClock, FaCheck, FaTimes } from 'react-icon
 import BattleNotification from '../components/BattleNotification';
 import { useSocket, battleSocketHelpers } from '../utils/socketManager';
 import { useNotification } from '../components/NotificationSystem';
+import useExamSecurity from '../hooks/useExamSecurity';
+import SecurityWarning from '../components/SecurityWarning';
+import SecurityInitModal from '../components/SecurityInitModal';
 
 const QuizBattleRoom = () => {
   const { roomId } = useParams();
@@ -35,6 +38,40 @@ const QuizBattleRoom = () => {
   const [isReady, setIsReady] = useState(false);
   const [isRoomCreator, setIsRoomCreator] = useState(false);
   const [notifications, setNotifications] = useState([]);
+
+  // Security system state
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [securityActive, setSecurityActive] = useState(false);
+  const [currentViolation, setCurrentViolation] = useState(null);
+  const [securityInitialized, setSecurityInitialized] = useState(false);
+
+  // Security system hook
+  const {
+    warnings,
+    maxWarnings,
+    isFullscreen,
+    securityStatus,
+    initializeSecurity,
+    cleanupSecurity,
+    remainingWarnings
+  } = useExamSecurity({
+    isActive: securityActive,
+    onSecurityViolation: (violation) => {
+      console.log('Battle security violation:', violation);
+      setCurrentViolation(violation);
+    },
+    onAutoSubmit: (reason) => {
+      console.log('Battle auto-submit triggered:', reason);
+      showError(`Battle auto-ended due to security violations: ${reason.reason}`);
+      handleLeaveRoom();
+    },
+    maxWarnings: 3,
+    enableFullscreen: true,
+    enableTabSwitchDetection: true,
+    enableRightClickBlock: true,
+    enableDevToolsBlock: true,
+    enableExitConfirmation: true
+  });
 
   // Get user data from localStorage
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -72,6 +109,11 @@ const QuizBattleRoom = () => {
           if (data.users.length > 0 && data.users[0].id === userData._id) {
             setIsRoomCreator(true);
             info('You are the room creator');
+          }
+
+          // Show security modal when room is joined
+          if (!securityInitialized) {
+            setShowSecurityModal(true);
           }
         });
 
@@ -307,6 +349,38 @@ const QuizBattleRoom = () => {
     }
   };
 
+  // Security handlers
+  const handleSecurityAccept = async () => {
+    setShowSecurityModal(false);
+    setSecurityActive(true);
+    setSecurityInitialized(true);
+    
+    // Initialize security system
+    const success = await initializeSecurity();
+    if (!success) {
+      showError('Failed to initialize security system. Please try again.');
+      setShowSecurityModal(true);
+    }
+  };
+
+  const handleSecurityCancel = () => {
+    setShowSecurityModal(false);
+    navigate('/dashboard');
+  };
+
+  const handleViolationDismiss = () => {
+    setCurrentViolation(null);
+  };
+
+  // Cleanup security on unmount
+  useEffect(() => {
+    return () => {
+      if (securityActive) {
+        cleanupSecurity();
+      }
+    };
+  }, [securityActive, cleanupSecurity]);
+
   const handleLeaveRoom = () => {
     battleSocketHelpers.leaveRoom(roomId, userData._id);
     navigate('/dashboard');
@@ -377,6 +451,33 @@ const QuizBattleRoom = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
+      {/* Security Initialization Modal */}
+      <SecurityInitModal
+        isOpen={showSecurityModal}
+        onAccept={handleSecurityAccept}
+        onCancel={handleSecurityCancel}
+        quizType="battle"
+      />
+
+      {/* Security Warning */}
+      {currentViolation && (
+        <SecurityWarning
+          violation={currentViolation}
+          warnings={warnings}
+          maxWarnings={maxWarnings}
+          onDismiss={handleViolationDismiss}
+          autoHide={true}
+          hideDelay={5000}
+        />
+      )}
+
+      {/* Security Status Indicator */}
+      {securityActive && (
+        <div className="fixed top-4 right-4 z-40 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+          🔒 Battle Secure Mode {warnings > 0 && `(${remainingWarnings} warnings left)`}
+        </div>
+      )}
+
       {/* Notifications */}
       <BattleNotification 
         notifications={notifications} 

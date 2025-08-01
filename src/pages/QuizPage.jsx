@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { apiHelpers } from "../utils/api";
 import { useNotification } from "../components/NotificationSystem";
 import LoadingSpinner from "../components/LoadingSpinner";
+import useExamSecurity from "../hooks/useExamSecurity";
+import SecurityWarning from "../components/SecurityWarning";
+import SecurityInitModal from "../components/SecurityInitModal";
 
 export default function QuizPage() {
   const navigate = useNavigate();
@@ -19,6 +22,40 @@ export default function QuizPage() {
   const [warning, setWarning] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Security system state
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [securityActive, setSecurityActive] = useState(false);
+  const [currentViolation, setCurrentViolation] = useState(null);
+  const [quizStarted, setQuizStarted] = useState(false);
+
+  // Security system hook
+  const {
+    warnings,
+    maxWarnings,
+    isFullscreen,
+    securityStatus,
+    initializeSecurity,
+    cleanupSecurity,
+    remainingWarnings
+  } = useExamSecurity({
+    isActive: securityActive,
+    onSecurityViolation: (violation) => {
+      console.log('Security violation:', violation);
+      setCurrentViolation(violation);
+    },
+    onAutoSubmit: (reason) => {
+      console.log('Auto-submit triggered:', reason);
+      showError(`Quiz auto-submitted due to security violations: ${reason.reason}`);
+      handleSubmit();
+    },
+    maxWarnings: 3,
+    enableFullscreen: true,
+    enableTabSwitchDetection: true,
+    enableRightClickBlock: true,
+    enableDevToolsBlock: true,
+    enableExitConfirmation: true
+  });
 
   useEffect(() => {
     async function fetchQuiz() {
@@ -57,9 +94,16 @@ export default function QuizPage() {
     fetchQuiz();
   }, [chapter, showError]);
 
-  // Timer logic
+  // Show security modal when quiz is loaded
   useEffect(() => {
-    if (loading || questions.length === 0) return;
+    if (!loading && questions.length > 0 && !quizStarted) {
+      setShowSecurityModal(true);
+    }
+  }, [loading, questions, quizStarted]);
+
+  // Timer logic - only start when quiz is actually started
+  useEffect(() => {
+    if (loading || questions.length === 0 || !quizStarted) return;
     if (timer === 0) {
       handleSubmit();
       return;
@@ -67,7 +111,42 @@ export default function QuizPage() {
     if (timer === 10) setWarning(true);
     const interval = setInterval(() => setTimer((t) => t - 1), 1000);
     return () => clearInterval(interval);
-  }, [timer, loading, questions]);
+  }, [timer, loading, questions, quizStarted]);
+
+  // Cleanup security on unmount
+  useEffect(() => {
+    return () => {
+      if (securityActive) {
+        cleanupSecurity();
+      }
+    };
+  }, [securityActive, cleanupSecurity]);
+
+  // Handle security modal acceptance
+  const handleSecurityAccept = async () => {
+    setShowSecurityModal(false);
+    setSecurityActive(true);
+    
+    // Initialize security system
+    const success = await initializeSecurity();
+    if (success) {
+      setQuizStarted(true);
+    } else {
+      showError('Failed to initialize security system. Please try again.');
+      setShowSecurityModal(true);
+    }
+  };
+
+  // Handle security modal cancellation
+  const handleSecurityCancel = () => {
+    setShowSecurityModal(false);
+    navigate('/dashboard');
+  };
+
+  // Handle violation dismissal
+  const handleViolationDismiss = () => {
+    setCurrentViolation(null);
+  };
 
   function handleOptionSelect(idx) {
     setSelectedOption(idx);
@@ -136,6 +215,32 @@ export default function QuizPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200">
+      {/* Security Initialization Modal */}
+      <SecurityInitModal
+        isOpen={showSecurityModal}
+        onAccept={handleSecurityAccept}
+        onCancel={handleSecurityCancel}
+        quizType="quiz"
+      />
+
+      {/* Security Warning */}
+      {currentViolation && (
+        <SecurityWarning
+          violation={currentViolation}
+          warnings={warnings}
+          maxWarnings={maxWarnings}
+          onDismiss={handleViolationDismiss}
+          autoHide={true}
+          hideDelay={5000}
+        />
+      )}
+
+      {/* Security Status Indicator */}
+      {securityActive && (
+        <div className="fixed top-4 right-4 z-40 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+          🔒 Secure Mode {warnings > 0 && `(${remainingWarnings} warnings left)`}
+        </div>
+      )}
       {/* Header */}
       <div className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-4xl mx-auto px-4 py-4">
