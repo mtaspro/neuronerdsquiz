@@ -10,6 +10,7 @@ import authRouter from './routes/auth.js';
 import quizRouter from './routes/quiz.js';
 import adminRouter from './routes/admin.js';
 import BattleService from './services/battleService.js';
+import UserScore from './models/UserScore.js';
 
 console.log('Auth router imported:', !!authRouter);
 console.log('Auth router type:', typeof authRouter);
@@ -82,6 +83,44 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Battle service instance
 const battleService = new BattleService();
+
+// Function to save battle results to leaderboard
+async function saveBattleResultsToLeaderboard(battleResults) {
+  try {
+    console.log('💾 Saving battle results to leaderboard...');
+    
+    for (const result of battleResults.results) {
+      try {
+        // Find existing user score or create new one
+        const existingScore = await UserScore.findOne({ username: result.username });
+        
+        if (existingScore) {
+          // Update if new score is higher
+          if (result.score > existingScore.score) {
+            existingScore.score = result.score;
+            await existingScore.save();
+            console.log(`📈 Updated ${result.username} score: ${result.score}`);
+          }
+        } else {
+          // Create new leaderboard entry
+          const newScore = new UserScore({
+            username: result.username,
+            score: result.score,
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(result.username)}&background=random`
+          });
+          await newScore.save();
+          console.log(`🆕 Added ${result.username} to leaderboard: ${result.score}`);
+        }
+      } catch (userError) {
+        console.error(`❌ Error saving score for ${result.username}:`, userError);
+      }
+    }
+    
+    console.log('✅ Battle results saved to leaderboard');
+  } catch (error) {
+    console.error('❌ Error saving battle results:', error);
+  }
+}
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
@@ -165,6 +204,10 @@ io.on('connection', (socket) => {
       // Check if all users have finished
       if (result.allFinished) {
         const battleResults = battleService.endBattle(roomId);
+        
+        // Save battle results to leaderboard
+        saveBattleResultsToLeaderboard(battleResults);
+        
         io.to(roomId).emit('battleEnded', battleResults);
       }
 

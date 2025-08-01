@@ -183,18 +183,20 @@ const Dashboard = () => {
               Challenge your friends in real-time multiplayer quiz battles!
             </p>
             
-            {/* Create Battle Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleCreateBattle}
-              className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 w-full mb-4"
-            >
-              <div className="flex items-center justify-center space-x-2">
-                <FaPlus className="text-lg" />
-                <span>Create Battle Room</span>
-              </div>
-            </motion.button>
+            {/* Admin-only Create Battle Button */}
+            {user?.isAdmin && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleCreateBattle}
+                className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 w-full mb-4"
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <FaPlus className="text-lg" />
+                  <span>Create Battle Room</span>
+                </div>
+              </motion.button>
+            )}
 
             {/* Join Battle */}
             <div className="space-y-3">

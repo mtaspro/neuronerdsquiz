@@ -122,6 +122,11 @@ const QuizBattleRoom = () => {
           setResults(data.results);
           addNotification('battle-ended', 'Battle Complete!', 'The quiz battle has ended!');
           success('Battle completed! Check your results!');
+          
+          // Auto-redirect to leaderboard after 3 seconds
+          setTimeout(() => {
+            navigate('/leaderboard');
+          }, 3000);
         });
 
         socket.addListener('error', (data) => {
