@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import axios from 'axios';
+import { apiHelpers } from '../utils/api';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -45,12 +45,17 @@ const Login = () => {
     setServerError('');
     if (!validateForm()) return;
     setIsLoading(true);
+    
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      const res = await axios.post(`${apiUrl}/api/auth/login`, {
+      console.log('Attempting login with:', { email: formData.email });
+
+      const res = await apiHelpers.login({
         email: formData.email,
         password: formData.password
       });
+
+      console.log('Login response:', res.data);
+
       if (res.data && res.data.token && res.data.user) {
         localStorage.setItem('authToken', res.data.token);
         localStorage.setItem('userData', JSON.stringify(res.data.user));
@@ -61,8 +66,12 @@ const Login = () => {
         setServerError('Invalid response from server.');
       }
     } catch (error) {
+      console.error('Login error:', error);
+      
       if (error.response && error.response.data && error.response.data.error) {
         setServerError(error.response.data.error);
+      } else if (error.message) {
+        setServerError(`Login failed: ${error.message}`);
       } else {
         setServerError('Login failed. Please try again.');
       }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import axios from 'axios';
+import { apiHelpers } from '../utils/api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -57,14 +57,23 @@ const Register = () => {
     setServerError('');
     if (!validateForm()) return;
     setIsLoading(true);
+    
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      const res = await axios.post(`${apiUrl}/api/auth/register`, {
+      console.log('Attempting registration with:', {
+        email: formData.email,
+        username: formData.username,
+        hasPassword: !!formData.password,
+        avatar: formData.avatar
+      });
+
+      const res = await apiHelpers.register({
         email: formData.email,
         password: formData.password,
         username: formData.username,
         avatar: formData.avatar
       });
+
+      console.log('Registration response:', res.data);
 
       if (res.data && res.data.token && res.data.user) {
         localStorage.setItem('authToken', res.data.token);
@@ -79,8 +88,12 @@ const Register = () => {
         setServerError('Invalid response from server.');
       }
     } catch (error) {
+      console.error('Registration error:', error);
+      
       if (error.response && error.response.data && error.response.data.error) {
         setServerError(error.response.data.error);
+      } else if (error.message) {
+        setServerError(`Registration failed: ${error.message}`);
       } else {
         setServerError('Registration failed. Please try again.');
       }

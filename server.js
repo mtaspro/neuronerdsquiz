@@ -29,32 +29,52 @@ const allowedOrigins = [
   process.env.CLIENT_URL
 ].filter(Boolean);
 
-// Add dynamic Vercel domain support
+// Enhanced CORS configuration with explicit headers
 const corsOptions = {
   origin: (origin, callback) => {
+    console.log('🌐 CORS request from origin:', origin);
+    
     // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('✅ Allowing request with no origin');
+      return callback(null, true);
+    }
     
     // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
+      console.log('✅ Origin found in allowed list:', origin);
       return callback(null, true);
     }
     
     // Allow any Vercel app domain
     if (origin.includes('.vercel.app')) {
+      console.log('✅ Allowing Vercel domain:', origin);
       return callback(null, true);
     }
     
     // Allow localhost with any port
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      console.log('✅ Allowing localhost:', origin);
       return callback(null, true);
     }
     
     console.log('❌ CORS blocked origin:', origin);
     callback(new Error('Not allowed by CORS'));
   },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: false
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: [
+    "Origin",
+    "X-Requested-With", 
+    "Content-Type", 
+    "Accept", 
+    "Authorization",
+    "Cache-Control",
+    "X-HTTP-Method-Override"
+  ],
+  exposedHeaders: ["Authorization"],
+  credentials: false,
+  optionsSuccessStatus: 200, // For legacy browser support
+  preflightContinue: false
 };
 
 console.log('🌐 CORS configuration:', {
@@ -69,6 +89,46 @@ const io = new Server(server, {
 
 app.use(express.json());
 app.use(cors(corsOptions));
+
+// Additional manual CORS handling for preflight requests
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  console.log(`🔍 Manual CORS check for ${req.method} ${req.path} from origin: ${origin}`);
+  
+  // Set CORS headers for all requests
+  if (origin) {
+    // Check if origin is allowed
+    const isAllowed = allowedOrigins.includes(origin) || 
+                     origin.includes('.vercel.app') || 
+                     origin.includes('localhost') || 
+                     origin.includes('127.0.0.1');
+    
+    if (isAllowed) {
+      res.header('Access-Control-Allow-Origin', origin);
+      console.log(`✅ Manual CORS: Allowing origin ${origin}`);
+    } else {
+      console.log(`❌ Manual CORS: Blocking origin ${origin}`);
+    }
+  } else {
+    // Allow requests with no origin
+    res.header('Access-Control-Allow-Origin', '*');
+    console.log(`✅ Manual CORS: Allowing request with no origin`);
+  }
+  
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, X-HTTP-Method-Override');
+  res.header('Access-Control-Expose-Headers', 'Authorization');
+  res.header('Access-Control-Allow-Credentials', 'false');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log(`✅ Handling OPTIONS preflight request for ${req.path}`);
+    res.status(200).end();
+    return;
+  }
+  
+  next();
+});
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
@@ -285,6 +345,30 @@ console.log('All routers mounted successfully');
 // Test route for API connectivity
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working!' });
+});
+
+// CORS test route
+app.get('/api/cors-test', (req, res) => {
+  const origin = req.headers.origin;
+  console.log('CORS test route accessed from origin:', origin);
+  res.json({ 
+    message: 'CORS test successful!',
+    origin: origin,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Simple POST test route for CORS
+app.post('/api/cors-test', (req, res) => {
+  const origin = req.headers.origin;
+  console.log('CORS POST test route accessed from origin:', origin);
+  console.log('Request body:', req.body);
+  res.json({ 
+    message: 'CORS POST test successful!',
+    origin: origin,
+    body: req.body,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Socket.IO health check

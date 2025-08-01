@@ -127,13 +127,28 @@ export default function QuizPage() {
     setShowSecurityModal(false);
     setSecurityActive(true);
     
-    // Initialize security system
-    const success = await initializeSecurity();
-    if (success) {
+    try {
+      console.log('🔒 Starting security initialization...');
+      
+      // Initialize security system
+      const success = await initializeSecurity();
+      
+      console.log('🔒 Security initialization result:', success);
+      
+      if (success) {
+        console.log('✅ Security system initialized, starting quiz');
+        setQuizStarted(true);
+      } else {
+        console.error('❌ Security system initialization failed');
+        showError('Failed to initialize security system. The quiz will continue without full security protection.');
+        // Still start the quiz even if security fails
+        setQuizStarted(true);
+      }
+    } catch (error) {
+      console.error('❌ Security initialization error:', error);
+      showError('Security system error. The quiz will continue with basic protection.');
+      // Still start the quiz even if security fails
       setQuizStarted(true);
-    } else {
-      showError('Failed to initialize security system. Please try again.');
-      setShowSecurityModal(true);
     }
   };
 

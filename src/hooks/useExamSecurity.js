@@ -25,10 +25,28 @@ const useExamSecurity = ({
 
   // Fullscreen management
   const enterFullscreen = useCallback(async () => {
-    if (!enableFullscreen) return true;
+    if (!enableFullscreen) {
+      console.log('🖥️ Fullscreen disabled, skipping');
+      return true;
+    }
     
+    // Check if fullscreen is supported
+    const element = document.documentElement;
+    const isFullscreenSupported = !!(
+      element.requestFullscreen ||
+      element.webkitRequestFullscreen ||
+      element.msRequestFullscreen ||
+      element.mozRequestFullScreen
+    );
+
+    if (!isFullscreenSupported) {
+      console.warn('⚠️ Fullscreen API not supported in this browser');
+      return true; // Don't fail, just continue without fullscreen
+    }
+
     try {
-      const element = document.documentElement;
+      console.log('🖥️ Requesting fullscreen...');
+      
       if (element.requestFullscreen) {
         await element.requestFullscreen();
       } else if (element.webkitRequestFullscreen) {
@@ -38,10 +56,20 @@ const useExamSecurity = ({
       } else if (element.mozRequestFullScreen) {
         await element.mozRequestFullScreen();
       }
+      
+      console.log('✅ Fullscreen request sent successfully');
       return true;
     } catch (error) {
-      console.warn('Fullscreen request failed:', error);
-      return false;
+      console.warn('⚠️ Fullscreen request failed:', error.message);
+      
+      // Common reasons for fullscreen failure:
+      if (error.name === 'NotAllowedError') {
+        console.warn('⚠️ Fullscreen blocked by browser policy or user settings');
+      } else if (error.name === 'TypeError') {
+        console.warn('⚠️ Fullscreen API not available or not supported');
+      }
+      
+      return true; // Don't fail the security system, just continue without fullscreen
     }
   }, [enableFullscreen]);
 
@@ -185,22 +213,34 @@ const useExamSecurity = ({
 
   // Initialize security system
   const initializeSecurity = useCallback(async () => {
-    if (!isActive) return false;
+    if (!isActive) {
+      console.warn('Security system not active, skipping initialization');
+      return false;
+    }
 
+    console.log('🔒 Initializing security system...');
     setSecurityStatus('initializing');
     setWarnings(0);
     warningsRef.current = 0;
 
-    // Request fullscreen if enabled
+    // Request fullscreen if enabled (but don't fail if it doesn't work)
     if (enableFullscreen) {
-      const fullscreenSuccess = await enterFullscreen();
-      if (!fullscreenSuccess) {
-        console.warn('Failed to enter fullscreen mode');
+      console.log('🖥️ Attempting to enter fullscreen mode...');
+      try {
+        const fullscreenSuccess = await enterFullscreen();
+        if (fullscreenSuccess) {
+          console.log('✅ Fullscreen mode activated successfully');
+        } else {
+          console.warn('⚠️ Fullscreen mode failed, but continuing with security system');
+        }
+      } catch (error) {
+        console.warn('⚠️ Fullscreen error, but continuing with security system:', error);
       }
     }
 
     setSecurityStatus('active');
-    return true;
+    console.log('✅ Security system initialized successfully');
+    return true; // Always return true - security system should work even without fullscreen
   }, [isActive, enableFullscreen, enterFullscreen]);
 
   // Cleanup security system

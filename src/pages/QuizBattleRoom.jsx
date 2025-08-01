@@ -355,11 +355,25 @@ const QuizBattleRoom = () => {
     setSecurityActive(true);
     setSecurityInitialized(true);
     
-    // Initialize security system
-    const success = await initializeSecurity();
-    if (!success) {
-      showError('Failed to initialize security system. Please try again.');
-      setShowSecurityModal(true);
+    try {
+      console.log('🔒 Starting battle security initialization...');
+      
+      // Initialize security system
+      const success = await initializeSecurity();
+      
+      console.log('🔒 Battle security initialization result:', success);
+      
+      if (!success) {
+        console.error('❌ Battle security system initialization failed');
+        showError('Failed to initialize security system. The battle will continue without full security protection.');
+        // Continue with the battle even if security fails
+      } else {
+        console.log('✅ Battle security system initialized successfully');
+      }
+    } catch (error) {
+      console.error('❌ Battle security initialization error:', error);
+      showError('Security system error. The battle will continue with basic protection.');
+      // Continue with the battle even if security fails
     }
   };
 

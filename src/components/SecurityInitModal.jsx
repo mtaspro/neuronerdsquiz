@@ -25,8 +25,8 @@ const SecurityInitModal = ({
   const securityFeatures = [
     {
       icon: <FaDesktop className="text-blue-500" />,
-      title: 'Fullscreen Mode Required',
-      description: 'The quiz will run in fullscreen mode. Exiting fullscreen will trigger warnings.'
+      title: 'Fullscreen Mode (Recommended)',
+      description: 'The quiz will attempt to run in fullscreen mode. If your browser blocks this, the quiz will continue with other security measures.'
     },
     {
       icon: <FaEye className="text-green-500" />,
