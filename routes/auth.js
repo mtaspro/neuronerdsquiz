@@ -119,7 +119,9 @@ router.post('/login', async (req, res) => {
     const userData = {
       _id: user._id,
       email: user.email,
-      isAdmin: user.isAdmin
+      isAdmin: user.isAdmin,
+      username: user.username,
+      avatar: user.avatar
     };
     
     console.log('Login successful for user:', email);
