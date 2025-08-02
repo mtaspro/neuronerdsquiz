@@ -166,13 +166,62 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Validate token and user existence - CRITICAL SECURITY ENDPOINT
+router.get('/validate', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('-password');
+    
+    if (!user) {
+      console.log(`🚨 SECURITY: User ${req.user.userId} token valid but user deleted from database`);
+      return res.status(401).json({ 
+        valid: false,
+        error: 'User account no longer exists.',
+        userDeleted: true 
+      });
+    }
+    
+    res.json({ 
+      valid: true,
+      user: {
+        _id: user._id,
+        email: user.email,
+        username: user.username,
+        avatar: user.avatar,
+        isAdmin: user.isAdmin
+      }
+    });
+  } catch (err) {
+    console.error('Error validating user:', err);
+    res.status(401).json({ 
+      valid: false,
+      error: 'Token validation failed.',
+      invalidToken: true 
+    });
+  }
+});
+
 // Sample protected route
 router.get('/me', authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('email -_id');
-    if (!user) return res.status(404).json({ error: 'User not found.' });
-    res.json({ user });
+    const user = await User.findById(req.user.userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ 
+        error: 'User not found.',
+        userDeleted: true 
+      });
+    }
+    
+    res.json({ 
+      user: {
+        _id: user._id,
+        email: user.email,
+        username: user.username,
+        avatar: user.avatar,
+        isAdmin: user.isAdmin
+      }
+    });
   } catch (err) {
+    console.error('Error fetching user:', err);
     res.status(500).json({ error: 'Failed to fetch user.' });
   }
 });
@@ -190,7 +239,10 @@ router.put('/profile', authMiddleware, upload.single('profilePicture'), async (r
     // Find the user
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ error: 'User not found.' });
+      return res.status(404).json({ 
+        error: 'User not found.',
+        userDeleted: true 
+      });
     }
     
     // Validate required fields
