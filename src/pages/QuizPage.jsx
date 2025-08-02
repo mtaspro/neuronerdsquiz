@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { apiHelpers } from "../utils/api";
 import { useNotification } from "../components/NotificationSystem";
 import LoadingSpinner from "../components/LoadingSpinner";
-import useExamSecurity from "../hooks/useExamSecurity";
+import useExamSecuritySimple from "../hooks/useExamSecuritySimple";
 import SecurityWarning from "../components/SecurityWarning";
 import SecurityInitModal from "../components/SecurityInitModal";
 
@@ -45,7 +45,7 @@ export default function QuizPage() {
     navigate("/result", { state: { score, total: questions.length } });
   }, [answers, questions, navigate]);
 
-  // Security system hook
+  // Security system hook (simplified version)
   const {
     warnings,
     maxWarnings,
@@ -55,7 +55,7 @@ export default function QuizPage() {
     cleanupSecurity,
     remainingWarnings,
     enterFullscreen
-  } = useExamSecurity({
+  } = useExamSecuritySimple({
     isActive: securityActive,
     onSecurityViolation: (violation) => {
       console.log('Security violation:', violation);
@@ -67,11 +67,6 @@ export default function QuizPage() {
       handleSubmit();
     },
     maxWarnings: 3,
-    enableFullscreen: true,
-    enableTabSwitchDetection: true,
-    enableRightClickBlock: true,
-    enableDevToolsBlock: true,
-    enableExitConfirmation: true
   });
 
   useEffect(() => {
