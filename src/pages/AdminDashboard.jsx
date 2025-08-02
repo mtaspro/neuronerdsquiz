@@ -59,6 +59,47 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false));
   }, [tab]);
 
+  // Delete user
+  function handleDeleteUser(userId, username, isAdmin) {
+    if (isAdmin) {
+      setError('Cannot delete admin users');
+      return;
+    }
+    
+    if (!window.confirm(`Delete user "${username}"? This will permanently remove the user and all their data. This action cannot be undone.`)) return;
+    
+    setLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.delete(`${apiUrl}/api/admin/users/${userId}`, { headers: authHeader() })
+      .then(() => {
+        setUsers(users => users.filter(u => u._id !== userId));
+        setError(''); // Clear any previous errors
+      })
+      .catch(err => {
+        const errorMsg = err.response?.data?.error || 'Failed to delete user';
+        setError(errorMsg);
+      })
+      .finally(() => setLoading(false));
+  }
+
+  // Reset user score
+  function handleResetUserScore(userId, username) {
+    if (!window.confirm(`Reset all scores for user "${username}"? This will remove them from the leaderboard.`)) return;
+    
+    setLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.post(`${apiUrl}/api/admin/users/${userId}/reset-score`, {}, { headers: authHeader() })
+      .then(() => {
+        setError(''); // Clear any previous errors
+        // You could add a success message here if needed
+      })
+      .catch(err => {
+        const errorMsg = err.response?.data?.error || 'Failed to reset user score';
+        setError(errorMsg);
+      })
+      .finally(() => setLoading(false));
+  }
+
   // Add new chapter
   function handleAddChapter(e) {
     e.preventDefault();
@@ -171,12 +212,18 @@ export default function AdminDashboard() {
           ))}
         </div>
         
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
+            {error}
+          </div>
+        )}
+
         {tab === 'Users' && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-x-auto">
             {loading ? (
               <div className="p-8 text-center text-gray-600 dark:text-gray-400">Loading users...</div>
             ) : (
-              <table className="w-full min-w-[600px]">
+              <table className="w-full min-w-[800px]">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Username</th>
@@ -191,7 +238,28 @@ export default function AdminDashboard() {
                       <td className="p-4 text-gray-800 dark:text-white">{u.username}</td>
                       <td className="p-4 text-gray-600 dark:text-gray-300">{u.email}</td>
                       <td className="p-4">{u.isAdmin ? '✅' : ''}</td>
-                      <td className="p-4"></td>
+                      <td className="p-4">
+                        <div className="flex gap-2 flex-wrap">
+                          <button
+                            onClick={() => handleResetUserScore(u._id, u.username)}
+                            disabled={loading}
+                            className="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded text-sm text-white transition-colors disabled:opacity-50"
+                            title="Reset user's scores"
+                          >
+                            Reset Score
+                          </button>
+                          {!u.isAdmin && (
+                            <button
+                              onClick={() => handleDeleteUser(u._id, u.username, u.isAdmin)}
+                              disabled={loading}
+                              className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm text-white transition-colors disabled:opacity-50"
+                              title="Delete user permanently"
+                            >
+                              Delete User
+                            </button>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -200,12 +268,6 @@ export default function AdminDashboard() {
           </div>
         )}
         
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
-            {error}
-          </div>
-        )}
-
         {tab === 'Chapters' && (
           <div className="space-y-6">
             {/* Add Chapter Form */}
