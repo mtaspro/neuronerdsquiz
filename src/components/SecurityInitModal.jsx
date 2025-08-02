@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaShieldAlt, FaDesktop, FaEye, FaKeyboard, FaExclamationTriangle, FaCheck } from 'react-icons/fa';
+import { FaShieldAlt, FaDesktop, FaEye, FaKeyboard, FaExclamationTriangle, FaCheck, FaExpand } from 'react-icons/fa';
 
 const SecurityInitModal = ({ 
   isOpen, 

@@ -23,7 +23,7 @@ const useExamSecurity = ({
     warningsRef.current = warnings;
   }, [isActive, warnings]);
 
-  // Fullscreen management
+  // Fullscreen management with multiple attempts
   const enterFullscreen = useCallback(async () => {
     if (!enableFullscreen) {
       console.log('🖥️ Fullscreen disabled, skipping');
@@ -44,34 +44,67 @@ const useExamSecurity = ({
       return true; // Don't fail, just continue without fullscreen
     }
 
+    // Check if already in fullscreen
+    if (checkFullscreen()) {
+      console.log('✅ Already in fullscreen mode');
+      return true;
+    }
+
     try {
       console.log('🖥️ Requesting fullscreen...');
+      console.log('🔍 Browser info:', {
+        userAgent: navigator.userAgent,
+        protocol: window.location.protocol,
+        isSecureContext: window.isSecureContext
+      });
       
+      // Try different fullscreen methods with options
       if (element.requestFullscreen) {
-        await element.requestFullscreen();
+        console.log('🖥️ Using standard requestFullscreen');
+        await element.requestFullscreen({ navigationUI: "hide" });
       } else if (element.webkitRequestFullscreen) {
-        await element.webkitRequestFullscreen();
+        console.log('🖥️ Using webkit requestFullscreen');
+        await element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
       } else if (element.msRequestFullscreen) {
+        console.log('🖥️ Using ms requestFullscreen');
         await element.msRequestFullscreen();
       } else if (element.mozRequestFullScreen) {
+        console.log('🖥️ Using moz requestFullScreen');
         await element.mozRequestFullScreen();
       }
       
-      console.log('✅ Fullscreen request sent successfully');
-      return true;
+      // Wait a bit and check if fullscreen actually worked
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      if (checkFullscreen()) {
+        console.log('✅ Fullscreen activated successfully');
+        return true;
+      } else {
+        console.warn('⚠️ Fullscreen request appeared to succeed but not actually in fullscreen');
+        return true; // Still don't fail the security system
+      }
+      
     } catch (error) {
-      console.warn('⚠️ Fullscreen request failed:', error.message);
+      console.warn('⚠️ Fullscreen request failed:', error);
+      console.warn('⚠️ Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
       
       // Common reasons for fullscreen failure:
       if (error.name === 'NotAllowedError') {
         console.warn('⚠️ Fullscreen blocked by browser policy or user settings');
+        console.warn('💡 Possible solutions: Enable fullscreen in browser settings, use HTTPS, or try a different browser');
       } else if (error.name === 'TypeError') {
         console.warn('⚠️ Fullscreen API not available or not supported');
+      } else if (error.name === 'InvalidStateError') {
+        console.warn('⚠️ Document not in a state where fullscreen can be requested');
       }
       
       return true; // Don't fail the security system, just continue without fullscreen
     }
-  }, [enableFullscreen]);
+  }, [enableFullscreen, checkFullscreen]);
 
   const exitFullscreen = useCallback(async () => {
     try {

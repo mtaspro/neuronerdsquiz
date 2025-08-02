@@ -53,7 +53,8 @@ const QuizBattleRoom = () => {
     securityStatus,
     initializeSecurity,
     cleanupSecurity,
-    remainingWarnings
+    remainingWarnings,
+    enterFullscreen
   } = useExamSecurity({
     isActive: securityActive,
     onSecurityViolation: (violation) => {
@@ -487,8 +488,20 @@ const QuizBattleRoom = () => {
 
       {/* Security Status Indicator */}
       {securityActive && (
-        <div className="fixed top-4 right-4 z-40 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-          🔒 Battle Secure Mode {warnings > 0 && `(${remainingWarnings} warnings left)`}
+        <div className="fixed top-4 right-4 z-40 flex flex-col space-y-2">
+          <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+            🔒 Battle Secure Mode {warnings > 0 && `(${remainingWarnings} warnings left)`}
+          </div>
+          {!isFullscreen && (
+            <button
+              onClick={enterFullscreen}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1 transition-colors"
+              title="Click to enter fullscreen mode"
+            >
+              <span>📺</span>
+              <span>Fullscreen</span>
+            </button>
+          )}
         </div>
       )}
 
