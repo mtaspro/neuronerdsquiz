@@ -9,40 +9,40 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
   const themes = [
     {
       id: 'tech-bg',
-      name: 'Tech Matrix',
-      description: 'Digital matrix with flowing code',
+      name: 'LOONY CIRCLES',
+      description: 'Circular shapes flying around the screen',
       video: '/src/assets/tech-bg.mp4',
       color: 'from-blue-600 to-purple-600',
       preview: '🔢'
     },
     {
       id: 'tech-bg1',
-      name: 'Cyber Circuit',
-      description: 'Futuristic circuit board patterns',
+      name: 'CUTY KITTENS',
+      description: 'CUTE KITTENS TOGETHER',
       video: '/src/assets/tech-bg1.mp4',
       color: 'from-green-500 to-teal-600',
       preview: '⚡'
     },
     {
       id: 'tech-bg2',
-      name: 'Neural Network',
-      description: 'Connected nodes and pathways',
+      name: 'LIVING KING',
+      description: 'ANIME WARRIOR',
       video: '/src/assets/tech-bg2.mp4',
       color: 'from-purple-500 to-pink-600',
       preview: '🧠'
     },
     {
       id: 'tech-bg3',
-      name: 'Data Stream',
-      description: 'Flowing data visualization',
+      name: 'ALIEN ISOLATION',
+      description: 'SPACESHIP INTERIOR',
       video: '/src/assets/tech-bg3.mp4',
       color: 'from-orange-500 to-red-600',
       preview: '📊'
     },
     {
       id: 'tech-bg4',
-      name: 'Quantum Field',
-      description: 'Particle physics simulation',
+      name: 'NEUTRAL NATURE',
+      description: 'BUTTERFLIES WITH NEON LIGHTS',
       video: '/src/assets/tech-bg4.mp4',
       color: 'from-indigo-500 to-blue-600',
       preview: '⚛️'
