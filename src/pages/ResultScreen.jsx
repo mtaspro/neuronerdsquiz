@@ -60,12 +60,12 @@ export default function ResultScreen() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 px-4 transition-colors duration-200">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 max-w-md w-full border border-gray-200 dark:border-gray-700"
+        className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 max-w-md w-full border border-gray-200 dark:border-gray-700"
       >
         <div className="text-center">
           {/* Header */}
@@ -85,7 +85,7 @@ export default function ResultScreen() {
             transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
             className="mb-6"
           >
-            <div className={`text-6xl font-bold ${getScoreColor(percentage)} mb-2`}>
+            <div className={`text-6xl font-bold ${getScoreColor(percentage)} mb-2`}> 
               {percentage}%
             </div>
             <div className="text-xl text-gray-600 dark:text-gray-300">
@@ -132,7 +132,7 @@ export default function ResultScreen() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.0 }}
-            className="space-y-3"
+            className="space-y-3 max-w-xs mx-auto px-4 sm:px-0"
           >
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -156,4 +156,4 @@ export default function ResultScreen() {
       </motion.div>
     </div>
   );
-} 
+}

@@ -116,7 +116,7 @@ const Login = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-8 space-y-6"
+          className="mt-8 space-y-6 max-w-sm mx-auto px-4 sm:px-0"
           onSubmit={handleSubmit}
         >
           {serverError && (
@@ -142,7 +142,7 @@ const Login = () => {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`appearance-none relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 sm:text-sm transition-colors ${
+                className={`appearance-none relative block w-full max-w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 text-sm leading-tight transition-colors ${
                   errors.email 
                     ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
                     : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
@@ -166,7 +166,7 @@ const Login = () => {
                 required
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`appearance-none relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 sm:text-sm transition-colors ${
+                className={`appearance-none relative block w-full max-w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 text-sm leading-tight transition-colors ${
                   errors.password 
                     ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
                     : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'

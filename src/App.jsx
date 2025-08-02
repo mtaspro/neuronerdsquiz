@@ -19,8 +19,10 @@ import { NotificationProvider } from './components/NotificationSystem';
 import { DarkModeProvider } from './contexts/DarkModeContext';
 
 // Optional Navbar
+import { useState } from "react";
 function Navbar() {
   const [isAdmin, setIsAdmin] = React.useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   React.useEffect(() => {
     function checkAdmin() {
       const userData = localStorage.getItem('userData');
@@ -29,12 +31,9 @@ function Navbar() {
       if (userData && token) {
         try {
           const user = JSON.parse(userData);
-          // Check both user data and JWT token for admin status
           const isUserAdmin = user.isAdmin === true;
           setIsAdmin(isUserAdmin);
-          console.log('Admin check - User data:', user, 'Is admin:', isUserAdmin);
         } catch (error) {
-          console.error('Error parsing user data:', error);
           setIsAdmin(false);
         }
       } else {
@@ -44,10 +43,7 @@ function Navbar() {
     
     checkAdmin();
     
-    // Listen for storage changes (when user logs in/out in another tab)
     window.addEventListener('storage', checkAdmin);
-    
-    // Also listen for custom events (when user logs in/out in same tab)
     window.addEventListener('userAuthChange', checkAdmin);
     
     return () => {
@@ -55,18 +51,48 @@ function Navbar() {
       window.removeEventListener('userAuthChange', checkAdmin);
     };
   }, []);
-  
+
   return (
-    <nav className="w-full bg-white dark:bg-gray-900 py-3 px-4 flex justify-center items-center gap-4 shadow-md z-20 border-b border-gray-200 dark:border-gray-700">
-      <Link to="/" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Intro</Link>
-      <Link to="/quiz" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Quiz</Link>
-      <Link to="/result" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Result</Link>
-      <Link to="/leaderboard" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Leaderboard</Link>
-      {isAdmin && (
-        <Link to="/admin" className="text-gray-800 dark:text-white font-semibold hover:text-pink-600 dark:hover:text-pink-400 transition">Admin</Link>
-      )}
-      <div className="ml-auto">
-        <DarkModeToggle />
+    <nav className="w-full bg-white dark:bg-gray-900 shadow-md z-20 border-b border-gray-200 dark:border-gray-700">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-14 items-center">
+          <div className="flex items-center space-x-4">
+            <div className="hidden md:flex md:space-x-4">
+              <Link to="/" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Intro</Link>
+              <Link to="/quiz" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Quiz</Link>
+              <Link to="/result" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Result</Link>
+              <Link to="/leaderboard" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Leaderboard</Link>
+              {isAdmin && (
+                <Link to="/admin" className="text-gray-800 dark:text-white font-semibold hover:text-pink-600 dark:hover:text-pink-400 transition">Admin</Link>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center space-x-4">
+            <DarkModeToggle />
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
+              aria-label="Toggle menu"
+              aria-expanded={menuOpen}
+            >
+              <svg className={`${menuOpen ? 'hidden' : 'block'} h-6 w-6`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <svg className={`${menuOpen ? 'block' : 'hidden'} h-6 w-6`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className={`${menuOpen ? 'block' : 'hidden'} md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-2 pt-2 pb-3 space-y-1`}>
+        <Link to="/" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Intro</Link>
+        <Link to="/quiz" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Quiz</Link>
+        <Link to="/result" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Result</Link>
+        <Link to="/leaderboard" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Leaderboard</Link>
+        {isAdmin && (
+          <Link to="/admin" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Admin</Link>
+        )}
       </div>
     </nav>
   );

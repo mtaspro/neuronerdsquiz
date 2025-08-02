@@ -304,7 +304,7 @@ export default function QuizPage() {
       </div>
 
       {/* Question Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestionIndex}
@@ -312,35 +312,30 @@ export default function QuizPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3 }}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 border border-gray-200 dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 md:p-8 border border-gray-200 dark:border-gray-700"
           >
             {/* Question */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+            <div className="mb-6">
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 dark:text-white mb-4 leading-tight">
                 {currentQuestion.question}
               </h2>
             </div>
 
             {/* Options */}
-            <div className="space-y-4 mb-8">
+            <div className="space-y-3 mb-6">
               {currentQuestion.options.map((option, index) => (
                 <motion.button
                   key={index}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleOptionSelect(index)}
-                  className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ${
+                  className={`w-full text-left p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 ${
                     selectedOption === index
                       ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-800 dark:text-cyan-200'
                       : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500 text-gray-800 dark:text-white'
                   }`}
                 >
                   <div className="flex items-center">
-                    <div className={`w-6 h-6 rounded-full border-2 mr-3 flex items-center justify-center ${
-                      selectedOption === index
-                        ? 'border-cyan-500 bg-cyan-500'
-                        : 'border-gray-300 dark:border-gray-500'
-                    }`}>
                       {selectedOption === index && (
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       )}
@@ -378,4 +373,4 @@ export default function QuizPage() {
       </div>
     </div>
   );
-} 
+}

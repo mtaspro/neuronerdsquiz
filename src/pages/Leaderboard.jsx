@@ -118,7 +118,7 @@ export default function Leaderboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 py-12 px-4 transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 py-12 px-4 transition-colors duration-200 overflow-x-auto">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div
@@ -145,11 +145,11 @@ export default function Leaderboard() {
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 ${style.size} transition-all duration-300 hover:shadow-xl`}
+                className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 ${style.size} transition-all duration-300 hover:shadow-xl max-w-full overflow-x-auto`}
               >
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-center sm:justify-between space-y-4 sm:space-y-0">
                   {/* Rank Badge */}
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-4"> 
                     <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${style.gradient} flex items-center justify-center text-2xl font-bold ${style.text} shadow-lg ${style.glow} border ${style.border}`}>
                       {style.badge}
                     </div>

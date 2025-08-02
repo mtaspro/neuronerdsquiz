@@ -155,11 +155,11 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto p-8">
         <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">Admin Dashboard</h1>
         
-        <div className="flex gap-4 mb-8">
+        <div className="flex gap-4 mb-8 overflow-x-auto no-scrollbar">
           {TABS.map(t => (
             <button
               key={t}
-              className={`px-4 py-2 rounded-lg transition-colors ${
+              className={`flex-shrink-0 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
                 tab === t 
                   ? 'bg-cyan-600 text-white' 
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
@@ -171,6 +171,28 @@ export default function AdminDashboard() {
           ))}
         </div>
         
+        {tab === 'Users' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-x-auto">
+            {loading ? (
+              <div className="p-8 text-center text-gray-600 dark:text-gray-400">Loading users...</div>
+            ) : (
+              <table className="w-full min-w-[600px]">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Username</th>
+                    <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Email</th>
+                    <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Admin</th>
+                    <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {users.map(u => (
+                    <tr key={u._id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <td className="p-4 text-gray-800 dark:text-white">{u.username}</td>
+                      <td className="p-4 text-gray-600 dark:text-gray-300">{u.email}</td>
+                      <td className="p-4">{u.isAdmin ? '✅' : ''}</td>
+                      <td className="p-4">
+        
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
             {error}
@@ -178,11 +200,11 @@ export default function AdminDashboard() {
         )}
         
         {tab === 'Users' && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-x-auto">
             {loading ? (
               <div className="p-8 text-center text-gray-600 dark:text-gray-400">Loading users...</div>
             ) : (
-              <table className="w-full">
+              <table className="w-full min-w-[600px]">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Username</th>
