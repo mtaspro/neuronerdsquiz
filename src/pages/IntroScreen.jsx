@@ -105,11 +105,11 @@ export default function IntroScreen() {
 
   const getThemeName = () => {
     const names = {
-      'tech-bg': 'Tech Matrix',
-      'tech-bg1': 'Cyber Circuit',
-      'tech-bg2': 'Neural Network',
-      'tech-bg3': 'Data Stream',
-      'tech-bg4': 'Quantum Field'
+      'tech-bg': 'LOONY CIRCLES',
+      'tech-bg1': 'CUTY KITTENS',
+      'tech-bg2': 'LIVING KING',
+      'tech-bg3': 'ALIEN ISOLATION',
+      'tech-bg4': 'NEUTRAL NATURE'
     };
     return names[currentTheme] || 'Tech Matrix';
   };
