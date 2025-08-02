@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { FaUser, FaCamera, FaUpload, FaSave, FaArrowLeft } from 'react-icons/fa';
+import { getAvatarUrl, getFallbackAvatar } from '../utils/avatarUtils';
 
 const ProfileEdit = () => {
   const [formData, setFormData] = useState({
@@ -44,7 +45,10 @@ const ProfileEdit = () => {
         email: userData.email || '',
         avatar: userData.avatar || avatarOptions[0]
       }));
-      setPreviewImage(userData.avatar || avatarOptions[0]);
+      
+      // Use the avatar utility to get the correct URL for display
+      const avatarUrl = getAvatarUrl(userData.avatar || avatarOptions[0]);
+      setPreviewImage(avatarUrl);
       setUseCustomImage(!avatarOptions.includes(userData.avatar || ''));
     } else {
       navigate('/login');
@@ -200,6 +204,12 @@ const ProfileEdit = () => {
     }
   };
 
+  // Handle image load error with fallback
+  const handleImageError = (e) => {
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    e.target.src = getFallbackAvatar(userData.username || 'User');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200">
       {/* Header */}
@@ -260,6 +270,7 @@ const ProfileEdit = () => {
                   src={previewImage}
                   alt="Profile Preview"
                   className="w-24 h-24 rounded-full mx-auto border-4 border-cyan-500 object-cover"
+                  onError={handleImageError}
                 />
               </div>
 

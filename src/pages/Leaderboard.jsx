@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { getAvatarUrl, getFallbackAvatar } from "../utils/avatarUtils";
 
 // Utility for rank badge and card styles
 const rankStyles = [
@@ -157,9 +158,10 @@ export default function Leaderboard() {
                     {/* Player Info */}
                     <div className="flex items-center space-x-4">
                       <img
-                        src={player.avatar}
+                        src={getAvatarUrl(player.avatar)}
                         alt={player.username}
-                        className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-600"
+                        className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-600 object-cover"
+                        onError={(e) => { e.target.src = getFallbackAvatar(player.username); }}
                       />
                       <div>
                         <h3 className="text-xl font-bold text-gray-800 dark:text-white">

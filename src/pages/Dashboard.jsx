@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog } from 'react-icons/fa';
+import { getAvatarUrl, getFallbackAvatar } from '../utils/avatarUtils';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -109,6 +110,14 @@ const Dashboard = () => {
               <p className="text-cyan-200 text-lg">Ready to test your knowledge?</p>
             </div>
             <div className="flex items-center space-x-4">
+              {user?.avatar && (
+                <img
+                  src={getAvatarUrl(user.avatar)}
+                  alt={user.username || 'User'}
+                  className="w-12 h-12 rounded-full border-2 border-cyan-300 object-cover"
+                  onError={(e) => { e.target.src = getFallbackAvatar(user.username || 'User'); }}
+                />
+              )}
               <div className="text-right">
                 <p className="text-sm text-cyan-200">Logged in as</p>
                 <p className="font-semibold text-white">{user?.email}</p>
