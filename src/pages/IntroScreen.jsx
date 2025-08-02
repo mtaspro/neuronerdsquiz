@@ -1,15 +1,42 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { FaPalette } from "react-icons/fa";
+import ThemeSelector from "../components/ThemeSelector";
+
+// Import all theme videos
 import techVideo from "../assets/tech-bg.mp4";
+import techVideo1 from "../assets/tech-bg1.mp4";
+import techVideo2 from "../assets/tech-bg2.mp4";
+import techVideo3 from "../assets/tech-bg3.mp4";
+import techVideo4 from "../assets/tech-bg4.mp4";
 
 export default function IntroScreen() {
   const [showVideo, setShowVideo] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const [particles, setParticles] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState('tech-bg');
   const navigate = useNavigate();
   const videoRef = useRef(null);
+
+  // Theme video mapping
+  const themeVideos = {
+    'tech-bg': techVideo,
+    'tech-bg1': techVideo1,
+    'tech-bg2': techVideo2,
+    'tech-bg3': techVideo3,
+    'tech-bg4': techVideo4
+  };
+
+  // Load saved theme from localStorage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('selectedTheme');
+    if (savedTheme && themeVideos[savedTheme]) {
+      setCurrentTheme(savedTheme);
+    }
+  }, []);
 
   // Check auth state on mount & storage changes
   useEffect(() => {
@@ -53,8 +80,62 @@ export default function IntroScreen() {
     };
   }, []);
 
+  // Handle theme change
+  const handleThemeChange = (themeId) => {
+    setCurrentTheme(themeId);
+    localStorage.setItem('selectedTheme', themeId);
+    
+    // Restart video with new theme
+    if (videoRef.current) {
+      videoRef.current.load();
+    }
+  };
+
+  // Get theme-specific gradient colors
+  const getThemeGradient = () => {
+    const gradients = {
+      'tech-bg': 'from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900',
+      'tech-bg1': 'from-green-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-green-900 dark:to-teal-900',
+      'tech-bg2': 'from-purple-50 via-pink-50 to-rose-50 dark:from-gray-900 dark:via-purple-900 dark:to-pink-900',
+      'tech-bg3': 'from-orange-50 via-red-50 to-pink-50 dark:from-gray-900 dark:via-orange-900 dark:to-red-900',
+      'tech-bg4': 'from-indigo-50 via-blue-50 to-cyan-50 dark:from-gray-900 dark:via-indigo-900 dark:to-blue-900'
+    };
+    return gradients[currentTheme] || gradients['tech-bg'];
+  };
+
+  const getThemeName = () => {
+    const names = {
+      'tech-bg': 'Tech Matrix',
+      'tech-bg1': 'Cyber Circuit',
+      'tech-bg2': 'Neural Network',
+      'tech-bg3': 'Data Stream',
+      'tech-bg4': 'Quantum Field'
+    };
+    return names[currentTheme] || 'Tech Matrix';
+  };
+
   return (
-    <div className="relative min-h-screen min-w-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 overflow-hidden transition-colors duration-300">
+    <div className={`relative min-h-screen min-w-full flex flex-col items-center justify-center bg-gradient-to-br ${getThemeGradient()} overflow-hidden transition-all duration-1000`}>
+      {/* Theme Selector Button */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: showContent ? 1 : 0, scale: showContent ? 1 : 0.8 }}
+        transition={{ duration: 0.5, delay: 1 }}
+        onClick={() => setShowThemeSelector(true)}
+        className="fixed top-4 right-4 z-20 bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm border border-white/30 dark:border-gray-700/30 rounded-full p-3 hover:bg-white/30 dark:hover:bg-gray-800/30 transition-all group"
+        title="Change Theme"
+      >
+        <FaPalette className="text-xl text-gray-700 dark:text-gray-300 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
+      </motion.button>
+
+      {/* Theme Selector Modal */}
+      <ThemeSelector
+        isOpen={showThemeSelector}
+        onClose={() => setShowThemeSelector(false)}
+        currentTheme={currentTheme}
+        onThemeChange={handleThemeChange}
+      />
+
       {/* Animated Background Particles */}
       <div className="absolute inset-0 overflow-hidden">
         {particles.map((particle) => (
@@ -80,21 +161,29 @@ export default function IntroScreen() {
         ))}
       </div>
 
-      {/* Background Video with faster fade-in */}
+      {/* Background Video with theme switching */}
       <motion.div
         className="absolute inset-0 w-full h-full pointer-events-none z-0"
         initial={{ opacity: 0 }}
         animate={{ opacity: showVideo ? 0.4 : 0 }}
         transition={{ duration: 1, ease: "easeOut" }}
+        key={currentTheme} // Force re-render when theme changes
       >
         <video
           ref={videoRef}
           className="w-full h-full object-cover"
-          src={techVideo}
+          src={themeVideos[currentTheme]}
           autoPlay
           loop
           muted
           playsInline
+          onError={(e) => {
+            console.log(`Video ${themeVideos[currentTheme]} failed to load`);
+            // Fallback to default theme
+            if (currentTheme !== 'tech-bg') {
+              setCurrentTheme('tech-bg');
+            }
+          }}
         />
       </motion.div>
 
@@ -167,6 +256,21 @@ export default function IntroScreen() {
               </motion.button>
             </>
           )}
+        </motion.div>
+
+        {/* Theme Indicator */}
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: showContent ? 0 : 30, opacity: showContent ? 1 : 0 }}
+          transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
+          className="mt-8"
+        >
+          <div className="inline-flex items-center space-x-2 bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 dark:border-gray-700/20">
+            <FaPalette className="text-sm text-gray-600 dark:text-gray-400" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Current theme: {getThemeName()}
+            </span>
+          </div>
         </motion.div>
 
         {/* Features */}
