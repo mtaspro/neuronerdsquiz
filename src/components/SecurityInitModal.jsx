@@ -25,8 +25,8 @@ const SecurityInitModal = ({
   const securityFeatures = [
     {
       icon: <FaDesktop className="text-blue-500" />,
-      title: 'Fullscreen Mode (Recommended)',
-      description: 'The quiz will attempt to run in fullscreen mode. If your browser blocks this, the quiz will continue with other security measures.'
+      title: 'Fullscreen Mode (Automatic)',
+      description: 'The quiz will automatically enter fullscreen mode when you start. This helps maintain focus and prevents distractions during the exam.'
     },
     {
       icon: <FaEye className="text-green-500" />,
@@ -71,16 +71,17 @@ const SecurityInitModal = ({
         {/* Content */}
         <div className="p-6">
           <div className="mb-6">
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
               <div className="flex items-start space-x-3">
-                <FaExclamationTriangle className="text-yellow-600 dark:text-yellow-400 text-xl flex-shrink-0 mt-0.5" />
+                <FaExpand className="text-blue-600 dark:text-blue-400 text-xl flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-1">
-                    Important Notice
+                  <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-1">
+                    Automatic Fullscreen
                   </h3>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                    This {quizType === 'battle' ? 'quiz battle' : 'quiz'} uses strict security measures to ensure fair play and prevent cheating. 
-                    Please read and understand the following security features before proceeding.
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    When you click "Accept & Start {quizType === 'battle' ? 'Battle' : 'Quiz'}", the browser will automatically 
+                    enter fullscreen mode to provide an optimal exam environment. If fullscreen fails, 
+                    the quiz will continue with other security measures.
                   </p>
                 </div>
               </div>
@@ -139,7 +140,7 @@ const SecurityInitModal = ({
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 I understand and agree to the security measures. I acknowledge that violating these 
                 security protocols may result in automatic submission of my {quizType === 'battle' ? 'battle' : 'quiz'} 
-                and potential disqualification.
+                and potential disqualification. I also understand that the browser will attempt to enter fullscreen mode.
               </span>
             </label>
           </div>
@@ -162,7 +163,7 @@ const SecurityInitModal = ({
               {isInitializing ? (
                 <div className="flex items-center justify-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Initializing Security...</span>
+                  <span>Initializing Security & Fullscreen...</span>
                 </div>
               ) : (
                 <div className="flex items-center justify-center space-x-2">

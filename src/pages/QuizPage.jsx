@@ -147,7 +147,7 @@ export default function QuizPage() {
     try {
       console.log('🔒 Starting security initialization...');
       
-      // Initialize security system
+      // Initialize security system (this will automatically attempt fullscreen)
       const success = await initializeSecurity();
       
       console.log('🔒 Security initialization result:', success);
@@ -252,24 +252,15 @@ export default function QuizPage() {
         />
       )}
 
-      {/* Security Status Indicator */}
+      {/* Security Status Indicator - Simplified without manual fullscreen button */}
       {securityActive && (
-        <div className="fixed top-4 right-4 z-40 flex flex-col space-y-2">
+        <div className="fixed top-4 right-4 z-40">
           <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
             🔒 Secure Mode {warnings > 0 && `(${remainingWarnings} warnings left)`}
           </div>
-          {!isFullscreen && (
-            <button
-              onClick={enterFullscreen}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1 transition-colors"
-              title="Click to enter fullscreen mode"
-            >
-              <span>📺</span>
-              <span>Fullscreen</span>
-            </button>
-          )}
         </div>
       )}
+
       {/* Header */}
       <div className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-4xl mx-auto px-4 py-4">
