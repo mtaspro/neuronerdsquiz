@@ -339,8 +339,7 @@ export default function QuizPage() {
                       {selectedOption === index && (
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       )}
-                    </div>
-                    <span className="font-medium">{option}</span>
+                      <span className="font-medium">{option}</span>
                   </div>
                 </motion.button>
               ))}

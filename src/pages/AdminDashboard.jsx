@@ -191,82 +191,18 @@ export default function AdminDashboard() {
                       <td className="p-4 text-gray-800 dark:text-white">{u.username}</td>
                       <td className="p-4 text-gray-600 dark:text-gray-300">{u.email}</td>
                       <td className="p-4">{u.isAdmin ? '✅' : ''}</td>
-                      <td className="p-4">
-        
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
-            {error}
-          </div>
-        )}
-        
-        {tab === 'Users' && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-x-auto">
-            {loading ? (
-              <div className="p-8 text-center text-gray-600 dark:text-gray-400">Loading users...</div>
-            ) : (
-              <table className="w-full min-w-[600px]">
-                <thead className="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Username</th>
-                    <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Email</th>
-                    <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Admin</th>
-                    <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {users.map(u => (
-                    <tr key={u._id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                      <td className="p-4 text-gray-800 dark:text-white">{u.username}</td>
-                      <td className="p-4 text-gray-600 dark:text-gray-300">{u.email}</td>
-                      <td className="p-4">{u.isAdmin ? '✅' : ''}</td>
-                      <td className="p-4">
-                        <div className="flex space-x-2">
-                          <button
-                            className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm transition-colors"
-                            onClick={() => {
-                              if (window.confirm('Reset this user\'s score?')) {
-                                setLoading(true);
-                                const apiUrl = import.meta.env.VITE_API_URL || '';
-                                axios.post(`${apiUrl}/api/admin/users/${u._id}/reset-score`, {}, { headers: authHeader() })
-                                  .then(() => alert('Score reset!'))
-                                  .catch(() => setError('Failed to reset score'))
-                                  .finally(() => setLoading(false));
-                              }
-                            }}
-                          >
-                            Reset Score
-                          </button>
-                          {!u.isAdmin && (
-                            <button
-                              className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors"
-                              onClick={() => {
-                                if (window.confirm(`Are you sure you want to delete user "${u.username}"? This action cannot be undone and the user will need to register again.`)) {
-                                  setLoading(true);
-                                  const apiUrl = import.meta.env.VITE_API_URL || '';
-                                  axios.delete(`${apiUrl}/api/admin/users/${u._id}`, { headers: authHeader() })
-                                    .then(() => {
-                                      alert('User deleted successfully!');
-                                      // Refresh users list
-                                      setUsers(users => users.filter(user => user._id !== u._id));
-                                    })
-                                    .catch((err) => {
-                                      const errorMsg = err.response?.data?.error || 'Failed to delete user';
-                                      setError(errorMsg);
-                                    })
-                                    .finally(() => setLoading(false));
-                                }
-                              }}
-                            >
-                              Delete User
-                            </button>
-                          )}
-                        </div>
-                      </td>
+                      <td className="p-4"></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             )}
+          </div>
+        )}
+        
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
+            {error}
           </div>
         )}
 
