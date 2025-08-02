@@ -9,7 +9,9 @@ import leaderboardRouter from './routes/leaderboard.js';
 import authRouter from './routes/auth.js';
 import quizRouter from './routes/quiz.js';
 import adminRouter from './routes/admin.js';
+import badgeRouter from './routes/badges.js';
 import BattleService from './services/battleService.js';
+import BadgeService from './services/badgeService.js';
 import UserScore from './models/UserScore.js';
 
 console.log('Auth router imported:', !!authRouter);
@@ -138,7 +140,11 @@ mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-  .then(() => console.log('✅ MongoDB connected!'))
+  .then(() => {
+    console.log('✅ MongoDB connected!');
+    // Initialize badges after MongoDB connection
+    initializeBadges();
+  })
   .catch((err) => {
     console.error('❌ MongoDB connection error:', err);
     process.exit(1);
@@ -146,6 +152,20 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Battle service instance
 const battleService = new BattleService();
+
+// Badge service instance
+const badgeService = new BadgeService();
+
+// Initialize badges
+async function initializeBadges() {
+  try {
+    console.log('🏆 Initializing badge system...');
+    await badgeService.initializeBadges();
+    console.log('✅ Badge system initialized successfully');
+  } catch (error) {
+    console.error('❌ Error initializing badge system:', error);
+  }
+}
 
 // Function to save battle results to leaderboard
 async function saveBattleResultsToLeaderboard(battleResults) {
@@ -174,6 +194,14 @@ async function saveBattleResultsToLeaderboard(battleResults) {
           await newScore.save();
           console.log(`🆕 Added ${result.username} to leaderboard: ${result.score}`);
         }
+
+        // Update battle stats for badge calculation
+        await badgeService.updateBattleStats(result.userId, {
+          won: result.rank === 1,
+          score: result.score,
+          timeSpent: result.totalTime
+        });
+        
       } catch (userError) {
         console.error(`❌ Error saving score for ${result.username}:`, userError);
       }
@@ -268,7 +296,7 @@ io.on('connection', (socket) => {
       if (result.allFinished) {
         const battleResults = battleService.endBattle(roomId);
         
-        // Save battle results to leaderboard
+        // Save battle results to leaderboard and update badges
         saveBattleResultsToLeaderboard(battleResults);
         
         io.to(roomId).emit('battleEnded', battleResults);
@@ -340,6 +368,8 @@ console.log('Mounting quiz router...');
 app.use('/api/quizzes', quizRouter);
 console.log('Mounting admin router...');
 app.use('/api/admin', adminRouter);
+console.log('Mounting badge router...');
+app.use('/api/badges', badgeRouter);
 console.log('All routers mounted successfully');
 
 // Test route for API connectivity
