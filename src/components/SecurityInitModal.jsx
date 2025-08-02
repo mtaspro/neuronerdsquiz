@@ -11,15 +11,70 @@ const SecurityInitModal = ({
   const [hasAccepted, setHasAccepted] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
 
+  // Function to attempt fullscreen immediately
+  const attemptFullscreen = async () => {
+    try {
+      const element = document.documentElement;
+      
+      // Check if fullscreen is supported
+      const isFullscreenSupported = !!(
+        element.requestFullscreen ||
+        element.webkitRequestFullscreen ||
+        element.msRequestFullscreen ||
+        element.mozRequestFullScreen
+      );
+
+      if (!isFullscreenSupported) {
+        console.warn('⚠️ Fullscreen API not supported in this browser');
+        return false;
+      }
+
+      // Check if already in fullscreen
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.msFullscreenElement ||
+        document.mozFullScreenElement
+      );
+
+      if (isCurrentlyFullscreen) {
+        console.log('✅ Already in fullscreen mode');
+        return true;
+      }
+
+      console.log('🖥️ Requesting fullscreen immediately...');
+      
+      // Try different fullscreen methods
+      if (element.requestFullscreen) {
+        await element.requestFullscreen({ navigationUI: "hide" });
+      } else if (element.webkitRequestFullscreen) {
+        await element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+      } else if (element.msRequestFullscreen) {
+        await element.msRequestFullscreen();
+      } else if (element.mozRequestFullScreen) {
+        await element.mozRequestFullScreen();
+      }
+      
+      console.log('✅ Fullscreen request sent successfully');
+      return true;
+      
+    } catch (error) {
+      console.warn('⚠️ Fullscreen request failed:', error);
+      return false;
+    }
+  };
+
   const handleAccept = async () => {
     if (!hasAccepted) return;
     
     setIsInitializing(true);
     
-    // Small delay to show loading state
-    setTimeout(() => {
-      onAccept();
-    }, 1000);
+    // Attempt fullscreen immediately while we have user gesture
+    console.log('🔒 Attempting fullscreen before security initialization...');
+    await attemptFullscreen();
+    
+    // Call onAccept immediately after fullscreen attempt
+    onAccept();
   };
 
   const securityFeatures = [
@@ -163,7 +218,7 @@ const SecurityInitModal = ({
               {isInitializing ? (
                 <div className="flex items-center justify-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Initializing Security & Fullscreen...</span>
+                  <span>Starting {quizType === 'battle' ? 'Battle' : 'Quiz'}...</span>
                 </div>
               ) : (
                 <div className="flex items-center justify-center space-x-2">
