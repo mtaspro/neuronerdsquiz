@@ -23,6 +23,60 @@ const useExamSecurity = ({
     warningsRef.current = warnings;
   }, [isActive, warnings]);
 
+  // Check if currently in fullscreen (define first to avoid circular dependency)
+  const checkFullscreen = useCallback(() => {
+    return !!(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.msFullscreenElement ||
+      document.mozFullScreenElement
+    );
+  }, []);
+
+  // Handle security violation (define early to avoid circular dependency)
+  const handleViolation = useCallback((type, details = '') => {
+    if (!isActiveRef.current) return;
+
+    const newWarnings = warningsRef.current + 1;
+    setWarnings(newWarnings);
+    warningsRef.current = newWarnings;
+
+    const violationData = {
+      type,
+      details,
+      warnings: newWarnings,
+      maxWarnings,
+      timestamp: new Date().toISOString()
+    };
+
+    onSecurityViolation(violationData);
+
+    if (newWarnings >= maxWarnings) {
+      setSecurityStatus('violated');
+      onAutoSubmit({
+        reason: 'Security violations exceeded',
+        totalViolations: newWarnings,
+        lastViolationType: type
+      });
+    }
+  }, [maxWarnings, onSecurityViolation, onAutoSubmit]);
+
+  const exitFullscreen = useCallback(async () => {
+    try {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        await document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        await document.msExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        await document.mozCancelFullScreen();
+      }
+    } catch (error) {
+      console.warn('Exit fullscreen failed:', error);
+    }
+  }, []);
+
   // Fullscreen management with multiple attempts
   const enterFullscreen = useCallback(async () => {
     if (!enableFullscreen) {
@@ -105,60 +159,6 @@ const useExamSecurity = ({
       return true; // Don't fail the security system, just continue without fullscreen
     }
   }, [enableFullscreen, checkFullscreen]);
-
-  const exitFullscreen = useCallback(async () => {
-    try {
-      if (document.exitFullscreen) {
-        await document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        await document.webkitExitFullscreen();
-      } else if (document.msExitFullscreen) {
-        await document.msExitFullscreen();
-      } else if (document.mozCancelFullScreen) {
-        await document.mozCancelFullScreen();
-      }
-    } catch (error) {
-      console.warn('Exit fullscreen failed:', error);
-    }
-  }, []);
-
-  // Check if currently in fullscreen
-  const checkFullscreen = useCallback(() => {
-    return !!(
-      document.fullscreenElement ||
-      document.webkitFullscreenElement ||
-      document.msFullscreenElement ||
-      document.mozFullScreenElement
-    );
-  }, []);
-
-  // Handle security violation
-  const handleViolation = useCallback((type, details = '') => {
-    if (!isActiveRef.current) return;
-
-    const newWarnings = warningsRef.current + 1;
-    setWarnings(newWarnings);
-    warningsRef.current = newWarnings;
-
-    const violationData = {
-      type,
-      details,
-      warnings: newWarnings,
-      maxWarnings,
-      timestamp: new Date().toISOString()
-    };
-
-    onSecurityViolation(violationData);
-
-    if (newWarnings >= maxWarnings) {
-      setSecurityStatus('violated');
-      onAutoSubmit({
-        reason: 'Security violations exceeded',
-        totalViolations: newWarnings,
-        lastViolationType: type
-      });
-    }
-  }, [maxWarnings, onSecurityViolation, onAutoSubmit]);
 
   // Fullscreen change handler
   const handleFullscreenChange = useCallback(() => {
