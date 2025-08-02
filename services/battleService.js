@@ -15,8 +15,10 @@ class BattleService {
       currentQuestion: 0,
       questions: [],
       startTime: null,
+      endTime: null,
       maxUsers: this.maxUsersPerRoom,
-      createdAt: new Date()
+      createdAt: new Date(),
+      isActive: true // Track if room is still accepting new users
     };
     
     this.battleRooms.set(roomId, room);
@@ -36,14 +38,23 @@ class BattleService {
       room = this.createRoom(roomId);
     }
 
+    // Check if room is still active for new users
+    if (!room.isActive) {
+      throw new Error('❌ This battle room is no longer accepting new players.');
+    }
+
     // Check if room is full
     if (room.users.size >= room.maxUsers) {
       throw new Error('Room is full');
     }
 
-    // Check if battle is already in progress
-    if (room.status === 'active' || room.status === 'finished') {
-      throw new Error('Battle is already in progress');
+    // Check if battle is already in progress or finished
+    if (room.status === 'active') {
+      throw new Error('❌ This battle is already in progress. Please join a new one.');
+    }
+    
+    if (room.status === 'finished') {
+      throw new Error('❌ This battle has ended. Please join a new one.');
     }
 
     // Add user to room
@@ -164,25 +175,35 @@ class BattleService {
     if (!room) return null;
 
     room.status = 'finished';
+    room.endTime = new Date();
+    room.isActive = false; // Mark room as inactive for new users
     
     // Calculate final results
     const results = Array.from(room.users.values())
-      .map(user => ({
+      .map((user, index) => ({
         userId: user.id,
         username: user.username,
         score: user.score,
-        totalTime: new Date() - room.startTime,
+        rank: 0, // Will be set after sorting
+        totalTime: room.endTime - room.startTime,
         answers: user.answers,
         correctAnswers: user.answers.filter(a => a?.isCorrect).length,
         totalQuestions: room.questions.length
       }))
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => b.score - a.score)
+      .map((result, index) => ({ ...result, rank: index + 1 }));
+
+    // Schedule room cleanup after 10 minutes
+    setTimeout(() => {
+      this.battleRooms.delete(roomId);
+      console.log(`🗑️ Cleaned up finished battle room: ${roomId}`);
+    }, 10 * 60 * 1000); // 10 minutes
 
     return {
       results,
       questions: room.questions,
       startTime: room.startTime,
-      endTime: new Date()
+      endTime: room.endTime
     };
   }
 
@@ -209,7 +230,10 @@ class BattleService {
       id: room.id,
       userCount: room.users.size,
       status: room.status,
+      isActive: room.isActive,
       maxUsers: room.maxUsers,
+      startTime: room.startTime,
+      endTime: room.endTime,
       users: Array.from(room.users.values()).map(user => ({
         id: user.id,
         username: user.username,
@@ -226,7 +250,9 @@ class BattleService {
       id: room.id,
       userCount: room.users.size,
       status: room.status,
-      maxUsers: room.maxUsers
+      isActive: room.isActive,
+      maxUsers: room.maxUsers,
+      createdAt: room.createdAt
     }));
   }
 
@@ -235,9 +261,14 @@ class BattleService {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     
     for (const [roomId, room] of this.battleRooms.entries()) {
-      if (room.status === 'waiting' && room.createdAt < oneHourAgo) {
+      // Clean up waiting rooms older than 1 hour or finished rooms older than 10 minutes
+      const shouldCleanup = 
+        (room.status === 'waiting' && room.createdAt < oneHourAgo) ||
+        (room.status === 'finished' && room.endTime && room.endTime < new Date(Date.now() - 10 * 60 * 1000));
+      
+      if (shouldCleanup) {
         this.battleRooms.delete(roomId);
-        console.log(`Cleaned up inactive room: ${roomId}`);
+        console.log(`🗑️ Cleaned up inactive room: ${roomId} (status: ${room.status})`);
       }
     }
   }
@@ -255,4 +286,4 @@ class BattleService {
   }
 }
 
-export default BattleService; 
+export default BattleService;

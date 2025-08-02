@@ -7,12 +7,13 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import useExamSecurity from "../hooks/useExamSecurity";
 import SecurityWarning from "../components/SecurityWarning";
 import SecurityInitModal from "../components/SecurityInitModal";
+import axios from "axios";
 
 export default function QuizPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const chapter = location.state?.chapter;
-  const { error: showError } = useNotification();
+  const { error: showError, success: showSuccess } = useNotification();
   const [questions, setQuestions] = useState([]);
   const [duration, setDuration] = useState(60); // default fallback
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -22,6 +23,12 @@ export default function QuizPage() {
   const [warning, setWarning] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Practice mode states
+  const [practiceMode, setPracticeMode] = useState(false);
+  const [hasAttempted, setHasAttempted] = useState(false);
+  const [previousAttempt, setPreviousAttempt] = useState(null);
+  const [checkingAttempt, setCheckingAttempt] = useState(false);
 
   // Security system state
   const [showSecurityModal, setShowSecurityModal] = useState(false);
@@ -30,20 +37,74 @@ export default function QuizPage() {
   const [quizStarted, setQuizStarted] = useState(false);
 
   // Define handleSubmit first to avoid circular dependency
-  const handleSubmit = useCallback((finalAnswers = answers) => {
-    // Calculate score
-    let score = 0;
-    questions.forEach((q, i) => {
-      // Support both correctAnswer (string) and correctAnswerIndex (number)
-      if (
-        (typeof q.correctAnswerIndex === 'number' && finalAnswers[i] === q.correctAnswerIndex) ||
-        (typeof q.correctAnswer === 'string' && q.options[finalAnswers[i]] === q.correctAnswer)
-      ) {
-        score++;
-      }
-    });
-    navigate("/result", { state: { score, total: questions.length } });
-  }, [answers, questions, navigate]);
+  const handleSubmit = useCallback(async (finalAnswers = answers) => {
+    try {
+      // Calculate score
+      let score = 0;
+      let correctAnswers = 0;
+      
+      questions.forEach((q, i) => {
+        const isCorrect = (typeof q.correctAnswerIndex === 'number' && finalAnswers[i] === q.correctAnswerIndex) ||
+                         (typeof q.correctAnswer === 'string' && q.options[finalAnswers[i]] === q.correctAnswer);
+        if (isCorrect) {
+          score++;
+          correctAnswers++;
+        }
+      });
+
+      // Calculate time spent
+      const timeSpent = (duration - timer) * 1000; // Convert to milliseconds
+
+      // Submit to backend
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = localStorage.getItem('authToken');
+      
+      const submitData = {
+        score,
+        totalQuestions: questions.length,
+        correctAnswers,
+        timeSpent,
+        chapter,
+        answers: finalAnswers,
+        questions // Include questions for quiz ID generation
+      };
+
+      const response = await axios.post(`${apiUrl}/api/quizzes/submit`, submitData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const result = response.data;
+      
+      // Navigate to result with additional info
+      navigate("/result", { 
+        state: { 
+          score, 
+          total: questions.length,
+          practiceMode: result.practiceMode,
+          isFirstAttempt: result.isFirstAttempt,
+          previousBestScore: result.previousBestScore,
+          improved: result.improved,
+          leaderboardUpdated: result.leaderboardUpdated,
+          badgesUpdated: result.badgesUpdated,
+          currentBadges: result.currentBadges
+        } 
+      });
+
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+      showError('Failed to submit quiz. Please try again.');
+      
+      // Fallback to local result calculation
+      let score = 0;
+      questions.forEach((q, i) => {
+        if ((typeof q.correctAnswerIndex === 'number' && finalAnswers[i] === q.correctAnswerIndex) ||
+            (typeof q.correctAnswer === 'string' && q.options[finalAnswers[i]] === q.correctAnswer)) {
+          score++;
+        }
+      });
+      navigate("/result", { state: { score, total: questions.length, error: true } });
+    }
+  }, [answers, questions, navigate, duration, timer, chapter, showError]);
 
   // Security system hook (full version with all features)
   const {
@@ -74,6 +135,40 @@ export default function QuizPage() {
     enableExitConfirmation: true
   });
 
+  // Check if user has already attempted this quiz
+  const checkQuizAttempt = useCallback(async (quizQuestions) => {
+    try {
+      setCheckingAttempt(true);
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = localStorage.getItem('authToken');
+      
+      const response = await axios.post(`${apiUrl}/api/quizzes/check-attempt`, {
+        chapter,
+        questions: quizQuestions
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const { hasAttempted, previousAttempt } = response.data;
+      
+      setHasAttempted(hasAttempted);
+      setPreviousAttempt(previousAttempt);
+      setPracticeMode(hasAttempted);
+      
+      if (hasAttempted) {
+        showSuccess(`Practice Mode: You've already completed this quiz with a score of ${previousAttempt.score}/${previousAttempt.totalQuestions}`);
+      }
+      
+    } catch (error) {
+      console.error('Error checking quiz attempt:', error);
+      // Continue anyway - assume first attempt
+      setHasAttempted(false);
+      setPracticeMode(false);
+    } finally {
+      setCheckingAttempt(false);
+    }
+  }, [chapter, showSuccess]);
+
   useEffect(() => {
     async function fetchQuiz() {
       setLoading(true);
@@ -96,6 +191,9 @@ export default function QuizPage() {
           setQuestions(quizzes);
           setDuration(quizzes[0]?.duration || 60);
           setTimer(quizzes[0]?.duration || 60);
+          
+          // Check if user has already attempted this quiz
+          await checkQuizAttempt(quizzes);
         }
       } catch (err) {
         console.error('Failed to fetch quiz:', err);
@@ -109,14 +207,14 @@ export default function QuizPage() {
       }
     }
     fetchQuiz();
-  }, [chapter, showError]);
+  }, [chapter, showError, checkQuizAttempt]);
 
-  // Show security modal when quiz is loaded
+  // Show security modal when quiz is loaded (only if not in practice mode or user wants security anyway)
   useEffect(() => {
-    if (!loading && questions.length > 0 && !quizStarted) {
+    if (!loading && !checkingAttempt && questions.length > 0 && !quizStarted) {
       setShowSecurityModal(true);
     }
-  }, [loading, questions, quizStarted]);
+  }, [loading, checkingAttempt, questions, quizStarted]);
 
   // Timer logic - only start when quiz is actually started
   useEffect(() => {
@@ -198,16 +296,17 @@ export default function QuizPage() {
     setTimer(duration); // reset timer for next question if per-question timer, else keep running
   }, [answers, currentQuestionIndex, selectedOption, questions.length, duration, handleSubmit]);
 
-  if (loading) {
+  if (loading || checkingAttempt) {
     return (
       <LoadingSpinner 
         fullScreen={true} 
-        text="Loading quiz questions..." 
+        text={checkingAttempt ? "Checking quiz status..." : "Loading quiz questions..."} 
         size="large" 
         color="cyan" 
       />
     );
   }
+  
   if (questions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
@@ -252,7 +351,7 @@ export default function QuizPage() {
         />
       )}
 
-      {/* Security Status Indicator - Simplified without manual fullscreen button */}
+      {/* Security Status Indicator */}
       {securityActive && (
         <div className="fixed top-4 right-4 z-40">
           <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
@@ -261,13 +360,34 @@ export default function QuizPage() {
         </div>
       )}
 
+      {/* Practice Mode Indicator */}
+      {practiceMode && (
+        <div className="fixed top-4 left-4 z-40">
+          <div className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+            🔄 Practice Mode
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-              Quiz: {chapter}
-            </h1>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+                Quiz: {chapter}
+              </h1>
+              {practiceMode && (
+                <div className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                  Practice Mode - Results won't affect your stats or badges
+                </div>
+              )}
+              {previousAttempt && (
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Previous best: {previousAttempt.score}/{previousAttempt.totalQuestions} on {new Date(previousAttempt.submittedAt).toLocaleDateString()}
+                </div>
+              )}
+            </div>
             <div className="text-right">
               <div className={`text-2xl font-bold ${warning ? 'text-red-500 dark:text-red-400' : 'text-gray-800 dark:text-white'}`}>
                 {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')}
@@ -283,7 +403,11 @@ export default function QuizPage() {
           {/* Progress Bar */}
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <motion.div
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 h-2 rounded-full"
+              className={`h-2 rounded-full ${
+                practiceMode 
+                  ? 'bg-gradient-to-r from-orange-500 to-yellow-600' 
+                  : 'bg-gradient-to-r from-cyan-500 to-blue-600'
+              }`}
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.3 }}
@@ -323,7 +447,9 @@ export default function QuizPage() {
                   onClick={() => handleOptionSelect(index)}
                   className={`w-full text-left p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 ${
                     selectedOption === index
-                      ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-800 dark:text-cyan-200'
+                      ? practiceMode
+                        ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200'
+                        : 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-800 dark:text-cyan-200'
                       : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500 text-gray-800 dark:text-white'
                   }`}
                 >
@@ -354,7 +480,11 @@ export default function QuizPage() {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleNext}
                 disabled={selectedOption === null}
-                className="px-6 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
+                className={`px-6 py-2 text-white rounded-lg transition-colors disabled:cursor-not-allowed ${
+                  practiceMode
+                    ? 'bg-gradient-to-r from-orange-600 to-yellow-600 hover:from-orange-700 hover:to-yellow-700 disabled:from-gray-400 disabled:to-gray-500'
+                    : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500'
+                }`}
               >
                 {currentQuestionIndex === questions.length - 1 ? 'Submit Quiz' : 'Next'}
               </motion.button>
