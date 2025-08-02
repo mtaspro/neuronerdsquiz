@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiHelpers } from "../utils/api";
@@ -28,6 +28,22 @@ export default function QuizPage() {
   const [securityActive, setSecurityActive] = useState(false);
   const [currentViolation, setCurrentViolation] = useState(null);
   const [quizStarted, setQuizStarted] = useState(false);
+
+  // Define handleSubmit first to avoid circular dependency
+  const handleSubmit = useCallback((finalAnswers = answers) => {
+    // Calculate score
+    let score = 0;
+    questions.forEach((q, i) => {
+      // Support both correctAnswer (string) and correctAnswerIndex (number)
+      if (
+        (typeof q.correctAnswerIndex === 'number' && finalAnswers[i] === q.correctAnswerIndex) ||
+        (typeof q.correctAnswer === 'string' && q.options[finalAnswers[i]] === q.correctAnswer)
+      ) {
+        score++;
+      }
+    });
+    navigate("/result", { state: { score, total: questions.length } });
+  }, [answers, questions, navigate]);
 
   // Security system hook
   const {
@@ -112,7 +128,7 @@ export default function QuizPage() {
     if (timer === 10) setWarning(true);
     const interval = setInterval(() => setTimer((t) => t - 1), 1000);
     return () => clearInterval(interval);
-  }, [timer, loading, questions, quizStarted]);
+  }, [timer, loading, questions, quizStarted, handleSubmit]);
 
   // Cleanup security on unmount
   useEffect(() => {
@@ -164,11 +180,11 @@ export default function QuizPage() {
     setCurrentViolation(null);
   };
 
-  function handleOptionSelect(idx) {
+  const handleOptionSelect = useCallback((idx) => {
     setSelectedOption(idx);
-  }
+  }, []);
 
-  function handleNext() {
+  const handleNext = useCallback(() => {
     const updatedAnswers = [...answers];
     updatedAnswers[currentQuestionIndex] = selectedOption;
     setAnswers(updatedAnswers);
@@ -180,22 +196,7 @@ export default function QuizPage() {
     }
     setCurrentQuestionIndex((i) => i + 1);
     setTimer(duration); // reset timer for next question if per-question timer, else keep running
-  }
-
-  function handleSubmit(finalAnswers = answers) {
-    // Calculate score
-    let score = 0;
-    questions.forEach((q, i) => {
-      // Support both correctAnswer (string) and correctAnswerIndex (number)
-      if (
-        (typeof q.correctAnswerIndex === 'number' && finalAnswers[i] === q.correctAnswerIndex) ||
-        (typeof q.correctAnswer === 'string' && q.options[finalAnswers[i]] === q.correctAnswer)
-      ) {
-        score++;
-      }
-    });
-    navigate("/result", { state: { score, total: questions.length } });
-  }
+  }, [answers, currentQuestionIndex, selectedOption, questions.length, duration, handleSubmit]);
 
   if (loading) {
     return (
