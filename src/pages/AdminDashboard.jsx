@@ -19,9 +19,22 @@ export default function AdminDashboard() {
 
   function authHeader() {
     const token = localStorage.getItem('authToken');
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    
     console.log('AdminDashboard - Token from localStorage:', token ? 'Present' : 'Missing');
+    console.log('AdminDashboard - User Data:', userData);
+    console.log('AdminDashboard - Is Admin:', userData.isAdmin);
+    
     if (token) {
       console.log('AdminDashboard - Token length:', token.length);
+      try {
+        // Log the token parts (without revealing the signature)
+        const [header, payload] = token.split('.');
+        console.log('AdminDashboard - Token header:', atob(header));
+        console.log('AdminDashboard - Token payload:', atob(payload));
+      } catch (e) {
+        console.error('AdminDashboard - Invalid token format');
+      }
     }
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
@@ -29,12 +42,46 @@ export default function AdminDashboard() {
   // Load users
   useEffect(() => {
     if (tab !== 'Users') return;
-    setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.get(`${apiUrl}/api/admin/users`, { headers: authHeader() })
-      .then(res => setUsers(res.data))
-      .catch(() => setError('Failed to load users'))
-      .finally(() => setLoading(false));
+    
+    const loadUsers = async () => {
+      setLoading(true);
+      setError('');
+      
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        console.log('AdminDashboard - API URL:', apiUrl);
+        
+        // First validate the token
+        const validationResponse = await axios.get(`${apiUrl}/api/auth/validate`, { 
+          headers: authHeader() 
+        });
+        console.log('AdminDashboard - Token validation:', validationResponse.data);
+        
+        if (!validationResponse.data.valid || !validationResponse.data.isAdmin) {
+          throw new Error('Not authorized as admin');
+        }
+        
+        const response = await axios.get(`${apiUrl}/api/admin/users`, { 
+          headers: authHeader() 
+        });
+        setUsers(response.data);
+      } catch (err) {
+        console.error('AdminDashboard - Error:', err.response || err);
+        const errorMessage = err.response?.data?.error || err.message || 'Failed to load users';
+        setError(errorMessage);
+        
+        // If token is invalid, clear auth data
+        if (err.response?.status === 401) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
+          window.location.href = '/login';
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUsers();
   }, [tab]);
 
   // Load chapters
