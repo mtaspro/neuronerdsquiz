@@ -4,6 +4,10 @@ import User from '../models/User.js';
 import UserScore from '../models/UserScore.js';
 import Quiz from '../models/Quiz.js';
 import Chapter from '../models/Chapter.js';
+import UserStats from '../models/UserStats.js';
+import Badge from '../models/Badge.js';
+import UserQuizRecord from '../models/UserQuizRecord.js';
+import BadgeService from '../services/badgeService.js';
 
 const router = express.Router();
 
@@ -13,10 +17,45 @@ router.get('/users', authMiddleware, requireAdmin, async (req, res) => {
   res.json(users);
 });
 
-// Reset a user's score
+// Reset a user's score and stats
 router.post('/users/:id/reset-score', authMiddleware, requireAdmin, async (req, res) => {
-  await UserScore.deleteMany({ user: req.params.id });
-  res.json({ message: 'User score reset' });
+  try {
+    const userId = req.params.id;
+    
+    // Find the user first
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    console.log(`🔄 Resetting all data for user: ${user.username}`);
+    
+    // 1. Delete user's scores from leaderboard
+    await UserScore.deleteMany({ user: userId });
+    await UserScore.deleteMany({ username: user.username });
+    console.log('✅ Deleted user scores');
+    
+    // 2. Delete user's stats (including badge statistics)
+    await UserStats.deleteMany({ userId: userId });
+    await UserStats.deleteMany({ username: user.username });
+    console.log('✅ Deleted user stats');
+    
+    // 3. Delete user's quiz records
+    await UserQuizRecord.deleteMany({ userId: userId });
+    console.log('✅ Deleted user quiz records');
+    
+    // 4. Remove user from any badges they currently hold and recalculate
+    const badgeService = new BadgeService();
+    await badgeService.recalculateAllBadges();
+    console.log('✅ Recalculated all badges');
+    
+    console.log(`🎉 Successfully reset all data for user: ${user.username}`);
+    res.json({ message: `User ${user.username}'s scores, stats, and badges have been reset` });
+    
+  } catch (error) {
+    console.error('Error resetting user data:', error);
+    res.status(500).json({ error: 'Failed to reset user data' });
+  }
 });
 
 // Delete a user completely
@@ -128,10 +167,57 @@ router.delete('/questions/:id', authMiddleware, requireAdmin, async (req, res) =
   res.json({ message: 'Question deleted' });
 });
 
-// Reset leaderboard (delete all scores)
+// Reset leaderboard (delete all scores, stats, badges, and quiz records)
 router.post('/leaderboard/reset', authMiddleware, requireAdmin, async (req, res) => {
-  await UserScore.deleteMany({});
-  res.json({ message: 'Leaderboard reset' });
+  try {
+    console.log('🔄 Starting complete leaderboard reset...');
+    
+    // 1. Delete all user scores from leaderboard
+    await UserScore.deleteMany({});
+    console.log('✅ Deleted all user scores');
+    
+    // 2. Delete all user stats (including badge statistics)
+    await UserStats.deleteMany({});
+    console.log('✅ Deleted all user stats');
+    
+    // 3. Reset all badges (clear current holders and history)
+    await Badge.updateMany(
+      {},
+      {
+        $unset: {
+          currentHolderId: 1,
+          currentHolderUsername: 1,
+          currentValue: 1
+        },
+        $set: {
+          previousHolders: [],
+          lastUpdated: new Date()
+        }
+      }
+    );
+    console.log('✅ Reset all badge holders');
+    
+    // 4. Delete all quiz attempt records
+    await UserQuizRecord.deleteMany({});
+    console.log('✅ Deleted all quiz records');
+    
+    // 5. Re-initialize the badge system to ensure clean state
+    const badgeService = new BadgeService();
+    await badgeService.initializeBadges();
+    console.log('✅ Re-initialized badge system');
+    
+    console.log('🎉 Complete leaderboard reset successful!');
+    res.json({ 
+      message: 'Complete leaderboard reset successful! All scores, stats, badges, and quiz records have been cleared.' 
+    });
+    
+  } catch (error) {
+    console.error('❌ Error during leaderboard reset:', error);
+    res.status(500).json({ 
+      error: 'Failed to reset leaderboard completely',
+      details: error.message 
+    });
+  }
 });
 
 export default router;
