@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const TABS = ['Users', 'Chapters', 'Questions', 'Leaderboard Reset'];
@@ -8,8 +9,31 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [chapters, setChapters] = useState([]);
   const [questions, setQuestions] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  // Check admin access on mount
+  useEffect(() => {
+    const checkAdminAccess = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await axios.get(`${apiUrl}/api/auth/validate`, { 
+          headers: authHeader() 
+        });
+        
+        if (!response.data.valid || !response.data.user?.isAdmin) {
+          navigate('/login');
+        }
+        setLoading(false);
+      } catch (err) {
+        console.error('AdminDashboard - Access Check Error:', err);
+        navigate('/login');
+      }
+    };
+
+    checkAdminAccess();
+  }, [navigate]);
   const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctAnswer: '', chapter: '', duration: 60 });
   const [newChapter, setNewChapter] = useState({ name: '', description: '', order: 0 });
   const [editingId, setEditingId] = useState(null);
@@ -55,9 +79,13 @@ export default function AdminDashboard() {
         const validationResponse = await axios.get(`${apiUrl}/api/auth/validate`, { 
           headers: authHeader() 
         });
-        console.log('AdminDashboard - Token validation:', validationResponse.data);
+        console.log('AdminDashboard - Token validation response:', validationResponse.data);
         
-        if (!validationResponse.data.valid || !validationResponse.data.isAdmin) {
+        if (!validationResponse.data.valid) {
+          throw new Error('Invalid token');
+        }
+        
+        if (!validationResponse.data.user?.isAdmin) {
           throw new Error('Not authorized as admin');
         }
         
@@ -87,23 +115,65 @@ export default function AdminDashboard() {
   // Load chapters
   useEffect(() => {
     if (tab !== 'Chapters') return;
-    setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.get(`${apiUrl}/api/admin/chapters`, { headers: authHeader() })
-      .then(res => setChapters(res.data))
-      .catch(() => setError('Failed to load chapters'))
-      .finally(() => setLoading(false));
+    
+    const loadChapters = async () => {
+      setLoading(true);
+      setError('');
+      
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await axios.get(`${apiUrl}/api/admin/chapters`, { 
+          headers: authHeader() 
+        });
+        setChapters(response.data);
+      } catch (err) {
+        console.error('AdminDashboard - Chapters Error:', err.response || err);
+        const errorMessage = err.response?.data?.error || err.message || 'Failed to load chapters';
+        setError(errorMessage);
+        
+        if (err.response?.status === 401) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
+          window.location.href = '/login';
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadChapters();
   }, [tab]);
 
   // Load questions
   useEffect(() => {
     if (tab !== 'Questions') return;
-    setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.get(`${apiUrl}/api/admin/questions`, { headers: authHeader() })
-      .then(res => setQuestions(res.data))
-      .catch(() => setError('Failed to load questions'))
-      .finally(() => setLoading(false));
+    
+    const loadQuestions = async () => {
+      setLoading(true);
+      setError('');
+      
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await axios.get(`${apiUrl}/api/admin/questions`, { 
+          headers: authHeader() 
+        });
+        setQuestions(response.data);
+      } catch (err) {
+        console.error('AdminDashboard - Questions Error:', err.response || err);
+        const errorMessage = err.response?.data?.error || err.message || 'Failed to load questions';
+        setError(errorMessage);
+        
+        if (err.response?.status === 401) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
+          window.location.href = '/login';
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadQuestions();
   }, [tab]);
 
   // Delete user
