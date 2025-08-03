@@ -86,7 +86,11 @@ export default function QuizPage() {
           improved: result.improved,
           leaderboardUpdated: result.leaderboardUpdated,
           badgesUpdated: result.badgesUpdated,
-          currentBadges: result.currentBadges
+          currentBadges: result.currentBadges,
+          questions: questions,
+          userAnswers: finalAnswers,
+          timeSpent: timeSpent,
+          chapter: chapter
         } 
       });
 
@@ -102,7 +106,18 @@ export default function QuizPage() {
           score++;
         }
       });
-      navigate("/result", { state: { score, total: questions.length, error: true } });
+      navigate("/result", { 
+        state: { 
+          score, 
+          total: questions.length, 
+          error: true,
+          questions: questions,
+          userAnswers: finalAnswers,
+          timeSpent: (duration - timer) * 1000,
+          chapter: chapter,
+          practiceMode: practiceMode
+        } 
+      });
     }
   }, [answers, questions, navigate, duration, timer, chapter, showError]);
 
