@@ -7,27 +7,46 @@ export const useOnboarding = () => {
   const [shouldShowTour, setShouldShowTour] = useState(false);
 
   useEffect(() => {
-    // Check if user has seen the tutorial
-    const tutorialStatus = localStorage.getItem(TUTORIAL_STORAGE_KEY);
-    const hasSeenIt = tutorialStatus === 'true';
-    
-    console.log('🎯 Onboarding Check:', { tutorialStatus, hasSeenIt });
-    
-    setHasSeenTutorial(hasSeenIt);
-    
-    // Only show tour if user hasn't seen it and is authenticated
-    const userData = localStorage.getItem('userData');
-    const authToken = localStorage.getItem('authToken');
-    
-    console.log('🔐 Auth Check:', { userData: !!userData, authToken: !!authToken });
-    
-    if (!hasSeenIt && userData && authToken) {
-      console.log('🚀 Starting onboarding tour...');
-      // Small delay to ensure components are mounted
-      setTimeout(() => {
-        setShouldShowTour(true);
-      }, 3000); // Increased delay to ensure all components are ready
-    }
+    const checkAndStartTour = () => {
+      // Check if user has seen the tutorial
+      const tutorialStatus = localStorage.getItem(TUTORIAL_STORAGE_KEY);
+      const hasSeenIt = tutorialStatus === 'true';
+      
+      console.log('🎯 Onboarding Check:', { tutorialStatus, hasSeenIt });
+      
+      setHasSeenTutorial(hasSeenIt);
+      
+      // Only show tour if user hasn't seen it and is authenticated
+      const userData = localStorage.getItem('userData');
+      const authToken = localStorage.getItem('authToken');
+      
+      console.log('🔐 Auth Check:', { userData: !!userData, authToken: !!authToken });
+      
+      if (!hasSeenIt && userData && authToken) {
+        console.log('🚀 Starting onboarding tour...');
+        // Small delay to ensure components are mounted
+        setTimeout(() => {
+          setShouldShowTour(true);
+        }, 3000); // Increased delay to ensure all components are ready
+      }
+    };
+
+    // Initial check
+    checkAndStartTour();
+
+    // Listen for auth changes (when user registers/logs in)
+    const handleAuthChange = () => {
+      console.log('🔄 Auth change detected, rechecking onboarding...');
+      setTimeout(checkAndStartTour, 1000); // Delay to ensure localStorage is updated
+    };
+
+    window.addEventListener('userAuthChange', handleAuthChange);
+    window.addEventListener('storage', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('userAuthChange', handleAuthChange);
+      window.removeEventListener('storage', handleAuthChange);
+    };
   }, []);
 
   const markTutorialAsCompleted = () => {

@@ -69,7 +69,7 @@ function Navbar() {
               <Link to="/result" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Result</Link>
               <Link to="/leaderboard" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Leaderboard</Link>
               <Link to="/badges" className="text-gray-800 dark:text-white font-semibold hover:text-yellow-600 dark:hover:text-yellow-400 transition">Badges</Link>
-              <Link to="/about" className="text-white font-bold bg-red-500 px-3 py-1 rounded hover:bg-red-600 transition">🎬 ABOUT</Link>
+              <Link to="/about" className="text-white font-bold bg-red-500 px-4 py-2 rounded hover:bg-red-600 transition border-2 border-yellow-400 animate-pulse">🎬 ABOUT 🎬</Link>
               {isAdmin && (
                 <Link to="/admin" className="text-gray-800 dark:text-white font-semibold hover:text-pink-600 dark:hover:text-pink-400 transition">Admin</Link>
               )}
@@ -130,6 +130,7 @@ function AnimatedRoutes() {
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/about" element={<About />} />
           <Route 
             path="/dashboard" 
             element={

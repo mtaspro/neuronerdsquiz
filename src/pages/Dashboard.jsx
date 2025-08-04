@@ -28,6 +28,14 @@ const Dashboard = () => {
       try {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
+        
+        // Check if this is a new user and start the tour
+        const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
+        if (!hasSeenTutorial) {
+          console.log('🎯 Starting onboarding tour for new user');
+          startTour();
+          localStorage.setItem('hasSeenTutorial', 'true');
+        }
       } catch (error) {
         console.error('Error parsing user data:', error);
         navigate('/login');
