@@ -209,10 +209,22 @@ const Dashboard = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/profile/edit')}
               className="profile-section bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full mt-4"
-            >
-              <div className="flex items-center justify-center space-x-2">
+            <div className="flex items-center justify-center space-x-2">
                 <FaUser className="text-lg" />
                 <span>Edit Profile</span>
+              </div>
+            </motion.button>
+
+            {/* Behind The Scenes Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/about')}
+              className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 w-full mt-4"
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <span className="text-2xl">🎬</span>
+                <span>Behind The Scenes</span>
               </div>
             </motion.button>
           </div>
