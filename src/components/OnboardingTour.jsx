@@ -1,5 +1,5 @@
-import React from 'react';
-import Joyride, { ACTIONS, EVENTS, STATUS } from 'react-joyride';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 
 const OnboardingTour = ({ 
@@ -8,88 +8,57 @@ const OnboardingTour = ({
   onTourComplete 
 }) => {
   const location = useLocation();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [targetElement, setTargetElement] = useState(null);
 
   // Define tour steps based on current page
   const getDashboardSteps = () => [
     {
       target: '.welcome-section',
-      content: (
-        <div>
-          <h3 className="text-lg font-bold mb-2">🎉 Welcome to NeuroNerds Quiz!</h3>
-          <p>Let's take a quick tour to help you get started with our interactive quiz platform.</p>
-        </div>
-      ),
+      title: '🎉 Welcome to NeuroNerds Quiz!',
+      content: 'Let\'s take a quick tour to help you get started with our interactive quiz platform.',
       placement: 'center',
-      disableBeacon: true,
     },
     {
       target: '.chapter-selection',
-      content: (
-        <div>
-          <h3 className="text-lg font-bold mb-2">📚 Choose Your Chapter</h3>
-          <p>Select from various quiz topics. Each chapter contains multiple questions to test your knowledge.</p>
-        </div>
-      ),
+      title: '📚 Choose Your Chapter',
+      content: 'Select from various quiz topics. Each chapter contains multiple questions to test your knowledge.',
       placement: 'bottom',
     },
     {
       target: '.start-quiz-btn',
-      content: (
-        <div>
-          <h3 className="text-lg font-bold mb-2">🚀 Start Your Quiz</h3>
-          <p>Click here to begin a quiz on your selected chapter. You'll face timed questions with multiple choice answers.</p>
-        </div>
-      ),
+      title: '🚀 Start Your Quiz',
+      content: 'Click here to begin a quiz on your selected chapter. You\'ll face timed questions with multiple choice answers.',
       placement: 'top',
     },
     {
       target: '.battle-section',
-      content: (
-        <div>
-          <h3 className="text-lg font-bold mb-2">⚔️ Quiz Battles</h3>
-          <p>Challenge friends in real-time quiz battles! Create a room or join an existing one for competitive fun.</p>
-        </div>
-      ),
+      title: '⚔️ Quiz Battles',
+      content: 'Challenge friends in real-time quiz battles! Create a room or join an existing one for competitive fun.',
       placement: 'top',
     },
     {
       target: '.leaderboard-link',
-      content: (
-        <div>
-          <h3 className="text-lg font-bold mb-2">🏆 Leaderboard</h3>
-          <p>Check your ranking against other players. Compete for the top spots and track your progress!</p>
-        </div>
-      ),
+      title: '🏆 Leaderboard',
+      content: 'Check your ranking against other players. Compete for the top spots and track your progress!',
       placement: 'bottom',
     },
     {
       target: '.badges-link',
-      content: (
-        <div>
-          <h3 className="text-lg font-bold mb-2">🎯 Badge System</h3>
-          <p>Earn competitive badges by excelling in different areas: speed, accuracy, battles, and more!</p>
-        </div>
-      ),
+      title: '🎯 Badge System',
+      content: 'Earn competitive badges by excelling in different areas: speed, accuracy, battles, and more!',
       placement: 'bottom',
     },
     {
       target: '.profile-section',
-      content: (
-        <div>
-          <h3 className="text-lg font-bold mb-2">👤 Your Profile</h3>
-          <p>View your stats, edit your profile, and track your quiz history and achievements.</p>
-        </div>
-      ),
+      title: '👤 Your Profile',
+      content: 'View your stats, edit your profile, and track your quiz history and achievements.',
       placement: 'left',
     },
     {
       target: '.dark-mode-toggle',
-      content: (
-        <div>
-          <h3 className="text-lg font-bold mb-2">🌙 Dark Mode</h3>
-          <p>Toggle between light and dark themes for a comfortable viewing experience.</p>
-        </div>
-      ),
+      title: '🌙 Dark Mode',
+      content: 'Toggle between light and dark themes for a comfortable viewing experience.',
       placement: 'bottom',
     },
   ];
@@ -97,14 +66,9 @@ const OnboardingTour = ({
   const getGeneralSteps = () => [
     {
       target: 'body',
-      content: (
-        <div>
-          <h3 className="text-lg font-bold mb-2">🎉 Welcome to NeuroNerds Quiz!</h3>
-          <p>Navigate to the Dashboard to start your quiz journey and explore all features!</p>
-        </div>
-      ),
+      title: '🎉 Welcome to NeuroNerds Quiz!',
+      content: 'Navigate to the Dashboard to start your quiz journey and explore all features!',
       placement: 'center',
-      disableBeacon: true,
     },
   ];
 
@@ -116,95 +80,200 @@ const OnboardingTour = ({
     return getGeneralSteps();
   };
 
-  const handleJoyrideCallback = (data) => {
-    const { action, index, status, type } = data;
+  const steps = getSteps();
 
-    if ([EVENTS.STEP_AFTER, EVENTS.TARGET_NOT_FOUND].includes(type)) {
-      // Update state to advance the tour
-      const nextStepIndex = index + (action === ACTIONS.PREV ? -1 : 1);
+  // Find target element
+  useEffect(() => {
+    if (shouldShowTour && steps[currentStep]) {
+      const target = steps[currentStep].target;
+      if (target === 'body') {
+        setTargetElement(document.body);
+      } else {
+        const element = document.querySelector(target);
+        setTargetElement(element);
+      }
     }
+  }, [shouldShowTour, currentStep, steps]);
 
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
-      // Tour completed or skipped
-      setShouldShowTour(false);
-      onTourComplete();
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleComplete();
     }
   };
 
-  const tourStyles = {
-    options: {
-      primaryColor: '#3b82f6',
-      textColor: '#374151',
-      backgroundColor: '#ffffff',
-      overlayColor: 'rgba(0, 0, 0, 0.4)',
-      spotlightShadow: '0 0 15px rgba(0, 0, 0, 0.5)',
-      zIndex: 10000,
-    },
-    tooltip: {
-      borderRadius: 12,
-      padding: 20,
-    },
-    tooltipContainer: {
-      textAlign: 'left',
-    },
-    tooltipTitle: {
-      fontSize: '18px',
-      fontWeight: 'bold',
-      marginBottom: '8px',
-    },
-    tooltipContent: {
-      fontSize: '14px',
-      lineHeight: '1.5',
-    },
-    buttonNext: {
-      backgroundColor: '#3b82f6',
-      borderRadius: 8,
-      padding: '8px 16px',
-      fontSize: '14px',
-      fontWeight: '600',
-    },
-    buttonBack: {
-      color: '#6b7280',
-      marginRight: 'auto',
-      padding: '8px 16px',
-      fontSize: '14px',
-    },
-    buttonSkip: {
-      color: '#6b7280',
-      fontSize: '14px',
-    },
-    beacon: {
-      inner: '#3b82f6',
-      outer: '#3b82f6',
-    },
+  const handlePrev = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSkip = () => {
+    handleComplete();
+  };
+
+  const handleComplete = () => {
+    setShouldShowTour(false);
+    setCurrentStep(0);
+    onTourComplete();
+  };
+
+  // Calculate tooltip position
+  const getTooltipPosition = () => {
+    if (!targetElement) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+
+    const rect = targetElement.getBoundingClientRect();
+    const placement = steps[currentStep]?.placement || 'bottom';
+
+    switch (placement) {
+      case 'top':
+        return {
+          top: rect.top - 20,
+          left: rect.left + rect.width / 2,
+          transform: 'translate(-50%, -100%)',
+        };
+      case 'bottom':
+        return {
+          top: rect.bottom + 20,
+          left: rect.left + rect.width / 2,
+          transform: 'translate(-50%, 0)',
+        };
+      case 'left':
+        return {
+          top: rect.top + rect.height / 2,
+          left: rect.left - 20,
+          transform: 'translate(-100%, -50%)',
+        };
+      case 'right':
+        return {
+          top: rect.top + rect.height / 2,
+          left: rect.right + 20,
+          transform: 'translate(0, -50%)',
+        };
+      case 'center':
+      default:
+        return {
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+        };
+    }
+  };
+
+  // Get spotlight position
+  const getSpotlightStyle = () => {
+    if (!targetElement || steps[currentStep]?.target === 'body') {
+      return {};
+    }
+
+    const rect = targetElement.getBoundingClientRect();
+    return {
+      clipPath: `circle(${Math.max(rect.width, rect.height) / 2 + 10}px at ${rect.left + rect.width / 2}px ${rect.top + rect.height / 2}px)`,
+    };
   };
 
   if (!shouldShowTour) return null;
 
+  const currentStepData = steps[currentStep];
+  if (!currentStepData) return null;
+
   return (
-    <Joyride
-      steps={getSteps()}
-      run={shouldShowTour}
-      continuous={true}
-      showProgress={true}
-      showSkipButton={true}
-      callback={handleJoyrideCallback}
-      styles={tourStyles}
-      locale={{
-        back: '← Back',
-        close: 'Close',
-        last: 'Got it! 🎉',
-        next: 'Next →',
-        skip: 'Skip Tour',
-      }}
-      floaterProps={{
-        disableAnimation: false,
-      }}
-      disableOverlayClose={true}
-      disableScrollParentFix={true}
-      spotlightClicks={false}
-      hideCloseButton={false}
-    />
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[10000]"
+      >
+        {/* Overlay */}
+        <div 
+          className="absolute inset-0 bg-black bg-opacity-50 transition-all duration-300"
+          style={getSpotlightStyle()}
+        />
+
+        {/* Tooltip */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="absolute bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 max-w-sm w-80 z-[10001]"
+          style={getTooltipPosition()}
+        >
+          {/* Progress Bar */}
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                Step {currentStep + 1} of {steps.length}
+              </span>
+              <button
+                onClick={handleSkip}
+                className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                Skip Tour
+              </button>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div
+                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">
+              {currentStepData.title}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+              {currentStepData.content}
+            </p>
+          </div>
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between items-center">
+            <button
+              onClick={handlePrev}
+              disabled={currentStep === 0}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                currentStep === 0
+                  ? 'text-gray-400 cursor-not-allowed'
+                  : 'text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white'
+              }`}
+            >
+              ← Back
+            </button>
+
+            <button
+              onClick={handleNext}
+              className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              {currentStep === steps.length - 1 ? 'Got it! 🎉' : 'Next →'}
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Beacon for target element */}
+        {targetElement && steps[currentStep]?.target !== 'body' && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute pointer-events-none z-[10002]"
+            style={{
+              top: targetElement.getBoundingClientRect().top + targetElement.getBoundingClientRect().height / 2,
+              left: targetElement.getBoundingClientRect().left + targetElement.getBoundingClientRect().width / 2,
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <div className="relative">
+              <div className="w-6 h-6 bg-blue-500 rounded-full animate-ping absolute" />
+              <div className="w-6 h-6 bg-blue-500 rounded-full" />
+            </div>
+          </motion.div>
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

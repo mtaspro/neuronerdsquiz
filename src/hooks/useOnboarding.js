@@ -21,7 +21,7 @@ export const useOnboarding = () => {
       // Small delay to ensure components are mounted
       setTimeout(() => {
         setShouldShowTour(true);
-      }, 1000);
+      }, 2000); // Increased delay to ensure all components are ready
     }
   }, []);
 
