@@ -69,7 +69,7 @@ function Navbar() {
               <Link to="/result" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Result</Link>
               <Link to="/leaderboard" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Leaderboard</Link>
               <Link to="/badges" className="text-gray-800 dark:text-white font-semibold hover:text-yellow-600 dark:hover:text-yellow-400 transition">Badges</Link>
-              <Link to="/about" className="text-white font-bold bg-red-500 px-4 py-2 rounded hover:bg-red-600 transition border-2 border-yellow-400 animate-pulse">🎬 ABOUT 🎬</Link>
+              <Link to="/about" className="text-gray-800 dark:text-white font-semibold hover:text-purple-600 dark:hover:text-purple-400 transition">About</Link>
               {isAdmin && (
                 <Link to="/admin" className="text-gray-800 dark:text-white font-semibold hover:text-pink-600 dark:hover:text-pink-400 transition">Admin</Link>
               )}
@@ -101,7 +101,7 @@ function Navbar() {
         <Link to="/result" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Result</Link>
         <Link to="/leaderboard" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Leaderboard</Link>
         <Link to="/badges" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Badges</Link>
-        <Link to="/about" className="block px-3 py-2 rounded-md text-base font-semibold bg-red-500 text-white hover:bg-red-600 m-1 rounded">🎬 ABOUT</Link>
+        <Link to="/about" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">About</Link>
         {isAdmin && (
           <Link to="/admin" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Admin</Link>
         )}
@@ -162,10 +162,6 @@ function AnimatedRoutes() {
                 <Badges />
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/about"
-            element={<About />}
           />
           <Route
             path="/admin"
