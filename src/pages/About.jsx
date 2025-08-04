@@ -7,6 +7,7 @@ import {
   FaTwitter, 
   FaFacebook, 
   FaLinkedin,
+  FaWikipediaW,
   FaCode,
   FaDatabase,
   FaServer,
