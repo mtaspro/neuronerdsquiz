@@ -209,7 +209,8 @@ const Dashboard = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/profile/edit')}
               className="profile-section bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full mt-4"
-            <div className="flex items-center justify-center space-x-2">
+            >
+              <div className="flex items-center justify-center space-x-2">
                 <FaUser className="text-lg" />
                 <span>Edit Profile</span>
               </div>
