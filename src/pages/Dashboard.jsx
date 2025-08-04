@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog } from 'react-icons/fa';
+import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog, FaQuestionCircle } from 'react-icons/fa';
 import { getAvatarUrl, getFallbackAvatar } from '../utils/avatarUtils';
+import { useOnboarding } from '../hooks/useOnboarding';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -15,6 +16,9 @@ const Dashboard = () => {
   const [battleRoomId, setBattleRoomId] = useState('');
   const [showBattleModal, setShowBattleModal] = useState(false);
   const [selectedBattleChapter, setSelectedBattleChapter] = useState('');
+  
+  // Onboarding hook
+  const { startTour } = useOnboarding();
 
   useEffect(() => {
     const userData = localStorage.getItem('userData');
@@ -105,7 +109,7 @@ const Dashboard = () => {
       <div className="bg-gradient-to-r from-cyan-900 to-blue-900 dark:from-gray-800 dark:to-gray-900 p-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <div>
+            <div className="welcome-section">
               <h1 className="text-4xl font-bold mb-2 text-white">Welcome back, {user?.username || 'Student'}! 🎓</h1>
               <p className="text-cyan-200 text-lg">Ready to test your knowledge?</p>
             </div>
@@ -141,7 +145,7 @@ const Dashboard = () => {
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Quick Actions</h4>
             
             {/* Chapter Dropdown */}
-            <div className="mb-4">
+            <div className="mb-4 chapter-selection">
               <label htmlFor="chapter-select" className="text-cyan-600 dark:text-cyan-300 font-semibold mb-1 block">Select Chapter</label>
               <select 
                 id="chapter-select" 
@@ -165,7 +169,7 @@ const Dashboard = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleStartQuiz}
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 w-full"
+              className="start-quiz-btn bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 w-full"
             >
               <div className="flex items-center justify-center space-x-2">
                 <span className="text-2xl">🚀</span>
@@ -178,11 +182,24 @@ const Dashboard = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/leaderboard')}
-              className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 w-full mt-4"
+              className="leaderboard-link bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 w-full mt-4"
             >
               <div className="flex items-center justify-center space-x-2">
                 <span className="text-2xl">🏆</span>
                 <span>View Leaderboard</span>
+              </div>
+            </motion.button>
+
+            {/* Badges Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/badges')}
+              className="badges-link bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 w-full mt-4"
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <span className="text-2xl">🎯</span>
+                <span>View Badges</span>
               </div>
             </motion.button>
 
@@ -191,7 +208,7 @@ const Dashboard = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/profile/edit')}
-              className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full mt-4"
+              className="profile-section bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full mt-4"
             >
               <div className="flex items-center justify-center space-x-2">
                 <FaUser className="text-lg" />
@@ -201,7 +218,7 @@ const Dashboard = () => {
           </div>
 
           {/* Quiz Battle Section */}
-          <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 dark:from-orange-500/20 dark:to-red-500/20 backdrop-blur-sm rounded-xl p-6 border border-orange-200/50 dark:border-orange-700/50 shadow-lg">
+          <div className="battle-section bg-gradient-to-br from-orange-500/10 to-red-500/10 dark:from-orange-500/20 dark:to-red-500/20 backdrop-blur-sm rounded-xl p-6 border border-orange-200/50 dark:border-orange-700/50 shadow-lg">
             <div className="flex items-center mb-4">
               <FaFire className="text-orange-500 text-2xl mr-2" />
               <h4 className="text-lg font-semibold text-gray-800 dark:text-white">Quiz Battle</h4>
@@ -299,6 +316,17 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Floating Help Button */}
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={startTour}
+        className="fixed bottom-6 right-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-4 rounded-full shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 z-50"
+        title="Take a tour of the platform"
+      >
+        <FaQuestionCircle className="text-xl" />
+      </motion.button>
     </div>
   );
 };

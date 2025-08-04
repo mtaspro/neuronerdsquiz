@@ -14,10 +14,13 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from './components/AdminRoute';
 import AdminDashboard from './pages/AdminDashboard';
 import Badges from './pages/Badges';
+import About from './pages/About';
 import DarkModeToggle from './components/DarkModeToggle';
 import ErrorBoundary from './components/ErrorBoundary';
 import { NotificationProvider } from './components/NotificationSystem';
 import { DarkModeProvider } from './contexts/DarkModeContext';
+import OnboardingTour from './components/OnboardingTour';
+import { useOnboarding } from './hooks/useOnboarding';
 
 // Optional Navbar
 import { useState } from "react";
@@ -64,13 +67,16 @@ function Navbar() {
               <Link to="/result" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Result</Link>
               <Link to="/leaderboard" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Leaderboard</Link>
               <Link to="/badges" className="text-gray-800 dark:text-white font-semibold hover:text-yellow-600 dark:hover:text-yellow-400 transition">Badges</Link>
+              <Link to="/about" className="text-gray-800 dark:text-white font-semibold hover:text-purple-600 dark:hover:text-purple-400 transition">About</Link>
               {isAdmin && (
                 <Link to="/admin" className="text-gray-800 dark:text-white font-semibold hover:text-pink-600 dark:hover:text-pink-400 transition">Admin</Link>
               )}
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <DarkModeToggle />
+            <div className="dark-mode-toggle">
+              <DarkModeToggle />
+            </div>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
@@ -93,6 +99,7 @@ function Navbar() {
         <Link to="/result" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Result</Link>
         <Link to="/leaderboard" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Leaderboard</Link>
         <Link to="/badges" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Badges</Link>
+        <Link to="/about" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">About</Link>
         {isAdmin && (
           <Link to="/admin" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Admin</Link>
         )}
@@ -154,6 +161,10 @@ function AnimatedRoutes() {
             }
           />
           <Route
+            path="/about"
+            element={<About />}
+          />
+          <Route
             path="/admin"
             element={
               <AdminRoute>
@@ -167,15 +178,34 @@ function AnimatedRoutes() {
   );
 }
 
+function AppContent() {
+  const {
+    shouldShowTour,
+    setShouldShowTour,
+    markTutorialAsCompleted
+  } = useOnboarding();
+
+  return (
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
+      <Navbar />
+      <AnimatedRoutes />
+      
+      {/* Onboarding Tour */}
+      <OnboardingTour
+        shouldShowTour={shouldShowTour}
+        setShouldShowTour={setShouldShowTour}
+        onTourComplete={markTutorialAsCompleted}
+      />
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
       <DarkModeProvider>
         <NotificationProvider>
-          <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
-            <Navbar />
-            <AnimatedRoutes />
-          </div>
+          <AppContent />
         </NotificationProvider>
       </DarkModeProvider>
     </ErrorBoundary>
