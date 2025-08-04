@@ -154,7 +154,7 @@ const About = () => {
                 className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700 hover:shadow-2xl transition-all duration-300"
               >
                 <div className="flex flex-col lg:flex-row items-start space-y-6 lg:space-y-0 lg:space-x-8">
-                  {/* Avatar and Basic Info */}
+                  {/* Avatar and Basic Info - Now on the left */}
                   <div className="flex-shrink-0 text-center lg:text-left">
                     <div className="text-6xl mb-4">{member.avatar}</div>
                     <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
@@ -179,7 +179,7 @@ const About = () => {
                     </div>
                   </div>
 
-                  {/* Details */}
+                  {/* Details - Now on the right */}
                   <div className="flex-1">
                     <p className="text-gray-600 dark:text-gray-300 mb-4 text-lg">
                       {member.description}
