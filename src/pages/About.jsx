@@ -6,6 +6,8 @@ import {
   FaGithub, 
   FaTwitter, 
   FaFacebook, 
+  FaInstagram,
+  FaDiscord,
   FaLinkedin,
   FaWikipediaW,
   FaCode,
@@ -20,6 +22,8 @@ import {
   FaCoffee,
   FaGamepad
 } from 'react-icons/fa';
+import { p } from 'framer-motion/client';
+import { plugin } from 'mongoose';
 
 const About = () => {
   const navigate = useNavigate();
@@ -52,7 +56,6 @@ const About = () => {
       socials: [
         { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/mtaspro', color: 'text-gray-800 dark:text-gray-200' },
         { platform: 'X', icon: FaTwitter, url: 'https://x.com/AAMahtab', color: 'text-gray-800 dark:text-gray-200' },
-        { platform: 'Facebook', icon: FaFacebook, url: 'https://web.facebook.com/ahmed.azmain.mahtab', color: 'text-blue-600' }
       ]
     },
     {
@@ -189,10 +192,12 @@ const About = () => {
                     <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
                       {member.name}
                     </h3>
-                    <p className="text-lg font-semibold text-purple-600 dark:text-purple-400 mb-4">
+                    <p className="text-lg font-semibold text-purple-600 dark:text-purple-400 mb-1">
                       {member.role}
                     </p>
-                    
+                    {member.name === 'Md. Akhyar Fardin' || member.name === 'Md. Tanvir Mahtab' || member.name === 'Ahmed Azmain Mahtab' ? (
+                      <p className="text-sm font-medium text-blue-500 dark:text-blue-300 mb-3">Neuronerds Study Group</p>
+                    ) : null}
                     {/* Social Links */}
                     <div className="flex justify-center lg:justify-end space-x-4">
                       {member.socials.map((social) => (
