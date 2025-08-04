@@ -8,7 +8,6 @@ import {
   FaFacebook, 
   FaLinkedin,
   FaWikipediaW,
-  FaX,
   FaCode,
   FaDatabase,
   FaServer,
@@ -52,7 +51,7 @@ const About = () => {
       ],
       socials: [
         { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/mtaspro', color: 'text-gray-800 dark:text-gray-200' },
-        { platform: 'X', icon: FaX, url: 'https://x.com/AAMahtab', color: 'text-gray-800 dark:text-gray-200' },
+        { platform: 'X', icon: FaTwitter, url: 'https://x.com/AAMahtab', color: 'text-gray-800 dark:text-gray-200' },
         { platform: 'Facebook', icon: FaFacebook, url: 'https://web.facebook.com/ahmed.azmain.mahtab', color: 'text-blue-600' }
       ]
     },
@@ -70,7 +69,7 @@ const About = () => {
         'Future-proof Study plan strategy'
       ],
       socials: [
-        { platform: 'X', icon: FaX, url: 'https://x.com/AkhyarFardin', color: 'text-gray-800 dark:text-gray-200' }
+        { platform: 'X', icon: FaTwitter, url: 'https://x.com/AkhyarFardin', color: 'text-gray-800 dark:text-gray-200' }
       ]
     },
     {
@@ -373,7 +372,7 @@ const About = () => {
               </p>
               <p>
                 We believe that learning should be fun, competitive, and rewarding. Every feature we build, 
-                every bug we fix, and every enhancement we make is with you in mind. Success will come to us gradually in sha allah.
+                every bug we fix, and every enhancement we make is with you in mind. Success will come to us gradually In-sha Allah.
               </p>
               <p className="font-semibold text-purple-600 dark:text-purple-400">
                 Keep learning, keep competing, and most importantly - keep having fun! 
