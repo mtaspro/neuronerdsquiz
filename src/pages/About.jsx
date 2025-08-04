@@ -49,9 +49,9 @@ const About = () => {
         'UI/UX design and animations'
       ],
       socials: [
-        { platform: 'GitHub', icon: FaGithub, url: '#', color: 'text-gray-800 dark:text-gray-200' },
-        { platform: 'Twitter', icon: FaTwitter, url: '#', color: 'text-blue-500' },
-        { platform: 'Facebook', icon: FaFacebook, url: '#', color: 'text-blue-600' }
+        { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/mtaspro', color: 'text-gray-800 dark:text-gray-200' },
+        { platform: 'Twitter', icon: FaTwitter, url: 'https://x.com/AAMahtab', color: 'text-blue-500' },
+        { platform: 'Facebook', icon: FaFacebook, url: 'https://web.facebook.com/ahmed.azmain.mahtab', color: 'text-blue-600' }
       ]
     },
     {
@@ -68,7 +68,7 @@ const About = () => {
         'Future-proof Study plan strategy'
       ],
       socials: [
-        { platform: 'Twitter', icon: FaTwitter, url: '#', color: 'text-blue-500' }
+        { platform: 'Twitter', icon: FaTwitter, url: 'https://x.com/AkhyarFardin', color: 'text-blue-500' }
       ]
     },
     {
@@ -85,7 +85,8 @@ const About = () => {
         'Study planning strategy'
       ],
       socials: [
-        { platform: 'LinkedIn', icon: FaLinkedin, url: '#', color: 'text-blue-700' }
+        { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/Tanvir-007-ctg', color: 'text-gray-800 dark:text-gray-200' },
+        { platform: 'wikipedia', icon: FaWikipediaW, url: 'https://bn.m.wikipedia.org/wiki/%E0%A6%AC%E0%A7%8D%E0%A6%AF%E0%A6%AC%E0%A6%B9%E0%A6%BE%E0%A6%B0%E0%A6%95%E0%A6%BE%E0%A6%B0%E0%A7%80:Md._T_Mahtab', color: 'text-gray-800 dark:text-gray-200' }
       ]
     }
   ];
