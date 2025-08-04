@@ -8,6 +8,7 @@ import {
   FaFacebook, 
   FaLinkedin,
   FaWikipediaW,
+  FaX,
   FaCode,
   FaDatabase,
   FaServer,
@@ -51,7 +52,7 @@ const About = () => {
       ],
       socials: [
         { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/mtaspro', color: 'text-gray-800 dark:text-gray-200' },
-        { platform: 'Twitter', icon: FaTwitter, url: 'https://x.com/AAMahtab', color: 'text-blue-500' },
+        { platform: 'X', icon: FaX, url: 'https://x.com/AAMahtab', color: 'text-gray-800 dark:text-gray-200' },
         { platform: 'Facebook', icon: FaFacebook, url: 'https://web.facebook.com/ahmed.azmain.mahtab', color: 'text-blue-600' }
       ]
     },
@@ -69,7 +70,7 @@ const About = () => {
         'Future-proof Study plan strategy'
       ],
       socials: [
-        { platform: 'Twitter', icon: FaTwitter, url: 'https://x.com/AkhyarFardin', color: 'text-blue-500' }
+        { platform: 'X', icon: FaX, url: 'https://x.com/AkhyarFardin', color: 'text-gray-800 dark:text-gray-200' }
       ]
     },
     {
