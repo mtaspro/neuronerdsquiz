@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPaperPlane, FaCog, FaUser } from 'react-icons/fa';
+import axios from 'axios';
 import botAvatar from '../assets/botavatar.png';
 
 const NeuraflowAIChat = () => {
@@ -60,6 +61,27 @@ const NeuraflowAIChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
+  // System prompt for Neuraflow AI
+  const systemPrompt = `You are Neuraflow AI, an intelligent study companion for the Neuronerds Quiz platform. You are friendly, knowledgeable, and helpful.
+
+Your role:
+• Help students with academic questions across all subjects
+• Provide information about the Neuronerds Quiz platform features
+• Assist with study tips and learning strategies
+• Answer questions about development updates and platform features
+• Be encouraging and supportive in your responses
+
+Platform features you can discuss:
+• Chapter-wise quizzes organized by subjects
+• Real-time battle mode for competitive learning
+• LaTeX math support for mathematical equations
+• Achievement system with badges and leaderboards
+• Dark mode and mobile-responsive design
+• Admin panel for question management
+• AI-powered LaTeX generator
+
+Tone: Friendly, intelligent, encouraging, and student-focused. Use emojis appropriately to make conversations engaging.`;
+
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
 
@@ -70,32 +92,42 @@ const NeuraflowAIChat = () => {
       timestamp: new Date()
     };
 
+    const currentInput = inputText;
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
     setIsTyping(true);
 
-    // Simulate AI response (replace with actual API call)
-    setTimeout(() => {
+    try {
+      const response = await getAIResponse(currentInput);
       const botResponse = {
         id: Date.now() + 1,
         type: 'bot',
-        content: generateResponse(inputText),
+        content: response,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, botResponse]);
+    } catch (error) {
+      console.error('AI response error:', error);
+      const errorResponse = {
+        id: Date.now() + 1,
+        type: 'bot',
+        content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment! 🤖",
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1500 + Math.random() * 1000);
+    }
   };
 
-  const generateResponse = (input) => {
-    const responses = [
-      "That's a great question! 🤔 I'd be happy to help you with that. Could you provide a bit more context?",
-      "Interesting! 💡 Based on what you're asking, here's what I think...",
-      "I understand what you're looking for! 📚 Let me break this down for you:",
-      "Excellent question! 🎯 This is actually a common topic that many students ask about.",
-      "Thanks for asking! 🚀 This relates to some key concepts we should explore together."
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
+  const getAIResponse = async (userInput) => {
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    const response = await axios.post(`${apiUrl}/api/ai-chat`, {
+      message: userInput,
+      model: selectedModel,
+      systemPrompt: systemPrompt
+    });
+    return response.data.response;
   };
 
   const formatTimestamp = (timestamp) => {

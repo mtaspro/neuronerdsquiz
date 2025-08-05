@@ -11,6 +11,7 @@ import quizRouter from './routes/quiz.js';
 import adminRouter from './routes/admin.js';
 import badgeRouter from './routes/badges.js';
 import { router as latexRouter } from './routes/latex.js';
+import { router as aiChatRouter } from './routes/ai-chat.js';
 import BattleService from './services/battleService.js';
 import BadgeService from './services/badgeService.js';
 import UserScore from './models/UserScore.js';
@@ -373,6 +374,8 @@ console.log('Mounting badge router...');
 app.use('/api/badges', badgeRouter);
 console.log('Mounting latex router...');
 app.use('/api/latex', latexRouter);
+console.log('Mounting AI chat router...');
+app.use('/api/ai-chat', aiChatRouter);
 console.log('All routers mounted successfully');
 
 // Test route for API connectivity
