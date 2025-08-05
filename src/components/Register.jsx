@@ -4,16 +4,31 @@ import { motion } from 'framer-motion';
 import { apiHelpers } from '../utils/api';
 
 const Register = () => {
+  // Avatar options from ProfileEdit
+  const avatarOptions = [
+    'https://avatar.iran.liara.run/public/41',
+    'https://avatar.iran.liara.run/public/43',
+    'https://avatar.iran.liara.run/public/38',
+    'https://avatar.iran.liara.run/public/40',
+    'https://avatar.iran.liara.run/public/100',
+    'https://avatar.iran.liara.run/public/56',
+    'https://avatar.iran.liara.run/public/73',
+    'https://avatar.iran.liara.run/public/97'
+  ];
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: '',
     username: '',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4'
+    avatar: avatarOptions[0],
+    profilePicture: null
   });
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
+  const [useCustomImage, setUseCustomImage] = useState(false);
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -52,6 +67,34 @@ const Register = () => {
     setServerError('');
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setErrors(prev => ({ ...prev, profilePicture: 'Please select an image file' }));
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, profilePicture: 'Image size must be less than 5MB' }));
+        return;
+      }
+      setFormData(prev => ({ ...prev, profilePicture: file }));
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewImage(e.target.result);
+        setUseCustomImage(true);
+      };
+      reader.readAsDataURL(file);
+      setErrors(prev => ({ ...prev, profilePicture: '' }));
+    }
+  };
+
+  const handleAvatarSelect = (avatarUrl) => {
+    setFormData(prev => ({ ...prev, avatar: avatarUrl, profilePicture: null }));
+    setPreviewImage('');
+    setUseCustomImage(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError('');
@@ -66,12 +109,17 @@ const Register = () => {
         avatar: formData.avatar
       });
 
-      const res = await apiHelpers.register({
-        email: formData.email,
-        password: formData.password,
-        username: formData.username,
-        avatar: formData.avatar
-      });
+      const submitData = new FormData();
+      submitData.append('email', formData.email);
+      submitData.append('password', formData.password);
+      submitData.append('username', formData.username);
+      if (useCustomImage && formData.profilePicture) {
+        submitData.append('profilePicture', formData.profilePicture);
+      } else {
+        submitData.append('avatar', formData.avatar);
+      }
+
+      const res = await apiHelpers.register(submitData);
 
       console.log('Registration response:', res.data);
 
@@ -246,6 +294,77 @@ const Register = () => {
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword}</p>
               )}
+            </div>
+
+            {/* Avatar Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                Choose Your Avatar
+              </label>
+              
+              {/* Current Selection Preview */}
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-cyan-500">
+                  <img
+                    src={useCustomImage ? previewImage : formData.avatar}
+                    alt="Selected avatar"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = `https://ui-avatars.com/api/?name=User&background=random`;
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Upload Custom Image */}
+              <div className="mb-4">
+                <label className="block w-full">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <div className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center cursor-pointer hover:border-cyan-400 transition-colors">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      📷 Upload Custom Image
+                    </span>
+                  </div>
+                </label>
+                {errors.profilePicture && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.profilePicture}</p>
+                )}
+              </div>
+
+              {/* Avatar Grid */}
+              <div className="grid grid-cols-4 gap-3">
+                {avatarOptions.map((avatarUrl, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handleAvatarSelect(avatarUrl)}
+                    className={`relative w-12 h-12 rounded-full overflow-hidden border-2 transition-all ${
+                      !useCustomImage && formData.avatar === avatarUrl
+                        ? 'border-cyan-500 ring-2 ring-cyan-200 dark:ring-cyan-800'
+                        : 'border-gray-300 dark:border-gray-600 hover:border-cyan-400'
+                    }`}
+                  >
+                    <img
+                      src={avatarUrl}
+                      alt={`Avatar ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = `https://ui-avatars.com/api/?name=User&background=random`;
+                      }}
+                    />
+                    {!useCustomImage && formData.avatar === avatarUrl && (
+                      <div className="absolute inset-0 bg-cyan-500 bg-opacity-20 flex items-center justify-center">
+                        <div className="w-3 h-3 bg-cyan-500 rounded-full"></div>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
