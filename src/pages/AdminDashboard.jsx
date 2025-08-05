@@ -42,6 +42,7 @@ export default function AdminDashboard() {
   const [editQuestion, setEditQuestion] = useState(null);
   const [editChapter, setEditChapter] = useState(null);
   const [resetMsg, setResetMsg] = useState('');
+  const [focusedField, setFocusedField] = useState(null);
 
   function authHeader() {
     const token = localStorage.getItem('authToken');
@@ -509,6 +510,15 @@ export default function AdminDashboard() {
                 ...prev, 
                 question: prev.question + latex
               }))}
+              onInsertOption={(latex, fieldName) => {
+                const optionIndex = parseInt(fieldName.replace('option', ''));
+                setNewQuestion(prev => {
+                  const newOptions = [...prev.options];
+                  newOptions[optionIndex] = newOptions[optionIndex] + latex;
+                  return { ...prev, options: newOptions };
+                });
+              }}
+              focusedField={focusedField}
             />
 
             {/* Add Question Form */}
@@ -520,6 +530,7 @@ export default function AdminDashboard() {
                   <textarea
                     value={newQuestion.question}
                     onChange={e => setNewQuestion({...newQuestion, question: e.target.value})}
+                    onFocus={() => setFocusedField('question')}
                     className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
                     rows="3"
                     placeholder="Enter question text. Use LaTeX: $x^2$ for inline math, $$\frac{a}{b}$$ for display math"
@@ -560,6 +571,7 @@ export default function AdminDashboard() {
                           newOpts[i] = e.target.value;
                           setNewQuestion({...newQuestion, options: newOpts});
                         }}
+                        onFocus={() => setFocusedField(`option${i}`)}
                         className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
                         placeholder={`Option ${i + 1} (LaTeX supported: $x^2$, $$\frac{a}{b}$$)`}
                         required

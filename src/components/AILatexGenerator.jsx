@@ -4,7 +4,7 @@ import { FaRobot, FaCopy, FaArrowDown, FaQuestionCircle, FaTimes } from 'react-i
 import MathText from './MathText';
 import axios from 'axios';
 
-const AILatexGenerator = ({ onInsert }) => {
+const AILatexGenerator = ({ onInsert, onInsertOption, focusedField }) => {
   const [inputText, setInputText] = useState('');
   const [generatedLatex, setGeneratedLatex] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -47,10 +47,21 @@ const AILatexGenerator = ({ onInsert }) => {
     navigator.clipboard.writeText(generatedLatex);
   };
 
-  const insertIntoQuestion = () => {
-    if (onInsert && generatedLatex) {
-      onInsert(generatedLatex);
+  const handleInsert = () => {
+    if (generatedLatex) {
+      if (focusedField?.startsWith('option') && onInsertOption) {
+        onInsertOption(generatedLatex, focusedField);
+      } else if (onInsert) {
+        onInsert(generatedLatex);
+      }
     }
+  };
+
+  const getInsertButtonText = () => {
+    if (focusedField?.startsWith('option')) {
+      return 'Insert into Option';
+    }
+    return 'Insert into Question';
   };
 
   return (
@@ -152,13 +163,13 @@ const AILatexGenerator = ({ onInsert }) => {
               <FaCopy />
               <span>Copy Code</span>
             </button>
-            {onInsert && (
+            {(onInsert || onInsertOption) && (
               <button
-                onClick={insertIntoQuestion}
+                onClick={handleInsert}
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
               >
                 <FaArrowDown />
-                <span>Insert into Question</span>
+                <span>{getInsertButtonText()}</span>
               </button>
             )}
           </div>
