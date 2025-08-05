@@ -21,6 +21,7 @@ import { NotificationProvider } from './components/NotificationSystem';
 import { DarkModeProvider } from './contexts/DarkModeContext';
 import OnboardingTour from './components/OnboardingTour';
 import { useOnboarding } from './hooks/useOnboarding';
+import { MathProvider } from './components/MathText';
 
 // Optional Navbar
 import { useState } from "react";
@@ -204,7 +205,9 @@ export default function App() {
     <ErrorBoundary>
       <DarkModeProvider>
         <NotificationProvider>
-          <AppContent />
+          <MathProvider>
+            <AppContent />
+          </MathProvider>
         </NotificationProvider>
       </DarkModeProvider>
     </ErrorBoundary>

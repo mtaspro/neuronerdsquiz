@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import MathText from '../components/MathText';
 import axios from 'axios';
 
 const TABS = ['Users', 'Chapters', 'Questions', 'Leaderboard Reset'];
@@ -512,8 +513,17 @@ export default function AdminDashboard() {
                     onChange={e => setNewQuestion({...newQuestion, question: e.target.value})}
                     className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
                     rows="3"
+                    placeholder="Enter question text. Use LaTeX: $x^2$ for inline math, $$\frac{a}{b}$$ for display math"
                     required
                   />
+                  {newQuestion.question && (
+                    <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-600 rounded border">
+                      <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Preview:</div>
+                      <div className="text-gray-800 dark:text-white">
+                        <MathText>{newQuestion.question}</MathText>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Chapter</label>
@@ -532,19 +542,26 @@ export default function AdminDashboard() {
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Options</label>
                   {newQuestion.options.map((opt, i) => (
-                    <input
-                      key={i}
-                      type="text"
-                      value={opt}
-                      onChange={e => {
-                        const newOpts = [...newQuestion.options];
-                        newOpts[i] = e.target.value;
-                        setNewQuestion({...newQuestion, options: newOpts});
-                      }}
-                      className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors mb-2"
-                      placeholder={`Option ${i + 1}`}
-                      required
-                    />
+                    <div key={i} className="mb-3">
+                      <input
+                        type="text"
+                        value={opt}
+                        onChange={e => {
+                          const newOpts = [...newQuestion.options];
+                          newOpts[i] = e.target.value;
+                          setNewQuestion({...newQuestion, options: newOpts});
+                        }}
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                        placeholder={`Option ${i + 1} (LaTeX supported: $x^2$, $$\frac{a}{b}$$)`}
+                        required
+                      />
+                      {opt && (
+                        <div className="mt-1 p-2 bg-gray-50 dark:bg-gray-600 rounded text-sm">
+                          <span className="text-gray-600 dark:text-gray-300">Preview: </span>
+                          <MathText>{opt}</MathText>
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
                 <div>
@@ -585,13 +602,24 @@ export default function AdminDashboard() {
                     <div key={q._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                       {editingId === q._id ? (
                         <form onSubmit={handleEditQuestion} className="space-y-3">
-                          <textarea
-                            value={editQuestion.question}
-                            onChange={e => setEditQuestion({...editQuestion, question: e.target.value})}
-                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
-                            rows="3"
-                            required
-                          />
+                          <div>
+                            <textarea
+                              value={editQuestion.question}
+                              onChange={e => setEditQuestion({...editQuestion, question: e.target.value})}
+                              className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                              rows="3"
+                              placeholder="Enter question text. Use LaTeX: $x^2$ for inline math, $$\frac{a}{b}$$ for display math"
+                              required
+                            />
+                            {editQuestion.question && (
+                              <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-500 rounded border">
+                                <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Preview:</div>
+                                <div className="text-gray-800 dark:text-white">
+                                  <MathText>{editQuestion.question}</MathText>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                           <select
                             value={editQuestion.chapter}
                             onChange={e => setEditQuestion({...editQuestion, chapter: e.target.value})}
@@ -604,19 +632,26 @@ export default function AdminDashboard() {
                             ))}
                           </select>
                           {editQuestion.options.map((opt, i) => (
-                            <input
-                              key={i}
-                              type="text"
-                              value={opt}
-                              onChange={e => {
-                                const newOpts = [...editQuestion.options];
-                                newOpts[i] = e.target.value;
-                                setEditQuestion({...editQuestion, options: newOpts});
-                              }}
-                              className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
-                              placeholder={`Option ${i + 1}`}
-                              required
-                            />
+                            <div key={i} className="space-y-1">
+                              <input
+                                type="text"
+                                value={opt}
+                                onChange={e => {
+                                  const newOpts = [...editQuestion.options];
+                                  newOpts[i] = e.target.value;
+                                  setEditQuestion({...editQuestion, options: newOpts});
+                                }}
+                                className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                                placeholder={`Option ${i + 1} (LaTeX supported: $x^2$, $$\frac{a}{b}$$)`}
+                                required
+                              />
+                              {opt && (
+                                <div className="p-2 bg-gray-100 dark:bg-gray-500 rounded text-sm">
+                                  <span className="text-gray-600 dark:text-gray-300">Preview: </span>
+                                  <MathText>{opt}</MathText>
+                                </div>
+                              )}
+                            </div>
                           ))}
                           <input
                             type="text"
@@ -648,13 +683,15 @@ export default function AdminDashboard() {
                         <div>
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex-1">
-                              <h4 className="font-semibold text-gray-800 dark:text-white">{q.question}</h4>
+                              <h4 className="font-semibold text-gray-800 dark:text-white">
+                                <MathText>{q.question}</MathText>
+                              </h4>
                               <p className="text-gray-600 dark:text-gray-300 text-sm">Chapter: {q.chapter}</p>
                               <p className="text-gray-600 dark:text-gray-300 text-sm">Duration: {q.duration}s</p>
                               <ul className="mt-2 space-y-1">
                                 {q.options.map((opt, i) => (
                                   <li key={i} className={`text-sm ${opt === q.correctAnswer ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-gray-600 dark:text-gray-300'}`}>
-                                    {String.fromCharCode(65 + i)}. {opt}
+                                    {String.fromCharCode(65 + i)}. <MathText>{opt}</MathText>
                                   </li>
                                 ))}
                               </ul>

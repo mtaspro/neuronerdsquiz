@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCheck, FaTimes, FaEye, FaArrowLeft, FaArrowRight, FaHome, FaTrophy } from "react-icons/fa";
+import MathText from "../components/MathText";
 import axios from "axios";
 
 export default function ResultScreen() {
@@ -191,7 +192,7 @@ export default function ResultScreen() {
               </div>
               
               <h2 className="text-xl font-semibold mb-4">
-                {currentItem.question}
+                <MathText>{currentItem.question}</MathText>
               </h2>
             </div>
 
@@ -214,7 +215,9 @@ export default function ResultScreen() {
                 return (
                   <div key={index} className={optionClass}>
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">{option}</span>
+                      <span className="font-medium">
+                        <MathText>{option}</MathText>
+                      </span>
                       <div className="flex items-center space-x-2">
                         {isCorrectAnswer && (
                           <span className="text-green-600 dark:text-green-400 text-sm font-semibold">

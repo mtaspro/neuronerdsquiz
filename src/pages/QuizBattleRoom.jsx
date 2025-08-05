@@ -8,6 +8,7 @@ import { useNotification } from '../components/NotificationSystem';
 import useExamSecurity from '../hooks/useExamSecurity';
 import SecurityWarning from '../components/SecurityWarning';
 import SecurityInitModal from '../components/SecurityInitModal';
+import MathText from '../components/MathText';
 
 const QuizBattleRoom = () => {
   const { roomId } = useParams();
@@ -728,7 +729,9 @@ const QuizBattleRoom = () => {
                     </div>
                   </div>
 
-                  <h3 className="text-xl font-semibold mb-6">{questions[currentQuestion]?.question}</h3>
+                  <h3 className="text-xl font-semibold mb-6">
+                    <MathText>{questions[currentQuestion]?.question}</MathText>
+                  </h3>
 
                   <div className="space-y-3">
                     {questions[currentQuestion]?.options.map((option, index) => (
@@ -749,7 +752,7 @@ const QuizBattleRoom = () => {
                         whileTap={{ scale: answered ? 1 : 0.98 }}
                       >
                         <span className="font-semibold mr-3">{String.fromCharCode(65 + index)}.</span>
-                        {option}
+                        <MathText>{option}</MathText>
                       </motion.button>
                     ))}
                   </div>

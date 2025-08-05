@@ -7,6 +7,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import useExamSecurity from "../hooks/useExamSecurity";
 import SecurityWarning from "../components/SecurityWarning";
 import SecurityInitModal from "../components/SecurityInitModal";
+import MathText from "../components/MathText";
 import axios from "axios";
 
 export default function QuizPage() {
@@ -448,7 +449,7 @@ export default function QuizPage() {
             {/* Question */}
             <div className="mb-6">
               <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 dark:text-white mb-4 leading-tight">
-                {currentQuestion.question}
+                <MathText>{currentQuestion.question}</MathText>
               </h2>
             </div>
 
@@ -472,7 +473,9 @@ export default function QuizPage() {
                       {selectedOption === index && (
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       )}
-                      <span className="font-medium">{option}</span>
+                      <span className="font-medium">
+                        <MathText>{option}</MathText>
+                      </span>
                   </div>
                 </motion.button>
               ))}
