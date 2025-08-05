@@ -249,7 +249,7 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute right-0 top-12 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2 min-w-64 z-10"
+                  className="absolute right-0 top-12 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2 min-w-64 z-50"
                 >
                   {models.map(model => (
                     <button
@@ -348,8 +348,7 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
                 </div>
                 <div className="bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50 shadow-lg backdrop-blur-sm px-6 py-4 rounded-3xl">
                   <div className="prose prose-sm max-w-none dark:prose-invert">
-                    <ReactMarkdown>{streamingMessage}</ReactMarkdown>
-                    <span className="inline-block w-2 h-5 bg-blue-500 ml-1 animate-pulse"></span>
+                    <span dangerouslySetInnerHTML={{ __html: streamingMessage + '<span class="inline-block w-2 h-5 bg-blue-500 ml-1 animate-pulse"></span>' }} />
                   </div>
                 </div>
               </div>
@@ -453,22 +452,7 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
           </div>
         </div>
       </motion.div>
-      
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, #2563eb, #7c3aed);
-        }
-      `}</style>
+
     </div>
   );
 };
