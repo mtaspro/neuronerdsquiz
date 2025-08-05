@@ -29,34 +29,37 @@ import { useState } from "react";
 
 function Navbar() {
   const [isAdmin, setIsAdmin] = React.useState(false);
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   
   React.useEffect(() => {
-    function checkAdmin() {
+    function checkAuth() {
       const userData = localStorage.getItem('userData');
       const token = localStorage.getItem('authToken');
       
       if (userData && token) {
         try {
           const user = JSON.parse(userData);
-          const isUserAdmin = user.isAdmin === true;
-          setIsAdmin(isUserAdmin);
+          setIsAuthenticated(true);
+          setIsAdmin(user.isAdmin === true);
         } catch (error) {
+          setIsAuthenticated(false);
           setIsAdmin(false);
         }
       } else {
+        setIsAuthenticated(false);
         setIsAdmin(false);
       }
     }
     
-    checkAdmin();
+    checkAuth();
     
-    window.addEventListener('storage', checkAdmin);
-    window.addEventListener('userAuthChange', checkAdmin);
+    window.addEventListener('storage', checkAuth);
+    window.addEventListener('userAuthChange', checkAuth);
     
     return () => {
-      window.removeEventListener('storage', checkAdmin);
-      window.removeEventListener('userAuthChange', checkAdmin);
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('userAuthChange', checkAuth);
     };
   }, []);
 
@@ -67,11 +70,11 @@ function Navbar() {
           <div className="flex items-center space-x-4">
             <div className="hidden md:flex md:space-x-4">
               <Link to="/" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Home</Link>
-              <Link to="/dashboard" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Dashboard</Link>
-              <Link to="/leaderboard" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Leaderboard</Link>
-              <Link to="/badges" className="text-gray-800 dark:text-white font-semibold hover:text-yellow-600 dark:hover:text-yellow-400 transition">Badges</Link>
-              <Link to="/about" className="text-gray-800 dark:text-white font-semibold hover:text-purple-600 dark:hover:text-purple-400 transition">About</Link>
-              <Link to="/ai-chat" className="text-gray-800 dark:text-white font-semibold hover:text-green-600 dark:hover:text-green-400 transition">AI Chat</Link>
+              <Link to={isAuthenticated ? "/dashboard" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Dashboard</Link>
+              <Link to={isAuthenticated ? "/leaderboard" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Leaderboard</Link>
+              <Link to={isAuthenticated ? "/badges" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-yellow-600 dark:hover:text-yellow-400 transition">Badges</Link>
+              <Link to={isAuthenticated ? "/about" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-purple-600 dark:hover:text-purple-400 transition">About</Link>
+              <Link to={isAuthenticated ? "/ai-chat" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-green-600 dark:hover:text-green-400 transition">Neuraflow AI</Link>
               {isAdmin && (
                 <Link to="/admin" className="text-gray-800 dark:text-white font-semibold hover:text-pink-600 dark:hover:text-pink-400 transition">Admin</Link>
               )}
@@ -103,11 +106,11 @@ function Navbar() {
           <div className="absolute top-14 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg" onClick={(e) => e.stopPropagation()}>
             <div className="px-2 pt-2 pb-3 space-y-1">
               <Link to="/" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Home</Link>
-              <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Dashboard</Link>
-              <Link to="/leaderboard" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Leaderboard</Link>
-              <Link to="/badges" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Badges</Link>
-              <Link to="/about" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">About</Link>
-              <Link to="/ai-chat" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">AI Chat</Link>
+              <Link to={isAuthenticated ? "/dashboard" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Dashboard</Link>
+              <Link to={isAuthenticated ? "/leaderboard" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Leaderboard</Link>
+              <Link to={isAuthenticated ? "/badges" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Badges</Link>
+              <Link to={isAuthenticated ? "/about" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">About</Link>
+              <Link to={isAuthenticated ? "/ai-chat" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Neuraflow AI</Link>
               {isAdmin && (
                 <Link to="/admin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Admin</Link>
               )}

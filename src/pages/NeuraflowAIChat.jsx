@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPaperPlane, FaCog, FaUser } from 'react-icons/fa';
+import { FaPaperPlane, FaCog, FaUser, FaRobot, FaStar } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
 import botAvatar from '../assets/botavatar.png';
@@ -9,7 +9,9 @@ const NeuraflowAIChat = () => {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('meta-llama/llama-3.3-70b-instruct:free');
+  const [streamingMessage, setStreamingMessage] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('qwen/qwen3-235b-a22b:free');
   const [showModelSelector, setShowModelSelector] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -51,7 +53,7 @@ const NeuraflowAIChat = () => {
     {
       id: 1,
       type: 'bot',
-      content: "👋 Hello! I'm **Neuraflow AI**, your intelligent study companion! I'm here to help you with academic questions, provide information about our quiz platform, and chat about anything you'd like to know. How can I assist you today?",
+      content: "👋 Hello! I'm **Neuraflow AI**, your intelligent study companion! ✨\n\nI'm here to help you with:\n• 📚 Academic questions across all subjects\n• 🎯 Quiz platform features and updates\n• 🏆 Study strategies and tips\n• 💬 General conversations\n\nHow can I assist you today?",
       timestamp: new Date()
     }
   ];
@@ -82,8 +84,8 @@ const NeuraflowAIChat = () => {
 
 🗣️ Tone & Communication Style:
 - Friendly, clear, concise, and student-focused.
-- Avoid unnecessary humor or filler (e.g., no “ahaha”, “lol”).
-- Use friendly emojis when helpful 🙂 but don’t overuse.
+- Avoid unnecessary humor or filler (e.g., no "ahaha", "lol").
+- Use friendly emojis when helpful 🙂 but don't overuse.
 - Write short and to-the-point unless detail is requested.
 - If the user types in Bangla, reply fully in Bangla.
 
@@ -112,11 +114,11 @@ const NeuraflowAIChat = () => {
 - Md. Tahshin Mahmud Irham (XY)  
 - Fathema Zahra (XX)  
 - Zahin Ushrut (Parsa) (XX)  
-- Muntasir (XY)  
-- Shakira Nowshin (XX)  
+- Muntasir (XY)
+- Shakira Nowshin (XX)
 - Nanzibah Azmaeen (XX)  
-- Samiul Alam Akib (XY)  
-- Jitu Chakraborty (XY)  
+- Samiul Alam Akib (XY) 
+- Jitu Chakraborty (XY) 
 - Amdad Hossen Nafiz (XY)
 
 All the members are Students of *Chattogram College* and are passionate about learning and helping each other succeed.
@@ -141,6 +143,22 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
 
     try {
       const response = await getAIResponse(currentInput);
+      
+      // Start streaming effect
+      setIsStreaming(true);
+      setStreamingMessage('');
+      
+      // Simulate typewriter effect
+      let currentText = '';
+      const words = response.split(' ');
+      
+      for (let i = 0; i < words.length; i++) {
+        currentText += (i > 0 ? ' ' : '') + words[i];
+        setStreamingMessage(currentText);
+        await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 50));
+      }
+      
+      // Add final message
       const botResponse = {
         id: Date.now() + 1,
         type: 'bot',
@@ -148,6 +166,8 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
         timestamp: new Date()
       };
       setMessages(prev => [...prev, botResponse]);
+      setIsStreaming(false);
+      setStreamingMessage('');
     } catch (error) {
       console.error('AI response error:', error);
       const errorResponse = {
@@ -184,21 +204,30 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
     return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const getUserAvatar = () => {
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-    return userData.avatar || `https://ui-avatars.com/api/?name=${userData.username || 'User'}&background=random`;
-  };
-
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 transition-all duration-500">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-3 shadow-sm">
+      <motion.div 
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50 px-4 py-4 shadow-lg"
+      >
         <div className="flex items-center justify-between max-w-4xl mx-auto">
-          <div className="flex items-center space-x-3">
-            <img src={botAvatar} alt="Neuraflow AI" className="w-10 h-10 rounded-full" />
+          <div className="flex items-center space-x-4">
+            <motion.div
+              animate={{ rotate: isTyping ? 360 : 0 }}
+              transition={{ duration: 2, repeat: isTyping ? Infinity : 0, ease: "linear" }}
+              className="relative"
+            >
+              <img src={botAvatar} alt="Neuraflow AI" className="w-12 h-12 rounded-full ring-2 ring-blue-500/30" />
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 animate-pulse"></div>
+            </motion.div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Neuraflow AI</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Your intelligent study companion</p>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Neuraflow AI</h1>
+              <div className="flex items-center space-x-2">
+                <FaStar className="text-yellow-500 text-xs" />
+                <p className="text-sm text-gray-600 dark:text-gray-400">Your intelligent study companion</p>
+              </div>
             </div>
           </div>
           
@@ -244,72 +273,126 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
             </AnimatePresence>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar">
+        <div className="max-w-4xl mx-auto space-y-8">
           <AnimatePresence>
             {messages.map((message) => (
               <motion.div
                 key={message.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
                 className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`flex items-start space-x-3 max-w-3xl ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                <div className={`flex items-start space-x-4 max-w-4xl ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                   {/* Avatar */}
-                  <div className="flex-shrink-0">
+                  <motion.div 
+                    className="flex-shrink-0"
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ duration: 0.2 }}
+                  >
                     {message.type === 'bot' ? (
-                      <img src={botAvatar} alt="Neuraflow AI" className="w-8 h-8 rounded-full" />
+                      <div className="relative">
+                        <img src={botAvatar} alt="Neuraflow AI" className="w-10 h-10 rounded-full ring-2 ring-blue-500/30 shadow-lg" />
+                        <FaRobot className="absolute -bottom-1 -right-1 text-blue-500 text-xs bg-white dark:bg-gray-900 rounded-full p-1 w-4 h-4" />
+                      </div>
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg ring-2 ring-white/50">
                         <FaUser className="text-white text-sm" />
                       </div>
                     )}
-                  </div>
+                  </motion.div>
 
                   {/* Message Bubble */}
-                  <div
-                    className={`group relative px-4 py-3 rounded-2xl shadow-sm ${
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className={`group relative px-6 py-4 rounded-3xl shadow-lg backdrop-blur-sm ${
                       message.type === 'user'
-                        ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
-                        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                        ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-blue-500/25'
+                        : 'bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50 shadow-gray-500/10'
                     }`}
                   >
-                    <div className="prose prose-sm max-w-none">
+                    <div className="prose prose-sm max-w-none dark:prose-invert">
                       <ReactMarkdown>{message.content}</ReactMarkdown>
                     </div>
                     
                     {/* Timestamp on hover */}
-                    <div className="absolute -bottom-6 left-0 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-gray-500 dark:text-gray-400">
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      whileHover={{ opacity: 1 }}
+                      className="absolute -bottom-8 left-0 text-xs text-gray-500 dark:text-gray-400 bg-white/80 dark:bg-gray-800/80 px-2 py-1 rounded-lg backdrop-blur-sm"
+                    >
                       {formatTimestamp(message.timestamp)}
-                    </div>
-                  </div>
+                    </motion.div>
+                  </motion.div>
                 </div>
               </motion.div>
             ))}
           </AnimatePresence>
 
+          {/* Streaming Message */}
+          {isStreaming && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-start"
+            >
+              <div className="flex items-start space-x-4 max-w-4xl">
+                <div className="relative">
+                  <img src={botAvatar} alt="Neuraflow AI" className="w-10 h-10 rounded-full ring-2 ring-blue-500/30 shadow-lg" />
+                  <FaRobot className="absolute -bottom-1 -right-1 text-blue-500 text-xs bg-white dark:bg-gray-900 rounded-full p-1 w-4 h-4" />
+                </div>
+                <div className="bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50 shadow-lg backdrop-blur-sm px-6 py-4 rounded-3xl">
+                  <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <ReactMarkdown>{streamingMessage}</ReactMarkdown>
+                    <span className="inline-block w-2 h-5 bg-blue-500 ml-1 animate-pulse"></span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Typing Indicator */}
           <AnimatePresence>
-            {isTyping && (
+            {isTyping && !isStreaming && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -30, scale: 0.9 }}
+                transition={{ duration: 0.3 }}
                 className="flex justify-start"
               >
-                <div className="flex items-start space-x-3 max-w-3xl">
-                  <img src={botAvatar} alt="Neuraflow AI" className="w-8 h-8 rounded-full" />
-                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 rounded-2xl shadow-sm">
-                    <div className="flex items-center space-x-2">
+                <div className="flex items-start space-x-4 max-w-4xl">
+                  <motion.div
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <img src={botAvatar} alt="Neuraflow AI" className="w-10 h-10 rounded-full ring-2 ring-blue-500/30 shadow-lg" />
+                  </motion.div>
+                  <div className="bg-white/90 dark:bg-gray-800/90 border border-gray-200/50 dark:border-gray-700/50 px-6 py-4 rounded-3xl shadow-lg backdrop-blur-sm">
+                    <div className="flex items-center space-x-3">
                       <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <motion.div 
+                          className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                        />
+                        <motion.div 
+                          className="w-3 h-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+                        />
+                        <motion.div 
+                          className="w-3 h-3 bg-gradient-to-r from-pink-500 to-blue-500 rounded-full"
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
+                        />
                       </div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Neuraflow AI is typing...</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">Neuraflow AI is thinking...</span>
                     </div>
                   </div>
                 </div>
@@ -322,31 +405,70 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
       </div>
 
       {/* Input Bar */}
-      <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-4 py-4">
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-t border-gray-200/50 dark:border-gray-700/50 px-4 py-6"
+      >
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-4">
             <div className="flex-1 relative">
-              <input
+              <motion.input
                 ref={inputRef}
                 type="text"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Ask me anything about studies, quizzes, or development..."
-                className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-2xl border-0 focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all"
-                disabled={isTyping}
+                placeholder="Ask me anything about studies, quizzes, or development... ✨"
+                className="w-full px-6 py-4 bg-white/90 dark:bg-gray-800/90 rounded-3xl border border-gray-200/50 dark:border-gray-700/50 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 focus:outline-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-300 shadow-lg backdrop-blur-sm"
+                disabled={isTyping || isStreaming}
+                whileFocus={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
               />
+              {inputText && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                >
+                  <span className="text-xs">{inputText.length}</span>
+                </motion.div>
+              )}
             </div>
-            <button
+            <motion.button
               onClick={handleSendMessage}
-              disabled={!inputText.trim() || isTyping}
-              className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-2xl transition-all duration-200 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              disabled={!inputText.trim() || isTyping || isStreaming}
+              className="p-4 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-2xl transition-all duration-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
             >
-              <FaPaperPlane className="text-sm" />
-            </button>
+              <motion.div
+                animate={{ rotate: isTyping || isStreaming ? 360 : 0 }}
+                transition={{ duration: 1, repeat: (isTyping || isStreaming) ? Infinity : 0, ease: "linear" }}
+              >
+                <FaPaperPlane className="text-lg" />
+              </motion.div>
+            </motion.button>
           </div>
         </div>
-      </div>
+      </motion.div>
+      
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(to bottom, #2563eb, #7c3aed);
+        }
+      `}</style>
     </div>
   );
 };
