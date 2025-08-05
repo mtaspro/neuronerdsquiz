@@ -1,5 +1,5 @@
-const express = require('express');
-const axios = require('axios');
+import express from 'express';
+import axios from 'axios';
 const router = express.Router();
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -203,4 +203,4 @@ router.post('/generate', async (req, res) => {
   }
 });
 
-module.exports = { chatWithQwen, chatWithQwenReasoning, router }; 
+export { chatWithQwen, chatWithQwenReasoning, router }; 
