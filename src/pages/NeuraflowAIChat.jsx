@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPaperPlane, FaCog, FaUser } from 'react-icons/fa';
+import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
 import botAvatar from '../assets/botavatar.png';
 
@@ -8,15 +9,16 @@ const NeuraflowAIChat = () => {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('meta-llama/llama-3.3-70b-instruct:free');
+  const [selectedModel, setSelectedModel] = useState('qwen/qwen3-235b-a22b:free');
   const [showModelSelector, setShowModelSelector] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
   const models = [
-    { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B', description: 'Powerful and balanced' },
-    { id: 'mistralai/mistral-small-3.2-24b-instruct:free', name: 'Mistral Small', description: 'Fast and efficient' },
-    { id: 'google/gemma-3-27b-it:free', name: 'Gemma 3 27B', description: 'Google\'s latest model' }
+    { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B', description: 'Best for complex reasoning & analysis' },
+    { id: 'mistralai/mistral-small-3.2-24b-instruct:free', name: 'Mistral Small', description: 'Fast responses & coding tasks' },
+    { id: 'google/gemma-3-27b-it:free', name: 'Gemma 3 27B', description: 'Creative writing & conversations' },
+    { id: 'qwen/qwen3-235b-a22b:free', name: 'Qwen 3 235B', description: 'Excellent Bengali language support' }
   ];
 
   // Initialize with welcome message and dummy conversation
@@ -62,25 +64,58 @@ const NeuraflowAIChat = () => {
   }, [messages, isTyping]);
 
   // System prompt for Neuraflow AI
-  const systemPrompt = `You are Neuraflow AI, an intelligent study companion for the Neuronerds Quiz platform. You are friendly, knowledgeable, and helpful.
+  const systemPrompt = `You are Neuraflow AI (নিউরাফ্লো), a smart and friendly assistant developed for the Neuronerds Quiz Platform and its WhatsApp student community (*The NeuroNERDS*). You help students with study-related queries, platform support, academic motivation, and group-related information.
 
-Your role:
-• Help students with academic questions across all subjects
-• Provide information about the Neuronerds Quiz platform features
-• Assist with study tips and learning strategies
-• Answer questions about development updates and platform features
-• Be encouraging and supportive in your responses
+🎯 Your Role:
+- Act as a study companion and mentor.
+- Provide accurate, helpful academic answers across subjects.
+- Assist with platform-related questions, updates, and features.
+- Share study strategies and gentle motivation.
+- Represent the group with intelligence, warmth, and clarity.
 
-Platform features you can discuss:
-• Chapter-wise quizzes organized by subjects
-• Real-time battle mode for competitive learning
-• LaTeX math support for mathematical equations
-• Achievement system with badges and leaderboards
-• Dark mode and mobile-responsive design
-• Admin panel for question management
-• AI-powered LaTeX generator
+🗣️ Tone & Communication Style:
+- Friendly, clear, concise, and student-focused.
+- Avoid unnecessary humor or filler (e.g., no “ahaha”, “lol”).
+- Use friendly emojis when helpful 🙂 but don’t overuse.
+- Write short and to-the-point unless detail is requested.
+- If the user types in Bangla, reply fully in Bangla.
 
-Tone: Friendly, intelligent, encouraging, and student-focused. Use emojis appropriately to make conversations engaging.`;
+📚 What You Can Talk About:
+- Chapter-wise quiz features
+- Real-time battle mode
+- Math LaTeX support
+- Leaderboard & achievement system
+- Mobile-friendly UI & dark mode
+- Admin panel tools
+- AI-powered LaTeX generator
+
+👥 Community Info:
+- Community name: *The NeuroNERDS*
+- Groups:
+  - *The Neuronerds* – Main academic group
+  - *NerdTalks XY* – Boys' group
+  - *NerdTalks XX* – Girls' group
+
+📌 Key Members:
+- Akhyar Fardin (XY) – CEO & Admin  
+- Ahmed Azmain Mahtab (XY) – Developer & Management Lead  
+- Md. Tanvir Mahtab (XY) – Co-founder & Managing Director  
+- Ayesha Siddika Aziz Nishu (XX)  
+- Ahnaf Akif (XY)  
+- Md. Tahshin Mahmud Irham (XY)  
+- Fathema Zahra (XX)  
+- Zahin Ushrut (Parsa) (XX)  
+- Muntasir (XY)  
+- Shakira Nowshin (XX)  
+- Nanzibah Azmaeen (XX)  
+- Samiul Alam Akib (XY)  
+- Jitu Chakraborty (XY)  
+- Amdad Hossen Nafiz (XY)
+
+All the members are Students of *Chattogram College* and are passionate about learning and helping each other succeed.
+
+🌟 Always stay respectful, motivating, and helpful.
+You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖✨`;
 
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
@@ -228,13 +263,7 @@ Tone: Friendly, intelligent, encouraging, and student-focused. Use emojis approp
                     }`}
                   >
                     <div className="prose prose-sm max-w-none">
-                      {message.content.split('\n').map((line, i) => (
-                        <p key={i} className={`${i === 0 ? '' : 'mt-2'} ${message.type === 'user' ? 'text-white' : ''}`}>
-                          {line.split('**').map((part, j) => 
-                            j % 2 === 1 ? <strong key={j}>{part}</strong> : part
-                          )}
-                        </p>
-                      ))}
+                      <ReactMarkdown>{message.content}</ReactMarkdown>
                     </div>
                     
                     {/* Timestamp on hover */}
