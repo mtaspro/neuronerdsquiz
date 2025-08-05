@@ -54,12 +54,12 @@ const About = () => {
         'UI/UX design and animations'
       ],
       socials: [
-        { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/mtaspro', color: 'text-gray-800 dark:text-gray-200' },
         { platform: 'X', icon: FaTwitter, url: 'https://x.com/AAMahtab', color: 'text-gray-800 dark:text-gray-200' },
+        { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/mtaspro', color: 'text-gray-800 dark:text-gray-200' }
       ]
     },
     {
-      name: 'Md. Akhyar Fardin',
+      name: 'Akhyar Fardin',
       role: 'Founder & CEO',
       avatar: '🧠',
       description: 'Visionary behind the Neuronerds movement',
@@ -72,7 +72,8 @@ const About = () => {
         'Future-proof Study plan strategy'
       ],
       socials: [
-        { platform: 'X', icon: FaTwitter, url: 'https://x.com/AkhyarFardin', color: 'text-gray-800 dark:text-gray-200' }
+        { platform: 'X', icon: FaTwitter, url: 'https://x.com/AkhyarFardin', color: 'text-gray-800 dark:text-gray-200' },
+        { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/fardinatwork', color: 'text-gray-800 dark:text-gray-200' }
       ]
     },
     {
