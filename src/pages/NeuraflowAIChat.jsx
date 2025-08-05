@@ -20,6 +20,8 @@ const NeuraflowAIChat = () => {
     { id: 'google/gemma-3-27b-it:free', name: 'Gemma 3 27B', description: 'Creative writing & conversations' },
     { id: 'qwen/qwen3-235b-a22b:free', name: 'Qwen 3 235B', description: 'Excellent Bengali language support' }
   ];
+  
+  console.log('Models array:', models);
 
   // Initialize with welcome message and dummy conversation
   useEffect(() => {
