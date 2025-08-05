@@ -19,6 +19,7 @@
     "express": "^4.19.2",
     "framer-motion": "^12.23.9",
     "jsonwebtoken": "^9.0.2",
+    "mathjax-react": "^2.0.1",
     "mongoose": "^7.6.0",
     "multer": "^2.0.2",
     "react": "^19.1.0",
