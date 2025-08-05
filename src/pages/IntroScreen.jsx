@@ -9,7 +9,6 @@ import techVideo from "../assets/tech-bg.mp4";
 import techVideo1 from "../assets/tech-bg1.mp4";
 import techVideo2 from "../assets/tech-bg2.mp4";
 import techVideo3 from "../assets/tech-bg3.mp4";
-import techVideo4 from "../assets/tech-bg4.mp4";
 
 export default function IntroScreen() {
   const [showVideo, setShowVideo] = useState(false);
@@ -27,7 +26,6 @@ export default function IntroScreen() {
     'tech-bg1': techVideo1,
     'tech-bg2': techVideo2,
     'tech-bg3': techVideo3,
-    'tech-bg4': techVideo4
   };
 
   // Load saved theme from localStorage
@@ -98,7 +96,6 @@ export default function IntroScreen() {
       'tech-bg1': 'from-green-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-green-900 dark:to-teal-900',
       'tech-bg2': 'from-purple-50 via-pink-50 to-rose-50 dark:from-gray-900 dark:via-purple-900 dark:to-pink-900',
       'tech-bg3': 'from-orange-50 via-red-50 to-pink-50 dark:from-gray-900 dark:via-orange-900 dark:to-red-900',
-      'tech-bg4': 'from-indigo-50 via-blue-50 to-cyan-50 dark:from-gray-900 dark:via-indigo-900 dark:to-blue-900'
     };
     return gradients[currentTheme] || gradients['tech-bg'];
   };
@@ -109,9 +106,8 @@ export default function IntroScreen() {
       'tech-bg1': 'CUTY KITTENS',
       'tech-bg2': 'LIVING KING',
       'tech-bg3': 'ALIEN ISOLATION',
-      'tech-bg4': 'NEUTRAL NATURE'
     };
-    return names[currentTheme] || 'Tech Matrix';
+    return names[currentTheme] || 'LOONY CIRCLES';
   };
 
   return (

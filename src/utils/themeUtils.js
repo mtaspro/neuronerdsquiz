@@ -2,40 +2,33 @@
 
 export const themes = {
   'tech-bg': {
-    name: 'Tech Matrix',
-    description: 'Digital matrix with flowing code',
+    name: 'Loony Circles',
+    description: 'colorful spheres and patterns',
     gradient: 'from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900',
     primaryColor: 'blue',
     accentColor: 'purple'
   },
   'tech-bg1': {
-    name: 'Cyber Circuit',
-    description: 'Futuristic circuit board patterns',
+    name: 'cuty Kittens',
+    description: 'Cute kittens and playful designs',
     gradient: 'from-green-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-green-900 dark:to-teal-900',
     primaryColor: 'green',
     accentColor: 'teal'
   },
   'tech-bg2': {
-    name: 'Neural Network',
-    description: 'Connected nodes and pathways',
+    name: 'Living King',
+    description: 'Anime Warrior',
     gradient: 'from-purple-50 via-pink-50 to-rose-50 dark:from-gray-900 dark:via-purple-900 dark:to-pink-900',
     primaryColor: 'purple',
     accentColor: 'pink'
   },
   'tech-bg3': {
-    name: 'Data Stream',
-    description: 'Flowing data visualization',
+    name: 'Alien Isolation',
+    description: 'Spaceship interior',
     gradient: 'from-orange-50 via-red-50 to-pink-50 dark:from-gray-900 dark:via-orange-900 dark:to-red-900',
     primaryColor: 'orange',
     accentColor: 'red'
   },
-  'tech-bg4': {
-    name: 'Quantum Field',
-    description: 'Particle physics simulation',
-    gradient: 'from-indigo-50 via-blue-50 to-cyan-50 dark:from-gray-900 dark:via-indigo-900 dark:to-blue-900',
-    primaryColor: 'indigo',
-    accentColor: 'blue'
-  }
 };
 
 export const getTheme = (themeId) => {

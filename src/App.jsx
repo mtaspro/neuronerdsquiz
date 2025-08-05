@@ -65,9 +65,8 @@ function Navbar() {
         <div className="flex justify-between h-14 items-center">
           <div className="flex items-center space-x-4">
             <div className="hidden md:flex md:space-x-4">
-              <Link to="/" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Intro</Link>
-              <Link to="/quiz" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Quiz</Link>
-              <Link to="/result" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Result</Link>
+              <Link to="/" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Home</Link>
+              <Link to="/dashboard" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Dashboard</Link>
               <Link to="/leaderboard" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Leaderboard</Link>
               <Link to="/badges" className="text-gray-800 dark:text-white font-semibold hover:text-yellow-600 dark:hover:text-yellow-400 transition">Badges</Link>
               <Link to="/about" className="text-gray-800 dark:text-white font-semibold hover:text-purple-600 dark:hover:text-purple-400 transition">About</Link>
@@ -97,9 +96,8 @@ function Navbar() {
         </div>
       </div>
       <div className={`${menuOpen ? 'block' : 'hidden'} md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-2 pt-2 pb-3 space-y-1`}>
-        <Link to="/" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Intro</Link>
-        <Link to="/quiz" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Quiz</Link>
-        <Link to="/result" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Result</Link>
+        <Link to="/" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Home</Link>
+        <Link to="/dashboard" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Dashboard</Link>
         <Link to="/leaderboard" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Leaderboard</Link>
         <Link to="/badges" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Badges</Link>
         <Link to="/about" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">About</Link>
