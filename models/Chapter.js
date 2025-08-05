@@ -19,6 +19,10 @@ const chapterSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  visible: {
+    type: Boolean,
+    default: true
   }
 }, {
   timestamps: true

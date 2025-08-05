@@ -7,7 +7,7 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 // AI Chat endpoint
 router.post('/', async (req, res) => {
   try {
-    const { message, model, systemPrompt } = req.body;
+    const { message, model, systemPrompt, conversationHistory = [] } = req.body;
     
     if (!message || !message.trim()) {
       return res.status(400).json({ error: 'Message is required' });
@@ -17,14 +17,18 @@ router.post('/', async (req, res) => {
       return res.status(500).json({ error: 'OpenRouter API key not configured' });
     }
 
+    // Build messages array with conversation history
+    const messages = [
+      { role: 'system', content: systemPrompt || 'You are a helpful AI assistant.' },
+      ...conversationHistory,
+      { role: 'user', content: message.trim() }
+    ];
+
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
       {
         model: model || 'meta-llama/llama-3.3-70b-instruct:free',
-        messages: [
-          { role: 'system', content: systemPrompt || 'You are a helpful AI assistant.' },
-          { role: 'user', content: message.trim() }
-        ],
+        messages: messages,
         temperature: 0.7,
         max_tokens: 1000,
         top_p: 0.9

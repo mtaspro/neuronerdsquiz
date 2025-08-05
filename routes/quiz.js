@@ -19,10 +19,18 @@ function generateQuizId(chapter, questions) {
   return `${chapter}-${hash.substring(0, 8)}`;
 }
 
-// Get all active chapters
-router.get('/chapters', async (req, res) => {
+// Get all active chapters (filtered by visibility for regular users)
+router.get('/chapters', authMiddleware, async (req, res) => {
   try {
-    const chapters = await Chapter.find({ isActive: true }).sort('order');
+    const user = await User.findById(req.user.userId);
+    let filter = { isActive: true };
+    
+    // If not admin, only show visible chapters
+    if (!user || !user.isAdmin) {
+      filter.visible = true;
+    }
+    
+    const chapters = await Chapter.find(filter).sort('order');
     res.json(chapters);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });

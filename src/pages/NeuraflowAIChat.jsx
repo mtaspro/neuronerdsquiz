@@ -20,45 +20,50 @@ const NeuraflowAIChat = () => {
     { id: 'google/gemma-3-27b-it:free', name: 'Gemma 3 27B', description: 'Creative writing & conversations' },
     { id: 'qwen/qwen3-235b-a22b:free', name: 'Qwen 3 235B', description: 'Excellent Bengali language support' }
   ];
-  
-  console.log('Models array:', models);
 
-  // Initialize with welcome message and dummy conversation
+  // Load conversation history on component mount
   useEffect(() => {
-    const initialMessages = [
-      {
-        id: 1,
-        type: 'bot',
-        content: "👋 Hello! I'm **Neuraflow AI**, your intelligent study companion! I'm here to help you with academic questions, provide information about our quiz platform, discuss development updates, and chat about anything you'd like to know. How can I assist you today?",
-        timestamp: new Date(Date.now() - 300000)
-      },
-      {
-        id: 2,
-        type: 'user',
-        content: "Hi! Can you tell me about the quiz features?",
-        timestamp: new Date(Date.now() - 240000)
-      },
-      {
-        id: 3,
-        type: 'bot',
-        content: "Absolutely! 🎯 Our **Neuronerds Quiz** platform offers some amazing features:\n\n• **Chapter-wise Quizzes** - Organized by subjects and topics\n• **Real-time Battle Mode** ⚔️ - Compete with friends live\n• **LaTeX Math Support** - Beautiful mathematical equations\n• **Achievement System** 🏆 - Earn badges for your progress\n• **Leaderboards** - See how you rank against others\n• **Dark Mode** 🌙 - Easy on the eyes\n• **Mobile Responsive** - Study anywhere, anytime\n\nWhat specific feature would you like to know more about?",
-        timestamp: new Date(Date.now() - 180000)
-      },
-      {
-        id: 4,
-        type: 'user',
-        content: "How does the battle mode work?",
-        timestamp: new Date(Date.now() - 120000)
-      },
-      {
-        id: 5,
-        type: 'bot',
-        content: "Great question! 🚀 **Battle Mode** is our most exciting feature:\n\n**How it works:**\n1. **Create or Join** a room with a unique code\n2. **Wait for friends** to join (up to 30 players!)\n3. **Everyone gets the same questions** simultaneously\n4. **Race to answer** - speed and accuracy matter\n5. **Live progress tracking** - see avatars racing on screen\n6. **Real-time results** - instant leaderboard after each battle\n\n**Special features:**\n• **Socket.IO powered** for real-time sync\n• **Anti-cheat security** - fullscreen mode, tab detection\n• **Chapter selection** - battle on specific topics\n• **Spectator mode** - watch ongoing battles\n\nIt's like a quiz game show with your friends! Want to try it out? 🎮",
-        timestamp: new Date(Date.now() - 60000)
+    const loadConversationHistory = () => {
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const userId = userData.id || 'guest';
+      const savedMessages = localStorage.getItem(`ai_chat_${userId}`);
+      
+      if (savedMessages) {
+        try {
+          const parsedMessages = JSON.parse(savedMessages).map(msg => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }));
+          setMessages(parsedMessages);
+        } catch (error) {
+          console.error('Error loading chat history:', error);
+          setMessages(getWelcomeMessage());
+        }
+      } else {
+        setMessages(getWelcomeMessage());
       }
-    ];
-    setMessages(initialMessages);
+    };
+    
+    loadConversationHistory();
   }, []);
+  
+  const getWelcomeMessage = () => [
+    {
+      id: 1,
+      type: 'bot',
+      content: "👋 Hello! I'm **Neuraflow AI**, your intelligent study companion! I'm here to help you with academic questions, provide information about our quiz platform, and chat about anything you'd like to know. How can I assist you today?",
+      timestamp: new Date()
+    }
+  ];
+  
+  // Save conversation history whenever messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const userId = userData.id || 'guest';
+      localStorage.setItem(`ai_chat_${userId}`, JSON.stringify(messages));
+    }
+  }, [messages]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -159,10 +164,18 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
 
   const getAIResponse = async (userInput) => {
     const apiUrl = import.meta.env.VITE_API_URL || '';
+    
+    // Get recent conversation history for context (last 5 pairs = 10 messages)
+    const recentMessages = messages.slice(-10).map(msg => ({
+      role: msg.type === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    }));
+    
     const response = await axios.post(`${apiUrl}/api/ai-chat`, {
       message: userInput,
       model: selectedModel,
-      systemPrompt: systemPrompt
+      systemPrompt: systemPrompt,
+      conversationHistory: recentMessages
     });
     return response.data.response;
   };

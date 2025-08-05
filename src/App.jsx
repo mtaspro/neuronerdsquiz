@@ -77,8 +77,8 @@ function Navbar() {
               )}
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="dark-mode-toggle">
+          <div className="flex items-center space-x-2">
+            <div className="hidden md:block">
               <DarkModeToggle />
             </div>
             <button
@@ -97,17 +97,27 @@ function Navbar() {
           </div>
         </div>
       </div>
-      <div className={`${menuOpen ? 'block' : 'hidden'} md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-2 pt-2 pb-3 space-y-1`}>
-        <Link to="/" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Home</Link>
-        <Link to="/dashboard" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Dashboard</Link>
-        <Link to="/leaderboard" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Leaderboard</Link>
-        <Link to="/badges" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Badges</Link>
-        <Link to="/about" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">About</Link>
-        <Link to="/ai-chat" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">AI Chat</Link>
-        {isAdmin && (
-          <Link to="/admin" className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Admin</Link>
-        )}
-      </div>
+      {/* Mobile Menu Overlay */}
+      {menuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setMenuOpen(false)}>
+          <div className="absolute top-14 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <Link to="/" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Home</Link>
+              <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Dashboard</Link>
+              <Link to="/leaderboard" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Leaderboard</Link>
+              <Link to="/badges" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Badges</Link>
+              <Link to="/about" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">About</Link>
+              <Link to="/ai-chat" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">AI Chat</Link>
+              {isAdmin && (
+                <Link to="/admin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Admin</Link>
+              )}
+              <div className="px-3 py-2 border-t border-gray-200 dark:border-gray-700 mt-2">
+                <DarkModeToggle />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
