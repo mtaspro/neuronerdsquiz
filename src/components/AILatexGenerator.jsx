@@ -209,11 +209,11 @@ const AILatexGenerator = ({ onInsert }) => {
                 <div>
                   <h4 className="font-semibold text-purple-600 dark:text-purple-400 mb-2">💡 Example Inputs:</h4>
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-sm space-y-2">
-                    <div><strong>"quadratic formula"</strong> → $x = \frac{{-b \pm \sqrt{{b^2 - 4ac}}}}{{2a}}$</div>
-                    <div><strong>"integral of x squared"</strong> → $\int x^2 dx$</div>
-                    <div><strong>"2x2 matrix with a, b, c, d"</strong> → $\begin{{bmatrix}} a & b \\\\ c & d \end{{bmatrix}}$</div>
-                    <div><strong>"square root of x plus y"</strong> → $\sqrt{{x + y}}$</div>
-                    <div><strong>"derivative of sine x"</strong> → $\frac{{d}}{{dx}}\sin(x)$</div>
+                    <div><strong>"quadratic formula"</strong> → quadratic formula LaTeX</div>
+                    <div><strong>"integral of x squared"</strong> → integral LaTeX</div>
+                    <div><strong>"2x2 matrix with a, b, c, d"</strong> → matrix LaTeX</div>
+                    <div><strong>"square root of x plus y"</strong> → square root LaTeX</div>
+                    <div><strong>"derivative of sine x"</strong> → derivative LaTeX</div>
                   </div>
                 </div>
 
