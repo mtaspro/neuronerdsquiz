@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MathText from '../components/MathText';
+import AILatexGenerator from '../components/AILatexGenerator';
 import axios from 'axios';
 
 const TABS = ['Users', 'Chapters', 'Questions', 'Leaderboard Reset'];
@@ -502,6 +503,14 @@ export default function AdminDashboard() {
 
         {tab === 'Questions' && (
           <div className="space-y-6">
+            {/* AI LaTeX Generator */}
+            <AILatexGenerator 
+              onInsert={(latex) => setNewQuestion(prev => ({
+                ...prev, 
+                question: prev.question + latex
+              }))}
+            />
+
             {/* Add Question Form */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
               <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Add New Question</h3>
