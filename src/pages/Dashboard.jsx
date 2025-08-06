@@ -150,34 +150,36 @@ const Dashboard = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-cyan-900 to-blue-900 dark:from-gray-800 dark:to-gray-900 p-8">
         <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8 space-y-4 lg:space-y-0">
             <div className="welcome-section">
-              <h1 className="text-4xl font-bold mb-2 text-white">Welcome back, {user?.username || 'Student'}! 🎓</h1>
-              <p className="text-cyan-200 text-lg">Ready to test your knowledge?</p>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 text-white">Welcome back, {user?.username || 'Student'}! 🎓</h1>
+              <p className="text-cyan-200 text-base lg:text-lg">Ready to test your knowledge?</p>
             </div>
-            <div className="flex items-center space-x-4">
-              {user?.avatar && (
-                <img
-                  src={getAvatarUrl(user.avatar)}
-                  alt={user.username || 'User'}
-                  className="w-12 h-12 rounded-full border-2 border-cyan-300 object-cover"
-                  onError={(e) => { e.target.src = getFallbackAvatar(user.username || 'User'); }}
-                />
-              )}
-              <div className="text-right">
-                <p className="text-sm text-cyan-200">Logged in as</p>
-                <p className="font-semibold text-white">{user?.email}</p>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+              <div className="flex items-center space-x-3">
+                {user?.avatar && (
+                  <img
+                    src={getAvatarUrl(user.avatar)}
+                    alt={user.username || 'User'}
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-cyan-300 object-cover"
+                    onError={(e) => { e.target.src = getFallbackAvatar(user.username || 'User'); }}
+                  />
+                )}
+                <div className="text-left sm:text-right">
+                  <p className="text-xs sm:text-sm text-cyan-200">Logged in as</p>
+                  <p className="font-semibold text-white text-sm sm:text-base">{user?.email}</p>
+                </div>
               </div>
               <div className="flex space-x-2">
                 <button
                   onClick={handleDeleteAccount}
-                  className="bg-red-800 hover:bg-red-900 px-4 py-2 rounded-lg transition-colors text-white text-sm"
+                  className="bg-red-800 hover:bg-red-900 px-2 sm:px-4 py-2 rounded-lg transition-colors text-white text-xs sm:text-sm"
                 >
-                  Delete Account
+                  Delete
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors text-white"
+                  className="bg-red-600 hover:bg-red-700 px-3 sm:px-4 py-2 rounded-lg transition-colors text-white text-xs sm:text-sm"
                 >
                   Logout
                 </button>
@@ -385,10 +387,10 @@ const Dashboard = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={startTour}
-        className="fixed bottom-6 right-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-4 rounded-full shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 z-50"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-3 sm:p-4 rounded-full shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 z-50"
         title="Take a tour of the platform"
       >
-        <FaQuestionCircle className="text-xl" />
+        <FaQuestionCircle className="text-lg sm:text-xl" />
       </motion.button>
     </div>
   );
