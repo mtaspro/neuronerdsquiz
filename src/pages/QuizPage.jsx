@@ -165,19 +165,21 @@ export default function QuizPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      const { hasAttempted, previousAttempt } = response.data;
+      const { hasAttempted, previousAttempt, practiceMode: chapterPracticeMode } = response.data;
       
       setHasAttempted(hasAttempted);
       setPreviousAttempt(previousAttempt);
-      setPracticeMode(hasAttempted);
+      setPracticeMode(chapterPracticeMode || hasAttempted);
       
-      if (hasAttempted) {
+      if (chapterPracticeMode) {
+        showSuccess('Practice Mode: This chapter is set to practice mode - your stats won\'t be affected');
+      } else if (hasAttempted) {
         showSuccess(`Practice Mode: You've already completed this quiz with a score of ${previousAttempt.score}/${previousAttempt.totalQuestions}`);
       }
       
     } catch (error) {
       console.error('Error checking quiz attempt:', error);
-      // Continue anyway - assume first attempt
+      // Continue anyway - assume first attempt and not practice mode
       setHasAttempted(false);
       setPracticeMode(false);
     } finally {
@@ -395,7 +397,7 @@ export default function QuizPage() {
               </h1>
               {practiceMode && (
                 <div className="text-sm text-orange-600 dark:text-orange-400 font-medium">
-                  Practice Mode - Results won't affect your stats or badges
+                  Practice Mode - Results won't affect your stats, leaderboard, or badges
                 </div>
               )}
               {previousAttempt && (

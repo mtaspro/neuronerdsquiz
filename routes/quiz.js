@@ -81,12 +81,17 @@ router.post('/check-attempt', authMiddleware, async (req, res) => {
     // Generate quiz ID
     const quizId = generateQuizId(chapter, questions);
     
+    // Check if chapter is in practice mode
+    const chapterDoc = await Chapter.findOne({ name: chapter });
+    const isChapterPracticeMode = chapterDoc?.practiceMode === true;
+    
     // Check if user has already attempted this quiz
     const existingRecord = await UserQuizRecord.findOne({ userId, quizId });
     
     res.json({
       hasAttempted: !!existingRecord,
       quizId,
+      practiceMode: isChapterPracticeMode,
       previousAttempt: existingRecord ? {
         score: existingRecord.score,
         submittedAt: existingRecord.submittedAt,
@@ -130,24 +135,28 @@ router.post('/submit', authMiddleware, async (req, res) => {
     
     console.log(`📝 Quiz submitted by ${user.username}: ${score}/${totalQuestions} in ${timeSpent}ms (Quiz ID: ${quizId})`);
 
+    // Check if chapter is in practice mode
+    const chapterDoc = await Chapter.findOne({ name: chapter });
+    const isChapterPracticeMode = chapterDoc?.practiceMode === true;
+    
     // Check if user has already attempted this quiz
     const existingRecord = await UserQuizRecord.findOne({ userId, quizId });
     
     let isFirstAttempt = !existingRecord;
-    let practiceMode = false;
+    let practiceMode = isChapterPracticeMode || !!existingRecord;
     
-    if (existingRecord) {
-      // This is a repeat attempt - treat as practice
-      practiceMode = true;
-      console.log(`🔄 Practice attempt by ${user.username} for quiz ${quizId}`);
+    if (practiceMode) {
+      // This is either a repeat attempt or chapter is in practice mode
+      const reason = isChapterPracticeMode ? 'chapter is in practice mode' : 'repeat attempt';
+      console.log(`🔄 Practice attempt by ${user.username} for quiz ${quizId} (${reason})`);
       
       return res.json({
-        message: 'Quiz completed in practice mode',
+        message: `Quiz completed in practice mode (${reason})`,
         practiceMode: true,
         isFirstAttempt: false,
         currentScore: score,
-        previousBestScore: existingRecord.score,
-        improved: score > existingRecord.score,
+        previousBestScore: existingRecord?.score || 0,
+        improved: existingRecord ? score > existingRecord.score : false,
         leaderboardUpdated: false,
         badgesUpdated: false
       });

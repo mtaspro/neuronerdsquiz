@@ -37,7 +37,7 @@ export default function AdminDashboard() {
     checkAdminAccess();
   }, [navigate]);
   const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60 });
-  const [newChapter, setNewChapter] = useState({ name: '', description: '', order: 0, visible: true });
+  const [newChapter, setNewChapter] = useState({ name: '', description: '', order: 0, visible: true, practiceMode: false });
   const [editingId, setEditingId] = useState(null);
   const [editQuestion, setEditQuestion] = useState(null);
   const [editChapter, setEditChapter] = useState(null);
@@ -228,7 +228,7 @@ export default function AdminDashboard() {
     axios.post(`${apiUrl}/api/admin/chapters`, newChapter, { headers: authHeader() })
       .then(res => {
         setChapters(chs => [...chs, res.data]);
-        setNewChapter({ name: '', description: '', order: 0 });
+        setNewChapter({ name: '', description: '', order: 0, visible: true, practiceMode: false });
       })
       .catch(err => setError(err.response?.data?.error || 'Failed to add chapter'))
       .finally(() => setLoading(false));
@@ -430,7 +430,7 @@ export default function AdminDashboard() {
                     className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
                   />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     <input
                       type="checkbox"
@@ -439,6 +439,15 @@ export default function AdminDashboard() {
                       className="rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500"
                     />
                     <span>Visible to users</span>
+                  </label>
+                  <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={newChapter.practiceMode === true}
+                      onChange={e => setNewChapter({...newChapter, practiceMode: e.target.checked})}
+                      className="rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500"
+                    />
+                    <span>Practice Mode (stats won't be calculated)</span>
                   </label>
                 </div>
                 <button type="submit" disabled={loading} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
@@ -477,15 +486,26 @@ export default function AdminDashboard() {
                             onChange={e => setEditChapter({...editChapter, order: parseInt(e.target.value) || 0})}
                             className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
                           />
-                          <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                            <input
-                              type="checkbox"
-                              checked={editChapter.visible !== false}
-                              onChange={e => setEditChapter({...editChapter, visible: e.target.checked})}
-                              className="rounded border-gray-300 dark:border-gray-500 text-cyan-600 focus:ring-cyan-500"
-                            />
-                            <span>Visible to users</span>
-                          </label>
+                          <div className="space-y-2">
+                            <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                              <input
+                                type="checkbox"
+                                checked={editChapter.visible !== false}
+                                onChange={e => setEditChapter({...editChapter, visible: e.target.checked})}
+                                className="rounded border-gray-300 dark:border-gray-500 text-cyan-600 focus:ring-cyan-500"
+                              />
+                              <span>Visible to users</span>
+                            </label>
+                            <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                              <input
+                                type="checkbox"
+                                checked={editChapter.practiceMode === true}
+                                onChange={e => setEditChapter({...editChapter, practiceMode: e.target.checked})}
+                                className="rounded border-gray-300 dark:border-gray-500 text-cyan-600 focus:ring-cyan-500"
+                              />
+                              <span>Practice Mode (stats won't be calculated)</span>
+                            </label>
+                          </div>
                           <div className="flex gap-2">
                             <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm disabled:opacity-50 text-white transition-colors">
                               Save
@@ -507,6 +527,11 @@ export default function AdminDashboard() {
                               <p className="text-gray-500 dark:text-gray-400 text-xs">
                                 Status: <span className={chapter.visible !== false ? 'text-green-600' : 'text-red-600'}>
                                   {chapter.visible !== false ? 'Visible' : 'Hidden'}
+                                </span>
+                              </p>
+                              <p className="text-gray-500 dark:text-gray-400 text-xs">
+                                Mode: <span className={chapter.practiceMode ? 'text-orange-600' : 'text-blue-600'}>
+                                  {chapter.practiceMode ? 'Practice Mode' : 'Normal Mode'}
                                 </span>
                               </p>
                             </div>

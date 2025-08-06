@@ -23,6 +23,10 @@ const chapterSchema = new mongoose.Schema({
   visible: {
     type: Boolean,
     default: true
+  },
+  practiceMode: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true
