@@ -56,13 +56,7 @@ const Dashboard = () => {
         setChapters(response.data);
       } catch (error) {
         console.error('Failed to fetch chapters:', error);
-        // Fallback to default chapters if API fails
-        setChapters([
-          { name: 'Chapter-1', description: 'Introduction to Basics' },
-          { name: 'Chapter-2', description: 'Advanced Concepts' },
-          { name: 'Chapter-3', description: 'Practical Applications' },
-          { name: 'Chapter-4', description: 'Final Assessment' }
-        ]);
+        setChapters([]);
       } finally {
         setChaptersLoading(false);
       }
@@ -92,7 +86,7 @@ const Dashboard = () => {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const token = localStorage.getItem('authToken');
       
-      await axios.delete(`${apiUrl}/api/admin/users/${user._id}`, {
+      await axios.delete(`${apiUrl}/api/auth/delete-account`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       

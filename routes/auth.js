@@ -340,6 +340,34 @@ router.put('/profile', authMiddleware, upload.single('profilePicture'), async (r
   }
 });
 
+// Delete account route - allows users to delete their own account
+router.delete('/delete-account', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    
+    // Find and delete the user
+    const user = await User.findByIdAndDelete(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    
+    // Delete profile picture if it exists
+    if (user.avatar && user.avatar.startsWith('/uploads/')) {
+      const filePath = path.join(process.cwd(), user.avatar);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+    
+    console.log('User account deleted:', user.email);
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({ error: 'Failed to delete account.' });
+  }
+});
+
 // Debug route to list all users (remove this in production)
 router.get('/debug/users', async (req, res) => {
   console.log('Debug route accessed');
