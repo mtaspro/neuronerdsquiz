@@ -123,6 +123,9 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, X-HTTP-Method-Override');
   res.header('Access-Control-Expose-Headers', 'Authorization');
   res.header('Access-Control-Allow-Credentials', 'false');
+  res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.header('Pragma', 'no-cache');
+  res.header('Expires', '0');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {

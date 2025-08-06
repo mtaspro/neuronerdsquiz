@@ -36,6 +36,7 @@ export default function AdminDashboard() {
 
     checkAdminAccess();
   }, [navigate]);
+  const [selectedChapter, setSelectedChapter] = useState('');
   const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60, explanation: '' });
   const [newChapter, setNewChapter] = useState({ name: '', description: '', order: 0, visible: true, practiceMode: false });
   const [editingId, setEditingId] = useState(null);
@@ -47,6 +48,7 @@ export default function AdminDashboard() {
   const [parsedQuestions, setParsedQuestions] = useState([]);
   const [showBulkParser, setShowBulkParser] = useState(false);
   const [parsingLoading, setParsingLoading] = useState(false);
+  const [usedQuestions, setUsedQuestions] = useState(new Set());
 
   function authHeader() {
     const token = localStorage.getItem('authToken');
@@ -276,7 +278,7 @@ export default function AdminDashboard() {
     axios.post(`${apiUrl}/api/admin/questions`, questionData, { headers: authHeader() })
       .then(res => {
         setQuestions(qs => [...qs, res.data]);
-        setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60, explanation: '' });
+        setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: selectedChapter, duration: 60, explanation: '' });
       })
       .catch(() => setError('Failed to add question'))
       .finally(() => setLoading(false));
@@ -334,7 +336,7 @@ export default function AdminDashboard() {
   }
 
   // Add parsed question to form
-  function handleAddParsedQuestion(parsedQ) {
+  function handleAddParsedQuestion(parsedQ, index) {
     const options = [
       parsedQ.options['ক'] || parsedQ.options['A'] || '',
       parsedQ.options['খ'] || parsedQ.options['B'] || '',
@@ -346,10 +348,12 @@ export default function AdminDashboard() {
       question: parsedQ.question,
       options: options,
       correctAnswer: 0,
-      chapter: newQuestion.chapter,
+      chapter: selectedChapter,
       duration: 60,
       explanation: parsedQ.explanation || ''
     });
+    
+    setUsedQuestions(prev => new Set([...prev, index]));
   }
 
   // Remove parsed question
@@ -671,10 +675,15 @@ export default function AdminDashboard() {
                         <h4 className="font-medium text-gray-800 dark:text-white">{pq.question}</h4>
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => handleAddParsedQuestion(pq)}
-                            className="bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs text-white"
+                            onClick={() => handleAddParsedQuestion(pq, index)}
+                            className={`px-2 py-1 rounded text-xs text-white ${
+                              usedQuestions.has(index)
+                                ? 'bg-green-700 cursor-default'
+                                : 'bg-green-600 hover:bg-green-700'
+                            }`}
+                            disabled={usedQuestions.has(index)}
                           >
-                            Use
+                            {usedQuestions.has(index) ? 'Used' : 'Use'}
                           </button>
                           <button
                             onClick={() => handleRemoveParsedQuestion(index)}
@@ -701,10 +710,13 @@ export default function AdminDashboard() {
               <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Add New Question</h3>
               <form onSubmit={handleAddQuestion} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Chapter</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Chapter (Global Selection)</label>
                   <select
-                    value={newQuestion.chapter}
-                    onChange={e => setNewQuestion({...newQuestion, chapter: e.target.value})}
+                    value={selectedChapter}
+                    onChange={e => {
+                      setSelectedChapter(e.target.value);
+                      setNewQuestion({...newQuestion, chapter: e.target.value});
+                    }}
                     className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
                     required
                   >
@@ -713,6 +725,11 @@ export default function AdminDashboard() {
                       <option key={ch._id} value={ch.name}>{ch.name}</option>
                     ))}
                   </select>
+                  {selectedChapter && (
+                    <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                      All questions will be added to: {selectedChapter}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Question</label>
