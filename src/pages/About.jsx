@@ -29,14 +29,18 @@ const About = () => {
   const navigate = useNavigate();
 
   const techStack = [
-    { name: 'React.js', icon: '⚛️', description: 'Frontend framework for dynamic UI' },
-    { name: 'Node.js', icon: '🟢', description: 'Backend runtime environment' },
-    { name: 'Express.js', icon: '🚀', description: 'Web application framework' },
-    { name: 'MongoDB', icon: '🍃', description: 'NoSQL database for data storage' },
-    { name: 'Socket.io', icon: '🔌', description: 'Real-time communication for battles' },
-    { name: 'Tailwind CSS', icon: '🎨', description: 'Utility-first CSS framework' },
-    { name: 'Framer Motion', icon: '✨', description: 'Animation library for smooth UX' },
-    { name: 'JWT', icon: '🔐', description: 'Secure authentication system' }
+    { name: 'React.js', icon: '⚛️', description: 'Frontend framework with hooks & context' },
+    { name: 'Node.js', icon: '🟢', description: 'Backend runtime with ES6+ modules' },
+    { name: 'Express.js', icon: '🚀', description: 'RESTful API with middleware architecture' },
+    { name: 'MongoDB', icon: '🍃', description: 'NoSQL database with Mongoose ODM' },
+    { name: 'Socket.io', icon: '🔌', description: 'Real-time battles & notifications' },
+    { name: 'Tailwind CSS', icon: '🎨', description: 'Responsive design with dark mode' },
+    { name: 'Framer Motion', icon: '✨', description: 'Smooth animations & transitions' },
+    { name: 'JWT', icon: '🔐', description: 'Secure auth with role-based access' },
+    { name: 'LaTeX', icon: '📐', description: 'Mathematical expressions rendering' },
+    { name: 'PWA', icon: '📱', description: 'Progressive Web App capabilities' },
+    { name: 'Axios', icon: '🌐', description: 'HTTP client for API communication' },
+    { name: 'Bcrypt', icon: '🛡️', description: 'Password hashing & security' }
   ];
 
   const teamMembers = [
@@ -97,10 +101,14 @@ const About = () => {
   ];
 
   const milestones = [
-    { icon: '💡', title: 'The Idea', description: 'Born from the need to make learning more engaging and competitive' },
-    { icon: '🏗️', title: 'Development', description: 'Days of coding, testing, and refining the perfect quiz experience' },
-    { icon: '⚔️', title: 'Battle System', description: 'Real-time multiplayer battles that changed everything' },
-    { icon: '🏆', title: 'Badge System', description: 'Competitive achievements that motivate continuous learning' },
+    { icon: '💡', title: 'The Vision', description: 'Making competitive learning accessible to everyone' },
+    { icon: '🏗️', title: 'Core Platform', description: 'Quiz system with authentication & leaderboards' },
+    { icon: '⚔️', title: 'Battle System', description: 'Real-time multiplayer competitions' },
+    { icon: '🏆', title: 'Badge System', description: 'Achievement system with 15+ unique badges' },
+    { icon: '🤖', title: 'AI Integration', description: 'Neuraflow AI assistant for personalized help' },
+    { icon: '🔒', title: 'Security Features', description: 'Exam security with fullscreen & monitoring' },
+    { icon: '📐', title: 'LaTeX Support', description: 'Mathematical expressions in questions' },
+    { icon: '🎯', title: 'Practice Mode', description: 'Safe environment for skill improvement' }
   ];
 
   return (
@@ -270,7 +278,7 @@ const About = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {milestones.map((milestone, index) => (
               <motion.div
                 key={milestone.title}
@@ -298,18 +306,18 @@ const About = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
               <div>
                 <FaCoffee className="text-4xl text-brown-500 mx-auto mb-2" />
-                <p className="font-semibold text-gray-800 dark:text-white">500+ Cups of Coffee</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Fueled our coding sessions</p>
+                <p className="font-semibold text-gray-800 dark:text-white">1000+ Cups of Coffee</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Fueled countless coding sessions</p>
               </div>
               <div>
                 <FaCode className="text-4xl text-blue-500 mx-auto mb-2" />
-                <p className="font-semibold text-gray-800 dark:text-white">10,000+ Lines of Code</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Crafted with love and precision</p>
+                <p className="font-semibold text-gray-800 dark:text-white">25,000+ Lines of Code</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Full-stack architecture</p>
               </div>
               <div>
                 <FaGamepad className="text-4xl text-green-500 mx-auto mb-2" />
-                <p className="font-semibold text-gray-800 dark:text-white">Countless Test Battles</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">To perfect the experience</p>
+                <p className="font-semibold text-gray-800 dark:text-white">15+ Unique Badges</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Achievement system</p>
               </div>
             </div>
           </div>
@@ -335,24 +343,26 @@ const About = () => {
               <div className="text-center">
                 <FaBrain className="text-5xl text-purple-500 mx-auto mb-4" />
                 <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-                  AI Chatbot Integration
+                  Advanced AI Features
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Introducing <strong>Neuraflow</strong> - an intelligent AI assistant that will help students 
-                  with personalized learning recommendations, instant doubt resolution, and adaptive quiz suggestions.
+                  <strong>Neuraflow AI</strong> is already integrated! Our intelligent assistant provides 
+                  instant help, LaTeX generation, and personalized learning support. Next: adaptive quiz 
+                  recommendations and advanced analytics.
                 </p>
               </div>
               <div className="text-center">
                 <FaRocket className="text-5xl text-blue-500 mx-auto mb-4" />
                 <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-                  Enhanced Features
+                  Upcoming Features
                 </h3>
                 <div className="text-left space-y-2">
-                  <p className="text-gray-600 dark:text-gray-300">• Advanced analytics dashboard</p>
                   <p className="text-gray-600 dark:text-gray-300">• Mobile app for iOS and Android</p>
+                  <p className="text-gray-600 dark:text-gray-300">• Advanced user analytics dashboard</p>
                   <p className="text-gray-600 dark:text-gray-300">• Voice-based quiz interactions</p>
-                  <p className="text-gray-600 dark:text-gray-300">• Collaborative study groups</p>
-                  <p className="text-gray-600 dark:text-gray-300">• Gamified learning paths</p>
+                  <p className="text-gray-600 dark:text-gray-300">• Team-based study groups</p>
+                  <p className="text-gray-600 dark:text-gray-300">• Custom quiz creation tools</p>
+                  <p className="text-gray-600 dark:text-gray-300">• Offline mode capabilities</p>
                 </div>
               </div>
             </div>
