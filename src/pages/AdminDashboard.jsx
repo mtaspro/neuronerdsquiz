@@ -36,7 +36,7 @@ export default function AdminDashboard() {
 
     checkAdminAccess();
   }, [navigate]);
-  const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctAnswer: '', chapter: '', duration: 60 });
+  const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60 });
   const [newChapter, setNewChapter] = useState({ name: '', description: '', order: 0, visible: true });
   const [editingId, setEditingId] = useState(null);
   const [editQuestion, setEditQuestion] = useState(null);
@@ -265,10 +265,14 @@ export default function AdminDashboard() {
     e.preventDefault();
     setLoading(true);
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.post(`${apiUrl}/api/admin/questions`, newQuestion, { headers: authHeader() })
+    const questionData = {
+      ...newQuestion,
+      correctAnswer: newQuestion.options[newQuestion.correctAnswer]
+    };
+    axios.post(`${apiUrl}/api/admin/questions`, questionData, { headers: authHeader() })
       .then(res => {
         setQuestions(qs => [...qs, res.data]);
-        setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: '', chapter: '', duration: 60 });
+        setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60 });
       })
       .catch(() => setError('Failed to add question'))
       .finally(() => setLoading(false));
@@ -279,7 +283,11 @@ export default function AdminDashboard() {
     e.preventDefault();
     setLoading(true);
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.put(`${apiUrl}/api/admin/questions/${editingId}`, editQuestion, { headers: authHeader() })
+    const questionData = {
+      ...editQuestion,
+      correctAnswer: editQuestion.options[editQuestion.correctAnswer]
+    };
+    axios.put(`${apiUrl}/api/admin/questions/${editingId}`, questionData, { headers: authHeader() })
       .then(res => {
         setQuestions(qs => qs.map(q => q._id === editingId ? res.data : q));
         setEditingId(null);
@@ -612,13 +620,17 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Correct Answer</label>
-                  <input
-                    type="text"
+                  <select
                     value={newQuestion.correctAnswer}
-                    onChange={e => setNewQuestion({...newQuestion, correctAnswer: e.target.value})}
+                    onChange={e => setNewQuestion({...newQuestion, correctAnswer: parseInt(e.target.value)})}
                     className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
                     required
-                  />
+                  >
+                    <option value={0}>A - {newQuestion.options[0] || 'Option 1'}</option>
+                    <option value={1}>B - {newQuestion.options[1] || 'Option 2'}</option>
+                    <option value={2}>C - {newQuestion.options[2] || 'Option 3'}</option>
+                    <option value={3}>D - {newQuestion.options[3] || 'Option 4'}</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Duration (seconds)</label>
@@ -699,14 +711,17 @@ export default function AdminDashboard() {
                               )}
                             </div>
                           ))}
-                          <input
-                            type="text"
-                            value={editQuestion.correctAnswer}
-                            onChange={e => setEditQuestion({...editQuestion, correctAnswer: e.target.value})}
+                          <select
+                            value={typeof editQuestion.correctAnswer === 'number' ? editQuestion.correctAnswer : editQuestion.options.indexOf(editQuestion.correctAnswer)}
+                            onChange={e => setEditQuestion({...editQuestion, correctAnswer: parseInt(e.target.value)})}
                             className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
-                            placeholder="Correct Answer"
                             required
-                          />
+                          >
+                            <option value={0}>A - {editQuestion.options[0] || 'Option 1'}</option>
+                            <option value={1}>B - {editQuestion.options[1] || 'Option 2'}</option>
+                            <option value={2}>C - {editQuestion.options[2] || 'Option 3'}</option>
+                            <option value={3}>D - {editQuestion.options[3] || 'Option 4'}</option>
+                          </select>
                           <input
                             type="number"
                             value={editQuestion.duration}
