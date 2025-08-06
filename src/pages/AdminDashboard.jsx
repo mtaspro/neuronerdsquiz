@@ -634,7 +634,7 @@ export default function AdminDashboard() {
                     onChange={e => setBulkText(e.target.value)}
                     className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-purple-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
                     rows="10"
-                    placeholder="Paste your bulk MCQ questions here...\n\n1. Question text?\nক option1\nখ option2\nগ option3\nঘ option4\nExplanation text"
+                    placeholder="In Chorcha app, go proceed a MCQ test and submit without solving, You will see the questions with correct answers and explanations. Copy the whole MCQ's from the page with Mouse dragging and Paste questions here directly "
                   />
                   <button
                     onClick={handleBulkParse}

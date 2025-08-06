@@ -52,10 +52,18 @@ const Dashboard = () => {
       try {
         setChaptersLoading(true);
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        const response = await axios.get(`${apiUrl}/api/quizzes/chapters`);
+        const token = localStorage.getItem('authToken');
+        const response = await axios.get(`${apiUrl}/api/quizzes/chapters`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setChapters(response.data);
       } catch (error) {
         console.error('Failed to fetch chapters:', error);
+        if (error.response?.status === 401) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
+          navigate('/login');
+        }
         setChapters([]);
       } finally {
         setChaptersLoading(false);
@@ -63,7 +71,7 @@ const Dashboard = () => {
     };
 
     fetchChapters();
-  }, []);
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
