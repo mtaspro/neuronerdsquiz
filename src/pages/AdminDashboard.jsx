@@ -559,6 +559,20 @@ export default function AdminDashboard() {
               <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Add New Question</h3>
               <form onSubmit={handleAddQuestion} className="space-y-4">
                 <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Chapter</label>
+                  <select
+                    value={newQuestion.chapter}
+                    onChange={e => setNewQuestion({...newQuestion, chapter: e.target.value})}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                    required
+                  >
+                    <option value="">Select Chapter</option>
+                    {chapters.map(ch => (
+                      <option key={ch._id} value={ch.name}>{ch.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Question</label>
                   <textarea
                     value={newQuestion.question}
@@ -577,20 +591,6 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Chapter</label>
-                  <select
-                    value={newQuestion.chapter}
-                    onChange={e => setNewQuestion({...newQuestion, chapter: e.target.value})}
-                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
-                    required
-                  >
-                    <option value="">Select Chapter</option>
-                    {chapters.map(ch => (
-                      <option key={ch._id} value={ch.name}>{ch.name}</option>
-                    ))}
-                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Options</label>
@@ -656,7 +656,7 @@ export default function AdminDashboard() {
                 <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading questions...</div>
               ) : (
                 <div className="space-y-4">
-                  {questions.map(q => (
+                  {questions.filter(q => !newQuestion.chapter || q.chapter === newQuestion.chapter).map(q => (
                     <div key={q._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                       {editingId === q._id ? (
                         <form onSubmit={handleEditQuestion} className="space-y-3">
