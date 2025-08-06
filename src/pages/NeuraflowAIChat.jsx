@@ -217,14 +217,22 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
       >
         <div className="flex items-center justify-between max-w-4xl mx-auto">
           <div className="flex items-center space-x-4">
-            <motion.div
-              animate={{ rotate: isTyping ? 360 : 0 }}
-              transition={{ duration: 2, repeat: isTyping ? Infinity : 0, ease: "linear" }}
-              className="relative"
-            >
-              <img src={botAvatar} alt="Neuraflow AI" className="w-12 h-12 rounded-full ring-2 ring-blue-500/30" />
+            <div className="relative">
+              <motion.div
+                animate={isTyping ? {
+                  boxShadow: [
+                    "0 0 0 0 rgba(59, 130, 246, 0.7)",
+                    "0 0 0 10px rgba(59, 130, 246, 0)",
+                    "0 0 0 20px rgba(59, 130, 246, 0)"
+                  ]
+                } : {}}
+                transition={{ duration: 1.5, repeat: isTyping ? Infinity : 0 }}
+                className="relative"
+              >
+                <img src={botAvatar} alt="Neuraflow AI" className="w-12 h-12 rounded-full ring-2 ring-blue-500/30" />
+              </motion.div>
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 animate-pulse"></div>
-            </motion.div>
+            </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Neuraflow AI</h1>
               <div className="flex items-center space-x-2">
