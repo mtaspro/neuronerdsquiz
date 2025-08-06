@@ -651,7 +651,9 @@ export default function AdminDashboard() {
 
             {/* Questions List */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Manage Questions</h3>
+              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+                Manage Questions ({questions.filter(q => !newQuestion.chapter || q.chapter === newQuestion.chapter).length})
+              </h3>
               {loading ? (
                 <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading questions...</div>
               ) : (
