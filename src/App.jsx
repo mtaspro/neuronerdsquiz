@@ -42,6 +42,8 @@ function Navbar() {
   const handleThemeChange = (theme) => {
     setCurrentTheme(theme);
     localStorage.setItem('selectedTheme', theme);
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('themeChanged', { detail: theme }));
   };
   
   React.useEffect(() => {

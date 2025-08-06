@@ -29,7 +29,7 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
       description: 'ANIME WARRIOR',
       video: '/src/assets/tech-bg2.mp4',
       color: 'from-purple-500 to-pink-600',
-      preview: '👑'
+      preview: '⚔️'
     },
     {
       id: 'tech-bg3',

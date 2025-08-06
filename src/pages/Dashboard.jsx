@@ -78,6 +78,38 @@ const Dashboard = () => {
     navigate('/login');
   };
 
+  const handleDeleteAccount = async () => {
+    if (!window.confirm(`Are you sure you want to delete your account "${user?.username}"? This will permanently remove your account and all your data. This action cannot be undone.`)) {
+      return;
+    }
+    
+    if (!window.confirm('This is your final warning. Your account and all data will be permanently deleted. Are you absolutely sure?')) {
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = localStorage.getItem('authToken');
+      
+      await axios.delete(`${apiUrl}/api/admin/users/${user._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Clear auth data and redirect
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
+      window.dispatchEvent(new Event('userAuthChange'));
+      alert('Your account has been successfully deleted.');
+      navigate('/login');
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert('Failed to delete account. Please try again or contact support.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleStartQuiz = () => {
     if (!selectedChapter) {
       alert('Please select a chapter to start the quiz.');
@@ -134,12 +166,20 @@ const Dashboard = () => {
                 <p className="text-sm text-cyan-200">Logged in as</p>
                 <p className="font-semibold text-white">{user?.email}</p>
               </div>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors text-white"
-              >
-                Logout
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleDeleteAccount}
+                  className="bg-red-800 hover:bg-red-900 px-4 py-2 rounded-lg transition-colors text-white text-sm"
+                >
+                  Delete Account
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors text-white"
+                >
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         </div>

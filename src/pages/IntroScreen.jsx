@@ -29,12 +29,28 @@ export default function IntroScreen() {
     'tech-bg3': techVideo3,
   };
 
-  // Load saved theme from localStorage
+  // Load saved theme from localStorage and listen for changes
   useEffect(() => {
     const savedTheme = localStorage.getItem('selectedTheme');
     if (savedTheme && themeVideos[savedTheme]) {
       setCurrentTheme(savedTheme);
     }
+
+    // Listen for theme changes from navbar
+    const handleThemeChange = () => {
+      const newTheme = localStorage.getItem('selectedTheme');
+      if (newTheme && themeVideos[newTheme]) {
+        setCurrentTheme(newTheme);
+      }
+    };
+
+    window.addEventListener('storage', handleThemeChange);
+    window.addEventListener('themeChanged', handleThemeChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleThemeChange);
+      window.removeEventListener('themeChanged', handleThemeChange);
+    };
   }, []);
 
   // Check auth state on mount & storage changes
