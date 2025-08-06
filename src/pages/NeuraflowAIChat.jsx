@@ -20,6 +20,7 @@ const NeuraflowAIChat = () => {
     { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B', description: 'Best for complex reasoning & analysis' },
     { id: 'mistralai/mistral-small-3.2-24b-instruct:free', name: 'Mistral Small', description: 'Fast responses & coding tasks' },
     { id: 'google/gemma-3-27b-it:free', name: 'Gemma 3 27B', description: 'Creative writing & conversations' },
+    { id: 'google/gemini-2.5-pro-exp-03-25', name: 'Gemini 2.5 Pro', description: 'Advanced Math and Scientific Problem Solving' },
     { id: 'qwen/qwen3-235b-a22b:free', name: 'Qwen 3 235B', description: 'Excellent Bengali language support' }
   ];
 
