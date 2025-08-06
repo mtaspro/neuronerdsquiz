@@ -243,10 +243,10 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
           </div>
           
           {/* Model Selector */}
-          <div className="relative">
+          <div className="relative z-[10000]">
             <button
               onClick={() => setShowModelSelector(!showModelSelector)}
-              className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors relative z-[10001]"
             >
               <FaCog className="text-gray-600 dark:text-gray-400" />
               <span className="text-sm text-gray-700 dark:text-gray-300 hidden sm:block">
@@ -260,7 +260,7 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute right-0 top-12 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2 min-w-64 z-[9999]"
+                  className="fixed right-4 top-20 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-2 min-w-64 z-[10002]"
                 >
                   {models.map(model => (
                     <button
