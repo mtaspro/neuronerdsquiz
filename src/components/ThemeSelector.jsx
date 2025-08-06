@@ -38,14 +38,6 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
       video: '/src/assets/tech-bg3.mp4',
       color: 'from-orange-500 to-red-600',
       preview: '👽'
-    },
-    {
-      id: 'tech-bg4',
-      name: 'NEUTRAL NATURE',
-      description: 'BUTTERFLIES WITH NEON LIGHTS',
-      video: '/src/assets/tech-bg4.mp4',
-      color: 'from-indigo-500 to-blue-600',
-      preview: '🦋'
     }
   ];
 

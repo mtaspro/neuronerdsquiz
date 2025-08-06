@@ -17,6 +17,7 @@ import Badges from './pages/Badges';
 import About from './pages/About';
 import NeuraflowAIChat from './pages/NeuraflowAIChat';
 import DarkModeToggle from './components/DarkModeToggle';
+import ThemeSelector from './components/ThemeSelector';
 import ErrorBoundary from './components/ErrorBoundary';
 import { NotificationProvider } from './components/NotificationSystem';
 import { DarkModeProvider } from './contexts/DarkModeContext';
@@ -26,11 +27,22 @@ import { MathProvider } from './components/MathText';
 
 // Optional Navbar
 import { useState } from "react";
+import { FaBars, FaTimes, FaCog, FaPalette } from 'react-icons/fa';
 
 function Navbar() {
   const [isAdmin, setIsAdmin] = React.useState(false);
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [themeModalOpen, setThemeModalOpen] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState(() => {
+    return localStorage.getItem('selectedTheme') || 'tech-bg';
+  });
+
+  const handleThemeChange = (theme) => {
+    setCurrentTheme(theme);
+    localStorage.setItem('selectedTheme', theme);
+  };
   
   React.useEffect(() => {
     function checkAuth() {
@@ -68,7 +80,40 @@ function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-14 items-center">
           <div className="flex items-center space-x-4">
-            <div className="hidden md:flex md:space-x-4">
+            {/* Settings Button - Desktop Only */}
+            <div className="hidden lg:block relative">
+              <button
+                onClick={() => setSettingsOpen(!settingsOpen)}
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
+                aria-label="Settings"
+              >
+                <FaCog className="h-5 w-5" />
+              </button>
+              {/* Settings Dropdown */}
+              {settingsOpen && (
+                <div className="absolute top-12 left-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-48 z-50">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Dark Mode</span>
+                      <DarkModeToggle />
+                    </div>
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-3">
+                      <button
+                        onClick={() => {
+                          setThemeModalOpen(true);
+                          setSettingsOpen(false);
+                        }}
+                        className="bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm border border-white/30 dark:border-gray-700/30 rounded-full p-2 hover:bg-white/30 dark:hover:bg-gray-800/30 transition-all group"
+                        title="Change Theme"
+                      >
+                        <FaPalette className="text-lg text-gray-700 dark:text-gray-300 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="hidden lg:flex lg:space-x-4">
               <Link to="/" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Home</Link>
               <Link to={isAuthenticated ? "/dashboard" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Dashboard</Link>
               <Link to={isAuthenticated ? "/leaderboard" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Leaderboard</Link>
@@ -80,47 +125,61 @@ function Navbar() {
               )}
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="hidden md:block">
-              <DarkModeToggle />
-            </div>
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
-              aria-label="Toggle menu"
-              aria-expanded={menuOpen}
-            >
-              <svg className={`${menuOpen ? 'hidden' : 'block'} h-6 w-6`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-              <svg className={`${menuOpen ? 'block' : 'hidden'} h-6 w-6`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+          {/* Mobile Menu Button - Top Right */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="lg:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
+            aria-label="Toggle menu"
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? <FaTimes className="h-5 w-5" /> : <FaBars className="h-5 w-5" />}
+          </button>
         </div>
       </div>
       {/* Mobile Menu Overlay */}
       {menuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setMenuOpen(false)}>
-          <div className="absolute top-14 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg" onClick={(e) => e.stopPropagation()}>
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              <Link to="/" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Home</Link>
-              <Link to={isAuthenticated ? "/dashboard" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Dashboard</Link>
-              <Link to={isAuthenticated ? "/leaderboard" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Leaderboard</Link>
-              <Link to={isAuthenticated ? "/badges" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Badges</Link>
-              <Link to={isAuthenticated ? "/about" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">About</Link>
-              <Link to={isAuthenticated ? "/ai-chat" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Neuraflow AI</Link>
-              {isAdmin && (
-                <Link to="/admin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">Admin</Link>
-              )}
-              <div className="px-3 py-2 border-t border-gray-200 dark:border-gray-700 mt-2">
-                <DarkModeToggle />
+        <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setMenuOpen(false)}>
+          <div className="absolute top-14 right-0 w-80 max-w-sm bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 shadow-lg h-full" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4">
+              <div className="space-y-2">
+                <Link to="/" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Home</Link>
+                <Link to={isAuthenticated ? "/dashboard" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Dashboard</Link>
+                <Link to={isAuthenticated ? "/leaderboard" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Leaderboard</Link>
+                <Link to={isAuthenticated ? "/badges" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Badges</Link>
+                <Link to={isAuthenticated ? "/about" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">About</Link>
+                <Link to={isAuthenticated ? "/ai-chat" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Neuraflow AI</Link>
+                {isAdmin && (
+                  <Link to="/admin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Admin</Link>
+                )}
+              </div>
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Dark Mode</span>
+                  <DarkModeToggle />
+                </div>
+                <button
+                  onClick={() => {
+                    setThemeModalOpen(true);
+                    setMenuOpen(false);
+                  }}
+                  className="bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm border border-white/30 dark:border-gray-700/30 rounded-full p-2 hover:bg-white/30 dark:hover:bg-gray-800/30 transition-all group mx-auto"
+                  title="Change Theme"
+                >
+                  <FaPalette className="text-lg text-gray-700 dark:text-gray-300 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
+      
+      {/* Theme Selector Modal */}
+      <ThemeSelector
+        isOpen={themeModalOpen}
+        onClose={() => setThemeModalOpen(false)}
+        currentTheme={currentTheme}
+        onThemeChange={handleThemeChange}
+      />
     </nav>
   );
 }

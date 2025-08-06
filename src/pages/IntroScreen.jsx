@@ -15,8 +15,9 @@ export default function IntroScreen() {
   const [showContent, setShowContent] = useState(false);
   const [particles, setParticles] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showThemeSelector, setShowThemeSelector] = useState(false);
+
   const [currentTheme, setCurrentTheme] = useState('tech-bg');
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
   const navigate = useNavigate();
   const videoRef = useRef(null);
 
@@ -112,17 +113,7 @@ export default function IntroScreen() {
 
   return (
     <div className={`relative min-h-screen min-w-full flex flex-col items-center justify-center bg-gradient-to-br ${getThemeGradient()} overflow-hidden transition-all duration-1000`}>
-      {/* Theme Selector Button */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: showContent ? 1 : 0, scale: showContent ? 1 : 0.8 }}
-        transition={{ duration: 0.5, delay: 1 }}
-        onClick={() => setShowThemeSelector(true)}
-        className="fixed top-4 right-4 z-20 bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm border border-white/30 dark:border-gray-700/30 rounded-full p-3 hover:bg-white/30 dark:hover:bg-gray-800/30 transition-all group"
-        title="Change Theme"
-      >
-        <FaPalette className="text-xl text-gray-700 dark:text-gray-300 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
-      </motion.button>
+
 
       {/* Theme Selector Modal */}
       <ThemeSelector
