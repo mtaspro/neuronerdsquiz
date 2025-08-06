@@ -159,7 +159,7 @@ const About = () => {
                 transition={{ duration: 0.6, delay: 0.1 * index }}
                 className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700 hover:shadow-2xl transition-all duration-300"
               >
-                <div className="flex flex-col lg:flex-row items-start space-y-6 lg:space-y-0 lg:space-x-8">
+                <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8 text-center lg:text-left">
                   {/* Details - Now on the left */}
                   <div className="flex-1">
                     <p className="text-gray-600 dark:text-gray-300 mb-4 text-lg">
