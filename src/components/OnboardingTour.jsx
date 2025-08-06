@@ -119,46 +119,58 @@ const OnboardingTour = ({
     onTourComplete();
   };
 
-  // Calculate tooltip position
+  // Calculate tooltip position with viewport bounds checking
   const getTooltipPosition = () => {
     if (!targetElement) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
 
     const rect = targetElement.getBoundingClientRect();
     const placement = steps[currentStep]?.placement || 'bottom';
+    const tooltipWidth = 320; // w-80 = 320px
+    const tooltipHeight = 200; // approximate height
+    const margin = 20;
+
+    let position = {};
 
     switch (placement) {
       case 'top':
-        return {
-          top: rect.top - 20,
-          left: rect.left + rect.width / 2,
-          transform: 'translate(-50%, -100%)',
+        position = {
+          top: Math.max(margin, rect.top - tooltipHeight - margin),
+          left: Math.min(Math.max(margin, rect.left + rect.width / 2 - tooltipWidth / 2), window.innerWidth - tooltipWidth - margin),
+          transform: 'translate(0, 0)',
         };
+        break;
       case 'bottom':
-        return {
-          top: rect.bottom + 20,
-          left: rect.left + rect.width / 2,
-          transform: 'translate(-50%, 0)',
+        position = {
+          top: Math.min(rect.bottom + margin, window.innerHeight - tooltipHeight - margin),
+          left: Math.min(Math.max(margin, rect.left + rect.width / 2 - tooltipWidth / 2), window.innerWidth - tooltipWidth - margin),
+          transform: 'translate(0, 0)',
         };
+        break;
       case 'left':
-        return {
-          top: rect.top + rect.height / 2,
-          left: rect.left - 20,
-          transform: 'translate(-100%, -50%)',
+        position = {
+          top: Math.min(Math.max(margin, rect.top + rect.height / 2 - tooltipHeight / 2), window.innerHeight - tooltipHeight - margin),
+          left: Math.max(margin, rect.left - tooltipWidth - margin),
+          transform: 'translate(0, 0)',
         };
+        break;
       case 'right':
-        return {
-          top: rect.top + rect.height / 2,
-          left: rect.right + 20,
-          transform: 'translate(0, -50%)',
+        position = {
+          top: Math.min(Math.max(margin, rect.top + rect.height / 2 - tooltipHeight / 2), window.innerHeight - tooltipHeight - margin),
+          left: Math.min(rect.right + margin, window.innerWidth - tooltipWidth - margin),
+          transform: 'translate(0, 0)',
         };
+        break;
       case 'center':
       default:
-        return {
+        position = {
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
         };
+        break;
     }
+
+    return position;
   };
 
   // Get spotlight position
@@ -197,7 +209,7 @@ const OnboardingTour = ({
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
-          className="absolute bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 max-w-sm w-80 z-[10001]"
+          className="absolute bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 max-w-xs sm:max-w-sm w-72 sm:w-80 z-[10001]"
           style={getTooltipPosition()}
         >
           {/* Progress Bar */}

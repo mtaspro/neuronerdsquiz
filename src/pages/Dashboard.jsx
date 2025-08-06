@@ -5,6 +5,7 @@ import axios from 'axios';
 import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog, FaQuestionCircle } from 'react-icons/fa';
 import { getAvatarUrl, getFallbackAvatar } from '../utils/avatarUtils';
 import { useOnboarding } from '../hooks/useOnboarding';
+import OnboardingTour from '../components/OnboardingTour';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -18,7 +19,7 @@ const Dashboard = () => {
   const [selectedBattleChapter, setSelectedBattleChapter] = useState('');
   
   // Onboarding hook
-  const { startTour } = useOnboarding();
+  const { shouldShowTour, setShouldShowTour, startTour, markTutorialAsCompleted } = useOnboarding();
 
   useEffect(() => {
     const userData = localStorage.getItem('userData');
@@ -392,6 +393,13 @@ const Dashboard = () => {
       >
         <FaQuestionCircle className="text-lg sm:text-xl" />
       </motion.button>
+
+      {/* Onboarding Tour */}
+      <OnboardingTour
+        shouldShowTour={shouldShowTour}
+        setShouldShowTour={setShouldShowTour}
+        onTourComplete={markTutorialAsCompleted}
+      />
     </div>
   );
 };
