@@ -8,6 +8,7 @@ import UserStats from '../models/UserStats.js';
 import Badge from '../models/Badge.js';
 import UserQuizRecord from '../models/UserQuizRecord.js';
 import BadgeService from '../services/badgeService.js';
+import axios from 'axios';
 
 const router = express.Router();
 
@@ -165,6 +166,67 @@ router.put('/questions/:id', authMiddleware, requireAdmin, async (req, res) => {
 router.delete('/questions/:id', authMiddleware, requireAdmin, async (req, res) => {
   await Quiz.findByIdAndDelete(req.params.id);
   res.json({ message: 'Question deleted' });
+});
+
+// Parse bulk questions using AI
+router.post('/parse-bulk-questions', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const { bulkText } = req.body;
+    
+    if (!bulkText || !bulkText.trim()) {
+      return res.status(400).json({ error: 'Bulk text is required' });
+    }
+
+    const systemPrompt = `You are an expert MCQ parser. Parse the given bulk MCQ text and extract structured data.
+
+Rules:
+1. Each question starts with a number (1., 2., etc.)
+2. Options are labeled with Bengali letters (ক, খ, গ, ঘ) or English letters (A, B, C, D)
+3. Explanation is usually the last line after options
+4. Ignore lines like "See AI Explanation"
+5. Return valid JSON array only
+
+Output format:
+[{
+  "question": "question text",
+  "options": {
+    "ক": "option1",
+    "খ": "option2",
+    "গ": "option3",
+    "ঘ": "option4"
+  },
+  "explanation": "explanation text"
+}]`;
+
+    const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+      model: 'qwen/qwen-2.5-72b-instruct:free',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Parse this MCQ text:\n\n${bulkText}` }
+      ]
+    }, {
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const aiResponse = response.data.choices[0].message.content;
+    
+    // Extract JSON from AI response
+    const jsonMatch = aiResponse.match(/\[.*\]/s);
+    if (!jsonMatch) {
+      throw new Error('No valid JSON found in AI response');
+    }
+    
+    const parsedQuestions = JSON.parse(jsonMatch[0]);
+    
+    res.json({ questions: parsedQuestions });
+    
+  } catch (error) {
+    console.error('Error parsing bulk questions:', error);
+    res.status(500).json({ error: 'Failed to parse questions' });
+  }
 });
 
 // Reset leaderboard (delete all scores, stats, badges, and quiz records)

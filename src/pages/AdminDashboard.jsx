@@ -36,13 +36,17 @@ export default function AdminDashboard() {
 
     checkAdminAccess();
   }, [navigate]);
-  const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60 });
+  const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60, explanation: '' });
   const [newChapter, setNewChapter] = useState({ name: '', description: '', order: 0, visible: true, practiceMode: false });
   const [editingId, setEditingId] = useState(null);
   const [editQuestion, setEditQuestion] = useState(null);
   const [editChapter, setEditChapter] = useState(null);
   const [resetMsg, setResetMsg] = useState('');
   const [focusedField, setFocusedField] = useState(null);
+  const [bulkText, setBulkText] = useState('');
+  const [parsedQuestions, setParsedQuestions] = useState([]);
+  const [showBulkParser, setShowBulkParser] = useState(false);
+  const [parsingLoading, setParsingLoading] = useState(false);
 
   function authHeader() {
     const token = localStorage.getItem('authToken');
@@ -272,7 +276,7 @@ export default function AdminDashboard() {
     axios.post(`${apiUrl}/api/admin/questions`, questionData, { headers: authHeader() })
       .then(res => {
         setQuestions(qs => [...qs, res.data]);
-        setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60 });
+        setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60, explanation: '' });
       })
       .catch(() => setError('Failed to add question'))
       .finally(() => setLoading(false));
@@ -306,6 +310,51 @@ export default function AdminDashboard() {
       .then(() => setQuestions(qs => qs.filter(q => q._id !== id)))
       .catch(() => setError('Failed to delete question'))
       .finally(() => setLoading(false));
+  }
+
+  // Handle bulk question parsing
+  async function handleBulkParse() {
+    if (!bulkText.trim()) return;
+    
+    setParsingLoading(true);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await axios.post(`${apiUrl}/api/admin/parse-bulk-questions`, {
+        bulkText: bulkText
+      }, { headers: authHeader() });
+      
+      setParsedQuestions(response.data.questions);
+      setBulkText('');
+      setShowBulkParser(false);
+    } catch (err) {
+      setError('Failed to parse questions. Please check the format.');
+    } finally {
+      setParsingLoading(false);
+    }
+  }
+
+  // Add parsed question to form
+  function handleAddParsedQuestion(parsedQ) {
+    const options = [
+      parsedQ.options['ক'] || parsedQ.options['A'] || '',
+      parsedQ.options['খ'] || parsedQ.options['B'] || '',
+      parsedQ.options['গ'] || parsedQ.options['C'] || '',
+      parsedQ.options['ঘ'] || parsedQ.options['D'] || ''
+    ];
+    
+    setNewQuestion({
+      question: parsedQ.question,
+      options: options,
+      correctAnswer: 0,
+      chapter: newQuestion.chapter,
+      duration: 60,
+      explanation: parsedQ.explanation || ''
+    });
+  }
+
+  // Remove parsed question
+  function handleRemoveParsedQuestion(index) {
+    setParsedQuestions(prev => prev.filter((_, i) => i !== index));
   }
 
   // Reset leaderboard
@@ -562,6 +611,38 @@ export default function AdminDashboard() {
 
         {tab === 'Questions' && (
           <div className="space-y-6">
+            {/* Bulk Question Parser */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Bulk Question Parser</h3>
+                <button
+                  onClick={() => setShowBulkParser(!showBulkParser)}
+                  className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white transition-colors"
+                >
+                  {showBulkParser ? 'Hide Parser' : 'Show Parser'}
+                </button>
+              </div>
+              
+              {showBulkParser && (
+                <div className="space-y-4">
+                  <textarea
+                    value={bulkText}
+                    onChange={e => setBulkText(e.target.value)}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-purple-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                    rows="10"
+                    placeholder="Paste your bulk MCQ questions here...\n\n1. Question text?\nক option1\nখ option2\nগ option3\nঘ option4\nExplanation text"
+                  />
+                  <button
+                    onClick={handleBulkParse}
+                    disabled={!bulkText.trim() || parsingLoading}
+                    className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors"
+                  >
+                    {parsingLoading ? 'Parsing...' : 'Parse Questions'}
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* AI LaTeX Generator */}
             <AILatexGenerator 
               onInsert={(latex) => setNewQuestion(prev => ({
@@ -578,6 +659,42 @@ export default function AdminDashboard() {
               }}
               focusedField={focusedField}
             />
+
+            {/* Parsed Questions Preview */}
+            {parsedQuestions.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 mb-6">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Parsed Questions ({parsedQuestions.length})</h3>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {parsedQuestions.map((pq, index) => (
+                    <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded border">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium text-gray-800 dark:text-white">{pq.question}</h4>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleAddParsedQuestion(pq)}
+                            className="bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs text-white"
+                          >
+                            Use
+                          </button>
+                          <button
+                            onClick={() => handleRemoveParsedQuestion(index)}
+                            className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs text-white"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                        {Object.entries(pq.options).map(([key, value]) => (
+                          <div key={key}>{key}. {value}</div>
+                        ))}
+                        {pq.explanation && <div className="text-blue-600 dark:text-blue-400 mt-2">💡 {pq.explanation}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Add Question Form */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
@@ -667,6 +784,24 @@ export default function AdminDashboard() {
                     min="30"
                     max="600"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Explanation (Optional)</label>
+                  <textarea
+                    value={newQuestion.explanation}
+                    onChange={e => setNewQuestion({...newQuestion, explanation: e.target.value})}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                    rows="3"
+                    placeholder="Explain why this is the correct answer (LaTeX supported: $x^2$, $$\frac{a}{b}$$)"
+                  />
+                  {newQuestion.explanation && (
+                    <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-600 rounded border">
+                      <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Preview:</div>
+                      <div className="text-gray-800 dark:text-white">
+                        <MathText>{newQuestion.explanation}</MathText>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <button type="submit" disabled={loading} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
                   {loading ? 'Adding...' : 'Add Question'}
@@ -758,6 +893,21 @@ export default function AdminDashboard() {
                             min="30"
                             max="600"
                           />
+                          <textarea
+                            value={editQuestion.explanation || ''}
+                            onChange={e => setEditQuestion({...editQuestion, explanation: e.target.value})}
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                            rows="3"
+                            placeholder="Explanation (LaTeX supported: $x^2$, $$\frac{a}{b}$$)"
+                          />
+                          {editQuestion.explanation && (
+                            <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-500 rounded border">
+                              <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Preview:</div>
+                              <div className="text-gray-800 dark:text-white">
+                                <MathText>{editQuestion.explanation}</MathText>
+                              </div>
+                            </div>
+                          )}
                           <div className="flex gap-2">
                             <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm disabled:opacity-50 text-white transition-colors">
                               Save
