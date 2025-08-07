@@ -203,7 +203,7 @@ export default function IntroScreen() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 dark:from-cyan-400 dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent"
         >
-          Neuronerds Quiz
+          NeuroNerds Quiz
         </motion.h1>
 
         {/* Subtitle */}

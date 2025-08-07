@@ -319,6 +319,8 @@ const QuizBattleRoom = () => {
 
   const handleAnswerSelect = (answerIndex) => {
     if (answered) return;
+    // In battle mode, once an answer is selected, it cannot be changed
+    if (selectedAnswer !== null) return;
     setSelectedAnswer(answerIndex);
   };
 

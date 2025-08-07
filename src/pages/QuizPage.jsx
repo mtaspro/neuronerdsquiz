@@ -246,13 +246,14 @@ export default function QuizPage() {
   useEffect(() => {
     if (loading || questions.length === 0 || !quizStarted) return;
     if (timer === 0) {
-      handleSubmit();
+      // Auto-move to next question when timer ends
+      handleNext();
       return;
     }
     if (timer === 10) setWarning(true);
     const interval = setInterval(() => setTimer((t) => t - 1), 1000);
     return () => clearInterval(interval);
-  }, [timer, loading, questions, quizStarted, handleSubmit]);
+  }, [timer, loading, questions, quizStarted, handleNext]);
 
   // Cleanup security on unmount
   useEffect(() => {
@@ -541,17 +542,7 @@ export default function QuizPage() {
             </div>
 
             {/* Navigation */}
-            <div className="flex justify-between items-center">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
-                disabled={currentQuestionIndex === 0}
-                className="px-6 py-2 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
-              >
-                Previous
-              </motion.button>
-
+            <div className="flex justify-end items-center">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
