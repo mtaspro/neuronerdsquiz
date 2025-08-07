@@ -4,6 +4,7 @@ import Chapter from '../models/Chapter.js';
 import UserScore from '../models/UserScore.js';
 import User from '../models/User.js';
 import UserQuizRecord from '../models/UserQuizRecord.js';
+import UserQuestionRecord from '../models/UserQuestionRecord.js';
 import BadgeService from '../services/badgeService.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import crypto from 'crypto';
@@ -64,7 +65,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get questions by chapter
+// Get questions by chapter (excluding already solved questions for authenticated users)
 router.get('/questions', async (req, res) => {
   try {
     const { chapter } = req.query;
@@ -72,7 +73,29 @@ router.get('/questions', async (req, res) => {
       return res.status(400).json({ error: 'Chapter parameter is required' });
     }
     
-    const questions = await Quiz.find({ chapter });
+    let questions = await Quiz.find({ chapter });
+    
+    // If user is authenticated, exclude already solved questions
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7);
+        const jwt = await import('jsonwebtoken');
+        const decoded = jwt.default.verify(token, process.env.JWT_SECRET);
+        const userId = decoded.userId;
+        
+        // Get already solved question IDs
+        const solvedQuestions = await UserQuestionRecord.find({ userId, chapter }).select('questionId');
+        const solvedQuestionIds = solvedQuestions.map(sq => sq.questionId.toString());
+        
+        // Filter out solved questions
+        questions = questions.filter(q => !solvedQuestionIds.includes(q._id.toString()));
+      } catch (tokenError) {
+        // If token is invalid, return all questions
+        console.log('Invalid token, returning all questions');
+      }
+    }
+    
     res.json(questions);
   } catch (err) {
     console.error('Error fetching questions:', err);
@@ -90,26 +113,28 @@ router.post('/check-attempt', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Chapter and questions are required' });
     }
     
-    // Generate quiz ID
-    const quizId = generateQuizId(chapter, questions);
-    
     // Check if chapter is in practice mode
     const chapterDoc = await Chapter.findOne({ name: chapter });
     const isChapterPracticeMode = chapterDoc?.practiceMode === true;
     
-    // Check if user has already attempted this quiz
-    const existingRecord = await UserQuizRecord.findOne({ userId, quizId });
+    // Get total questions in chapter and solved questions count
+    const totalQuestionsInChapter = await Quiz.countDocuments({ chapter });
+    const solvedQuestionsCount = await UserQuestionRecord.countDocuments({ userId, chapter });
+    
+    // Check if all questions in chapter are solved
+    const allQuestionsSolved = solvedQuestionsCount >= totalQuestionsInChapter;
+    
+    // Practice mode if: chapter is marked as practice OR all questions are solved
+    const practiceMode = isChapterPracticeMode || allQuestionsSolved;
     
     res.json({
-      hasAttempted: !!existingRecord,
-      quizId,
-      practiceMode: isChapterPracticeMode,
-      previousAttempt: existingRecord ? {
-        score: existingRecord.score,
-        submittedAt: existingRecord.submittedAt,
-        totalQuestions: existingRecord.totalQuestions,
-        correctAnswers: existingRecord.correctAnswers
-      } : null
+      hasAttempted: false, // Always false since we track individual questions now
+      practiceMode,
+      totalQuestionsInChapter,
+      solvedQuestionsCount,
+      remainingQuestions: totalQuestionsInChapter - solvedQuestionsCount,
+      allQuestionsSolved,
+      previousAttempt: null
     });
     
   } catch (error) {
@@ -142,95 +167,83 @@ router.post('/submit', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Questions array is required' });
     }
 
-    // Generate quiz ID
-    const quizId = generateQuizId(chapter, questions);
-    
-    console.log(`📝 Quiz submitted by ${user.username}: ${score}/${totalQuestions} in ${timeSpent}ms (Quiz ID: ${quizId})`);
+    console.log(`📝 Quiz submitted by ${user.username}: ${score}/${totalQuestions} in ${timeSpent}ms`);
 
     // Check if chapter is in practice mode
     const chapterDoc = await Chapter.findOne({ name: chapter });
     const isChapterPracticeMode = chapterDoc?.practiceMode === true;
     
-    // Check if user has already attempted this quiz
-    const existingRecord = await UserQuizRecord.findOne({ userId, quizId });
+    // Record individual question attempts
+    const questionRecords = [];
+    let newQuestionsCount = 0;
     
-    let isFirstAttempt = !existingRecord;
-    let practiceMode = isChapterPracticeMode || !!existingRecord;
+    for (let i = 0; i < questions.length; i++) {
+      const question = questions[i];
+      const answer = answers[i];
+      const isCorrect = (typeof question.correctAnswerIndex === 'number' && answer === question.correctAnswerIndex) ||
+                       (typeof question.correctAnswer === 'string' && question.options[answer] === question.correctAnswer);
+      
+      try {
+        const questionRecord = new UserQuestionRecord({
+          userId,
+          username: user.username,
+          questionId: question._id,
+          chapter,
+          isCorrect,
+          selectedAnswer: answer,
+          timeSpent: Math.floor(timeSpent / totalQuestions)
+        });
+        
+        await questionRecord.save();
+        questionRecords.push(questionRecord);
+        newQuestionsCount++;
+      } catch (recordError) {
+        if (recordError.code === 11000) {
+          // Question already solved - this is practice mode
+          console.log(`⚠️ Question ${question._id} already solved by ${user.username}`);
+        } else {
+          throw recordError;
+        }
+      }
+    }
+    
+    // Check if this is practice mode
+    const totalQuestionsInChapter = await Quiz.countDocuments({ chapter });
+    const solvedQuestionsCount = await UserQuestionRecord.countDocuments({ userId, chapter });
+    const allQuestionsSolved = solvedQuestionsCount >= totalQuestionsInChapter;
+    
+    const practiceMode = isChapterPracticeMode || newQuestionsCount === 0;
     
     if (practiceMode) {
-      // This is either a repeat attempt or chapter is in practice mode
-      const reason = isChapterPracticeMode ? 'chapter is in practice mode' : 'repeat attempt';
-      console.log(`🔄 Practice attempt by ${user.username} for quiz ${quizId} (${reason})`);
+      const reason = isChapterPracticeMode ? 'chapter is in practice mode' : 'all questions already solved';
+      console.log(`🔄 Practice attempt by ${user.username} for chapter ${chapter} (${reason})`);
       
       return res.json({
         message: `Quiz completed in practice mode (${reason})`,
         practiceMode: true,
         isFirstAttempt: false,
         currentScore: score,
-        previousBestScore: existingRecord?.score || 0,
-        improved: existingRecord ? score > existingRecord.score : false,
         leaderboardUpdated: false,
-        badgesUpdated: false
+        badgesUpdated: false,
+        solvedQuestionsCount,
+        totalQuestionsInChapter,
+        remainingQuestions: totalQuestionsInChapter - solvedQuestionsCount
       });
     }
 
-    // This is the first attempt - record it and update stats
-    try {
-      // Create quiz record
-      const quizRecord = new UserQuizRecord({
-        userId,
-        username: user.username,
-        quizId,
-        chapter,
-        score,
-        totalQuestions,
-        correctAnswers,
-        timeSpent,
-        answers: answers.map((answer, index) => ({
-          questionIndex: index,
-          selectedAnswer: answer,
-          isCorrect: questions[index] && (
-            (typeof questions[index].correctAnswerIndex === 'number' && answer === questions[index].correctAnswerIndex) ||
-            (typeof questions[index].correctAnswer === 'string' && questions[index].options[answer] === questions[index].correctAnswer)
-          ),
-          timeSpent: Math.floor(timeSpent / totalQuestions) // Approximate time per question
-        })),
-        isFirstAttempt: true
-      });
+    // This contains new questions - update stats
+    console.log(`✅ ${newQuestionsCount} new questions solved by ${user.username} in chapter ${chapter}`);
 
-      await quizRecord.save();
-      console.log(`✅ First attempt recorded for ${user.username} - Quiz ID: ${quizId}`);
-
-    } catch (recordError) {
-      if (recordError.code === 11000) {
-        // Duplicate key error - someone else submitted at the same time
-        console.log(`⚠️ Concurrent submission detected for ${user.username} - Quiz ID: ${quizId}`);
-        return res.json({
-          message: 'Quiz completed in practice mode (concurrent submission)',
-          practiceMode: true,
-          isFirstAttempt: false,
-          currentScore: score,
-          leaderboardUpdated: false,
-          badgesUpdated: false
-        });
-      }
-      throw recordError;
-    }
-
-    // Update or create leaderboard entry (only for first attempts)
+    // Update or create leaderboard entry
     let userScore = await UserScore.findOne({ username: user.username });
     let leaderboardUpdated = false;
     
     if (userScore) {
-      // Update if new score is higher
-      if (score > userScore.score) {
-        userScore.score = score;
-        await userScore.save();
-        leaderboardUpdated = true;
-        console.log(`📈 Updated leaderboard score for ${user.username}: ${score}`);
-      }
+      userScore.score += score;
+      await userScore.save();
+      leaderboardUpdated = true;
+      console.log(`📈 Updated leaderboard score for ${user.username}: +${score} (total: ${userScore.score})`);
     } else {
-      // Create new leaderboard entry
       userScore = new UserScore({
         username: user.username,
         score: score,
@@ -241,7 +254,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
       console.log(`🆕 Added ${user.username} to leaderboard: ${score}`);
     }
 
-    // Update user stats and recalculate badges (only for first attempts)
+    // Update user stats and recalculate badges
     await badgeService.updateUserStats(userId, {
       score,
       totalQuestions,
@@ -261,7 +274,11 @@ router.post('/submit', authMiddleware, async (req, res) => {
       leaderboardUpdated,
       badgesUpdated: true,
       newScore: score,
-      currentBadges: userBadges
+      currentBadges: userBadges,
+      solvedQuestionsCount,
+      totalQuestionsInChapter,
+      remainingQuestions: totalQuestionsInChapter - solvedQuestionsCount,
+      allQuestionsSolved
     });
 
   } catch (error) {
