@@ -247,13 +247,23 @@ export default function QuizPage() {
     if (loading || questions.length === 0 || !quizStarted) return;
     if (timer === 0) {
       // Auto-move to next question when timer ends
-      handleNext();
+      const updatedAnswers = [...answers];
+      updatedAnswers[currentQuestionIndex] = selectedOption;
+      setAnswers(updatedAnswers);
+      setSelectedOption(null);
+      setWarning(false);
+      if (currentQuestionIndex === questions.length - 1) {
+        handleSubmit(updatedAnswers);
+      } else {
+        setCurrentQuestionIndex((i) => i + 1);
+        setTimer(duration);
+      }
       return;
     }
     if (timer === 10) setWarning(true);
     const interval = setInterval(() => setTimer((t) => t - 1), 1000);
     return () => clearInterval(interval);
-  }, [timer, loading, questions, quizStarted, handleNext]);
+  }, [timer, loading, questions, quizStarted, answers, currentQuestionIndex, selectedOption, duration, handleSubmit]);
 
   // Cleanup security on unmount
   useEffect(() => {
@@ -326,12 +336,13 @@ export default function QuizPage() {
     setSelectedOption(null);
     setWarning(false);
     if (currentQuestionIndex === questions.length - 1) {
-      handleSubmit(updatedAnswers);
+      // Submit quiz when on last question
+      setTimeout(() => handleSubmit(updatedAnswers), 0);
       return;
     }
     setCurrentQuestionIndex((i) => i + 1);
-    setTimer(duration); // reset timer for next question if per-question timer, else keep running
-  }, [answers, currentQuestionIndex, selectedOption, questions.length, duration, handleSubmit]);
+    setTimer(duration);
+  }, [answers, currentQuestionIndex, selectedOption, questions.length, duration]);
 
   if (loading || checkingAttempt) {
     return (

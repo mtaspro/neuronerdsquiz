@@ -215,14 +215,12 @@ const Dashboard = () => {
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
               <div className="flex items-center space-x-3">
-                {user?.avatar && (
-                  <img
-                    src={getAvatarUrl(user.avatar)}
-                    alt={user.username || 'User'}
-                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-cyan-300 object-cover"
-                    onError={(e) => { e.target.src = getFallbackAvatar(user.username || 'User'); }}
-                  />
-                )}
+                <img
+                  src={user?.avatar ? getAvatarUrl(user.avatar) : getFallbackAvatar(user?.username || 'User')}
+                  alt={user?.username || 'User'}
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-cyan-300 object-cover"
+                  onError={(e) => { e.target.src = getFallbackAvatar(user?.username || 'User'); }}
+                />
                 <div className="text-left sm:text-right">
                   <p className="text-xs sm:text-sm text-cyan-200">Logged in as</p>
                   <p className="font-semibold text-white text-sm sm:text-base">{user?.email}</p>
