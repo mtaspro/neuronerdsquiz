@@ -5,7 +5,7 @@ import AILatexGenerator from '../components/AILatexGenerator';
 import axios from 'axios';
 import { authHeader } from '../utils/auth';
 
-const TABS = ['Users', 'Subjects', 'Chapters', 'Questions', 'Leaderboard Reset'];
+const TABS = ['Users', 'Subjects', 'Chapters', 'Questions', 'Quiz Config', 'Leaderboard Reset'];
 
 
 
@@ -15,6 +15,7 @@ export default function AdminDashboard() {
   const [subjects, setSubjects] = useState([]);
   const [chapters, setChapters] = useState([]);
   const [questions, setQuestions] = useState([]);
+  const [quizConfigs, setQuizConfigs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -55,6 +56,11 @@ export default function AdminDashboard() {
   const [showBulkParser, setShowBulkParser] = useState(false);
   const [parsingLoading, setParsingLoading] = useState(false);
   const [usedQuestions, setUsedQuestions] = useState(new Set());
+
+  // Get question count for a chapter
+  const getQuestionCount = (chapterName) => {
+    return questions.filter(q => q.chapter === chapterName).length;
+  };
 
   // Load users
   useEffect(() => {
@@ -199,6 +205,38 @@ export default function AdminDashboard() {
     };
 
     loadQuestions();
+  }, [tab]);
+
+  // Load quiz configs
+  useEffect(() => {
+    if (tab !== 'Quiz Config') return;
+    
+    const loadQuizConfigs = async () => {
+      setLoading(true);
+      setError('');
+      
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await axios.get(`${apiUrl}/api/admin/quiz-configs`, { 
+          headers: authHeader() 
+        });
+        setQuizConfigs(response.data);
+      } catch (err) {
+        console.error('AdminDashboard - Quiz Configs Error:', err.response || err);
+        const errorMessage = err.response?.data?.error || err.message || 'Failed to load quiz configs';
+        setError(errorMessage);
+        
+        if (err.response?.status === 401) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
+          window.location.href = '/login';
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadQuizConfigs();
   }, [tab]);
 
   // Delete user
@@ -415,6 +453,25 @@ export default function AdminDashboard() {
   // Remove parsed question
   function handleRemoveParsedQuestion(index) {
     setParsedQuestions(prev => prev.filter((_, i) => i !== index));
+  }
+
+  // Update quiz config
+  function handleUpdateQuizConfig(chapterId, examQuestions, battleQuestions) {
+    setLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.put(`${apiUrl}/api/admin/quiz-configs/${chapterId}`, {
+      examQuestions: parseInt(examQuestions) || 0,
+      battleQuestions: parseInt(battleQuestions) || 0
+    }, { headers: authHeader() })
+      .then(res => {
+        setQuizConfigs(configs => 
+          configs.map(config => 
+            config.chapterId === chapterId ? res.data : config
+          )
+        );
+      })
+      .catch(err => setError(err.response?.data?.error || 'Failed to update quiz config'))
+      .finally(() => setLoading(false));
   }
 
   // Reset leaderboard
@@ -1194,6 +1251,79 @@ export default function AdminDashboard() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {tab === 'Quiz Config' && (
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+            <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Quiz Configuration</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">Set how many questions will be randomly selected from each chapter for exams and battles.</p>
+            
+            {loading ? (
+              <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading quiz configurations...</div>
+            ) : (
+              <div className="space-y-4">
+                {chapters.map(chapter => {
+                  const config = quizConfigs.find(c => c.chapterId === chapter._id) || {};
+                  const questionCount = questions.filter(q => q.chapter === chapter.name).length;
+                  
+                  return (
+                    <div key={chapter._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h4 className="font-semibold text-lg text-gray-800 dark:text-white">{chapter.name}</h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">Subject: {chapter.subject}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Total Questions: {questionCount}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Exam Questions</label>
+                          <input
+                            type="number"
+                            defaultValue={config.examQuestions || 0}
+                            min="0"
+                            max={questionCount}
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                            onBlur={(e) => handleUpdateQuizConfig(chapter._id, e.target.value, config.battleQuestions)}
+                            placeholder="Number of questions for exams"
+                          />
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Max: {questionCount}</p>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Battle Questions</label>
+                          <input
+                            type="number"
+                            defaultValue={config.battleQuestions || 0}
+                            min="0"
+                            max={questionCount}
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                            onBlur={(e) => handleUpdateQuizConfig(chapter._id, config.examQuestions, e.target.value)}
+                            placeholder="Number of questions for battles"
+                          />
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Max: {questionCount}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          <strong>Note:</strong> Questions will be randomly selected from the {questionCount} available questions. 
+                          Each user will get a different random set.
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {chapters.length === 0 && (
+                  <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                    No chapters found. Create chapters first to configure quiz settings.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
