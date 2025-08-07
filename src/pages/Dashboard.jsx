@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog, FaQuestionCircle, FaCopy } from 'react-icons/fa';
 import { getAvatarUrl, getFallbackAvatar } from '../utils/avatarUtils';
 import { useOnboarding } from '../hooks/useOnboarding';
@@ -25,9 +26,8 @@ const Dashboard = () => {
   
   // Socket connection for battle room updates
   useEffect(() => {
-    const connectSocket = async () => {
+    const connectSocket = () => {
       try {
-        const { io } = await import('socket.io-client');
         const apiUrl = import.meta.env.VITE_SOCKET_SERVER_URL || import.meta.env.VITE_API_URL || '';
         
         const socket = io(apiUrl, {
@@ -38,7 +38,7 @@ const Dashboard = () => {
           setActiveBattleRoom(data);
           setBattleRoomId(data.id);
           
-          if (!user?.isAdmin) {
+          if (user?.isAdmin !== true) {
             success(`Battle room available! Join now to compete in ${data.chapter}`, {
               duration: 10000,
               title: '⚔️ Battle Room Available!'
@@ -381,7 +381,7 @@ const Dashboard = () => {
             </p>
             
             {/* Admin-only Create Battle Section */}
-            {user?.isAdmin && (
+            {user?.isAdmin === true && (
               <div className="mb-4">
                 {/* Chapter Selection for Battle */}
                 <div className="mb-3">
