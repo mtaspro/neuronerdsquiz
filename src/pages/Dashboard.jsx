@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog, FaQuestionCircle } from 'react-icons/fa';
+import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog, FaQuestionCircle, FaCopy } from 'react-icons/fa';
 import { getAvatarUrl, getFallbackAvatar } from '../utils/avatarUtils';
 import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
+import { useNotification } from '../components/NotificationSystem';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -17,6 +18,9 @@ const Dashboard = () => {
   const [battleRoomId, setBattleRoomId] = useState('');
   const [showBattleModal, setShowBattleModal] = useState(false);
   const [selectedBattleChapter, setSelectedBattleChapter] = useState('');
+  
+  // Notification hook
+  const { success, info } = useNotification();
   
   // Onboarding hook
   const { shouldShowTour, setShouldShowTour, startTour, markTutorialAsCompleted } = useOnboarding();
@@ -127,6 +131,29 @@ const Dashboard = () => {
       return;
     }
     const roomId = `battle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Show notification with room code and copy functionality
+    info(`Battle room created! Room ID: ${roomId}`, {
+      duration: 10000,
+      action: {
+        label: 'Copy Room ID',
+        onClick: () => {
+          navigator.clipboard.writeText(roomId).then(() => {
+            success('Room ID copied to clipboard!');
+          }).catch(() => {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = roomId;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            success('Room ID copied to clipboard!');
+          });
+        }
+      }
+    });
+    
     navigate(`/battle/${roomId}`, { state: { chapter: selectedBattleChapter } });
   };
 
