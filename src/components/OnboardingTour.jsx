@@ -125,7 +125,7 @@ const OnboardingTour = ({
 
     const rect = targetElement.getBoundingClientRect();
     const placement = steps[currentStep]?.placement || 'bottom';
-    const tooltipWidth = 320; // w-80 = 320px
+    const tooltipWidth = window.innerWidth < 640 ? window.innerWidth - 32 : 320; // responsive width
     const tooltipHeight = 200; // approximate height
     const margin = 20;
 
@@ -163,9 +163,9 @@ const OnboardingTour = ({
       case 'center':
       default:
         position = {
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
+          top: Math.min(Math.max(margin, window.innerHeight / 2 - tooltipHeight / 2), window.innerHeight - tooltipHeight - margin),
+          left: Math.min(Math.max(margin, window.innerWidth / 2 - tooltipWidth / 2), window.innerWidth - tooltipWidth - margin),
+          transform: 'translate(0, 0)',
         };
         break;
     }
@@ -209,7 +209,7 @@ const OnboardingTour = ({
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
-          className="absolute bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 max-w-xs sm:max-w-sm w-72 sm:w-80 z-[10001]"
+          className="absolute bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 w-[calc(100vw-2rem)] max-w-xs sm:max-w-sm sm:w-80 z-[10001]"
           style={getTooltipPosition()}
         >
           {/* Progress Bar */}
