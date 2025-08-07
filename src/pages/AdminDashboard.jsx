@@ -5,13 +5,14 @@ import AILatexGenerator from '../components/AILatexGenerator';
 import axios from 'axios';
 import { authHeader } from '../utils/auth';
 
-const TABS = ['Users', 'Chapters', 'Questions', 'Leaderboard Reset'];
+const TABS = ['Users', 'Subjects', 'Chapters', 'Questions', 'Leaderboard Reset'];
 
 
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('Users');
   const [users, setUsers] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [chapters, setChapters] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,9 +42,11 @@ export default function AdminDashboard() {
   }, [navigate]);
   const [selectedChapter, setSelectedChapter] = useState('');
   const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60, explanation: '' });
-  const [newChapter, setNewChapter] = useState({ name: '', description: '', order: 0, visible: true, practiceMode: false });
+  const [newSubject, setNewSubject] = useState({ name: '', description: '', order: 0, visible: true });
+  const [newChapter, setNewChapter] = useState({ name: '', description: '', order: 0, visible: true, practiceMode: false, subject: '' });
   const [editingId, setEditingId] = useState(null);
   const [editQuestion, setEditQuestion] = useState(null);
+  const [editSubject, setEditSubject] = useState(null);
   const [editChapter, setEditChapter] = useState(null);
   const [resetMsg, setResetMsg] = useState('');
   const [focusedField, setFocusedField] = useState(null);
@@ -100,6 +103,38 @@ export default function AdminDashboard() {
     };
 
     loadUsers();
+  }, [tab]);
+
+  // Load subjects
+  useEffect(() => {
+    if (tab !== 'Subjects') return;
+    
+    const loadSubjects = async () => {
+      setLoading(true);
+      setError('');
+      
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await axios.get(`${apiUrl}/api/admin/subjects`, { 
+          headers: authHeader() 
+        });
+        setSubjects(response.data);
+      } catch (err) {
+        console.error('AdminDashboard - Subjects Error:', err.response || err);
+        const errorMessage = err.response?.data?.error || err.message || 'Failed to load subjects';
+        setError(errorMessage);
+        
+        if (err.response?.status === 401) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
+          window.location.href = '/login';
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSubjects();
   }, [tab]);
 
   // Load chapters
@@ -207,6 +242,20 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false));
   }
 
+  // Add new subject
+  function handleAddSubject(e) {
+    e.preventDefault();
+    setLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.post(`${apiUrl}/api/admin/subjects`, newSubject, { headers: authHeader() })
+      .then(res => {
+        setSubjects(subs => [...subs, res.data]);
+        setNewSubject({ name: '', description: '', order: 0, visible: true });
+      })
+      .catch(err => setError(err.response?.data?.error || 'Failed to add subject'))
+      .finally(() => setLoading(false));
+  }
+
   // Add new chapter
   function handleAddChapter(e) {
     e.preventDefault();
@@ -215,9 +264,24 @@ export default function AdminDashboard() {
     axios.post(`${apiUrl}/api/admin/chapters`, newChapter, { headers: authHeader() })
       .then(res => {
         setChapters(chs => [...chs, res.data]);
-        setNewChapter({ name: '', description: '', order: 0, visible: true, practiceMode: false });
+        setNewChapter({ name: '', description: '', order: 0, visible: true, practiceMode: false, subject: '' });
       })
       .catch(err => setError(err.response?.data?.error || 'Failed to add chapter'))
+      .finally(() => setLoading(false));
+  }
+
+  // Edit subject
+  function handleEditSubject(e) {
+    e.preventDefault();
+    setLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.put(`${apiUrl}/api/admin/subjects/${editingId}`, editSubject, { headers: authHeader() })
+      .then(res => {
+        setSubjects(subs => subs.map(sub => sub._id === editingId ? res.data : sub));
+        setEditingId(null);
+        setEditSubject(null);
+      })
+      .catch(err => setError(err.response?.data?.error || 'Failed to edit subject'))
       .finally(() => setLoading(false));
   }
 
@@ -233,6 +297,17 @@ export default function AdminDashboard() {
         setEditChapter(null);
       })
       .catch(err => setError(err.response?.data?.error || 'Failed to edit chapter'))
+      .finally(() => setLoading(false));
+  }
+
+  // Delete subject
+  function handleDeleteSubject(id) {
+    if (!window.confirm('Delete this subject? All chapters and questions in this subject will also be deleted.')) return;
+    setLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.delete(`${apiUrl}/api/admin/subjects/${id}`, { headers: authHeader() })
+      .then(() => setSubjects(subs => subs.filter(sub => sub._id !== id)))
+      .catch(() => setError('Failed to delete subject'))
       .finally(() => setLoading(false));
   }
 
@@ -430,12 +505,165 @@ export default function AdminDashboard() {
           </div>
         )}
         
+        {tab === 'Subjects' && (
+          <div className="space-y-6">
+            {/* Add Subject Form */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Add New Subject</h3>
+              <form onSubmit={handleAddSubject} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Subject Name</label>
+                  <input
+                    type="text"
+                    value={newSubject.name}
+                    onChange={e => setNewSubject({...newSubject, name: e.target.value})}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Description</label>
+                  <textarea
+                    value={newSubject.description}
+                    onChange={e => setNewSubject({...newSubject, description: e.target.value})}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                    rows="2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Order</label>
+                  <input
+                    type="number"
+                    value={newSubject.order}
+                    onChange={e => setNewSubject({...newSubject, order: parseInt(e.target.value) || 0})}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={newSubject.visible !== false}
+                      onChange={e => setNewSubject({...newSubject, visible: e.target.checked})}
+                      className="rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500"
+                    />
+                    <span>Visible to users</span>
+                  </label>
+                </div>
+                <button type="submit" disabled={loading} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
+                  {loading ? 'Adding...' : 'Add Subject'}
+                </button>
+              </form>
+            </div>
+
+            {/* Subjects List */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Manage Subjects</h3>
+              {loading ? (
+                <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading subjects...</div>
+              ) : (
+                <div className="space-y-4">
+                  {subjects.map(subject => (
+                    <div key={subject._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                      {editingId === subject._id ? (
+                        <form onSubmit={handleEditSubject} className="space-y-3">
+                          <input
+                            type="text"
+                            value={editSubject.name}
+                            onChange={e => setEditSubject({...editSubject, name: e.target.value})}
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                            required
+                          />
+                          <textarea
+                            value={editSubject.description}
+                            onChange={e => setEditSubject({...editSubject, description: e.target.value})}
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                            rows="2"
+                          />
+                          <input
+                            type="number"
+                            value={editSubject.order}
+                            onChange={e => setEditSubject({...editSubject, order: parseInt(e.target.value) || 0})}
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                          />
+                          <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <input
+                              type="checkbox"
+                              checked={editSubject.visible !== false}
+                              onChange={e => setEditSubject({...editSubject, visible: e.target.checked})}
+                              className="rounded border-gray-300 dark:border-gray-500 text-cyan-600 focus:ring-cyan-500"
+                            />
+                            <span>Visible to users</span>
+                          </label>
+                          <div className="flex gap-2">
+                            <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm disabled:opacity-50 text-white transition-colors">
+                              Save
+                            </button>
+                            <button type="button" onClick={() => { setEditingId(null); setEditSubject(null); }} className="bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded text-sm text-white transition-colors">
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <div>
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h4 className="font-semibold text-lg text-gray-800 dark:text-white">{subject.name}</h4>
+                              {subject.description && (
+                                <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">{subject.description}</p>
+                              )}
+                              <p className="text-gray-500 dark:text-gray-400 text-xs">Order: {subject.order}</p>
+                              <p className="text-gray-500 dark:text-gray-400 text-xs">
+                                Status: <span className={subject.visible !== false ? 'text-green-600' : 'text-red-600'}>
+                                  {subject.visible !== false ? 'Visible' : 'Hidden'}
+                                </span>
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => { setEditingId(subject._id); setEditSubject({...subject}); }}
+                                className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm text-white transition-colors"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteSubject(subject._id)}
+                                className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm text-white transition-colors"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
         {tab === 'Chapters' && (
           <div className="space-y-6">
             {/* Add Chapter Form */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
               <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Add New Chapter</h3>
               <form onSubmit={handleAddChapter} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Subject</label>
+                  <select
+                    value={newChapter.subject}
+                    onChange={e => setNewChapter({...newChapter, subject: e.target.value})}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                    required
+                  >
+                    <option value="">Select Subject</option>
+                    {subjects.map(sub => (
+                      <option key={sub._id} value={sub.name}>{sub.name}</option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Chapter Name</label>
                   <input
@@ -501,6 +729,17 @@ export default function AdminDashboard() {
                     <div key={chapter._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                       {editingId === chapter._id ? (
                         <form onSubmit={handleEditChapter} className="space-y-3">
+                          <select
+                            value={editChapter.subject}
+                            onChange={e => setEditChapter({...editChapter, subject: e.target.value})}
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                            required
+                          >
+                            <option value="">Select Subject</option>
+                            {subjects.map(sub => (
+                              <option key={sub._id} value={sub.name}>{sub.name}</option>
+                            ))}
+                          </select>
                           <input
                             type="text"
                             value={editChapter.name}
@@ -554,6 +793,7 @@ export default function AdminDashboard() {
                           <div className="flex justify-between items-start mb-2">
                             <div>
                               <h4 className="font-semibold text-lg text-gray-800 dark:text-white">{chapter.name}</h4>
+                              <p className="text-gray-600 dark:text-gray-300 text-sm">Subject: {chapter.subject}</p>
                               {chapter.description && (
                                 <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">{chapter.description}</p>
                               )}
