@@ -44,7 +44,7 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
       name: 'RADIOGRAPHY',
       description: 'RADIOGRAPHY DNA',
       video: '/src/assets/tech-bg4.mp4',
-      color: 'from-slate-600 to-zinc-600',
+      color: 'from-red-500 to-red-600',
       preview: '🔬'
     }
   ];
