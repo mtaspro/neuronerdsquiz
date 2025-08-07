@@ -133,13 +133,14 @@ const Dashboard = () => {
     const roomId = `battle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     // Show notification with room code and copy functionality
-    info(`Battle room created! Room ID: ${roomId}`, {
-      duration: 10000,
+    success(`Battle room created! Share this Room ID with others: ${roomId}`, {
+      duration: 15000,
+      title: '🔥 Battle Room Created!',
       action: {
         label: 'Copy Room ID',
         onClick: () => {
           navigator.clipboard.writeText(roomId).then(() => {
-            success('Room ID copied to clipboard!');
+            success('Room ID copied to clipboard! Share it with your friends!');
           }).catch(() => {
             // Fallback for older browsers
             const textArea = document.createElement('textarea');
@@ -148,13 +149,16 @@ const Dashboard = () => {
             textArea.select();
             document.execCommand('copy');
             document.body.removeChild(textArea);
-            success('Room ID copied to clipboard!');
+            success('Room ID copied to clipboard! Share it with your friends!');
           });
         }
       }
     });
     
-    navigate(`/battle/${roomId}`, { state: { chapter: selectedBattleChapter } });
+    // Delay navigation to give user time to see and copy the room ID
+    setTimeout(() => {
+      navigate(`/battle/${roomId}`, { state: { chapter: selectedBattleChapter } });
+    }, 2000);
   };
 
   const handleJoinBattle = () => {
