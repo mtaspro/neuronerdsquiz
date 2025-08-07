@@ -126,7 +126,7 @@ export default function IntroScreen() {
       'tech-bg1': 'CUTY KITTENS',
       'tech-bg2': 'LIVING KING',
       'tech-bg3': 'ALIEN ISOLATION',
-      'tech-bg4': 'TECH MATRIX',
+      'tech-bg4': 'RADIOGRAPHY DNA',
     };
     return names[currentTheme] || 'LOONY CIRCLES';
   };

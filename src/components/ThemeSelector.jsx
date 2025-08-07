@@ -41,11 +41,11 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
     },
     {
       id: 'tech-bg4',
-      name: 'TECH MATRIX',
-      description: 'Digital matrix technology theme',
+      name: 'RADIOGRAPHY',
+      description: 'RADIOGRAPHY DNA',
       video: '/src/assets/tech-bg4.mp4',
       color: 'from-slate-600 to-zinc-600',
-      preview: '🔢'
+      preview: '🔬'
     }
   ];
 
