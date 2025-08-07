@@ -18,9 +18,41 @@ const Dashboard = () => {
   const [battleRoomId, setBattleRoomId] = useState('');
   const [showBattleModal, setShowBattleModal] = useState(false);
   const [selectedBattleChapter, setSelectedBattleChapter] = useState('');
+  const [activeBattleRoom, setActiveBattleRoom] = useState(null);
   
   // Notification hook
   const { success, info } = useNotification();
+  
+  // Listen for battle room creation events
+  useEffect(() => {
+    const handleBattleRoomCreated = () => {
+      const battleRoom = localStorage.getItem('activeBattleRoom');
+      if (battleRoom) {
+        const parsedRoom = JSON.parse(battleRoom);
+        setActiveBattleRoom(parsedRoom);
+        setBattleRoomId(parsedRoom.id);
+        
+        if (!user?.isAdmin) {
+          success(`Battle room available! Join now to compete in ${parsedRoom.chapter}`, {
+            duration: 10000,
+            title: '⚔️ Battle Room Available!'
+          });
+        }
+      }
+    };
+    
+    // Check for existing battle room on mount
+    handleBattleRoomCreated();
+    
+    // Listen for new battle rooms
+    window.addEventListener('battleRoomCreated', handleBattleRoomCreated);
+    window.addEventListener('storage', handleBattleRoomCreated);
+    
+    return () => {
+      window.removeEventListener('battleRoomCreated', handleBattleRoomCreated);
+      window.removeEventListener('storage', handleBattleRoomCreated);
+    };
+  }, [user?.isAdmin, success]);
   
   // Onboarding hook
   const { shouldShowTour, setShouldShowTour, startTour, markTutorialAsCompleted } = useOnboarding();
@@ -132,41 +164,28 @@ const Dashboard = () => {
     }
     const roomId = `battle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
-    // Show notification with room code and copy functionality
-    success(`Battle room created! Share this Room ID with others: ${roomId}`, {
-      duration: 15000,
-      title: '🔥 Battle Room Created!',
-      action: {
-        label: 'Copy Room ID',
-        onClick: () => {
-          navigator.clipboard.writeText(roomId).then(() => {
-            success('Room ID copied to clipboard! Share it with your friends!');
-          }).catch(() => {
-            // Fallback for older browsers
-            const textArea = document.createElement('textarea');
-            textArea.value = roomId;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            success('Room ID copied to clipboard! Share it with your friends!');
-          });
-        }
-      }
+    // Set active battle room for users to join
+    setActiveBattleRoom({ id: roomId, chapter: selectedBattleChapter });
+    setBattleRoomId(roomId);
+    
+    // Broadcast to localStorage for other tabs/users
+    localStorage.setItem('activeBattleRoom', JSON.stringify({ id: roomId, chapter: selectedBattleChapter }));
+    window.dispatchEvent(new Event('battleRoomCreated'));
+    
+    success('Battle room created! Users can now join the battle.', {
+      duration: 5000,
+      title: '🔥 Battle Room Created!'
     });
     
-    // Delay navigation to give user time to see and copy the room ID
-    setTimeout(() => {
-      navigate(`/battle/${roomId}`, { state: { chapter: selectedBattleChapter } });
-    }, 2000);
+    navigate(`/battle/${roomId}`, { state: { chapter: selectedBattleChapter } });
   };
 
   const handleJoinBattle = () => {
-    if (!battleRoomId.trim()) {
-      alert('Please enter a room ID to join.');
+    if (!activeBattleRoom) {
+      alert('No battle room available to join.');
       return;
     }
-    navigate(`/battle/${battleRoomId.trim()}`);
+    navigate(`/battle/${activeBattleRoom.id}`);
   };
 
   if (isLoading) {
@@ -368,27 +387,42 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* Join Battle */}
-            <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="Enter Room ID"
-                value={battleRoomId}
-                onChange={(e) => setBattleRoomId(e.target.value)}
-                className="w-full px-4 py-2 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-cyan-200 focus:outline-none focus:ring-2 focus:ring-orange-400 border border-gray-300 dark:border-gray-600 transition-colors"
-              />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleJoinBattle}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full"
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  <FaPlay className="text-sm" />
-                  <span>Join Battle</span>
-                </div>
-              </motion.button>
-            </div>
+            {/* Join Battle - For non-admin users */}
+            {!user?.isAdmin && (
+              <div className="space-y-3">
+                {activeBattleRoom && (
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mb-3">
+                    <div className="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">
+                      ⚔️ Battle Available!
+                    </div>
+                    <div className="text-xs text-green-600 dark:text-green-300">
+                      Chapter: {activeBattleRoom.chapter}
+                    </div>
+                  </div>
+                )}
+                <motion.button
+                  whileHover={{ scale: activeBattleRoom ? 1.05 : 1 }}
+                  whileTap={{ scale: activeBattleRoom ? 0.95 : 1 }}
+                  onClick={handleJoinBattle}
+                  disabled={!activeBattleRoom}
+                  className={`w-full font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                    activeBattleRoom 
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white focus:ring-green-500 animate-pulse' 
+                      : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <FaPlay className="text-sm" />
+                    <span>{activeBattleRoom ? 'Join Battle Now!' : 'No Battle Available'}</span>
+                  </div>
+                </motion.button>
+                {!activeBattleRoom && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                    Waiting for an admin to create a battle room...
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Available Quizzes */}
