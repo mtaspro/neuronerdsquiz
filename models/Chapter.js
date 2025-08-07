@@ -31,6 +31,14 @@ const chapterSchema = new mongoose.Schema({
   practiceMode: {
     type: Boolean,
     default: false
+  },
+  adminVisible: {
+    type: Boolean,
+    default: true
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }
 }, {
   timestamps: true

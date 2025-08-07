@@ -149,16 +149,33 @@ router.delete('/users/:id', authMiddleware, requireAdmin, async (req, res) => {
   }
 });
 
-// List all chapters
+// List all chapters (all chapters visible in manage section)
 router.get('/chapters', authMiddleware, requireAdmin, async (req, res) => {
-  const chapters = await Chapter.find().sort('order');
-  res.json(chapters);
+  try {
+    const currentUserId = req.user.userId;
+    const chapters = await Chapter.find().sort('order').populate('createdBy', 'username');
+    
+    // Add canEdit flag to indicate if current admin can edit this chapter
+    const chaptersWithPermissions = chapters.map(chapter => ({
+      ...chapter.toObject(),
+      canEdit: !chapter.createdBy || chapter.createdBy._id.toString() === currentUserId
+    }));
+    
+    res.json(chaptersWithPermissions);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch chapters' });
+  }
 });
 
 // Add a new chapter
 router.post('/chapters', authMiddleware, requireAdmin, async (req, res) => {
   try {
-    const chapter = new Chapter(req.body);
+    const chapterData = {
+      ...req.body,
+      createdBy: req.user.userId,
+      adminVisible: req.body.adminVisible !== undefined ? req.body.adminVisible : true
+    };
+    const chapter = new Chapter(chapterData);
     await chapter.save();
     res.status(201).json(chapter);
   } catch (error) {
@@ -170,14 +187,23 @@ router.post('/chapters', authMiddleware, requireAdmin, async (req, res) => {
   }
 });
 
-// Edit a chapter
+// Edit a chapter (only if created by current admin)
 router.put('/chapters/:id', authMiddleware, requireAdmin, async (req, res) => {
   try {
-    const chapter = await Chapter.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const currentUserId = req.user.userId;
+    const chapter = await Chapter.findById(req.params.id);
+    
     if (!chapter) {
       return res.status(404).json({ error: 'Chapter not found' });
     }
-    res.json(chapter);
+    
+    // Allow editing if chapter has no creator (legacy) or created by current admin
+    if (chapter.createdBy && chapter.createdBy.toString() !== currentUserId) {
+      return res.status(403).json({ error: 'You can only edit chapters you created' });
+    }
+    
+    const updatedChapter = await Chapter.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updatedChapter);
   } catch (error) {
     if (error.code === 11000) {
       res.status(400).json({ error: 'Chapter name already exists' });
@@ -202,11 +228,27 @@ router.delete('/chapters/:id', authMiddleware, requireAdmin, async (req, res) =>
   }
 });
 
-// List all questions (visible to all admins by default)
+// List all questions (filtered by chapter admin visibility)
 router.get('/questions', authMiddleware, requireAdmin, async (req, res) => {
   try {
-    // Show all questions to all admins by default
-    const questions = await Quiz.find({}).populate('createdBy', 'username');
+    const currentUserId = req.user.userId;
+    
+    // Get all chapters that are either:
+    // 1. Created by current admin, OR
+    // 2. Marked as admin visible
+    const visibleChapters = await Chapter.find({
+      $or: [
+        { createdBy: currentUserId },
+        { adminVisible: true }
+      ]
+    });
+    
+    const chapterNames = visibleChapters.map(ch => ch.name);
+    
+    // Get questions from visible chapters
+    const questions = await Quiz.find({
+      chapter: { $in: chapterNames }
+    }).populate('createdBy', 'username');
     
     res.json(questions);
   } catch (error) {
