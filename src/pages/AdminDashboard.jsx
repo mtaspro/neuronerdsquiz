@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import MathText from '../components/MathText';
 import AILatexGenerator from '../components/AILatexGenerator';
 import axios from 'axios';
+import { authHeader } from '../utils/auth';
 
 const TABS = ['Users', 'Chapters', 'Questions', 'Leaderboard Reset'];
+
+
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('Users');
@@ -49,28 +52,6 @@ export default function AdminDashboard() {
   const [showBulkParser, setShowBulkParser] = useState(false);
   const [parsingLoading, setParsingLoading] = useState(false);
   const [usedQuestions, setUsedQuestions] = useState(new Set());
-
-  function authHeader() {
-    const token = localStorage.getItem('authToken');
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-    
-    console.log('AdminDashboard - Token from localStorage:', token ? 'Present' : 'Missing');
-    console.log('AdminDashboard - User Data:', userData);
-    console.log('AdminDashboard - Is Admin:', userData.isAdmin);
-    
-    if (token) {
-      console.log('AdminDashboard - Token length:', token.length);
-      try {
-        // Log the token parts (without revealing the signature)
-        const [header, payload] = token.split('.');
-        console.log('AdminDashboard - Token header:', atob(header));
-        console.log('AdminDashboard - Token payload:', atob(payload));
-      } catch (e) {
-        console.error('AdminDashboard - Invalid token format');
-      }
-    }
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
 
   // Load users
   useEffect(() => {

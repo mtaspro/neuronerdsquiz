@@ -22,8 +22,6 @@ import {
   FaCoffee,
   FaGamepad
 } from 'react-icons/fa';
-import { p } from 'framer-motion/client';
-import { plugin } from 'mongoose';
 
 const About = () => {
   const navigate = useNavigate();
