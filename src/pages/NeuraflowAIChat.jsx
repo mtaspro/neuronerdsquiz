@@ -18,7 +18,7 @@ const NeuraflowAIChat = () => {
 
   const models = [
     { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B', description: 'complex reasoning, coding' },
-    { id: 'google/gemini-2.5-pro-exp-03-25', name: 'Gemini 2.5 Pro', description: 'Advanced Math and Scientific Problem Solving' },
+    { id: 'google/gemini-2.0-flash-exp:free', name: 'Gemini 2.0 Flash', description: 'Advanced Math and Scientific Problem Solving' },
     { id: 'qwen/qwen3-235b-a22b:free', name: 'Qwen 3 235B', description: 'Excellent Bengali language support' }
   ];
 

@@ -202,7 +202,7 @@ const About = () => {
                     <p className="text-lg font-semibold text-purple-600 dark:text-purple-400 mb-1">
                       {member.role}
                     </p>
-                    {member.name === 'Md. Akhyar Fardin' || member.name === 'Md. Tanvir Mahtab' || member.name === 'Ahmed Azmain Mahtab' ? (
+                    {member.name === 'Md. Akhyar Fardin' || member.name === 'Md. Tanvir Mahtab' || member.name === 'Ahmed Azmain Mahtab' || member.name === 'Akhyar Fardin' ? (
                       <p className="text-sm font-medium text-blue-500 dark:text-blue-300 mb-3">Neuronerds Study Group</p>
                     ) : null}
                     {/* Social Links */}
