@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const quizConfigSchema = new mongoose.Schema({
   chapterId: {
@@ -25,4 +25,4 @@ const quizConfigSchema = new mongoose.Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model('QuizConfig', quizConfigSchema);
+export default mongoose.model('QuizConfig', quizConfigSchema);
