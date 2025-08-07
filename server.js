@@ -10,6 +10,7 @@ import authRouter from './routes/auth.js';
 import quizRouter from './routes/quiz.js';
 import adminRouter from './routes/admin.js';
 import badgeRouter from './routes/badges.js';
+import battleRouter from './routes/battle.js';
 import { router as latexRouter } from './routes/latex.js';
 import { router as aiChatRouter } from './routes/ai-chat.js';
 import BattleService from './services/battleService.js';
@@ -364,6 +365,9 @@ setInterval(() => {
   battleService.cleanupInactiveRooms();
 }, 30 * 60 * 1000);
 
+// Make io available to routes
+app.set('io', io);
+
 // Mount the routers with /api prefix
 console.log('Mounting leaderboard router...');
 app.use('/api', leaderboardRouter);
@@ -375,6 +379,8 @@ console.log('Mounting admin router...');
 app.use('/api/admin', adminRouter);
 console.log('Mounting badge router...');
 app.use('/api/badges', badgeRouter);
+console.log('Mounting battle router...');
+app.use('/api/battle', battleRouter);
 console.log('Mounting latex router...');
 app.use('/api/latex', latexRouter);
 console.log('Mounting AI chat router...');

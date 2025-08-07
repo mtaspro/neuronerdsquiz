@@ -23,35 +23,58 @@ const Dashboard = () => {
   // Notification hook
   const { success, info } = useNotification();
   
-  // Listen for battle room creation events
+  // Socket connection for battle room updates
   useEffect(() => {
-    const handleBattleRoomCreated = () => {
-      const battleRoom = localStorage.getItem('activeBattleRoom');
-      if (battleRoom) {
-        const parsedRoom = JSON.parse(battleRoom);
-        setActiveBattleRoom(parsedRoom);
-        setBattleRoomId(parsedRoom.id);
+    const connectSocket = async () => {
+      try {
+        const { io } = await import('socket.io-client');
+        const apiUrl = import.meta.env.VITE_SOCKET_SERVER_URL || import.meta.env.VITE_API_URL || '';
         
-        if (!user?.isAdmin) {
-          success(`Battle room available! Join now to compete in ${parsedRoom.chapter}`, {
-            duration: 10000,
-            title: '⚔️ Battle Room Available!'
-          });
-        }
+        const socket = io(apiUrl, {
+          transports: ['websocket', 'polling']
+        });
+        
+        socket.on('battleRoomCreated', (data) => {
+          setActiveBattleRoom(data);
+          setBattleRoomId(data.id);
+          
+          if (!user?.isAdmin) {
+            success(`Battle room available! Join now to compete in ${data.chapter}`, {
+              duration: 10000,
+              title: '⚔️ Battle Room Available!'
+            });
+          }
+        });
+        
+        socket.on('battleRoomClosed', () => {
+          setActiveBattleRoom(null);
+          setBattleRoomId('');
+        });
+        
+        return () => socket.disconnect();
+      } catch (error) {
+        console.error('Socket connection failed:', error);
       }
     };
     
-    // Check for existing battle room on mount
-    handleBattleRoomCreated();
-    
-    // Listen for new battle rooms
-    window.addEventListener('battleRoomCreated', handleBattleRoomCreated);
-    window.addEventListener('storage', handleBattleRoomCreated);
-    
-    return () => {
-      window.removeEventListener('battleRoomCreated', handleBattleRoomCreated);
-      window.removeEventListener('storage', handleBattleRoomCreated);
+    // Check for existing battle room
+    const checkExistingBattleRoom = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await fetch(`${apiUrl}/api/battle/active`);
+        const data = await response.json();
+        
+        if (data.battleRoom) {
+          setActiveBattleRoom(data.battleRoom);
+          setBattleRoomId(data.battleRoom.id);
+        }
+      } catch (error) {
+        console.error('Failed to check existing battle room:', error);
+      }
     };
+    
+    checkExistingBattleRoom();
+    connectSocket();
   }, [user?.isAdmin, success]);
   
   // Onboarding hook
@@ -157,27 +180,41 @@ const Dashboard = () => {
     navigate('/quiz', { state: { chapter: selectedChapter } });
   };
 
-  const handleCreateBattle = () => {
+  const handleCreateBattle = async () => {
     if (!selectedBattleChapter) {
       alert('Please select a chapter for the battle.');
       return;
     }
     const roomId = `battle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
-    // Set active battle room for users to join
-    setActiveBattleRoom({ id: roomId, chapter: selectedBattleChapter });
-    setBattleRoomId(roomId);
-    
-    // Broadcast to localStorage for other tabs/users
-    localStorage.setItem('activeBattleRoom', JSON.stringify({ id: roomId, chapter: selectedBattleChapter }));
-    window.dispatchEvent(new Event('battleRoomCreated'));
-    
-    success('Battle room created! Users can now join the battle.', {
-      duration: 5000,
-      title: '🔥 Battle Room Created!'
-    });
-    
-    navigate(`/battle/${roomId}`, { state: { chapter: selectedBattleChapter } });
+    try {
+      // Broadcast battle room creation to all users
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/battle/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          roomId,
+          chapter: selectedBattleChapter
+        })
+      });
+      
+      if (response.ok) {
+        success('Battle room created! Users can now join the battle.', {
+          duration: 5000,
+          title: '🔥 Battle Room Created!'
+        });
+      }
+      
+      navigate(`/battle/${roomId}`, { state: { chapter: selectedBattleChapter } });
+    } catch (error) {
+      console.error('Failed to create battle room:', error);
+      // Fallback - still navigate to battle room
+      navigate(`/battle/${roomId}`, { state: { chapter: selectedBattleChapter } });
+    }
   };
 
   const handleJoinBattle = () => {
@@ -387,42 +424,40 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* Join Battle - For non-admin users */}
-            {!user?.isAdmin && (
-              <div className="space-y-3">
-                {activeBattleRoom && (
-                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mb-3">
-                    <div className="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">
-                      ⚔️ Battle Available!
-                    </div>
-                    <div className="text-xs text-green-600 dark:text-green-300">
-                      Chapter: {activeBattleRoom.chapter}
-                    </div>
+            {/* Join Battle - For all users */}
+            <div className="space-y-3">
+              {activeBattleRoom && (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mb-3">
+                  <div className="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">
+                    ⚔️ Battle Available!
                   </div>
-                )}
-                <motion.button
-                  whileHover={{ scale: activeBattleRoom ? 1.05 : 1 }}
-                  whileTap={{ scale: activeBattleRoom ? 0.95 : 1 }}
-                  onClick={handleJoinBattle}
-                  disabled={!activeBattleRoom}
-                  className={`w-full font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                    activeBattleRoom 
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white focus:ring-green-500 animate-pulse' 
-                      : 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                  }`}
-                >
-                  <div className="flex items-center justify-center space-x-2">
-                    <FaPlay className="text-sm" />
-                    <span>{activeBattleRoom ? 'Join Battle Now!' : 'No Battle Available'}</span>
+                  <div className="text-xs text-green-600 dark:text-green-300">
+                    Chapter: {activeBattleRoom.chapter}
                   </div>
-                </motion.button>
-                {!activeBattleRoom && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                    Waiting for an admin to create a battle room...
-                  </p>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+              <motion.button
+                whileHover={{ scale: activeBattleRoom ? 1.05 : 1 }}
+                whileTap={{ scale: activeBattleRoom ? 0.95 : 1 }}
+                onClick={handleJoinBattle}
+                disabled={!activeBattleRoom}
+                className={`w-full font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                  activeBattleRoom 
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white focus:ring-green-500 animate-pulse' 
+                    : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <FaPlay className="text-sm" />
+                  <span>{activeBattleRoom ? 'Join Battle Now!' : 'No Battle Available'}</span>
+                </div>
+              </motion.button>
+              {!activeBattleRoom && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                  Waiting for an admin to create a battle room...
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Available Quizzes */}
