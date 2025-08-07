@@ -202,20 +202,11 @@ router.delete('/chapters/:id', authMiddleware, requireAdmin, async (req, res) =>
   }
 });
 
-// List all questions (filtered by admin visibility)
+// List all questions (visible to all admins by default)
 router.get('/questions', authMiddleware, requireAdmin, async (req, res) => {
   try {
-    const currentUserId = req.user.userId;
-    
-    // Get questions that are either:
-    // 1. Created by current admin, OR
-    // 2. Created by other admins but marked as admin visible
-    const questions = await Quiz.find({
-      $or: [
-        { createdBy: currentUserId },
-        { adminVisible: true }
-      ]
-    }).populate('createdBy', 'username');
+    // Show all questions to all admins by default
+    const questions = await Quiz.find({}).populate('createdBy', 'username');
     
     res.json(questions);
   } catch (error) {

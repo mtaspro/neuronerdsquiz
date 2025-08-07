@@ -12,6 +12,10 @@ const chapterSchema = new mongoose.Schema({
     trim: true,
     default: ''
   },
+  subject: {
+    type: String,
+    trim: true
+  },
   order: {
     type: Number,
     default: 0
