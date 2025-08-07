@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { io } from 'socket.io-client';
 import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog, FaQuestionCircle, FaCopy } from 'react-icons/fa';
 import { getAvatarUrl, getFallbackAvatar } from '../utils/avatarUtils';
 import { useOnboarding } from '../hooks/useOnboarding';
@@ -24,40 +23,8 @@ const Dashboard = () => {
   // Notification hook
   const { success, info } = useNotification();
   
-  // Socket connection for battle room updates
+  // Check for existing battle room
   useEffect(() => {
-    const connectSocket = () => {
-      try {
-        const apiUrl = import.meta.env.VITE_SOCKET_SERVER_URL || import.meta.env.VITE_API_URL || '';
-        
-        const socket = io(apiUrl, {
-          transports: ['websocket', 'polling']
-        });
-        
-        socket.on('battleRoomCreated', (data) => {
-          setActiveBattleRoom(data);
-          setBattleRoomId(data.id);
-          
-          if (user?.isAdmin !== true) {
-            success(`Battle room available! Join now to compete in ${data.chapter}`, {
-              duration: 10000,
-              title: '⚔️ Battle Room Available!'
-            });
-          }
-        });
-        
-        socket.on('battleRoomClosed', () => {
-          setActiveBattleRoom(null);
-          setBattleRoomId('');
-        });
-        
-        return () => socket.disconnect();
-      } catch (error) {
-        console.error('Socket connection failed:', error);
-      }
-    };
-    
-    // Check for existing battle room
     const checkExistingBattleRoom = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -74,8 +41,11 @@ const Dashboard = () => {
     };
     
     checkExistingBattleRoom();
-    connectSocket();
-  }, [user?.isAdmin, success]);
+    
+    // Poll for battle room updates every 5 seconds
+    const interval = setInterval(checkExistingBattleRoom, 5000);
+    return () => clearInterval(interval);
+  }, []);
   
   // Onboarding hook
   const { shouldShowTour, setShouldShowTour, startTour, markTutorialAsCompleted } = useOnboarding();
