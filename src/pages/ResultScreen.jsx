@@ -53,6 +53,7 @@ export default function ResultScreen() {
         }
 
         await axios.post(`${API_URL}/api/score`, {
+          userId: userData._id,
           username: userData.username,
           avatar: userData.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.username)}&background=random`,
           score: score

@@ -5,6 +5,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import User from '../models/User.js';
+import UserScore from '../models/UserScore.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -309,6 +310,12 @@ router.put('/profile', authMiddleware, upload.single('profilePicture'), async (r
     
     // Save updated user
     await user.save();
+    
+    // Update leaderboard entry if it exists
+    await UserScore.findOneAndUpdate(
+      { userId: user._id },
+      { $set: { username: user.username, avatar: user.avatar } }
+    );
     
     // Return updated user data (excluding password)
     const updatedUserData = {

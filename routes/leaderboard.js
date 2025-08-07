@@ -16,11 +16,12 @@ leaderboardRouter.get('/leaderboard', async (req, res) => {
   }
 });
 
-// POST /score - creates or updates a user's score based on their username
+// POST /score - creates or updates a user's score based on their userId
 leaderboardRouter.post('/score', async (req, res) => {
-  const { username, score, avatar } = req.body;
+  const { userId, username, score, avatar } = req.body;
 
   if (
+    !userId ||
     typeof username !== 'string' ||
     !username.trim() ||
     typeof score !== 'number' ||
@@ -31,10 +32,10 @@ leaderboardRouter.post('/score', async (req, res) => {
   }
 
   try {
-    // Find user by username and update if exists, otherwise create new
+    // Find user by userId and update if exists, otherwise create new
     const updated = await UserScore.findOneAndUpdate(
-      { username: username.trim() },
-      { $set: { score, avatar: avatar.trim() } },
+      { userId },
+      { $set: { username: username.trim(), score, avatar: avatar.trim() } },
       { upsert: true, new: true }
     );
     res.status(201).json({ message: 'Score submitted successfully.' });
