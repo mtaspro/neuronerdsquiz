@@ -8,6 +8,8 @@ import UserStats from '../models/UserStats.js';
 import Badge from '../models/Badge.js';
 import UserQuizRecord from '../models/UserQuizRecord.js';
 import BadgeService from '../services/badgeService.js';
+import QuizConfig from '../models/QuizConfig.js';
+import Subject from '../models/Subject.js';
 import axios from 'axios';
 
 const router = express.Router();
@@ -16,6 +18,63 @@ const router = express.Router();
 router.get('/users', authMiddleware, requireAdmin, async (req, res) => {
   const users = await User.find({}, '-password');
   res.json(users);
+});
+
+// List all subjects
+router.get('/subjects', authMiddleware, requireAdmin, async (req, res) => {
+  const subjects = await Subject.find().sort('order');
+  res.json(subjects);
+});
+
+// Add a new subject
+router.post('/subjects', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const subject = new Subject(req.body);
+    await subject.save();
+    res.status(201).json(subject);
+  } catch (error) {
+    if (error.code === 11000) {
+      res.status(400).json({ error: 'Subject name already exists' });
+    } else {
+      res.status(500).json({ error: 'Failed to create subject' });
+    }
+  }
+});
+
+// Edit a subject
+router.put('/subjects/:id', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const subject = await Subject.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!subject) {
+      return res.status(404).json({ error: 'Subject not found' });
+    }
+    res.json(subject);
+  } catch (error) {
+    if (error.code === 11000) {
+      res.status(400).json({ error: 'Subject name already exists' });
+    } else {
+      res.status(500).json({ error: 'Failed to update subject' });
+    }
+  }
+});
+
+// Delete a subject
+router.delete('/subjects/:id', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const subject = await Subject.findByIdAndDelete(req.params.id);
+    if (!subject) {
+      return res.status(404).json({ error: 'Subject not found' });
+    }
+    // Also delete all chapters and questions in this subject
+    const chapters = await Chapter.find({ subject: subject.name });
+    for (const chapter of chapters) {
+      await Quiz.deleteMany({ chapter: chapter.name });
+    }
+    await Chapter.deleteMany({ subject: subject.name });
+    res.json({ message: 'Subject, its chapters and questions deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete subject' });
+  }
 });
 
 // Reset a user's score and stats
@@ -226,6 +285,47 @@ Output format:
   } catch (error) {
     console.error('Error parsing bulk questions:', error);
     res.status(500).json({ error: 'Failed to parse questions' });
+  }
+});
+
+// Get quiz configurations
+router.get('/quiz-configs', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const configs = await QuizConfig.find();
+    res.json(configs);
+  } catch (error) {
+    console.error('Error fetching quiz configs:', error);
+    res.status(500).json({ error: 'Failed to fetch quiz configs' });
+  }
+});
+
+// Update quiz configuration
+router.put('/quiz-configs/:chapterId', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const { chapterId } = req.params;
+    const { examQuestions, battleQuestions } = req.body;
+    
+    // Find the chapter to get its name
+    const chapter = await Chapter.findById(chapterId);
+    if (!chapter) {
+      return res.status(404).json({ error: 'Chapter not found' });
+    }
+    
+    const config = await QuizConfig.findOneAndUpdate(
+      { chapterId },
+      {
+        chapterId,
+        chapterName: chapter.name,
+        examQuestions: parseInt(examQuestions) || 0,
+        battleQuestions: parseInt(battleQuestions) || 0
+      },
+      { upsert: true, new: true }
+    );
+    
+    res.json(config);
+  } catch (error) {
+    console.error('Error updating quiz config:', error);
+    res.status(500).json({ error: 'Failed to update quiz config' });
   }
 });
 

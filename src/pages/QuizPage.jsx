@@ -16,6 +16,9 @@ export default function QuizPage() {
   const chapter = location.state?.chapter;
   const { error: showError, success: showSuccess } = useNotification();
   const [questions, setQuestions] = useState([]);
+  const [allQuestions, setAllQuestions] = useState([]);
+  const [selectedQuestionCount, setSelectedQuestionCount] = useState(null);
+  const [showQuestionSelector, setShowQuestionSelector] = useState(false);
   const [duration, setDuration] = useState(60); // default fallback
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -206,12 +209,17 @@ export default function QuizPage() {
           setError('No questions available for this chapter.');
           showError('No questions found for the selected chapter');
         } else {
-          setQuestions(quizzes);
+          setAllQuestions(quizzes);
           setDuration(quizzes[0]?.duration || 60);
           setTimer(quizzes[0]?.duration || 60);
           
-          // Check if user has already attempted this quiz
-          await checkQuizAttempt(quizzes);
+          // Show question selector if more than 5 questions available
+          if (quizzes.length > 5) {
+            setShowQuestionSelector(true);
+          } else {
+            setQuestions(quizzes);
+            await checkQuizAttempt(quizzes);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch quiz:', err);
@@ -291,6 +299,16 @@ export default function QuizPage() {
     navigate('/dashboard');
   };
 
+  // Handle question count selection
+  const handleQuestionCountSelect = async (count) => {
+    const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
+    const selectedQuestions = shuffled.slice(0, count);
+    setQuestions(selectedQuestions);
+    setSelectedQuestionCount(count);
+    setShowQuestionSelector(false);
+    await checkQuizAttempt(selectedQuestions);
+  };
+
   // Handle violation dismissal
   const handleViolationDismiss = () => {
     setCurrentViolation(null);
@@ -322,6 +340,45 @@ export default function QuizPage() {
         size="large" 
         color="cyan" 
       />
+    );
+  }
+
+  // Question Count Selector
+  if (showQuestionSelector) {
+    const questionOptions = [5, 10, 15, 20, Math.min(30, allQuestions.length), allQuestions.length]
+      .filter((count, index, arr) => count <= allQuestions.length && arr.indexOf(count) === index)
+      .sort((a, b) => a - b);
+
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center transition-colors duration-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 text-center">
+            Select Question Count
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-6 text-center">
+            Choose how many questions you want to solve from {allQuestions.length} available questions in <strong>{chapter}</strong>
+          </p>
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {questionOptions.map(count => (
+              <motion.button
+                key={count}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleQuestionCountSelect(count)}
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-all"
+              >
+                {count} Questions
+              </motion.button>
+            ))}
+          </div>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
     );
   }
   

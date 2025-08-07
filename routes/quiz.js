@@ -31,7 +31,19 @@ router.get('/chapters', authMiddleware, async (req, res) => {
     }
     
     const chapters = await Chapter.find(filter).sort('order');
-    res.json(chapters);
+    
+    // Add question count for each chapter
+    const chaptersWithCounts = await Promise.all(
+      chapters.map(async (chapter) => {
+        const questionCount = await Quiz.countDocuments({ chapter: chapter.name });
+        return {
+          ...chapter.toObject(),
+          questionCount
+        };
+      })
+    );
+    
+    res.json(chaptersWithCounts);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }

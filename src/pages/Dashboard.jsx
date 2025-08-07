@@ -360,21 +360,50 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Available Chapters */}
+          {/* Available Quizzes */}
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
-            <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Available Chapters</h4>
+            <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Available Quizzes</h4>
             {chaptersLoading ? (
               <div className="text-center py-8">
-                <div className="text-cyan-600 dark:text-cyan-400">Loading chapters...</div>
+                <div className="text-cyan-600 dark:text-cyan-400">Loading quizzes...</div>
               </div>
             ) : (
-              <div className="space-y-3">
-                {chapters.map(chapter => (
-                  <div key={chapter._id || chapter.name} className="bg-gray-100/80 dark:bg-gray-700/80 rounded-lg p-4 border border-gray-200/50 dark:border-gray-600/50 transition-colors">
-                    <h5 className="font-semibold text-cyan-600 dark:text-cyan-300">{chapter.name}</h5>
-                    {chapter.description && (
-                      <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">{chapter.description}</p>
-                    )}
+              <div className="space-y-4">
+                {chapters.reduce((acc, chapter) => {
+                  const subject = chapter.subject || 'General';
+                  if (!acc[subject]) acc[subject] = [];
+                  acc[subject].push(chapter);
+                  return acc;
+                }, {}) && Object.entries(chapters.reduce((acc, chapter) => {
+                  const subject = chapter.subject || 'General';
+                  if (!acc[subject]) acc[subject] = [];
+                  acc[subject].push(chapter);
+                  return acc;
+                }, {})).map(([subject, subjectChapters]) => (
+                  <div key={subject} className="bg-gray-100/80 dark:bg-gray-700/80 rounded-lg p-4 border border-gray-200/50 dark:border-gray-600/50">
+                    <h5 className="font-bold text-purple-600 dark:text-purple-400 mb-3">{subject}</h5>
+                    <div className="space-y-2">
+                      {subjectChapters.map(chapter => (
+                        <div key={chapter._id || chapter.name} className="bg-white/60 dark:bg-gray-600/60 rounded p-3 border border-gray-200/30 dark:border-gray-500/30">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h6 className="font-semibold text-cyan-600 dark:text-cyan-300">{chapter.name}</h6>
+                              {chapter.description && (
+                                <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">{chapter.description}</p>
+                              )}
+                            </div>
+                            <div className="text-right ml-3">
+                              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                {chapter.questionCount || 0} questions
+                              </div>
+                              {chapter.practiceMode && (
+                                <div className="text-xs text-orange-600 dark:text-orange-400">Practice Mode</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
