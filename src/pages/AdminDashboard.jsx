@@ -42,7 +42,8 @@ export default function AdminDashboard() {
     checkAdminAccess();
   }, [navigate]);
   const [selectedChapter, setSelectedChapter] = useState('');
-  const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60, explanation: '', adminVisible: true });
+  const [adminVisibleForChapter, setAdminVisibleForChapter] = useState(true);
+  const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60, explanation: '' });
   const [newSubject, setNewSubject] = useState({ name: '', description: '', order: 0, visible: true });
   const [newChapter, setNewChapter] = useState({ name: '', description: '', order: 0, visible: true, practiceMode: false, subject: '' });
   const [editingId, setEditingId] = useState(null);
@@ -367,12 +368,13 @@ export default function AdminDashboard() {
     const apiUrl = import.meta.env.VITE_API_URL || '';
     const questionData = {
       ...newQuestion,
-      correctAnswer: newQuestion.options[newQuestion.correctAnswer]
+      correctAnswer: newQuestion.options[newQuestion.correctAnswer],
+      adminVisible: adminVisibleForChapter
     };
     axios.post(`${apiUrl}/api/admin/questions`, questionData, { headers: authHeader() })
       .then(res => {
         setQuestions(qs => [...qs, res.data]);
-        setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: selectedChapter, duration: 60, explanation: '', adminVisible: true });
+        setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: selectedChapter, duration: 60, explanation: '' });
       })
       .catch(() => setError('Failed to add question'))
       .finally(() => setLoading(false));
@@ -1010,6 +1012,22 @@ export default function AdminDashboard() {
                   )}
                 </div>
                 <div>
+                  <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={adminVisibleForChapter}
+                      onChange={e => setAdminVisibleForChapter(e.target.checked)}
+                      className="rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500"
+                    />
+                    <span>Questions visible to other admins</span>
+                  </label>
+                  {selectedChapter && (
+                    <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                      All questions in "{selectedChapter}" will be {adminVisibleForChapter ? 'visible to' : 'hidden from'} other admins
+                    </p>
+                  )}
+                </div>
+                <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Question</label>
                   <textarea
                     value={newQuestion.question}
@@ -1097,17 +1115,6 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   )}
-                </div>
-                <div>
-                  <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    <input
-                      type="checkbox"
-                      checked={newQuestion.adminVisible !== false}
-                      onChange={e => setNewQuestion({...newQuestion, adminVisible: e.target.checked})}
-                      className="rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500"
-                    />
-                    <span>Visible to other admins</span>
-                  </label>
                 </div>
                 <button type="submit" disabled={loading} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
                   {loading ? 'Adding...' : 'Add Question'}
