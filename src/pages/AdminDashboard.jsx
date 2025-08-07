@@ -42,7 +42,7 @@ export default function AdminDashboard() {
     checkAdminAccess();
   }, [navigate]);
   const [selectedChapter, setSelectedChapter] = useState('');
-  const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60, explanation: '' });
+  const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60, explanation: '', adminVisible: true });
   const [newSubject, setNewSubject] = useState({ name: '', description: '', order: 0, visible: true });
   const [newChapter, setNewChapter] = useState({ name: '', description: '', order: 0, visible: true, practiceMode: false, subject: '' });
   const [editingId, setEditingId] = useState(null);
@@ -372,7 +372,7 @@ export default function AdminDashboard() {
     axios.post(`${apiUrl}/api/admin/questions`, questionData, { headers: authHeader() })
       .then(res => {
         setQuestions(qs => [...qs, res.data]);
-        setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: selectedChapter, duration: 60, explanation: '' });
+        setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: selectedChapter, duration: 60, explanation: '', adminVisible: true });
       })
       .catch(() => setError('Failed to add question'))
       .finally(() => setLoading(false));
@@ -1097,6 +1097,17 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   )}
+                </div>
+                <div>
+                  <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={newQuestion.adminVisible !== false}
+                      onChange={e => setNewQuestion({...newQuestion, adminVisible: e.target.checked})}
+                      className="rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500"
+                    />
+                    <span>Visible to other admins</span>
+                  </label>
                 </div>
                 <button type="submit" disabled={loading} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
                   {loading ? 'Adding...' : 'Add Question'}

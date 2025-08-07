@@ -202,29 +202,83 @@ router.delete('/chapters/:id', authMiddleware, requireAdmin, async (req, res) =>
   }
 });
 
-// List all questions
+// List all questions (filtered by admin visibility)
 router.get('/questions', authMiddleware, requireAdmin, async (req, res) => {
-  const questions = await Quiz.find();
-  res.json(questions);
+  try {
+    const currentUserId = req.user.userId;
+    
+    // Get questions that are either:
+    // 1. Created by current admin, OR
+    // 2. Created by other admins but marked as admin visible
+    const questions = await Quiz.find({
+      $or: [
+        { createdBy: currentUserId },
+        { adminVisible: true }
+      ]
+    }).populate('createdBy', 'username');
+    
+    res.json(questions);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch questions' });
+  }
 });
 
 // Add a new question
 router.post('/questions', authMiddleware, requireAdmin, async (req, res) => {
-  const q = new Quiz(req.body);
-  await q.save();
-  res.status(201).json(q);
+  try {
+    const questionData = {
+      ...req.body,
+      createdBy: req.user.userId,
+      adminVisible: req.body.adminVisible !== undefined ? req.body.adminVisible : true
+    };
+    const q = new Quiz(questionData);
+    await q.save();
+    res.status(201).json(q);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create question' });
+  }
 });
 
-// Edit a question
+// Edit a question (only if created by current admin)
 router.put('/questions/:id', authMiddleware, requireAdmin, async (req, res) => {
-  const q = await Quiz.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(q);
+  try {
+    const currentUserId = req.user.userId;
+    const question = await Quiz.findById(req.params.id);
+    
+    if (!question) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+    
+    if (question.createdBy.toString() !== currentUserId) {
+      return res.status(403).json({ error: 'You can only edit questions you created' });
+    }
+    
+    const q = await Quiz.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(q);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update question' });
+  }
 });
 
-// Delete a question
+// Delete a question (only if created by current admin)
 router.delete('/questions/:id', authMiddleware, requireAdmin, async (req, res) => {
-  await Quiz.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Question deleted' });
+  try {
+    const currentUserId = req.user.userId;
+    const question = await Quiz.findById(req.params.id);
+    
+    if (!question) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+    
+    if (question.createdBy.toString() !== currentUserId) {
+      return res.status(403).json({ error: 'You can only delete questions you created' });
+    }
+    
+    await Quiz.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Question deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete question' });
+  }
 });
 
 // Parse bulk questions using AI
