@@ -398,13 +398,21 @@ router.put('/quiz-configs/:chapterId', authMiddleware, requireAdmin, async (req,
       return res.status(404).json({ error: 'Chapter not found' });
     }
     
+    // Properly parse numbers, keeping the original value if it's already a valid number
+    const examQuestionsNum = examQuestions !== undefined && examQuestions !== null && examQuestions !== '' 
+      ? Math.max(0, parseInt(examQuestions)) 
+      : 0;
+    const battleQuestionsNum = battleQuestions !== undefined && battleQuestions !== null && battleQuestions !== '' 
+      ? Math.max(0, parseInt(battleQuestions)) 
+      : 0;
+    
     const config = await QuizConfig.findOneAndUpdate(
       { chapterId },
       {
         chapterId,
         chapterName: chapter.name,
-        examQuestions: parseInt(examQuestions) || 0,
-        battleQuestions: parseInt(battleQuestions) || 0
+        examQuestions: examQuestionsNum,
+        battleQuestions: battleQuestionsNum
       },
       { upsert: true, new: true }
     );
