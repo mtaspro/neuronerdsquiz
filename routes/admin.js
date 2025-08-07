@@ -458,14 +458,19 @@ router.post('/leaderboard/reset', authMiddleware, requireAdmin, async (req, res)
     await UserQuizRecord.deleteMany({});
     console.log('✅ Deleted all quiz records');
     
-    // 5. Re-initialize the badge system to ensure clean state
+    // 5. Delete all individual question records (makes users start from 0 solved questions)
+    const UserQuestionRecord = (await import('../models/UserQuestionRecord.js')).default;
+    await UserQuestionRecord.deleteMany({});
+    console.log('✅ Deleted all question records - users reset to 0 solved questions');
+    
+    // 6. Re-initialize the badge system to ensure clean state
     const badgeService = new BadgeService();
     await badgeService.initializeBadges();
     console.log('✅ Re-initialized badge system');
     
     console.log('🎉 Complete leaderboard reset successful!');
     res.json({ 
-      message: 'Complete leaderboard reset successful! All scores, stats, badges, and quiz records have been cleared.' 
+      message: 'Complete leaderboard reset successful! All users reset to freshman status - they must solve all chapter questions again to unlock practice mode.' 
     });
     
   } catch (error) {
