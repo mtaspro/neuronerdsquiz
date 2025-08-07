@@ -38,6 +38,14 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
       video: '/src/assets/tech-bg3.mp4',
       color: 'from-orange-500 to-red-600',
       preview: '👽'
+    },
+    {
+      id: 'tech-bg4',
+      name: 'TECH MATRIX',
+      description: 'Digital matrix technology theme',
+      video: '/src/assets/tech-bg4.mp4',
+      color: 'from-slate-600 to-zinc-600',
+      preview: '🔢'
     }
   ];
 
