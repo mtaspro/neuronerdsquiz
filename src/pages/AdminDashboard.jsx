@@ -469,26 +469,53 @@ export default function AdminDashboard() {
       return;
     }
     
-    if (!window.confirm(`Add all ${parsedQuestions.length} questions to "${selectedChapter}"?`)) return;
+    const validQuestions = [];
+    const invalidQuestions = [];
+    
+    parsedQuestions.forEach((pq, index) => {
+      const options = Array.isArray(pq.options) ? pq.options : [
+        pq.options['ক'] || pq.options['A'] || '',
+        pq.options['খ'] || pq.options['B'] || '',
+        pq.options['গ'] || pq.options['C'] || '',
+        pq.options['ঘ'] || pq.options['D'] || ''
+      ];
+      
+      const validOptions = options.filter(opt => opt && opt.trim());
+      const hasValidCorrectAnswer = pq.correctAnswer && validOptions.includes(pq.correctAnswer);
+      
+      if (pq.question && pq.question.trim() && validOptions.length >= 2 && hasValidCorrectAnswer) {
+        validQuestions.push({ pq, index });
+      } else {
+        invalidQuestions.push(index);
+      }
+    });
+    
+    if (validQuestions.length === 0) {
+      setError('No valid questions found. Please fix the questions and try again.');
+      return;
+    }
+    
+    if (!window.confirm(`Add ${validQuestions.length} valid questions to "${selectedChapter}"? ${invalidQuestions.length} invalid questions will remain for manual fixing.`)) return;
     
     setLoading(true);
     const apiUrl = import.meta.env.VITE_API_URL || '';
     
     try {
-      const questionsToAdd = parsedQuestions.map(pq => {
-        const options = [
+      const questionsToAdd = validQuestions.map(({ pq }) => {
+        const options = Array.isArray(pq.options) ? pq.options : [
           pq.options['ক'] || pq.options['A'] || '',
           pq.options['খ'] || pq.options['B'] || '',
           pq.options['গ'] || pq.options['C'] || '',
           pq.options['ঘ'] || pq.options['D'] || ''
         ];
         
-        const correctAnswerIndex = options.findIndex(opt => opt === pq.correctAnswer);
+        const validOptions = options.filter(opt => opt && opt.trim());
+        const correctAnswerIndex = validOptions.findIndex(opt => opt === pq.correctAnswer);
         
         return {
           question: pq.question,
-          options: options,
-          correctAnswer: options[correctAnswerIndex >= 0 ? correctAnswerIndex : 0],
+          options: validOptions,
+          correctAnswer: validOptions[correctAnswerIndex],
           chapter: selectedChapter,
           duration: 60,
           explanation: pq.explanation || '',
@@ -501,7 +528,11 @@ export default function AdminDashboard() {
       }, { headers: authHeader() });
       
       setQuestions(qs => [...qs, ...response.data]);
-      setParsedQuestions([]);
+      
+      // Remove only valid questions, keep invalid ones
+      const validIndices = new Set(validQuestions.map(({ index }) => index));
+      setParsedQuestions(prev => prev.filter((_, i) => !validIndices.has(i)));
+      
       setError('');
     } catch (err) {
       setError('Failed to add questions in bulk');
