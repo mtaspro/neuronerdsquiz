@@ -93,7 +93,8 @@ const io = new Server(server, {
   cors: corsOptions
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cors(corsOptions));
 
 // Additional manual CORS handling for preflight requests
