@@ -186,11 +186,7 @@ router.post('/chapters', authMiddleware, requireAdmin, async (req, res) => {
     await chapter.save();
     res.status(201).json(chapter);
   } catch (error) {
-    if (error.code === 11000) {
-      res.status(400).json({ error: 'Chapter name already exists' });
-    } else {
-      res.status(500).json({ error: 'Failed to create chapter' });
-    }
+    res.status(500).json({ error: 'Failed to create chapter' });
   }
 });
 
@@ -212,11 +208,7 @@ router.put('/chapters/:id', authMiddleware, requireAdmin, async (req, res) => {
     const updatedChapter = await Chapter.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(updatedChapter);
   } catch (error) {
-    if (error.code === 11000) {
-      res.status(400).json({ error: 'Chapter name already exists' });
-    } else {
-      res.status(500).json({ error: 'Failed to update chapter' });
-    }
+    res.status(500).json({ error: 'Failed to update chapter' });
   }
 });
 
