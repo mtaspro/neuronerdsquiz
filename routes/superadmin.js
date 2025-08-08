@@ -235,8 +235,16 @@ router.get('/global-settings', authMiddleware, requireSuperAdmin, async (req, re
 // Start Neuronerds Showdown event
 router.post('/start-showdown-event', authMiddleware, requireSuperAdmin, async (req, res) => {
   try {
-    const endTime = new Date();
-    endTime.setDate(endTime.getDate() + 15); // 15 days from now
+    const { endTime } = req.body;
+    
+    if (!endTime) {
+      return res.status(400).json({ error: 'End time is required' });
+    }
+    
+    const endDateTime = new Date(endTime);
+    if (endDateTime <= new Date()) {
+      return res.status(400).json({ error: 'End time must be in the future' });
+    }
     
     await GlobalSettings.findOneAndUpdate(
       { settingKey: 'showdownEvent' },
@@ -244,7 +252,7 @@ router.post('/start-showdown-event', authMiddleware, requireSuperAdmin, async (r
         settingValue: {
           isActive: true,
           startTime: new Date(),
-          endTime: endTime,
+          endTime: endDateTime,
           title: 'The Neuronerds Showdown'
         },
         updatedBy: req.user.userId,

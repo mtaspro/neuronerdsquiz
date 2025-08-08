@@ -10,6 +10,8 @@ const SuperAdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   const [globalTheme, setGlobalTheme] = useState('tech-bg');
+  const [eventEndDate, setEventEndDate] = useState('');
+  const [eventEndTime, setEventEndTime] = useState('');
   const { success, error: showError } = useNotification();
 
   const themes = [
@@ -89,11 +91,20 @@ const SuperAdminDashboard = () => {
   };
 
   const handleStartEvent = async () => {
+    if (!eventEndDate || !eventEndTime) {
+      showError('Please set both end date and time');
+      return;
+    }
+    
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const token = localStorage.getItem('authToken');
       
-      await axios.post(`${apiUrl}/api/superadmin/start-showdown-event`, {}, {
+      const endDateTime = new Date(`${eventEndDate}T${eventEndTime}`);
+      
+      await axios.post(`${apiUrl}/api/superadmin/start-showdown-event`, {
+        endTime: endDateTime.toISOString()
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -207,8 +218,34 @@ const SuperAdminDashboard = () => {
             <h2 className="text-xl font-semibold">Neuronerds Showdown Event</h2>
           </div>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Manually control the special event banner and timing.
+            Set custom end date/time for the event countdown.
           </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={eventEndDate}
+                onChange={(e) => setEventEndDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                End Time
+              </label>
+              <input
+                type="time"
+                value={eventEndTime}
+                onChange={(e) => setEventEndTime(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          
           <div className="flex space-x-4">
             <button
               onClick={handleStartEvent}
