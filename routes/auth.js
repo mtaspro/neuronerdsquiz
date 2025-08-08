@@ -383,13 +383,37 @@ router.get('/debug/users', async (req, res) => {
   console.log('Debug route accessed');
   try {
     console.log('Attempting to find users...');
-    const users = await User.find({}, 'email isAdmin createdAt');
+    const users = await User.find({}, 'email isAdmin isSuperAdmin createdAt');
     console.log('All users in database:', users);
     res.json({ users });
   } catch (err) {
     console.error('Debug route error:', err);
     console.error('Error details:', err.message);
     res.status(500).json({ error: 'Failed to fetch users', details: err.message });
+  }
+});
+
+// Temporary route to make yourself SuperAdmin (REMOVE AFTER USE)
+router.post('/debug/make-superadmin', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email required' });
+    }
+    
+    const user = await User.findOneAndUpdate(
+      { email },
+      { $set: { isSuperAdmin: true, isAdmin: true } },
+      { new: true }
+    );
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json({ message: `${email} is now SuperAdmin`, user: { email: user.email, isAdmin: user.isAdmin, isSuperAdmin: user.isSuperAdmin } });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update user' });
   }
 });
 

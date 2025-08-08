@@ -13,6 +13,7 @@ import Register from "./components/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from './components/AdminRoute';
 import AdminDashboard from './pages/AdminDashboard';
+import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import Badges from './pages/Badges';
 import About from './pages/About';
 import NeuraflowAIChat from './pages/NeuraflowAIChat';
@@ -31,6 +32,7 @@ import { FaBars, FaTimes, FaCog, FaPalette } from 'react-icons/fa';
 
 function Navbar() {
   const [isAdmin, setIsAdmin] = React.useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -56,13 +58,16 @@ function Navbar() {
           const user = JSON.parse(userData);
           setIsAuthenticated(true);
           setIsAdmin(user.isAdmin === true);
+          setIsSuperAdmin(user.isSuperAdmin === true);
         } catch (error) {
           setIsAuthenticated(false);
           setIsAdmin(false);
+          setIsSuperAdmin(false);
         }
       } else {
         setIsAuthenticated(false);
         setIsAdmin(false);
+        setIsSuperAdmin(false);
       }
     }
     
@@ -125,6 +130,9 @@ function Navbar() {
               {isAdmin && (
                 <Link to="/admin" className="text-gray-800 dark:text-white font-semibold hover:text-pink-600 dark:hover:text-pink-400 transition">Admin</Link>
               )}
+              {isSuperAdmin && (
+                <Link to="/superadmin" className="text-gray-800 dark:text-white font-semibold hover:text-red-600 dark:hover:text-red-400 transition">SuperAdmin</Link>
+              )}
             </div>
           </div>
           {/* Mobile Menu Button - Top Right */}
@@ -152,6 +160,9 @@ function Navbar() {
                 <Link to={isAuthenticated ? "/ai-chat" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Neuraflow AI</Link>
                 {isAdmin && (
                   <Link to="/admin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Admin</Link>
+                )}
+                {isSuperAdmin && (
+                  <Link to="/superadmin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">SuperAdmin</Link>
                 )}
               </div>
               <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
@@ -246,6 +257,14 @@ function AnimatedRoutes() {
               <AdminRoute>
                 <AdminDashboard />
               </AdminRoute>
+            }
+          />
+          <Route
+            path="/superadmin"
+            element={
+              <ProtectedRoute>
+                <SuperAdminDashboard />
+              </ProtectedRoute>
             }
           />
         </Routes>
