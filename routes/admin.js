@@ -177,6 +177,14 @@ router.get('/chapters', authMiddleware, requireAdmin, async (req, res) => {
 // Add a new chapter
 router.post('/chapters', authMiddleware, requireAdmin, async (req, res) => {
   try {
+    // Drop unique index if it exists
+    try {
+      await Chapter.collection.dropIndex('name_1');
+      console.log('Dropped unique index on chapter name');
+    } catch (indexError) {
+      // Index might not exist, ignore error
+    }
+    
     const chapterData = {
       ...req.body,
       createdBy: req.user.userId,
