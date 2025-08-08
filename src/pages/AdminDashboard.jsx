@@ -1139,7 +1139,7 @@ export default function AdminDashboard() {
                   >
                     <option value="">Select Chapter</option>
                     {chapters.map(ch => (
-                      <option key={ch._id} value={ch.name}>{ch.name}</option>
+                      <option key={ch._id} value={ch.name}>{ch.name}{ch.description ? ` - ${ch.description}` : ''}</option>
                     ))}
                   </select>
                   {selectedChapter && (
@@ -1298,7 +1298,7 @@ export default function AdminDashboard() {
                           >
                             <option value="">Select Chapter</option>
                             {chapters.map(ch => (
-                              <option key={ch._id} value={ch.name}>{ch.name}</option>
+                              <option key={ch._id} value={ch.name}>{ch.name}{ch.description ? ` - ${ch.description}` : ''}</option>
                             ))}
                           </select>
                           {editQuestion.options.map((opt, i) => (
