@@ -895,6 +895,30 @@ export default function AdminDashboard() {
 
         {tab === 'Questions' && (
           <div className="space-y-6">
+            {/* Easy Question Import */}
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-6 rounded-lg border-2 border-green-200 dark:border-green-700 mb-6">
+              <h3 className="text-xl font-semibold text-green-800 dark:text-green-300 mb-4">🚀 Easy Question Import from Chorcha</h3>
+              <div className="space-y-4">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-600">
+                  <h4 className="font-semibold text-gray-800 dark:text-white mb-2">📋 Step-by-Step Instructions:</h4>
+                  <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>Go to <strong>Chorcha app</strong> and start any MCQ test</li>
+                    <li><strong>Submit without solving</strong> (just click submit)</li>
+                    <li>You'll see the <strong>review page</strong> with all questions, correct answers, and explanations</li>
+                    <li><strong>Open Developer Tools</strong> (Press F12)</li>
+                    <li><strong>Go to Console tab</strong> and paste the extraction script</li>
+                    <li><strong>Copy the formatted questions</strong> from console output</li>
+                    <li><strong>Paste below</strong> and click "Parse Questions"</li>
+                  </ol>
+                </div>
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded border border-yellow-200 dark:border-yellow-700">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                    <strong>💡 Pro Tip:</strong> The script automatically extracts correct answers from the colored options!
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Bulk Question Parser */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 mb-6">
               <div className="flex items-center justify-between mb-4">
@@ -914,7 +938,7 @@ export default function AdminDashboard() {
                     onChange={e => setBulkText(e.target.value)}
                     className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-purple-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
                     rows="10"
-                    placeholder="In Chorcha app, go proceed a MCQ test and submit without solving, You will see the questions with correct answers and explanations. Copy the whole MCQ's from the page with Mouse dragging and Paste questions here directly "
+                    placeholder="Paste the extracted questions from Chorcha here. Format should be:\n\n1. Question text\nক. Option 1\nখ. Option 2\nগ. Option 3\nঘ. Option 4\nCorrect Answer: Option text\nExplanation: Explanation text\n\n---\n\n2. Next question..."
                   />
                   <button
                     onClick={handleBulkParse}

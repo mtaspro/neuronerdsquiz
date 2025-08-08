@@ -333,21 +333,23 @@ router.post('/parse-bulk-questions', authMiddleware, requireAdmin, async (req, r
     const systemPrompt = `You are an expert MCQ parser. Parse the given bulk MCQ text and extract structured data.
 
 Rules:
-1. Each question starts with a number (1., 2., etc.)
+1. Each question may start with a number or be separated by ---
 2. Options are labeled with Bengali letters (ক, খ, গ, ঘ) or English letters (A, B, C, D)
-3. Explanation is usually the last line after options
-4. Ignore lines like "See AI Explanation"
-5. Return valid JSON array only
+3. Look for "Correct Answer:" followed by the answer text
+4. Explanation may be after "Explanation:" or at the end
+5. Handle multi-part questions with Roman numerals (i, ii, iii)
+6. Return valid JSON array only
 
 Output format:
 [{
-  "question": "question text",
-  "options": {
-    "ক": "option1",
-    "খ": "option2",
-    "গ": "option3",
-    "ঘ": "option4"
-  },
+  "question": "full question text including any sub-parts",
+  "options": [
+    "option1 text",
+    "option2 text", 
+    "option3 text",
+    "option4 text"
+  ],
+  "correctAnswer": "exact text of correct option",
   "explanation": "explanation text"
 }]`;
 
