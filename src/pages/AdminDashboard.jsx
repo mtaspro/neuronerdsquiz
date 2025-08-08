@@ -440,16 +440,67 @@ export default function AdminDashboard() {
       parsedQ.options['ঘ'] || parsedQ.options['D'] || ''
     ];
     
+    // Find correct answer index
+    const correctAnswerIndex = options.findIndex(opt => opt === parsedQ.correctAnswer);
+    
     setNewQuestion({
       question: parsedQ.question,
       options: options,
-      correctAnswer: 0,
+      correctAnswer: correctAnswerIndex >= 0 ? correctAnswerIndex : 0,
       chapter: selectedChapter,
       duration: 60,
       explanation: parsedQ.explanation || ''
     });
     
     setUsedQuestions(prev => new Set([...prev, index]));
+  }
+
+  // Add all parsed questions
+  async function handleAddAllQuestions() {
+    if (!selectedChapter) {
+      setError('Please select a chapter first');
+      return;
+    }
+    
+    if (!window.confirm(`Add all ${parsedQuestions.length} questions to "${selectedChapter}"?`)) return;
+    
+    setLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    
+    try {
+      const questionsToAdd = parsedQuestions.map(pq => {
+        const options = [
+          pq.options['ক'] || pq.options['A'] || '',
+          pq.options['খ'] || pq.options['B'] || '',
+          pq.options['গ'] || pq.options['C'] || '',
+          pq.options['ঘ'] || pq.options['D'] || ''
+        ];
+        
+        const correctAnswerIndex = options.findIndex(opt => opt === pq.correctAnswer);
+        
+        return {
+          question: pq.question,
+          options: options,
+          correctAnswer: options[correctAnswerIndex >= 0 ? correctAnswerIndex : 0],
+          chapter: selectedChapter,
+          duration: 60,
+          explanation: pq.explanation || '',
+          adminVisible: adminVisibleForChapter
+        };
+      });
+      
+      const response = await axios.post(`${apiUrl}/api/admin/questions/bulk`, {
+        questions: questionsToAdd
+      }, { headers: authHeader() });
+      
+      setQuestions(qs => [...qs, ...response.data]);
+      setParsedQuestions([]);
+      setError('');
+    } catch (err) {
+      setError('Failed to add questions in bulk');
+    } finally {
+      setLoading(false);
+    }
   }
 
   // Remove parsed question
@@ -900,15 +951,30 @@ export default function AdminDashboard() {
               <h3 className="text-xl font-semibold text-green-800 dark:text-green-300 mb-4">🚀 Easy Question Import from Chorcha</h3>
               <div className="space-y-4">
                 <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-600">
-                  <h4 className="font-semibold text-gray-800 dark:text-white mb-2">📋 Step-by-Step Instructions:</h4>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-gray-800 dark:text-white">📋 Step-by-Step Instructions:</h4>
+                    <button
+                      onClick={() => {
+                        const script = `javascript:(function(){\n    function extractChorchaQuestions() {\n        const questions = [];\n        console.log('Starting extraction...');\n        \n        let questionContainers = document.querySelectorAll('div.space-y-4 > div.rounded-xl');\n        if (questionContainers.length === 0) {\n            questionContainers = document.querySelectorAll('div.rounded-xl');\n        }\n        \n        questionContainers.forEach((container, index) => {\n            try {\n                if (index % 10 === 0) console.log(\`Processing question \${index + 1}...\`);\n                \n                let questionArea = container.querySelector('div.space-y-2.md\\\\:space-y-3') || \n                                 container.querySelector('div.space-y-2');\n                if (!questionArea) return;\n                \n                const questionDiv = questionArea.querySelector('div.flex-grow');\n                if (!questionDiv) return;\n                \n                let questionText = questionDiv.textContent.trim();\n                if (!questionText) return;\n                \n                let optionButtons = container.querySelectorAll('div.grid.md\\\\:grid-cols-2.gap-1 button') ||\n                                  container.querySelectorAll('button[type="button"]');\n                \n                const options = {};\n                let correctAnswer = '';\n                \n                optionButtons.forEach(button => {\n                    const optionDiv = button.querySelector('div.rounded-full');\n                    let optionContent = button.querySelector('div.text-left.overflow-x-auto') ||\n                                      button.querySelector('p');\n                    \n                    if (optionDiv && optionContent) {\n                        const optionLetter = optionDiv.textContent.trim();\n                        const optionText = optionContent.textContent.trim();\n                        \n                        if (optionLetter.match(/[কখগঘ]/)) {\n                            options[optionLetter] = optionText;\n                            if (optionDiv.classList.contains('skipped')) {\n                                correctAnswer = optionText;\n                            }\n                        }\n                    }\n                });\n                \n                const explanationDiv = container.querySelector('div.p-3.rounded-lg.bg-green-200\\\\/25');\n                const explanation = explanationDiv ? explanationDiv.textContent.trim() : '';\n                \n                if (questionText && Object.keys(options).length >= 2) {\n                    questions.push({\n                        question: questionText,\n                        options: options,\n                        correctAnswer: correctAnswer,\n                        explanation: explanation\n                    });\n                }\n            } catch (error) {\n                console.log(\`Error processing question \${index + 1}:\`, error);\n            }\n        });\n        \n        return questions;\n    }\n    \n    const questions = extractChorchaQuestions();\n    const formattedText = questions.map(q => {\n        const optionsText = Object.entries(q.options)\n            .map(([letter, text]) => \`\${letter}. \${text}\`)\n            .join('\\n');\n        return \`\${q.question}\\n\${optionsText}\\nCorrect Answer: \${q.correctAnswer}\\nExplanation: \${q.explanation}\`;\n    }).join('\\n\\n---\\n\\n');\n    \n    // Create a popup with the results\n    const popup = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');\n    popup.document.write(\`\n        <html>\n        <head><title>Extracted Questions (\${questions.length})</title></head>\n        <body style="font-family: Arial; padding: 20px;">\n            <h2>Extracted \${questions.length} Questions</h2>\n            <button onclick="navigator.clipboard.writeText(document.getElementById('questions').textContent); alert('Copied!');" \n                    style="background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 20px;">\n                Copy All Questions\n            </button>\n            <pre id="questions" style="background: #f5f5f5; padding: 15px; border-radius: 5px; white-space: pre-wrap;">\${formattedText}</pre>\n        </body>\n        </html>\n    \`);\n})();`;
+                        navigator.clipboard.writeText(script).then(() => {
+                          alert('Chorcha extractor script copied to clipboard! Paste it in browser console.');
+                        }).catch(() => {
+                          alert('Failed to copy. Please copy manually from the file.');
+                        });
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm text-white transition-colors"
+                    >
+                      📋 Copy Script
+                    </button>
+                  </div>
                   <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700 dark:text-gray-300">
                     <li>Go to <strong>Chorcha app</strong> and start any MCQ test</li>
                     <li><strong>Submit without solving</strong> (just click submit)</li>
                     <li>You'll see the <strong>review page</strong> with all questions, correct answers, and explanations</li>
-                    <li><strong>Open Developer Tools</strong> (Press F12)</li>
-                    <li><strong>Go to Console tab</strong> and paste the extraction script</li>
-                    <li><strong>Copy the formatted questions</strong> from console output</li>
-                    <li><strong>Paste below</strong> and click "Parse Questions"</li>
+                    <li><strong>Open Developer Tools</strong> </li>
+                    <li><strong>Go to Console tab</strong> and paste the extraction script (use Copy Script button above)</li>
+                    <li><strong>Copy the formatted questions</strong> That will be shown in another window</li>
+                    <li><strong>Paste below</strong> and click "Parse Questions(500+ power at a time!!)"</li>
                   </ol>
                 </div>
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded border border-yellow-200 dark:border-yellow-700">
@@ -971,7 +1037,16 @@ export default function AdminDashboard() {
             {/* Parsed Questions Preview */}
             {parsedQuestions.length > 0 && (
               <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 mb-6">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Parsed Questions ({parsedQuestions.length})</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Parsed Questions ({parsedQuestions.length})</h3>
+                  <button
+                    onClick={handleAddAllQuestions}
+                    disabled={!selectedChapter || loading}
+                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors"
+                  >
+                    {loading ? 'Adding...' : 'Add All Questions'}
+                  </button>
+                </div>
                 <div className="space-y-4 max-h-96 overflow-y-auto">
                   {parsedQuestions.map((pq, index) => (
                     <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded border">

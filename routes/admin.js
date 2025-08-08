@@ -279,6 +279,28 @@ router.post('/questions', authMiddleware, requireAdmin, async (req, res) => {
   }
 });
 
+// Add multiple questions in bulk
+router.post('/questions/bulk', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const { questions } = req.body;
+    
+    if (!questions || !Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ error: 'Questions array is required' });
+    }
+    
+    const questionsToAdd = questions.map(q => ({
+      ...q,
+      createdBy: req.user.userId,
+      adminVisible: q.adminVisible !== undefined ? q.adminVisible : true
+    }));
+    
+    const savedQuestions = await Quiz.insertMany(questionsToAdd);
+    res.status(201).json(savedQuestions);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create questions in bulk' });
+  }
+});
+
 // Edit a question (only if created by current admin)
 router.put('/questions/:id', authMiddleware, requireAdmin, async (req, res) => {
   try {
@@ -354,7 +376,7 @@ Output format:
 }]`;
 
     const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-      model: 'qwen/qwen-2.5-72b-instruct:free',
+      model: 'google/gemini-2.0-flash-exp:free',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `Parse this MCQ text:\n\n${bulkText}` }
