@@ -10,6 +10,8 @@ import UserQuestionRecord from '../models/UserQuestionRecord.js';
 import BadgeService from '../services/badgeService.js';
 import GlobalSettings from '../models/GlobalSettings.js';
 
+const router = express.Router();
+
 // Get current showdown event status
 router.get('/showdown-event', async (req, res) => {
   try {
@@ -25,8 +27,6 @@ router.get('/showdown-event', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch event status' });
   }
 });
-
-const router = express.Router();
 
 // Get all pending requests
 router.get('/requests', authMiddleware, requireSuperAdmin, async (req, res) => {
