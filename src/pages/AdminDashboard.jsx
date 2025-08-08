@@ -263,19 +263,24 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false));
   }
 
-  // Reset user score
+  // Request user deletion (same as reset score - deletes all user data)
   function handleResetUserScore(userId, username) {
-    if (!window.confirm(`Reset all scores for user "${username}"? This will remove them from the leaderboard.`)) return;
+    const reason = prompt(`Please provide a reason for deleting user "${username}" and all their data:`);
+    if (!reason || !reason.trim()) return;
+    
+    if (!window.confirm(`Submit deletion request for user "${username}"? This will delete all their scores, stats, and data. SuperAdmin approval required.`)) return;
     
     setLoading(true);
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.post(`${apiUrl}/api/admin/users/${userId}/reset-score`, {}, { headers: authHeader() })
+    axios.post(`${apiUrl}/api/admin/users/${userId}/request-deletion`, {
+      reason: reason.trim()
+    }, { headers: authHeader() })
       .then(() => {
-        setError(''); // Clear any previous errors
-        // You could add a success message here if needed
+        setError('');
+        alert(`User deletion request for "${username}" submitted! Awaiting SuperAdmin approval.`);
       })
       .catch(err => {
-        const errorMsg = err.response?.data?.error || 'Failed to reset user score';
+        const errorMsg = err.response?.data?.error || 'Failed to submit deletion request';
         setError(errorMsg);
       })
       .finally(() => setLoading(false));
@@ -634,10 +639,10 @@ export default function AdminDashboard() {
                           <button
                             onClick={() => handleResetUserScore(u._id, u.username)}
                             disabled={loading}
-                            className="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded text-sm text-white transition-colors disabled:opacity-50"
-                            title="Reset user's scores"
+                            className="bg-orange-600 hover:bg-orange-700 px-3 py-1 rounded text-sm text-white transition-colors disabled:opacity-50"
+                            title="Request user deletion (requires SuperAdmin approval)"
                           >
-                            Reset Score
+                            Request Deletion
                           </button>
                           {!u.isAdmin && (
                             <button
