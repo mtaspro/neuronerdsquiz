@@ -574,7 +574,7 @@ export default function AdminDashboard() {
     
     setLoading(true);
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.post(`${apiUrl}/api/admin/request-leaderboard-reset`, {
+    axios.post(`${apiUrl}/api/admin/leaderboard/request-reset`, {
       reason: reason.trim()
     }, { headers: authHeader() })
       .then(() => setResetMsg('Leaderboard reset request submitted! Awaiting SuperAdmin approval.'))
