@@ -186,7 +186,8 @@ router.post('/chapters', authMiddleware, requireAdmin, async (req, res) => {
     await chapter.save();
     res.status(201).json(chapter);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create chapter' });
+    console.error('Chapter creation error:', error);
+    res.status(500).json({ error: error.message || 'Failed to create chapter' });
   }
 });
 
@@ -208,7 +209,8 @@ router.put('/chapters/:id', authMiddleware, requireAdmin, async (req, res) => {
     const updatedChapter = await Chapter.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(updatedChapter);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update chapter' });
+    console.error('Chapter update error:', error);
+    res.status(500).json({ error: error.message || 'Failed to update chapter' });
   }
 });
 
