@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { FaCheck, FaTimes, FaUser, FaTrash, FaHistory } from 'react-icons/fa';
+import { FaCheck, FaTimes, FaUser, FaTrash, FaHistory, FaPalette } from 'react-icons/fa';
 import { useNotification } from '../components/NotificationSystem';
 
 const SuperAdminDashboard = () => {
@@ -9,10 +9,22 @@ const SuperAdminDashboard = () => {
   const [allRequests, setAllRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
+  const [globalTheme, setGlobalTheme] = useState('tech-bg');
   const { success, error: showError } = useNotification();
+
+  const themes = [
+    { id: 'tech-bg', name: 'LOONY CIRCLES' },
+    { id: 'tech-bg1', name: 'CUTY KITTENS' },
+    { id: 'tech-bg2', name: 'LIVING KING' },
+    { id: 'tech-bg3', name: 'ALIEN ISOLATION' },
+    { id: 'tech-bg4', name: 'RADIOGRAPHY DNA' },
+    { id: 'tech-bg5', name: 'CRYSTAL MATRIX' },
+    { id: 'tech-bg6', name: 'NEON TUNNEL' }
+  ];
 
   useEffect(() => {
     fetchRequests();
+    fetchGlobalSettings();
   }, []);
 
   const fetchRequests = async () => {
@@ -36,6 +48,75 @@ const SuperAdminDashboard = () => {
       showError('Failed to fetch requests');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchGlobalSettings = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = localStorage.getItem('authToken');
+      
+      const response = await axios.get(`${apiUrl}/api/superadmin/global-settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const themeSettings = response.data.find(s => s.settingKey === 'defaultTheme');
+      if (themeSettings) {
+        setGlobalTheme(themeSettings.settingValue);
+      }
+    } catch (error) {
+      console.error('Error fetching global settings:', error);
+    }
+  };
+
+  const handleSetGlobalTheme = async (theme) => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = localStorage.getItem('authToken');
+      
+      await axios.post(`${apiUrl}/api/superadmin/set-global-theme`, {
+        theme
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setGlobalTheme(theme);
+      success(`Global theme set to ${themes.find(t => t.id === theme)?.name}`);
+    } catch (error) {
+      console.error('Error setting global theme:', error);
+      showError('Failed to set global theme');
+    }
+  };
+
+  const handleStartEvent = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = localStorage.getItem('authToken');
+      
+      await axios.post(`${apiUrl}/api/superadmin/start-showdown-event`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      success('Neuronerds Showdown event started!');
+    } catch (error) {
+      console.error('Error starting event:', error);
+      showError('Failed to start event');
+    }
+  };
+
+  const handleEndEvent = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = localStorage.getItem('authToken');
+      
+      await axios.post(`${apiUrl}/api/superadmin/end-showdown-event`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      success('Neuronerds Showdown event ended!');
+    } catch (error) {
+      console.error('Error ending event:', error);
+      showError('Failed to end event');
     }
   };
 
@@ -90,6 +171,60 @@ const SuperAdminDashboard = () => {
       </div>
 
       <div className="max-w-6xl mx-auto p-8">
+        {/* Global Theme Settings */}
+        <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-3 mb-4">
+            <FaPalette className="text-purple-600 text-xl" />
+            <h2 className="text-xl font-semibold">Global Theme Settings</h2>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Set the default theme for all users. Users can still override this with their personal preference.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {themes.map((theme) => (
+              <button
+                key={theme.id}
+                onClick={() => handleSetGlobalTheme(theme.id)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  globalTheme === theme.id
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                {theme.name}
+              </button>
+            ))}
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Current global default: <span className="font-semibold">{themes.find(t => t.id === globalTheme)?.name}</span>
+          </p>
+        </div>
+
+        {/* Event Management */}
+        <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="text-orange-600 text-xl">🔥</div>
+            <h2 className="text-xl font-semibold">Neuronerds Showdown Event</h2>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Manually control the special event banner and timing.
+          </p>
+          <div className="flex space-x-4">
+            <button
+              onClick={handleStartEvent}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            >
+              🚀 Start Event
+            </button>
+            <button
+              onClick={handleEndEvent}
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            >
+              🛑 End Event
+            </button>
+          </div>
+        </div>
+
         {/* Toggle Buttons */}
         <div className="mb-6 flex space-x-4">
           <button

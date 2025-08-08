@@ -8,6 +8,23 @@ import Badge from '../models/Badge.js';
 import UserQuizRecord from '../models/UserQuizRecord.js';
 import UserQuestionRecord from '../models/UserQuestionRecord.js';
 import BadgeService from '../services/badgeService.js';
+import GlobalSettings from '../models/GlobalSettings.js';
+
+// Get current showdown event status
+router.get('/showdown-event', async (req, res) => {
+  try {
+    const eventSettings = await GlobalSettings.findOne({ settingKey: 'showdownEvent' });
+    
+    if (!eventSettings || !eventSettings.settingValue.isActive) {
+      return res.json({ isActive: false });
+    }
+    
+    res.json(eventSettings.settingValue);
+  } catch (error) {
+    console.error('Error fetching event status:', error);
+    res.status(500).json({ error: 'Failed to fetch event status' });
+  }
+});
 
 const router = express.Router();
 
@@ -117,15 +134,39 @@ async function executeUserDeletion(userId) {
 async function executeLeaderboardReset() {
   console.log('🔄 Starting SuperAdmin approved leaderboard reset...');
   
-  // Delete all user scores from leaderboard
+  // Delete ALL user scores (both general and battle)
   await UserScore.deleteMany({});
-  console.log('✅ Deleted all user scores');
+  console.log('✅ Deleted all user scores (general + battle)');
   
   // Delete all user stats
   await UserStats.deleteMany({});
   console.log('✅ Deleted all user stats');
   
-  // Reset all badges
+  // Reset ALL user fields to zero
+  await User.updateMany(
+    {},
+    {
+      $set: {
+        totalScore: 0,
+        questionsAnswered: 0,
+        correctAnswers: 0,
+        incorrectAnswers: 0,
+        averageScore: 0,
+        bestScore: 0,
+        totalQuizzes: 0,
+        streak: 0,
+        lastQuizDate: null,
+        battleWins: 0,
+        battleLosses: 0,
+        battleDraws: 0,
+        totalBattles: 0,
+        battleScore: 0
+      }
+    }
+  );
+  console.log('✅ Reset all user stats to zero');
+  
+  // Reset ALL badges
   await Badge.updateMany(
     {},
     {
@@ -148,14 +189,98 @@ async function executeLeaderboardReset() {
   
   // Delete all individual question records
   await UserQuestionRecord.deleteMany({});
-  console.log('✅ Deleted all question records - users reset to 0 solved questions');
+  console.log('✅ Deleted all question records');
   
   // Re-initialize the badge system
   const badgeService = new BadgeService();
   await badgeService.initializeBadges();
   console.log('✅ Re-initialized badge system');
   
-  console.log('🎉 SuperAdmin approved leaderboard reset completed!');
+  console.log('🎉 Complete reset: Both leaderboards cleared, all stats reset, badges reset!');
 }
+
+// Set global default theme
+router.post('/set-global-theme', authMiddleware, requireSuperAdmin, async (req, res) => {
+  try {
+    const { theme } = req.body;
+    
+    await GlobalSettings.findOneAndUpdate(
+      { settingKey: 'defaultTheme' },
+      { 
+        settingValue: theme,
+        updatedBy: req.user.userId,
+        updatedAt: new Date()
+      },
+      { upsert: true }
+    );
+    
+    res.json({ message: `Global theme set to ${theme}` });
+  } catch (error) {
+    console.error('Error setting global theme:', error);
+    res.status(500).json({ error: 'Failed to set global theme' });
+  }
+});
+
+// Get global settings
+router.get('/global-settings', authMiddleware, requireSuperAdmin, async (req, res) => {
+  try {
+    const settings = await GlobalSettings.find().populate('updatedBy', 'username');
+    res.json(settings);
+  } catch (error) {
+    console.error('Error fetching global settings:', error);
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+// Start Neuronerds Showdown event
+router.post('/start-showdown-event', authMiddleware, requireSuperAdmin, async (req, res) => {
+  try {
+    const endTime = new Date();
+    endTime.setDate(endTime.getDate() + 15); // 15 days from now
+    
+    await GlobalSettings.findOneAndUpdate(
+      { settingKey: 'showdownEvent' },
+      { 
+        settingValue: {
+          isActive: true,
+          startTime: new Date(),
+          endTime: endTime,
+          title: 'The Neuronerds Showdown'
+        },
+        updatedBy: req.user.userId,
+        updatedAt: new Date()
+      },
+      { upsert: true }
+    );
+    
+    res.json({ message: 'Neuronerds Showdown event started!' });
+  } catch (error) {
+    console.error('Error starting event:', error);
+    res.status(500).json({ error: 'Failed to start event' });
+  }
+});
+
+// End Neuronerds Showdown event
+router.post('/end-showdown-event', authMiddleware, requireSuperAdmin, async (req, res) => {
+  try {
+    await GlobalSettings.findOneAndUpdate(
+      { settingKey: 'showdownEvent' },
+      { 
+        settingValue: {
+          isActive: false,
+          endTime: new Date()
+        },
+        updatedBy: req.user.userId,
+        updatedAt: new Date()
+      },
+      { upsert: true }
+    );
+    
+    res.json({ message: 'Neuronerds Showdown event ended!' });
+  } catch (error) {
+    console.error('Error ending event:', error);
+    res.status(500).json({ error: 'Failed to end event' });
+  }
+});
 
 export default router;

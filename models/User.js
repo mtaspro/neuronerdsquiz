@@ -23,6 +23,7 @@ const userSchema = new mongoose.Schema({
   },
   isAdmin: { type: Boolean, default: false },
   isSuperAdmin: { type: Boolean, default: false },
+  selectedTheme: { type: String, default: null }, // null means use global default
 });
 
 // Hash password before saving

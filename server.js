@@ -14,6 +14,7 @@ import badgeRouter from './routes/badges.js';
 import battleRouter from './routes/battle.js';
 import { router as latexRouter } from './routes/latex.js';
 import { router as aiChatRouter } from './routes/ai-chat.js';
+import themeRouter from './routes/theme.js';
 import BattleService from './services/battleService.js';
 import BadgeService from './services/badgeService.js';
 import UserScore from './models/UserScore.js';
@@ -175,6 +176,26 @@ async function initializeBadges() {
   }
 }
 
+// Add balanced bonus based on general quiz performance
+async function addBalancedBonus(userId, username) {
+  try {
+    const generalScore = await UserScore.findOne({ userId, type: 'general' });
+    if (generalScore) {
+      // Add 1% of general score as battle bonus (max 5 points)
+      const bonus = Math.min(5, Math.floor(generalScore.score * 0.01));
+      
+      const battleScore = await UserScore.findOne({ userId, type: 'battle' });
+      if (battleScore) {
+        battleScore.score += bonus;
+        await battleScore.save();
+        console.log(`💰 Added ${bonus} balanced bonus to ${username}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error adding balanced bonus:', error);
+  }
+}
+
 // Function to save battle results to leaderboard
 async function saveBattleResultsToLeaderboard(battleResults) {
   try {
@@ -182,25 +203,30 @@ async function saveBattleResultsToLeaderboard(battleResults) {
     
     for (const result of battleResults.results) {
       try {
-        // Find existing user score or create new one
-        const existingScore = await UserScore.findOne({ username: result.username });
+        // Find existing battle score or create new one
+        const existingScore = await UserScore.findOne({ 
+          userId: result.userId, 
+          type: 'battle' 
+        });
         
         if (existingScore) {
           // Update if new score is higher
           if (result.score > existingScore.score) {
             existingScore.score = result.score;
             await existingScore.save();
-            console.log(`📈 Updated ${result.username} score: ${result.score}`);
+            console.log(`📈 Updated ${result.username} battle score: ${result.score}`);
           }
         } else {
-          // Create new leaderboard entry
+          // Create new battle leaderboard entry
           const newScore = new UserScore({
+            userId: result.userId,
             username: result.username,
             score: result.score,
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(result.username)}&background=random`
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(result.username)}&background=random`,
+            type: 'battle'
           });
           await newScore.save();
-          console.log(`🆕 Added ${result.username} to leaderboard: ${result.score}`);
+          console.log(`🆕 Added ${result.username} to battle leaderboard: ${result.score}`);
         }
 
         // Update battle stats for badge calculation
@@ -209,6 +235,9 @@ async function saveBattleResultsToLeaderboard(battleResults) {
           score: result.score,
           timeSpent: result.totalTime
         });
+        
+        // Add balanced bonus from general quiz score
+        await addBalancedBonus(result.userId, result.username);
         
       } catch (userError) {
         console.error(`❌ Error saving score for ${result.username}:`, userError);
@@ -400,6 +429,10 @@ console.log('Mounting latex router...');
 app.use('/api/latex', latexRouter);
 console.log('Mounting AI chat router...');
 app.use('/api/ai-chat', aiChatRouter);
+console.log('Mounting theme router...');
+app.use('/api/theme', themeRouter);
+console.log('Mounting events router...');
+app.use('/api/events', (await import('./routes/events.js')).default);
 console.log('All routers mounted successfully');
 
 // Test route for API connectivity

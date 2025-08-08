@@ -146,9 +146,9 @@ class BattleService {
 
     // Update score
     if (isCorrect) {
-      // Calculate score based on time spent (faster = higher score)
-      const baseScore = 100;
-      const timeBonus = Math.max(0, 50 - Math.floor(timeSpent / 1000)); // Bonus for speed
+      // Optimized scoring: 2 points base + small time bonus
+      const baseScore = 2;
+      const timeBonus = Math.max(0, 1 - Math.floor(timeSpent / 10000)); // Max 1 point for very fast answers
       user.score += baseScore + timeBonus;
     }
 

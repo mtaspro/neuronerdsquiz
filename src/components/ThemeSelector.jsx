@@ -46,6 +46,22 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
       video: '/src/assets/tech-bg4.mp4',
       color: 'from-red-500 to-red-600',
       preview: '🔬'
+    },
+    {
+      id: 'tech-bg5',
+      name: 'CRYSTAL MATRIX',
+      description: 'Blue crystalline geometric patterns',
+      video: '/src/assets/tech-bg5.mp4',
+      color: 'from-blue-500 to-cyan-600',
+      preview: '💎'
+    },
+    {
+      id: 'tech-bg6',
+      name: 'NEON TUNNEL',
+      description: 'Purple neon tunnel with energy effects',
+      video: '/src/assets/tech-bg6.mp4',
+      color: 'from-purple-500 to-fuchsia-600',
+      preview: '🌌'
     }
   ];
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { getAvatarUrl, getFallbackAvatar } from "../utils/avatarUtils";
+import BattleEventBanner from "../components/BattleEventBanner";
 
 // Utility for rank badge and card styles
 const rankStyles = [
@@ -48,7 +49,9 @@ function getCardStyle(rank) {
 
 export default function Leaderboard() {
   // State management
-  const [leaderboard, setLeaderboard] = useState([]);
+  const [generalLeaderboard, setGeneralLeaderboard] = useState([]);
+  const [battleLeaderboard, setBattleLeaderboard] = useState([]);
+  const [activeTab, setActiveTab] = useState('general');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -56,42 +59,32 @@ export default function Leaderboard() {
 
   // Fetch leaderboard data
   useEffect(() => {
-    const fetchLeaderboard = async () => {
+    const fetchLeaderboards = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_URL}/api/leaderboard`);
-        setLeaderboard(response.data);
+        const [generalResponse, battleResponse] = await Promise.all([
+          axios.get(`${API_URL}/api/leaderboard/general`),
+          axios.get(`${API_URL}/api/leaderboard/battle`)
+        ]);
+        setGeneralLeaderboard(generalResponse.data);
+        setBattleLeaderboard(battleResponse.data);
         setError(null);
       } catch (err) {
-        console.error("Failed to fetch leaderboard:", err);
+        console.error("Failed to fetch leaderboards:", err);
         setError("Failed to fetch leaderboard data");
         // Fallback to dummy data if API fails
-        setLeaderboard([
-          {
-            username: "Alice",
-            score: 980,
-            avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-          },
-          {
-            username: "Bob",
-            score: 920,
-            avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-          },
-          {
-            username: "Charlie",
-            score: 870,
-            avatar: "https://randomuser.me/api/portraits/men/45.jpg",
-          },
-        ]);
+        setGeneralLeaderboard([]);
+        setBattleLeaderboard([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchLeaderboard();
+    fetchLeaderboards();
   }, [API_URL]);
 
-  // Sort players by score descending
-  const sortedPlayers = [...leaderboard].sort((a, b) => b.score - a.score);
+  // Get current leaderboard data
+  const currentLeaderboard = activeTab === 'general' ? generalLeaderboard : battleLeaderboard;
+  const sortedPlayers = [...currentLeaderboard].sort((a, b) => b.score - a.score);
 
   if (loading) {
     return (
@@ -121,6 +114,9 @@ export default function Leaderboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 py-12 px-4 transition-colors duration-200 overflow-x-auto">
       <div className="max-w-4xl mx-auto">
+        {/* Event Banner */}
+        <BattleEventBanner />
+        
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -131,9 +127,54 @@ export default function Leaderboard() {
           <h1 className="text-4xl md:text-6xl font-bold text-gray-800 dark:text-white mb-4">
             🏆 Leaderboard
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
+          <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
             Top performers in Neuronerds Quiz
           </p>
+          
+          {/* Tab Buttons */}
+          <div className="flex justify-center space-x-4 mb-8">
+            <button
+              onClick={() => setActiveTab('general')}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
+                activeTab === 'general'
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              📚 General Quiz
+            </button>
+            <button
+              onClick={() => setActiveTab('battle')}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
+                activeTab === 'battle'
+                  ? 'bg-red-600 text-white shadow-lg'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              ⚔️ Battle Mode
+            </button>
+          </div>
+          
+          {/* Scoring Info */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-8 text-left max-w-2xl mx-auto">
+            <h3 className="font-semibold text-gray-800 dark:text-white mb-2">📊 Scoring System:</h3>
+            <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+              {activeTab === 'general' ? (
+                <>
+                  <p>• <strong>Correct Answer:</strong> 10 points</p>
+                  <p>• <strong>Time Bonus:</strong> Up to 5 extra points for quick answers</p>
+                  <p>• <strong>Streak Bonus:</strong> +2 points for consecutive correct answers</p>
+                </>
+              ) : (
+                <>
+                  <p>• <strong>Correct Answer:</strong> 2 points base</p>
+                  <p>• <strong>Speed Bonus:</strong> Up to 1 extra point (very fast answers)</p>
+                  <p>• <strong>Balanced Bonus:</strong> 1% of general quiz score (max 5 points)</p>
+                  <p>• <strong>Formula:</strong> 2 + speed_bonus + balanced_bonus</p>
+                </>
+              )}
+            </div>
+          </div>
         </motion.div>
 
         {/* Leaderboard Cards */}
@@ -208,7 +249,7 @@ export default function Leaderboard() {
               No scores yet
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Be the first to take a quiz and appear on the leaderboard!
+              Be the first to {activeTab === 'general' ? 'take a quiz' : 'join a battle'} and appear on the leaderboard!
             </p>
           </motion.div>
         )}

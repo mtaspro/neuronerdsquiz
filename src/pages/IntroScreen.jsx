@@ -10,6 +10,8 @@ import techVideo1 from "../assets/tech-bg1.mp4";
 import techVideo2 from "../assets/tech-bg2.mp4";
 import techVideo3 from "../assets/tech-bg3.mp4";
 import techVideo4 from "../assets/tech-bg4.mp4";
+import techVideo5 from "../assets/tech-bg5.mp4";
+import techVideo6 from "../assets/tech-bg6.mp4";
 
 export default function IntroScreen() {
   const [showVideo, setShowVideo] = useState(false);
@@ -29,23 +31,44 @@ export default function IntroScreen() {
     'tech-bg2': techVideo2,
     'tech-bg3': techVideo3,
     'tech-bg4': techVideo4,
+    'tech-bg5': techVideo5,
+    'tech-bg6': techVideo6,
   };
 
-  // Load saved theme from localStorage and listen for changes
+  // Load user's effective theme (personal or global default)
   useEffect(() => {
-    const savedTheme = localStorage.getItem('selectedTheme');
-    if (savedTheme && themeVideos[savedTheme]) {
-      setCurrentTheme(savedTheme);
-    }
-
-    // Listen for theme changes from navbar
-    const handleThemeChange = () => {
-      const newTheme = localStorage.getItem('selectedTheme');
-      if (newTheme && themeVideos[newTheme]) {
-        setCurrentTheme(newTheme);
+    const loadTheme = async () => {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        try {
+          const response = await fetch('/api/theme/current', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await response.json();
+          if (data.theme && themeVideos[data.theme]) {
+            setCurrentTheme(data.theme);
+          }
+        } catch (error) {
+          console.error('Error loading theme:', error);
+          // Fallback to localStorage
+          const savedTheme = localStorage.getItem('selectedTheme');
+          if (savedTheme && themeVideos[savedTheme]) {
+            setCurrentTheme(savedTheme);
+          }
+        }
+      } else {
+        // Not logged in, use localStorage
+        const savedTheme = localStorage.getItem('selectedTheme');
+        if (savedTheme && themeVideos[savedTheme]) {
+          setCurrentTheme(savedTheme);
+        }
       }
     };
 
+    loadTheme();
+
+    // Listen for theme changes
+    const handleThemeChange = () => loadTheme();
     window.addEventListener('storage', handleThemeChange);
     window.addEventListener('themeChanged', handleThemeChange);
     
@@ -98,9 +121,26 @@ export default function IntroScreen() {
   }, []);
 
   // Handle theme change
-  const handleThemeChange = (themeId) => {
+  const handleThemeChange = async (themeId) => {
     setCurrentTheme(themeId);
     localStorage.setItem('selectedTheme', themeId);
+    
+    // Save to database if logged in
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      try {
+        await fetch('/api/theme/set', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ theme: themeId })
+        });
+      } catch (error) {
+        console.error('Error saving theme:', error);
+      }
+    }
     
     // Restart video with new theme
     if (videoRef.current) {
@@ -116,6 +156,8 @@ export default function IntroScreen() {
       'tech-bg2': 'from-purple-50 via-pink-50 to-rose-50 dark:from-gray-900 dark:via-purple-900 dark:to-pink-900',
       'tech-bg3': 'from-orange-50 via-red-50 to-pink-50 dark:from-gray-900 dark:via-orange-900 dark:to-red-900',
       'tech-bg4': 'from-slate-50 via-gray-50 to-zinc-50 dark:from-gray-900 dark:via-slate-900 dark:to-zinc-900',
+      'tech-bg5': 'from-blue-50 via-cyan-50 to-teal-50 dark:from-gray-900 dark:via-blue-900 dark:to-cyan-900',
+      'tech-bg6': 'from-purple-50 via-pink-50 to-fuchsia-50 dark:from-gray-900 dark:via-purple-900 dark:to-fuchsia-900',
     };
     return gradients[currentTheme] || gradients['tech-bg'];
   };
@@ -127,6 +169,8 @@ export default function IntroScreen() {
       'tech-bg2': 'LIVING KING',
       'tech-bg3': 'ALIEN ISOLATION',
       'tech-bg4': 'RADIOGRAPHY DNA',
+      'tech-bg5': 'CRYSTAL MATRIX',
+      'tech-bg6': 'NEON TUNNEL',
     };
     return names[currentTheme] || 'LOONY CIRCLES';
   };

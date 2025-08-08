@@ -3,10 +3,36 @@ import UserScore from '../models/UserScore.js';
 
 const leaderboardRouter = express.Router();
 
-// GET /leaderboard - returns top 10 users sorted by score (highest first)
+// GET /leaderboard/general - returns top 10 users sorted by general quiz score
+leaderboardRouter.get('/leaderboard/general', async (req, res) => {
+  try {
+    const topUsers = await UserScore.find({ type: { $ne: 'battle' } })
+      .sort({ score: -1 })
+      .limit(10)
+      .select('username score avatar -_id');
+    res.json(topUsers);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch general leaderboard.' });
+  }
+});
+
+// GET /leaderboard/battle - returns top 10 users sorted by battle score
+leaderboardRouter.get('/leaderboard/battle', async (req, res) => {
+  try {
+    const topUsers = await UserScore.find({ type: 'battle' })
+      .sort({ score: -1 })
+      .limit(10)
+      .select('username score avatar -_id');
+    res.json(topUsers);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch battle leaderboard.' });
+  }
+});
+
+// GET /leaderboard - legacy endpoint (returns general)
 leaderboardRouter.get('/leaderboard', async (req, res) => {
   try {
-    const topUsers = await UserScore.find({})
+    const topUsers = await UserScore.find({ type: { $ne: 'battle' } })
       .sort({ score: -1 })
       .limit(10)
       .select('username score avatar -_id');
