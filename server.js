@@ -328,6 +328,17 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Chat message
+  socket.on('sendChatMessage', ({ roomId, username, message }) => {
+    if (message && message.trim() && roomId && username) {
+      io.to(roomId).emit('chatMessage', {
+        username,
+        message: message.trim(),
+        timestamp: new Date()
+      });
+    }
+  });
+
   // Leave room
   socket.on('leaveRoom', ({ roomId, userId }) => {
     const room = battleService.removeUserFromRoom(roomId, userId);

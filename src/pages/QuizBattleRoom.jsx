@@ -39,6 +39,9 @@ const QuizBattleRoom = () => {
   const [isReady, setIsReady] = useState(false);
   const [isRoomCreator, setIsRoomCreator] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const chatEndRef = useRef(null);
 
   // Security system state
   const [showSecurityModal, setShowSecurityModal] = useState(false);
@@ -195,6 +198,16 @@ const QuizBattleRoom = () => {
           if (reason !== 'io client disconnect') {
             showError('Disconnected from battle server');
           }
+        });
+
+        socket.addListener('chatMessage', (data) => {
+          console.log('Received chat message:', data);
+          setChatMessages(prev => [...prev, {
+            id: Date.now() + Math.random(),
+            username: data.username,
+            message: data.message,
+            timestamp: new Date()
+          }]);
         });
 
         // Connect to socket
@@ -419,6 +432,25 @@ const QuizBattleRoom = () => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !connected) return;
+    
+    console.log('Sending chat message:', newMessage);
+    socket.emit('sendChatMessage', {
+      roomId,
+      username: userData.username || userData.email?.split('@')[0] || 'User',
+      message: newMessage.trim()
+    });
+    
+    setNewMessage('');
+  };
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
   const getProgressPercentage = (user) => {
     if (!battleStarted || !questions.length) return 0;
     return (user.currentQuestion / questions.length) * 100;
@@ -560,38 +592,88 @@ const QuizBattleRoom = () => {
               )}
             </div>
 
-            {/* Players List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {users.map((user, index) => (
-                <motion.div
-                  key={user.id}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 border-2 transition-all duration-300 ${
-                    user.isReady ? 'border-green-400 bg-green-400 bg-opacity-20' : 'border-gray-600'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center font-bold text-lg">
-                      {user.username.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{user.username}</h3>
-                      <div className="flex items-center space-x-2 text-sm">
-                        {user.isReady ? (
-                          <>
-                            <FaCheck className="text-green-400" />
-                            <span className="text-green-400">Ready</span>
-                          </>
-                        ) : (
-                          <span className="text-gray-400">Waiting...</span>
-                        )}
+            {/* Players List and Chat */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              {/* Players List */}
+              <div>
+                <h3 className="text-xl font-semibold mb-4 text-center">Players ({users.length})</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {users.map((user, index) => (
+                    <motion.div
+                      key={user.id}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      className={`bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 border-2 transition-all duration-300 ${
+                        user.isReady ? 'border-green-400 bg-green-400 bg-opacity-20' : 'border-gray-600'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center font-bold text-lg">
+                          {user.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold">{user.username}</h3>
+                          <div className="flex items-center space-x-2 text-sm">
+                            {user.isReady ? (
+                              <>
+                                <FaCheck className="text-green-400" />
+                                <span className="text-green-400">Ready</span>
+                              </>
+                            ) : (
+                              <span className="text-gray-400">Waiting...</span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Chat Box */}
+              <div>
+                <h3 className="text-xl font-semibold mb-4 text-center">Battle Chat</h3>
+                <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg border border-white border-opacity-20 h-80 flex flex-col">
+                  {/* Chat Messages */}
+                  <div className="flex-1 p-4 overflow-y-auto space-y-2">
+                    {chatMessages.length === 0 ? (
+                      <div className="text-center text-gray-400 text-sm mt-8">
+                        💬 Start chatting with other players!
+                      </div>
+                    ) : (
+                      chatMessages.map((msg) => (
+                        <div key={msg.id} className="text-sm">
+                          <span className="font-semibold text-blue-300">{msg.username}:</span>
+                          <span className="ml-2 text-gray-200">{msg.message}</span>
+                        </div>
+                      ))
+                    )}
+                    <div ref={chatEndRef} />
                   </div>
-                </motion.div>
-              ))}
+                  
+                  {/* Chat Input */}
+                  <form onSubmit={handleSendMessage} className="p-3 border-t border-white border-opacity-20">
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder="Type a message..."
+                        className="flex-1 bg-white bg-opacity-20 text-white placeholder-gray-300 px-3 py-2 rounded-lg border border-white border-opacity-30 focus:outline-none focus:border-blue-400 text-sm"
+                        maxLength={100}
+                      />
+                      <button
+                        type="submit"
+                        disabled={!newMessage.trim()}
+                        className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors text-sm font-semibold"
+                      >
+                        Send
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
             </div>
 
             {/* Ready Button */}
