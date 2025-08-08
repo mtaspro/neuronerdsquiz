@@ -247,7 +247,6 @@ const useExamSecurity = ({
   // Initialize security system
   const initializeSecurity = useCallback(async () => {
     if (!isActive) {
-      console.warn('Security system not active, skipping initialization');
       return false;
     }
 

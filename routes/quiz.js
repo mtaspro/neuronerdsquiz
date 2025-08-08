@@ -235,36 +235,47 @@ router.post('/submit', authMiddleware, async (req, res) => {
     console.log(`✅ ${newQuestionsCount} new questions solved by ${user.username} in chapter ${chapter}`);
 
     // Update or create leaderboard entry
-    let userScore = await UserScore.findOne({ username: user.username });
+    let userScore = await UserScore.findOne({ username: user.username, type: 'general' });
     let leaderboardUpdated = false;
     
-    if (userScore) {
-      userScore.score += score;
-      await userScore.save();
-      leaderboardUpdated = true;
-      console.log(`📈 Updated leaderboard score for ${user.username}: +${score} (total: ${userScore.score})`);
-    } else {
-      userScore = new UserScore({
-        username: user.username,
-        score: score,
-        avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=random`
-      });
-      await userScore.save();
-      leaderboardUpdated = true;
-      console.log(`🆕 Added ${user.username} to leaderboard: ${score}`);
+    try {
+      if (userScore) {
+        userScore.score += score;
+        await userScore.save();
+        leaderboardUpdated = true;
+        console.log(`📈 Updated leaderboard score for ${user.username}: +${score} (total: ${userScore.score})`);
+      } else {
+        userScore = new UserScore({
+          userId,
+          username: user.username,
+          score: score,
+          avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=random`,
+          type: 'general'
+        });
+        await userScore.save();
+        leaderboardUpdated = true;
+        console.log(`🆕 Added ${user.username} to leaderboard: ${score}`);
+      }
+    } catch (scoreError) {
+      console.error('Error updating leaderboard:', scoreError);
+      // Continue without failing the entire request
     }
 
     // Update user stats and recalculate badges
-    await badgeService.updateUserStats(userId, {
-      score,
-      totalQuestions,
-      correctAnswers,
-      timeSpent,
-      isQuiz: true
-    });
-
-    // Get updated user badges for response
-    const userBadges = await badgeService.getUserBadges(userId);
+    let userBadges = [];
+    try {
+      await badgeService.updateUserStats(userId, {
+        score,
+        totalQuestions,
+        correctAnswers,
+        timeSpent,
+        isQuiz: true
+      });
+      userBadges = await badgeService.getUserBadges(userId);
+    } catch (badgeError) {
+      console.error('Error updating badges:', badgeError);
+      // Continue without failing the entire request
+    }
 
     res.json({ 
       message: 'Quiz submitted successfully',
