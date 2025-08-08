@@ -565,14 +565,20 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false));
   }
 
-  // Reset leaderboard
+  // Request leaderboard reset (SuperAdmin approval required)
   function handleResetLeaderboard() {
-    if (!window.confirm('Reset the leaderboard? This cannot be undone.')) return;
+    const reason = prompt('Please provide a reason for leaderboard reset:');
+    if (!reason || !reason.trim()) return;
+    
+    if (!window.confirm('Submit leaderboard reset request? SuperAdmin approval is required.')) return;
+    
     setLoading(true);
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.post(`${apiUrl}/api/admin/leaderboard/reset`, {}, { headers: authHeader() })
-      .then(() => setResetMsg('Leaderboard reset!'))
-      .catch(() => setError('Failed to reset leaderboard'))
+    axios.post(`${apiUrl}/api/admin/request-leaderboard-reset`, {
+      reason: reason.trim()
+    }, { headers: authHeader() })
+      .then(() => setResetMsg('Leaderboard reset request submitted! Awaiting SuperAdmin approval.'))
+      .catch(err => setError(err.response?.data?.error || 'Failed to submit reset request'))
       .finally(() => setLoading(false));
   }
 
@@ -1470,14 +1476,22 @@ export default function AdminDashboard() {
 
         {tab === 'Leaderboard Reset' && (
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-            <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Reset Leaderboard</h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">This will delete all user scores from the leaderboard.</p>
+            <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Request Leaderboard Reset</h3>
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-700 mb-4">
+              <p className="text-yellow-800 dark:text-yellow-300 text-sm">
+                ⚠️ <strong>SuperAdmin Approval Required:</strong> Leaderboard reset requests must be approved by SuperAdmin for security.
+              </p>
+            </div>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              This will request to delete all user scores, stats, and badges from both general and battle leaderboards. 
+              You'll need to provide a reason for the reset.
+            </p>
             <button
               onClick={handleResetLeaderboard}
               disabled={loading}
-              className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors"
+              className="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors"
             >
-              {loading ? 'Resetting...' : 'Reset Leaderboard'}
+              {loading ? 'Submitting Request...' : 'Request Leaderboard Reset'}
             </button>
             {resetMsg && <p className="text-green-600 dark:text-green-400 mt-2">{resetMsg}</p>}
           </div>
