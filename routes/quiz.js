@@ -24,7 +24,7 @@ function generateQuizId(chapter, questions) {
 router.get('/chapters', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
-    let filter = { isActive: true };
+    let filter = {};
     
     // If not admin, only show visible chapters
     if (!user || !user.isAdmin) {

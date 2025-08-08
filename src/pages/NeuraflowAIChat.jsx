@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPaperPlane, FaCog, FaUser, FaRobot, FaStar } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
+import MathText from '../components/MathText';
 import axios from 'axios';
 import botAvatar from '../assets/botavatar.png';
 
@@ -287,7 +288,7 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
                     }`}
                   >
                     <div className="prose prose-sm max-w-none dark:prose-invert">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                      <MathText>{message.content}</MathText>
                     </div>
                     
                     {/* Timestamp on hover */}
@@ -318,7 +319,8 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
                 </div>
                 <div className="bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50 shadow-lg backdrop-blur-sm px-6 py-4 rounded-3xl">
                   <div className="prose prose-sm max-w-none dark:prose-invert">
-                    <span dangerouslySetInnerHTML={{ __html: streamingMessage + '<span class="inline-block w-2 h-5 bg-blue-500 ml-1 animate-pulse"></span>' }} />
+                    <MathText>{streamingMessage}</MathText>
+                    <span className="inline-block w-2 h-5 bg-blue-500 ml-1 animate-pulse"></span>
                   </div>
                 </div>
               </div>

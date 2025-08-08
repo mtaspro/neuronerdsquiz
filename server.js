@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import path from 'path';
+import fs from 'fs';
 
 import leaderboardRouter from './routes/leaderboard.js';
 import authRouter from './routes/auth.js';
@@ -141,8 +143,25 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve uploaded files
-app.use('/uploads', express.static('uploads'));
+// Serve uploaded files with fallback
+app.use('/uploads', (req, res, next) => {
+  const filePath = path.join(process.cwd(), 'uploads', req.path);
+  
+  // Check if file exists
+  if (fs.existsSync(filePath)) {
+    express.static('uploads')(req, res, next);
+  } else {
+    // File doesn't exist, redirect to default avatar
+    const filename = req.path.split('/').pop();
+    if (filename && filename.startsWith('profile-')) {
+      // Extract username from request or use generic
+      const defaultAvatar = 'https://ui-avatars.com/api/?name=User&background=random';
+      res.redirect(defaultAvatar);
+    } else {
+      res.status(404).json({ error: 'File not found' });
+    }
+  }
+});
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {

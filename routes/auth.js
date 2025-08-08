@@ -183,13 +183,25 @@ router.get('/validate', authMiddleware, async (req, res) => {
       });
     }
     
+    // Check if uploaded avatar file still exists, if not use default
+    let avatar = user.avatar;
+    if (avatar && avatar.startsWith('/uploads/')) {
+      const filePath = path.join(process.cwd(), avatar);
+      if (!fs.existsSync(filePath)) {
+        // File missing, update to default avatar
+        avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=random`;
+        await User.findByIdAndUpdate(user._id, { avatar });
+        await UserScore.updateMany({ userId: user._id }, { avatar });
+      }
+    }
+    
     res.json({ 
       valid: true,
       user: {
         _id: user._id,
         email: user.email,
         username: user.username,
-        avatar: user.avatar,
+        avatar: avatar,
         isAdmin: user.isAdmin,
         isSuperAdmin: user.isSuperAdmin
       }
