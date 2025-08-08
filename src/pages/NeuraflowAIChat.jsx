@@ -150,7 +150,7 @@ const NeuraflowAIChat = () => {
     {
       id: 1,
       type: 'bot',
-      content: "👋 Hello! I'm **Neuraflow AI**, your intelligent study companion! ✨\n\nI'm here to help you with:\n• 📚 Academic questions across all subjects\n• 🎯 Quiz platform features and updates\n• 🏆 Study strategies and tips\n• 💬 General conversations\n\nHow can I assist you today?",
+      content: "👋 Hello! I'm **NeuraX**, your advanced AI assistant! ⚡\n\nI'm here to help you with:\n• 📚 Academic questions across all subjects\n• 🎯 Quiz platform features and updates\n• 🏆 Study strategies and tips\n• 💬 General conversations\n\nHow can I assist you today?",
       timestamp: new Date()
     }
   ];
@@ -176,8 +176,8 @@ const NeuraflowAIChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // System prompt for Neuraflow AI
-  const systemPrompt = `You are Neuraflow AI (নিউরাফ্লো), a smart and friendly assistant developed for the Neuronerds Quiz Platform and its WhatsApp student community (*The NeuroNERDS*). You help students with study-related queries, platform support, academic motivation, and group-related information.
+  // System prompt for NeuraX
+  const systemPrompt = `You are NeuraX (নিউর‌এক্স), a smart and friendly assistant developed for the Neuronerds Quiz Platform and its WhatsApp student community (*The NeuroNERDS*). You help students with study-related queries, platform support, academic motivation, and group-related information.
 
 🎯 Your Role:
 - Act as a study companion and mentor.
@@ -243,7 +243,7 @@ const NeuraflowAIChat = () => {
 At present all the members are Students of *Chattogram College*,Bangladesh and reading in class XI and are passionate about learning and helping each other succeed.
 
 🌟 Always stay respectful, motivating, and helpful.
-You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖✨`;
+You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`;
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -677,14 +677,14 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
               >
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5">
                   <div className="w-full h-full rounded-xl bg-black flex items-center justify-center">
-                    <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">N</span>
+                    <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">X</span>
                   </div>
                 </div>
               </motion.div>
               <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-black animate-pulse"></div>
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">Neuraflow</h1>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">NeuraX</h1>
               <p className="text-xs text-gray-400 font-medium">Advanced AI Assistant</p>
             </div>
           </div>
@@ -772,7 +772,7 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
                     {message.type === 'bot' ? (
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5">
                         <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
-                          <span className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">N</span>
+                          <span className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">X</span>
                         </div>
                       </div>
                     ) : (
@@ -836,7 +836,7 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
               <div className="flex items-start space-x-4 max-w-4xl">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5 mt-1">
                   <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
-                    <span className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">N</span>
+                    <span className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">X</span>
                   </div>
                 </div>
                 <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 text-gray-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-3xl">
@@ -867,7 +867,7 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
                         transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                         className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
                       >
-                        N
+                        X
                       </motion.span>
                     </div>
                   </div>
@@ -976,7 +976,7 @@ You are *Neuraflow* — the intelligent, reliable friend of every student. 🤖�
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
-                placeholder={isListening ? "🎤 Listening..." : isGeneratingImage ? "🎨 Creating..." : enableWebSearch ? "Ask anything with web search 🌐" : selectedImage ? "What would you like to know about this image?" : "Message Neuraflow..."}
+                placeholder={isListening ? "🎤 Listening..." : isGeneratingImage ? "🎨 Creating..." : enableWebSearch ? "Ask anything with web search 🌐" : selectedImage ? "What would you like to know about this image?" : "Message NeuraX..."}
                 className="w-full px-4 py-3 bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 focus:border-blue-500/50 rounded-2xl focus:outline-none text-gray-100 placeholder-gray-400 transition-all duration-200 resize-none scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600"
                 disabled={isTyping || isStreaming || isProcessingOCR || isListening || isGeneratingImage}
                 rows={1}
