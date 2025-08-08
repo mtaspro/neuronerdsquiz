@@ -103,13 +103,14 @@ router.post('/register', async (req, res) => {
       return res.status(500).json({ error: 'Server configuration error.' });
     }
 
-    const token = jwt.sign({ userId: user._id, email: user.email, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ userId: user._id, email: user.email, isAdmin: user.isAdmin, isSuperAdmin: user.isSuperAdmin }, process.env.JWT_SECRET, { expiresIn: '1d' });
     
     // Return both token and user data (excluding password)
     const userData = {
       _id: user._id,
       email: user.email,
       isAdmin: user.isAdmin,
+      isSuperAdmin: user.isSuperAdmin,
       username: user.username,
       avatar: user.avatar
     };
@@ -148,13 +149,14 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
-    const token = jwt.sign({ userId: user._id, email: user.email, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ userId: user._id, email: user.email, isAdmin: user.isAdmin, isSuperAdmin: user.isSuperAdmin }, process.env.JWT_SECRET, { expiresIn: '1d' });
     
     // Return both token and user data (excluding password)
     const userData = {
       _id: user._id,
       email: user.email,
       isAdmin: user.isAdmin,
+      isSuperAdmin: user.isSuperAdmin,
       username: user.username,
       avatar: user.avatar
     };
@@ -188,7 +190,8 @@ router.get('/validate', authMiddleware, async (req, res) => {
         email: user.email,
         username: user.username,
         avatar: user.avatar,
-        isAdmin: user.isAdmin
+        isAdmin: user.isAdmin,
+        isSuperAdmin: user.isSuperAdmin
       }
     });
   } catch (err) {

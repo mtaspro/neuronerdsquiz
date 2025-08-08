@@ -33,4 +33,11 @@ export const requireAdmin = (req, res, next) => {
   next();
 };
 
+export const requireSuperAdmin = (req, res, next) => {
+  if (!req.user || !req.user.isSuperAdmin) {
+    return res.status(403).json({ error: 'SuperAdmin access required' });
+  }
+  next();
+};
+
 export default authMiddleware;

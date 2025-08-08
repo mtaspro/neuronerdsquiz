@@ -118,34 +118,41 @@ router.post('/users/:id/reset-score', authMiddleware, requireAdmin, async (req, 
   }
 });
 
-// Delete a user completely
-router.delete('/users/:id', authMiddleware, requireAdmin, async (req, res) => {
+// Request user deletion (creates request for SuperAdmin approval)
+router.post('/users/:id/request-deletion', authMiddleware, requireAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
+    const { reason } = req.body;
     
-    // Find the user first
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ error: 'Reason is required for deletion request' });
+    }
+    
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    // Don't allow deleting admin users
-    if (user.isAdmin) {
-      return res.status(403).json({ error: 'Cannot delete admin users' });
+    if (user.isAdmin || user.isSuperAdmin) {
+      return res.status(403).json({ error: 'Cannot request deletion of admin users' });
     }
     
-    // Delete user's scores from leaderboard
-    await UserScore.deleteMany({ username: user.username });
+    const AdminRequest = (await import('../models/AdminRequest.js')).default;
+    const request = new AdminRequest({
+      type: 'USER_DELETION',
+      requestedBy: req.user.userId,
+      requestedByUsername: req.user.email,
+      targetUserId: userId,
+      targetUsername: user.username,
+      reason: reason.trim()
+    });
     
-    // Delete the user
-    await User.findByIdAndDelete(userId);
-    
-    console.log(`Admin deleted user: ${user.email} (${user.username})`);
-    res.json({ message: 'User deleted successfully' });
+    await request.save();
+    res.json({ message: 'User deletion request submitted for SuperAdmin approval' });
     
   } catch (error) {
-    console.error('Error deleting user:', error);
-    res.status(500).json({ error: 'Failed to delete user' });
+    console.error('Error creating deletion request:', error);
+    res.status(500).json({ error: 'Failed to create deletion request' });
   }
 });
 
@@ -424,61 +431,29 @@ router.put('/quiz-configs/:chapterId', authMiddleware, requireAdmin, async (req,
   }
 });
 
-// Reset leaderboard (delete all scores, stats, badges, and quiz records)
-router.post('/leaderboard/reset', authMiddleware, requireAdmin, async (req, res) => {
+// Request leaderboard reset (creates request for SuperAdmin approval)
+router.post('/leaderboard/request-reset', authMiddleware, requireAdmin, async (req, res) => {
   try {
-    console.log('🔄 Starting complete leaderboard reset...');
+    const { reason } = req.body;
     
-    // 1. Delete all user scores from leaderboard
-    await UserScore.deleteMany({});
-    console.log('✅ Deleted all user scores');
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ error: 'Reason is required for reset request' });
+    }
     
-    // 2. Delete all user stats (including badge statistics)
-    await UserStats.deleteMany({});
-    console.log('✅ Deleted all user stats');
-    
-    // 3. Reset all badges (clear current holders and history)
-    await Badge.updateMany(
-      {},
-      {
-        $unset: {
-          currentHolderId: 1,
-          currentHolderUsername: 1,
-          currentValue: 1
-        },
-        $set: {
-          previousHolders: [],
-          lastUpdated: new Date()
-        }
-      }
-    );
-    console.log('✅ Reset all badge holders');
-    
-    // 4. Delete all quiz attempt records
-    await UserQuizRecord.deleteMany({});
-    console.log('✅ Deleted all quiz records');
-    
-    // 5. Delete all individual question records (makes users start from 0 solved questions)
-    const UserQuestionRecord = (await import('../models/UserQuestionRecord.js')).default;
-    await UserQuestionRecord.deleteMany({});
-    console.log('✅ Deleted all question records - users reset to 0 solved questions');
-    
-    // 6. Re-initialize the badge system to ensure clean state
-    const badgeService = new BadgeService();
-    await badgeService.initializeBadges();
-    console.log('✅ Re-initialized badge system');
-    
-    console.log('🎉 Complete leaderboard reset successful!');
-    res.json({ 
-      message: 'Complete leaderboard reset successful! All users reset to freshman status - they must solve all chapter questions again to unlock practice mode.' 
+    const AdminRequest = (await import('../models/AdminRequest.js')).default;
+    const request = new AdminRequest({
+      type: 'LEADERBOARD_RESET',
+      requestedBy: req.user.userId,
+      requestedByUsername: req.user.email,
+      reason: reason.trim()
     });
+    
+    await request.save();
+    res.json({ message: 'Leaderboard reset request submitted for SuperAdmin approval' });
     
   } catch (error) {
-    console.error('❌ Error during leaderboard reset:', error);
-    res.status(500).json({ 
-      error: 'Failed to reset leaderboard completely',
-      details: error.message 
-    });
+    console.error('Error creating reset request:', error);
+    res.status(500).json({ error: 'Failed to create reset request' });
   }
 });
 

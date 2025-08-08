@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema({
     default: ''
   },
   isAdmin: { type: Boolean, default: false },
+  isSuperAdmin: { type: Boolean, default: false },
 });
 
 // Hash password before saving
