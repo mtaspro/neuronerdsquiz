@@ -347,7 +347,7 @@ router.delete('/questions/:id', authMiddleware, requireAdmin, async (req, res) =
   }
 });
 
-// Parse bulk questions using AI
+// Parse bulk questions using regex fallback
 router.post('/parse-bulk-questions', authMiddleware, requireAdmin, async (req, res) => {
   try {
     const { bulkText } = req.body;
@@ -356,69 +356,52 @@ router.post('/parse-bulk-questions', authMiddleware, requireAdmin, async (req, r
       return res.status(400).json({ error: 'Bulk text is required' });
     }
 
-    console.log('Parsing bulk text, length:', bulkText.length);
-
-    const systemPrompt = `You are an expert MCQ parser. Parse the given bulk MCQ text and extract structured data.
-
-Rules:
-1. Each question may start with a number or be separated by ---
-2. Options are labeled with Bengali letters (ক, খ, গ, ঘ) or English letters (A, B, C, D)
-3. Look for "Correct Answer:" followed by the answer text
-4. Explanation may be after "Explanation:" or at the end
-5. Handle multi-part questions with Roman numerals (i, ii, iii)
-6. Return valid JSON array only
-
-Output format:
-[{
-  "question": "full question text including any sub-parts",
-  "options": [
-    "option1 text",
-    "option2 text", 
-    "option3 text",
-    "option4 text"
-  ],
-  "correctAnswer": "exact text of correct option",
-  "explanation": "explanation text"
-}]`;
-
-    if (!process.env.OPENROUTER_API_KEY) {
-      throw new Error('OpenRouter API key not configured');
-    }
-
-    const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-      model: 'google/gemini-2.0-flash-exp:free',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Parse this MCQ text:\n\n${bulkText}` }
-      ]
-    }, {
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json'
+    // Simple regex-based parser for Chorcha format
+    const questions = [];
+    const questionBlocks = bulkText.split(/\n\s*---\s*\n/).filter(block => block.trim());
+    
+    for (const block of questionBlocks) {
+      const lines = block.split('\n').map(line => line.trim()).filter(line => line);
+      
+      let question = '';
+      const options = [];
+      let correctAnswer = '';
+      let explanation = '';
+      
+      let currentSection = 'question';
+      
+      for (const line of lines) {
+        if (line.match(/^[কখগঘA-D]\./)) {
+          currentSection = 'options';
+          options.push(line.substring(2).trim());
+        } else if (line.startsWith('Correct Answer:')) {
+          correctAnswer = line.replace('Correct Answer:', '').trim();
+          currentSection = 'answer';
+        } else if (line.startsWith('Explanation:')) {
+          explanation = line.replace('Explanation:', '').trim();
+          currentSection = 'explanation';
+        } else if (currentSection === 'question') {
+          question += (question ? ' ' : '') + line;
+        } else if (currentSection === 'explanation') {
+          explanation += (explanation ? ' ' : '') + line;
+        }
       }
-    });
-
-    console.log('AI response received');
-    const aiResponse = response.data.choices[0].message.content;
-    console.log('AI response preview:', aiResponse.substring(0, 200));
-    
-    // Extract JSON from AI response
-    const jsonMatch = aiResponse.match(/\[.*\]/s);
-    if (!jsonMatch) {
-      console.error('No JSON found in AI response:', aiResponse);
-      throw new Error('No valid JSON found in AI response');
+      
+      if (question && options.length >= 2) {
+        questions.push({
+          question: question,
+          options: options,
+          correctAnswer: correctAnswer,
+          explanation: explanation
+        });
+      }
     }
     
-    const parsedQuestions = JSON.parse(jsonMatch[0]);
-    console.log('Successfully parsed', parsedQuestions.length, 'questions');
-    
-    res.json({ questions: parsedQuestions });
+    console.log('Parsed', questions.length, 'questions using regex parser');
+    res.json({ questions });
     
   } catch (error) {
     console.error('Error parsing bulk questions:', error.message);
-    if (error.response) {
-      console.error('API Error:', error.response.status, error.response.data);
-    }
     res.status(500).json({ error: error.message || 'Failed to parse questions' });
   }
 });
