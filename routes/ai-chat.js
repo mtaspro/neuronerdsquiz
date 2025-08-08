@@ -43,11 +43,14 @@ router.post('/', async (req, res) => {
       }
     );
     
-    const aiResponse = response.data.choices?.[0]?.message?.content?.trim();
+    let aiResponse = response.data.choices?.[0]?.message?.content?.trim();
     
     if (!aiResponse) {
       return res.status(500).json({ error: 'Failed to get AI response' });
     }
+
+    // Remove AI reasoning tags to hide internal thinking process
+    aiResponse = aiResponse.replace(/<think>.*?<\/think>/gs, '').trim();
 
     res.json({ response: aiResponse });
   } catch (error) {
