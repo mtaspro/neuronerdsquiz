@@ -288,6 +288,8 @@ router.post('/questions/bulk', authMiddleware, requireAdmin, async (req, res) =>
       return res.status(400).json({ error: 'Questions array is required' });
     }
     
+    console.log('Adding', questions.length, 'questions in bulk');
+    
     const questionsToAdd = questions.map(q => ({
       ...q,
       createdBy: req.user.userId,
@@ -295,9 +297,11 @@ router.post('/questions/bulk', authMiddleware, requireAdmin, async (req, res) =>
     }));
     
     const savedQuestions = await Quiz.insertMany(questionsToAdd);
+    console.log('Successfully added', savedQuestions.length, 'questions');
     res.status(201).json(savedQuestions);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create questions in bulk' });
+    console.error('Bulk questions error:', error.message);
+    res.status(500).json({ error: error.message || 'Failed to create questions in bulk' });
   }
 });
 
@@ -352,6 +356,8 @@ router.post('/parse-bulk-questions', authMiddleware, requireAdmin, async (req, r
       return res.status(400).json({ error: 'Bulk text is required' });
     }
 
+    console.log('Parsing bulk text, length:', bulkText.length);
+
     const systemPrompt = `You are an expert MCQ parser. Parse the given bulk MCQ text and extract structured data.
 
 Rules:
@@ -375,6 +381,10 @@ Output format:
   "explanation": "explanation text"
 }]`;
 
+    if (!process.env.OPENROUTER_API_KEY) {
+      throw new Error('OpenRouter API key not configured');
+    }
+
     const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
       model: 'google/gemini-2.0-flash-exp:free',
       messages: [
@@ -388,21 +398,28 @@ Output format:
       }
     });
 
+    console.log('AI response received');
     const aiResponse = response.data.choices[0].message.content;
+    console.log('AI response preview:', aiResponse.substring(0, 200));
     
     // Extract JSON from AI response
     const jsonMatch = aiResponse.match(/\[.*\]/s);
     if (!jsonMatch) {
+      console.error('No JSON found in AI response:', aiResponse);
       throw new Error('No valid JSON found in AI response');
     }
     
     const parsedQuestions = JSON.parse(jsonMatch[0]);
+    console.log('Successfully parsed', parsedQuestions.length, 'questions');
     
     res.json({ questions: parsedQuestions });
     
   } catch (error) {
-    console.error('Error parsing bulk questions:', error);
-    res.status(500).json({ error: 'Failed to parse questions' });
+    console.error('Error parsing bulk questions:', error.message);
+    if (error.response) {
+      console.error('API Error:', error.response.status, error.response.data);
+    }
+    res.status(500).json({ error: error.message || 'Failed to parse questions' });
   }
 });
 

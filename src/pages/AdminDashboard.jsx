@@ -425,7 +425,8 @@ export default function AdminDashboard() {
       setBulkText('');
       setShowBulkParser(false);
     } catch (err) {
-      setError('Failed to parse questions. Please check the format.');
+      console.error('Parsing error:', err.response?.data || err.message);
+      setError(err.response?.data?.error || 'Failed to parse questions. Please check the format.');
     } finally {
       setParsingLoading(false);
     }
@@ -433,12 +434,18 @@ export default function AdminDashboard() {
 
   // Add parsed question to form
   function handleAddParsedQuestion(parsedQ, index) {
-    const options = [
-      parsedQ.options['ক'] || parsedQ.options['A'] || '',
-      parsedQ.options['খ'] || parsedQ.options['B'] || '',
-      parsedQ.options['গ'] || parsedQ.options['C'] || '',
-      parsedQ.options['ঘ'] || parsedQ.options['D'] || ''
-    ];
+    // Handle both object and array format for options
+    let options;
+    if (Array.isArray(parsedQ.options)) {
+      options = parsedQ.options;
+    } else {
+      options = [
+        parsedQ.options['ক'] || parsedQ.options['A'] || '',
+        parsedQ.options['খ'] || parsedQ.options['B'] || '',
+        parsedQ.options['গ'] || parsedQ.options['C'] || '',
+        parsedQ.options['ঘ'] || parsedQ.options['D'] || ''
+      ];
+    }
     
     // Find correct answer index
     const correctAnswerIndex = options.findIndex(opt => opt === parsedQ.correctAnswer);
