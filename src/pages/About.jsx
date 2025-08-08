@@ -47,7 +47,7 @@ const About = () => {
       role: 'Lead Developer',
       avatar: '👨‍💻',
       description: 'Full-stack development, feature planning, design, and deployment',
-      message: 'Building Neuronerds Quiz has been an incredible journey of turning ideas into reality. Every line of code represents hours of passion and dedication to create something that truly helps friends learn and compete in a fun way.',
+      message: 'Building Neuronerds Quiz and NeuraX has been an incredible journey of turning ideas into reality. From simple quizzes to advanced AI capabilities - every line of code represents hours of passion and dedication to create something that truly revolutionizes how students learn.',
       contributions: [
         'Complete full-stack architecture',
         'Real-time battle system implementation',
@@ -103,7 +103,7 @@ const About = () => {
     { icon: '🏗️', title: 'Core Platform', description: 'Quiz system with authentication & leaderboards' },
     { icon: '⚔️', title: 'Battle System', description: 'Real-time multiplayer competitions' },
     { icon: '🏆', title: 'Badge System', description: 'Achievement system with 15+ unique badges' },
-    { icon: '🤖', title: 'AI Integration', description: 'Neuraflow AI assistant for personalized help' },
+    { icon: '🤖', title: 'AI Integration', description: 'NeuraX - Advanced AI assistant with multimodal capabilities' },
     { icon: '🔒', title: 'Security Features', description: 'Exam security with fullscreen & monitoring' },
     { icon: '📐', title: 'LaTeX Support', description: 'Mathematical expressions in questions' },
     { icon: '🎯', title: 'Practice Mode', description: 'Safe environment for skill improvement' }
@@ -133,8 +133,8 @@ const About = () => {
               Behind The Scenes 🎬
             </h1>
             <p className="text-xl text-purple-200 max-w-3xl mx-auto">
-              Meet the passionate team and discover the story behind Neuronerds Quiz - 
-              where learning meets competition and innovation drives education forward.
+              Meet the passionate team behind Neuronerds Quiz and discover NeuraX - 
+              our advanced AI assistant that's revolutionizing how students learn and compete.
             </p>
           </motion.div>
         </div>
@@ -152,7 +152,7 @@ const About = () => {
               Meet Our Team 👥
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-300">
-              The brilliant minds behind Neuronerds Quiz
+              The brilliant minds behind Neuronerds Quiz and NeuraX AI
             </p>
           </div>
 
@@ -341,12 +341,16 @@ const About = () => {
               <div className="text-center">
                 <FaBrain className="text-5xl text-purple-500 mx-auto mb-4" />
                 <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-                  Advanced AI Features
+                  NeuraX - Advanced AI Assistant
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  <strong>Neuraflow AI</strong> is already integrated! Our intelligent assistant provides 
-                  instant help, LaTeX generation, and personalized learning support. Next: adaptive quiz 
-                  recommendations and advanced analytics.
+                  <strong>NeuraX</strong> is our cutting-edge AI assistant featuring:
+                  • 🎤 Voice interaction with auto-language detection
+                  • 🔍 Real-time web search integration
+                  • 📷 OCR & image analysis capabilities
+                  • 🎨 AI-powered image generation
+                  • 📐 LaTeX mathematical rendering
+                  • 🌐 Bengali & English bilingual support
                 </p>
               </div>
               <div className="text-center">
@@ -357,7 +361,7 @@ const About = () => {
                 <div className="text-left space-y-2">
                   <p className="text-gray-600 dark:text-gray-300">• Mobile app for iOS and Android</p>
                   <p className="text-gray-600 dark:text-gray-300">• Advanced user analytics dashboard</p>
-                  <p className="text-gray-600 dark:text-gray-300">• Voice-based quiz interactions</p>
+                  <p className="text-gray-600 dark:text-gray-300">• Enhanced NeuraX AI capabilities</p>
                   <p className="text-gray-600 dark:text-gray-300">• Team-based study groups</p>
                   <p className="text-gray-600 dark:text-gray-300">• Custom quiz creation tools</p>
                   <p className="text-gray-600 dark:text-gray-300">• Offline mode capabilities</p>
