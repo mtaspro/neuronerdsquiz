@@ -574,11 +574,14 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
       
       const response = aiResult.response || aiResult;
       
+      // Ensure response is a string
+      const responseText = typeof response === 'string' ? response : String(response || 'Sorry, I encountered an error processing your request.');
+      
       setIsStreaming(true);
       setStreamingMessage('');
       
       let currentText = '';
-      const words = response.split(' ');
+      const words = responseText.split(' ');
       
       for (let i = 0; i < words.length; i++) {
         currentText += (i > 0 ? ' ' : '') + words[i];
@@ -589,7 +592,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
       const botResponse = {
         id: Date.now() + 1,
         type: 'bot',
-        content: response,
+        content: responseText,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, botResponse]);
@@ -636,9 +639,9 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
   };
 
   return (
-    <div className="flex h-screen bg-black text-white overflow-hidden">
+    <div className="flex min-h-screen bg-black text-white">
       {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900">
+      <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-purple-900/20"></div>
         <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]"></div>
       </div>
@@ -647,7 +650,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
       <motion.div 
         initial={{ x: -300 }}
         animate={{ x: showHistory ? 0 : -300 }}
-        className="fixed left-0 top-0 h-full w-80 bg-gray-900/95 backdrop-blur-xl border-r border-gray-700/50 z-50 overflow-y-auto"
+        className="fixed left-0 top-0 h-full w-80 md:w-80 sm:w-72 bg-gray-900/95 backdrop-blur-xl border-r border-gray-700/50 z-50 overflow-y-auto"
       >
         <div className="p-4">
           <div className="flex items-center justify-between mb-6">
@@ -692,11 +695,11 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
       </motion.div>
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col relative z-10">
+      <div className="flex-1 flex flex-col relative z-10 w-full">
         {/* Header */}
-        <div className="border-b border-gray-800/50 backdrop-blur-xl bg-black/20 px-6 py-4">
+        <div className="border-b border-gray-800/50 backdrop-blur-xl bg-black/20 px-4 md:px-6 py-4 sticky top-0 z-40">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 md:space-x-4">
               <button
                 onClick={() => setShowHistory(true)}
                 className="p-2 hover:bg-gray-800/50 rounded-lg transition-colors"
@@ -708,12 +711,12 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                 </div>
               </button>
               
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-600/30">
+              <div className="flex items-center space-x-2 md:space-x-3">
+                <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg overflow-hidden border border-gray-600/30">
                   <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">NeuraX</h1>
+                  <h1 className="text-base md:text-lg font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">NeuraX</h1>
                 </div>
               </div>
             </div>
@@ -721,9 +724,10 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
             <div className="flex items-center space-x-2">
               <button
                 onClick={startNewChat}
-                className="px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors text-sm border border-gray-700/50"
+                className="px-3 md:px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors text-xs md:text-sm border border-gray-700/50"
               >
-                New Chat
+                <span className="hidden sm:inline">New Chat</span>
+                <span className="sm:hidden">New</span>
               </button>
             </div>
           </div>
@@ -731,15 +735,15 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
 
         {/* Welcome Screen or Messages */}
         {messages.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center px-6">
+          <div className="flex-1 flex items-center justify-center px-4 md:px-6 py-8">
             <div className="max-w-2xl mx-auto text-center">
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="mb-8"
+                className="mb-6 md:mb-8"
               >
-                <div className="w-24 h-24 mx-auto rounded-3xl overflow-hidden shadow-2xl bg-white/5 backdrop-blur-sm border border-gray-700/30">
+                <div className="w-16 h-16 md:w-24 md:h-24 mx-auto rounded-3xl overflow-hidden shadow-2xl bg-white/5 backdrop-blur-sm border border-gray-700/30">
                   <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
                 </div>
               </motion.div>
@@ -749,10 +753,10 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
-                <h1 className="text-5xl font-bold mb-4 text-white">
+                <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4 text-white">
                   NeuraX
                 </h1>
-                <p className="text-xl text-gray-400 mb-8">
+                <p className="text-lg md:text-xl text-gray-400 mb-6 md:mb-8">
                   How can I help you today?
                 </p>
               </motion.div>
@@ -761,7 +765,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
-                className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8"
+                className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8"
               >
                 {[
                   { icon: '🎤', title: 'Voice Chat', desc: 'Speak naturally' },
@@ -776,11 +780,11 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
-                    className="p-4 bg-gray-900/30 backdrop-blur-sm rounded-xl border border-gray-700/30 hover:border-gray-600/50 transition-all duration-200"
+                    className="p-3 md:p-4 bg-gray-900/30 backdrop-blur-sm rounded-xl border border-gray-700/30 hover:border-gray-600/50 transition-all duration-200"
                   >
-                    <div className="text-2xl mb-2">{capability.icon}</div>
-                    <div className="text-sm font-medium text-gray-200">{capability.title}</div>
-                    <div className="text-xs text-gray-400">{capability.desc}</div>
+                    <div className="text-xl md:text-2xl mb-1 md:mb-2">{capability.icon}</div>
+                    <div className="text-xs md:text-sm font-medium text-gray-200">{capability.title}</div>
+                    <div className="text-xs text-gray-400 hidden md:block">{capability.desc}</div>
                   </motion.div>
                 ))}
               </motion.div>
@@ -795,9 +799,9 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                   <button
                     key={index}
                     onClick={() => handleQuickAction(action)}
-                    className="flex items-center space-x-3 p-4 bg-gray-800/30 hover:bg-gray-700/50 rounded-xl border border-gray-700/30 hover:border-gray-600/50 transition-all duration-200 text-left"
+                    className="flex items-center space-x-3 p-3 md:p-4 bg-gray-800/30 hover:bg-gray-700/50 rounded-xl border border-gray-700/30 hover:border-gray-600/50 transition-all duration-200 text-left"
                   >
-                    <span className="text-xl">{action.icon}</span>
+                    <span className="text-lg md:text-xl">{action.icon}</span>
                     <span className="text-sm font-medium text-gray-200">{action.text}</span>
                   </button>
                 ))}
@@ -805,8 +809,8 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
             </div>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto px-6 py-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-700">
-            <div className="max-w-4xl mx-auto space-y-6">
+          <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-700">
+            <div className="max-w-4xl mx-auto space-y-4 md:space-y-6 pb-4">
               <AnimatePresence>
                 {messages.map((message) => (
                   <motion.div
@@ -817,14 +821,14 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                     transition={{ duration: 0.3, ease: "easeOut" }}
                     className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div className={`flex items-start space-x-4 max-w-4xl ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                    <div className={`flex items-start space-x-2 md:space-x-4 max-w-full md:max-w-4xl ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                       <div className="flex-shrink-0 mt-1">
                         {message.type === 'bot' ? (
-                          <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-600/30">
+                          <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg overflow-hidden border border-gray-600/30">
                             <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
                           </div>
                         ) : (
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center">
+                          <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center">
                             <FaUser className="text-gray-300 text-xs" />
                           </div>
                         )}
@@ -832,18 +836,18 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
 
                       <motion.div
                         whileHover={{ scale: 1.01 }}
-                        className={`group relative max-w-3xl ${
+                        className={`group relative max-w-[85%] md:max-w-3xl ${
                           message.type === 'user'
-                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-tr-md px-4 py-3 shadow-lg'
-                            : 'bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 text-gray-100 rounded-2xl rounded-tl-md px-4 py-3'
+                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-tr-md px-3 md:px-4 py-2 md:py-3 shadow-lg'
+                            : 'bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 text-gray-100 rounded-2xl rounded-tl-md px-3 md:px-4 py-2 md:py-3'
                         }`}
                       >
                         {message.image && (
-                          <div className="mb-3">
+                          <div className="mb-2 md:mb-3">
                             <img 
                               src={message.image} 
                               alt="Uploaded" 
-                              className="max-w-sm rounded-xl shadow-lg border border-gray-600/30"
+                              className="max-w-full md:max-w-sm rounded-xl shadow-lg border border-gray-600/30"
                             />
                           </div>
                         )}
@@ -851,7 +855,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                           <MathText>{message.content}</MathText>
                         </div>
                         
-                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-700/20">
+                        <div className="flex items-center justify-between mt-2 md:mt-3 pt-2 border-t border-gray-700/20">
                           <span className="text-xs text-gray-400">
                             {formatTimestamp(message.timestamp)}
                           </span>
@@ -862,7 +866,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                               disabled={isSpeaking}
                             >
                               <FaVolumeUp className="text-xs" />
-                              <span>{isSpeaking ? 'Playing' : 'Listen'}</span>
+                              <span className="hidden sm:inline">{isSpeaking ? 'Playing' : 'Listen'}</span>
                             </button>
                           )}
                         </div>
@@ -938,20 +942,20 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
         )}
 
         {/* Input Bar */}
-        <div className="border-t border-gray-800/30 backdrop-blur-xl bg-black/20 px-6 py-6">
+        <div className="border-t border-gray-800/30 backdrop-blur-xl bg-black/20 px-4 md:px-6 py-4 md:py-6 sticky bottom-0 z-40">
           <div className="max-w-4xl mx-auto">
             {selectedImage && (
-              <div className="mb-4 flex items-center space-x-3 bg-gray-900/50 backdrop-blur-sm rounded-xl p-3 border border-gray-700/30">
+              <div className="mb-3 md:mb-4 flex items-center space-x-3 bg-gray-900/50 backdrop-blur-sm rounded-xl p-3 border border-gray-700/30">
                 <img 
                   src={URL.createObjectURL(selectedImage)} 
                   alt="Selected" 
-                  className="w-12 h-12 object-cover rounded-lg border border-gray-600/30"
+                  className="w-10 h-10 md:w-12 md:h-12 object-cover rounded-lg border border-gray-600/30"
                 />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-200">{selectedImage.name}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-200 truncate">{selectedImage.name}</p>
                   {isProcessingOCR ? (
                     <div className="flex items-center space-x-2 mt-1">
-                      <div className="w-32 bg-gray-700 rounded-full h-1.5">
+                      <div className="w-24 md:w-32 bg-gray-700 rounded-full h-1.5">
                         <div 
                           className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full transition-all duration-300"
                           style={{ width: `${ocrProgress}%` }}
@@ -965,7 +969,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                 </div>
                 <button
                   onClick={handleRemoveImage}
-                  className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                  className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0"
                 >
                   <FaTimes className="text-sm" />
                 </button>
@@ -973,7 +977,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
             )}
             
             {(isGeneratingImage || searchStatus) && (
-              <div className="mb-4 flex items-center justify-center space-x-3 bg-gray-900/30 backdrop-blur-sm rounded-xl p-3 border border-gray-700/20">
+              <div className="mb-3 md:mb-4 flex items-center justify-center space-x-3 bg-gray-900/30 backdrop-blur-sm rounded-xl p-3 border border-gray-700/20">
                 {isGeneratingImage && (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-400 border-t-transparent"></div>
@@ -990,14 +994,14 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
             )}
             
             {!isListening && !isTyping && !isStreaming && messages.length <= 1 && (
-              <div className="mb-4 text-center">
+              <div className="mb-3 md:mb-4 text-center hidden md:block">
                 <p className="text-xs text-gray-500">
                   Press <kbd className="px-2 py-1 bg-gray-800 border border-gray-600 rounded text-xs font-mono">Space</kbd> for voice • Multiple AI models • Real-time web search
                 </p>
               </div>
             )}
             
-            <div className="flex items-end space-x-3">
+            <div className="flex items-end space-x-2 md:space-x-3">
               <div className="flex-1 relative">
                 <motion.textarea
                   ref={inputRef}
@@ -1005,7 +1009,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
                   placeholder={isListening ? "🎤 Listening..." : isGeneratingImage ? "🎨 Creating..." : enableWebSearch ? "Ask anything with web search 🌐" : selectedImage ? "What would you like to know about this image?" : "Message NeuraX..."}
-                  className="w-full px-4 py-3 bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 focus:border-blue-500/50 rounded-2xl focus:outline-none text-gray-100 placeholder-gray-400 transition-all duration-200 resize-none scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600"
+                  className="w-full px-3 md:px-4 py-3 bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 focus:border-blue-500/50 rounded-2xl focus:outline-none text-gray-100 placeholder-gray-400 transition-all duration-200 resize-none scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 text-sm md:text-base"
                   disabled={isTyping || isStreaming || isProcessingOCR || isListening || isGeneratingImage}
                   rows={1}
                   style={{ minHeight: '48px', maxHeight: '120px' }}
@@ -1021,10 +1025,10 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                 )}
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 md:space-x-2">
                 <button
                   onClick={() => setEnableWebSearch(!enableWebSearch)}
-                  className={`p-2.5 rounded-xl transition-all duration-200 ${
+                  className={`p-2 md:p-2.5 rounded-xl transition-all duration-200 ${
                     enableWebSearch 
                       ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
                       : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
@@ -1032,12 +1036,12 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                   disabled={isTyping || isStreaming || isProcessingOCR}
                   title={enableWebSearch ? 'Web search ON' : 'Enable web search'}
                 >
-                  <FaSearch className="text-sm" />
+                  <FaSearch className="text-xs md:text-sm" />
                 </button>
                 
                 <button
                   onClick={isListening ? stopListening : startListening}
-                  className={`p-2.5 rounded-xl transition-all duration-200 ${
+                  className={`p-2 md:p-2.5 rounded-xl transition-all duration-200 ${
                     isListening 
                       ? 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse'
                       : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
@@ -1045,7 +1049,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                   disabled={isTyping || isStreaming || isProcessingOCR}
                   title={isListening ? 'Stop recording' : 'Voice input'}
                 >
-                  {isListening ? <FaMicrophoneSlash className="text-sm" /> : <FaMicrophone className="text-sm" />}
+                  {isListening ? <FaMicrophoneSlash className="text-xs md:text-sm" /> : <FaMicrophone className="text-xs md:text-sm" />}
                 </button>
                 
                 <input
@@ -1057,14 +1061,14 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-2.5 bg-gray-800/50 text-gray-400 border border-gray-700/50 rounded-xl hover:bg-gray-700/50 transition-all duration-200"
+                  className="p-2 md:p-2.5 bg-gray-800/50 text-gray-400 border border-gray-700/50 rounded-xl hover:bg-gray-700/50 transition-all duration-200"
                   disabled={isTyping || isStreaming || isProcessingOCR}
                   title="Upload image"
                 >
-                  <FaImage className="text-sm" />
+                  <FaImage className="text-xs md:text-sm" />
                 </button>
                 
-                <div className="relative">
+                <div className="relative hidden md:block">
                   <button
                     onClick={() => setShowModelSelector(!showModelSelector)}
                     className="p-2.5 bg-gray-800/50 text-gray-400 border border-gray-700/50 rounded-xl hover:bg-gray-700/50 transition-all duration-200"
@@ -1107,7 +1111,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
               <motion.button
                 onClick={handleSendMessage}
                 disabled={(!inputText.trim() && !selectedImage) || isTyping || isStreaming || isProcessingOCR}
-                className={`p-3 rounded-xl transition-all duration-200 ${
+                className={`p-2.5 md:p-3 rounded-xl transition-all duration-200 flex-shrink-0 ${
                   (!inputText.trim() && !selectedImage) || isTyping || isStreaming || isProcessingOCR
                     ? 'bg-gray-800/50 text-gray-500 border border-gray-700/50 cursor-not-allowed'
                     : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border border-blue-500/30 shadow-lg hover:shadow-xl'
@@ -1119,7 +1123,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                   animate={{ rotate: isTyping || isStreaming || isProcessingOCR ? 360 : 0 }}
                   transition={{ duration: 1, repeat: (isTyping || isStreaming || isProcessingOCR) ? Infinity : 0, ease: "linear" }}
                 >
-                  <FaPaperPlane className="text-sm" />
+                  <FaPaperPlane className="text-xs md:text-sm" />
                 </motion.div>
               </motion.button>
             </div>

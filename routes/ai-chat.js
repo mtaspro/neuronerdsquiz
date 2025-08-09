@@ -51,6 +51,9 @@ router.post('/', async (req, res) => {
     if (!aiResponse) {
       return res.status(500).json({ error: 'Failed to get AI response' });
     }
+    
+    // Ensure aiResponse is always a string
+    aiResponse = String(aiResponse);
 
     // Check if AI wants to generate an image
     const imageGenerateMatch = aiResponse.match(/\[GENERATE_IMAGE:\s*(.+?)\]/);
@@ -119,6 +122,11 @@ router.post('/', async (req, res) => {
         );
         
         aiResponse = response.data.choices?.[0]?.message?.content?.trim();
+        
+        // Ensure aiResponse is always a string
+        if (aiResponse) {
+          aiResponse = String(aiResponse);
+        }
       } catch (searchError) {
         console.error('Web search error:', searchError);
         // Continue with original response if search fails
