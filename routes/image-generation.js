@@ -26,7 +26,7 @@ router.post('/', async (req, res) => {
       },
       {
         headers: {
-          'Authorization': 'Bearer hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', // Free tier, no key needed
+          'Authorization': `Bearer ${process.env.HUGGINGFACE_API_KEY}`
           'Content-Type': 'application/json'
         },
         responseType: 'arraybuffer',
