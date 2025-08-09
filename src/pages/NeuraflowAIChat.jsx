@@ -111,13 +111,25 @@ const NeuraflowAIChat = () => {
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
       const userId = userData.id || 'guest';
       
+      // Load from localStorage first
+      const localChats = JSON.parse(localStorage.getItem(`chat_history_${userId}`) || '[]');
+      setChatHistory(localChats);
+      
+      // Try to load from server for logged-in users
       if (userId !== 'guest') {
-        const apiUrl = import.meta.env.VITE_API_URL || '';
-        const token = localStorage.getItem('authToken');
-        const response = await axios.get(`${apiUrl}/api/ai-chat/history-list`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setChatHistory(response.data.chats || []);
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || '';
+          const token = localStorage.getItem('authToken');
+          const response = await axios.get(`${apiUrl}/api/ai-chat/history-list`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const serverChats = response.data.chats || [];
+          if (serverChats.length > 0) {
+            setChatHistory(serverChats);
+          }
+        } catch (serverError) {
+          console.log('Server chat history not available, using local storage');
+        }
       }
     } catch (error) {
       console.log('No chat history found');
@@ -133,18 +145,40 @@ const NeuraflowAIChat = () => {
 
   const loadChat = async (chatId) => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get(`${apiUrl}/api/ai-chat/history/${chatId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const userId = userData.id || 'guest';
       
-      const parsedMessages = response.data.messages.map(msg => ({
-        ...msg,
-        timestamp: new Date(msg.timestamp)
-      }));
+      // Try to load from localStorage first
+      const savedMessages = JSON.parse(localStorage.getItem(`ai_chat_${userId}_${chatId}`) || '[]');
       
-      setMessages(parsedMessages);
+      if (savedMessages.length > 0) {
+        const parsedMessages = savedMessages.map(msg => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+        setMessages(parsedMessages);
+        setCurrentChatId(chatId);
+        setIsNewChat(false);
+        setShowHistory(false);
+        return;
+      }
+      
+      // Fallback to server if available
+      if (userId !== 'guest') {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const token = localStorage.getItem('authToken');
+        const response = await axios.get(`${apiUrl}/api/ai-chat/history/${chatId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const parsedMessages = response.data.messages.map(msg => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+        
+        setMessages(parsedMessages);
+      }
+      
       setCurrentChatId(chatId);
       setIsNewChat(false);
       setShowHistory(false);
@@ -164,19 +198,28 @@ const NeuraflowAIChat = () => {
   
   // Save conversation history whenever messages change
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > 0 && currentChatId) {
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
       const userId = userData.id || 'guest';
       
-      // Save to local storage
-      localStorage.setItem(`ai_chat_${userId}`, JSON.stringify(messages));
+      // Save messages to specific chat
+      localStorage.setItem(`ai_chat_${userId}_${currentChatId}`, JSON.stringify(messages));
+      
+      // Update chat history with last message time
+      const updatedChats = chatHistory.map(chat => 
+        chat.id === currentChatId 
+          ? { ...chat, lastMessage: new Date().toISOString() }
+          : chat
+      );
+      setChatHistory(updatedChats);
+      localStorage.setItem(`chat_history_${userId}`, JSON.stringify(updatedChats));
       
       // Save to server for logged-in users
       if (userId !== 'guest') {
         saveChatToServer(messages);
       }
     }
-  }, [messages]);
+  }, [messages, currentChatId, chatHistory]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -382,8 +425,10 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
     try {
       setSearchStatus('Searching the web...');
       const apiUrl = import.meta.env.VITE_API_URL || '';
+      // Add date context for fresher results
+      const enhancedQuery = `${query.trim()} 2024 2025 latest recent`;
       const response = await axios.post(`${apiUrl}/api/web-search`, {
-        query: query.trim()
+        query: enhancedQuery
       });
       
       const results = response.data.results;
@@ -393,7 +438,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
           `${index + 1}. **${result.title}**\n   ${result.snippet}\n   Source: ${result.link}`
         ).join('\n\n');
         
-        return `🔍 **Web Search Results:**\n\n${searchSummary}`;
+        return `🔍 **Web Search Results:**\n\n${searchSummary}\n\n*⚠️ Search results may not reflect the most recent information. For latest updates, please verify from official sources.*`;
       }
       setSearchStatus('No results found');
       return '🔍 No web search results found.';
@@ -514,6 +559,30 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
       return;
     }
 
+    // Create new chat if this is the first message
+    if (messages.length === 0 && !currentChatId) {
+      const newChatId = Date.now().toString();
+      const chatTitle = inputText.trim().slice(0, 50) + (inputText.trim().length > 50 ? '...' : '');
+      
+      setCurrentChatId(newChatId);
+      setIsNewChat(false);
+      
+      // Add to chat history
+      const newChat = {
+        id: newChatId,
+        title: chatTitle,
+        lastMessage: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+      setChatHistory(prev => [newChat, ...prev]);
+      
+      // Save to localStorage
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const userId = userData.id || 'guest';
+      const existingChats = JSON.parse(localStorage.getItem(`chat_history_${userId}`) || '[]');
+      localStorage.setItem(`chat_history_${userId}`, JSON.stringify([newChat, ...existingChats]));
+    }
+
     let messageContent = inputText;
     let uploadedImageUrl = null;
     
@@ -599,15 +668,23 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
       setIsStreaming(false);
       setStreamingMessage('');
       
-      if (synthRef.current && responseText && !responseText.includes('Should I generate this image')) {
-        setTimeout(() => speakText(responseText), 500);
-      }
+      // Removed auto-speak - only manual via Listen button
     } catch (error) {
       console.error('AI response error:', error);
+      let errorMessage = "I'm sorry, I'm having trouble connecting right now. Please try again in a moment! 🤖";
+      
+      if (enableWebSearch && error.response?.status === 500) {
+        errorMessage = "Web search is temporarily unavailable. Let me try to answer without searching the web.";
+        // Retry without web search
+        setEnableWebSearch(false);
+        setTimeout(() => handleSendMessage(), 1000);
+        return;
+      }
+      
       const errorResponse = {
         id: Date.now() + 1,
         type: 'bot',
-        content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment! 🤖",
+        content: errorMessage,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorResponse]);
@@ -861,12 +938,11 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                           </span>
                           {message.type === 'bot' && (
                             <button
-                              onClick={() => speakText(message.content)}
+                              onClick={() => isSpeaking ? stopSpeaking() : speakText(message.content)}
                               className="flex items-center space-x-1 px-2 py-1 text-xs text-gray-400 hover:text-blue-400 transition-colors rounded-md hover:bg-gray-800/30"
-                              disabled={isSpeaking}
                             >
                               <FaVolumeUp className="text-xs" />
-                              <span className="hidden sm:inline">{isSpeaking ? 'Playing' : 'Listen'}</span>
+                              <span className="hidden sm:inline">{isSpeaking ? 'Stop' : 'Listen'}</span>
                             </button>
                           )}
                         </div>
@@ -1108,24 +1184,35 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                 </div>
               </div>
               
-              <motion.button
-                onClick={handleSendMessage}
-                disabled={(!inputText.trim() && !selectedImage) || isTyping || isStreaming || isProcessingOCR}
-                className={`p-2.5 md:p-3 rounded-xl transition-all duration-200 flex-shrink-0 ${
-                  (!inputText.trim() && !selectedImage) || isTyping || isStreaming || isProcessingOCR
-                    ? 'bg-gray-800/50 text-gray-500 border border-gray-700/50 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border border-blue-500/30 shadow-lg hover:shadow-xl'
-                }`}
-                whileHover={(!inputText.trim() && !selectedImage) || isTyping || isStreaming || isProcessingOCR ? {} : { scale: 1.05 }}
-                whileTap={(!inputText.trim() && !selectedImage) || isTyping || isStreaming || isProcessingOCR ? {} : { scale: 0.95 }}
-              >
-                <motion.div
-                  animate={{ rotate: isTyping || isStreaming || isProcessingOCR ? 360 : 0 }}
-                  transition={{ duration: 1, repeat: (isTyping || isStreaming || isProcessingOCR) ? Infinity : 0, ease: "linear" }}
+              {(isTyping || isStreaming) ? (
+                <motion.button
+                  onClick={() => {
+                    setIsTyping(false);
+                    setIsStreaming(false);
+                    setStreamingMessage('');
+                  }}
+                  className="p-2.5 md:p-3 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all duration-200 flex-shrink-0"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Stop response"
+                >
+                  <div className="w-3 h-3 bg-red-400 rounded-sm"></div>
+                </motion.button>
+              ) : (
+                <motion.button
+                  onClick={handleSendMessage}
+                  disabled={(!inputText.trim() && !selectedImage) || isProcessingOCR}
+                  className={`p-2.5 md:p-3 rounded-xl transition-all duration-200 flex-shrink-0 ${
+                    (!inputText.trim() && !selectedImage) || isProcessingOCR
+                      ? 'bg-gray-800/50 text-gray-500 border border-gray-700/50 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border border-blue-500/30 shadow-lg hover:shadow-xl'
+                  }`}
+                  whileHover={(!inputText.trim() && !selectedImage) || isProcessingOCR ? {} : { scale: 1.05 }}
+                  whileTap={(!inputText.trim() && !selectedImage) || isProcessingOCR ? {} : { scale: 0.95 }}
                 >
                   <FaPaperPlane className="text-xs md:text-sm" />
-                </motion.div>
-              </motion.button>
+                </motion.button>
+              )}
             </div>
           </div>
         </div>
