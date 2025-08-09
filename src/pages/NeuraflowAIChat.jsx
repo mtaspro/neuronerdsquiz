@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPaperPlane, FaCog, FaUser, FaRobot, FaStar, FaImage, FaTimes, FaMicrophone, FaMicrophoneSlash, FaVolumeUp, FaSearch, FaPalette } from 'react-icons/fa';
+import { FaPaperPlane, FaCog, FaUser, FaRobot, FaStar, FaImage, FaTimes, FaMicrophone, FaMicrophoneSlash, FaVolumeUp, FaSearch, FaPalette, FaEllipsisV, FaTrash, FaArchive } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import MathText from '../components/MathText';
 import axios from 'axios';
@@ -27,6 +27,8 @@ const NeuraflowAIChat = () => {
   const [chatHistory, setChatHistory] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [isNewChat, setIsNewChat] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [showChatOptions, setShowChatOptions] = useState(null);
 
   const [ocrProgress, setOcrProgress] = useState(0);
   const [searchStatus, setSearchStatus] = useState('');
@@ -204,7 +206,7 @@ const NeuraflowAIChat = () => {
     {
       id: 1,
       type: 'bot',
-      content: "👋 Hello! I'm **NeuraX**, your advanced AI assistant! ⚡\n\nI can help you with:\n• 📚 Academic questions across all subjects\n• 🔍 Real-time web search\n• 📷 Image analysis & OCR\n• 🎤 Voice interactions\n• 💬 General conversations\n\nWhat would you like to explore today?",
+      content: "👋 Hi! I'm **NeuraX**, your AI study companion!\n\nI can help with academics, answer questions, analyze images, and search the web. What's on your mind?",
       timestamp: new Date()
     }
   ];
@@ -242,72 +244,29 @@ const NeuraflowAIChat = () => {
   // System prompt for NeuraX
   const systemPrompt = `You are NeuraX (নিউরএক্স), a smart and friendly assistant developed for the Neuronerds Quiz Platform and its WhatsApp student community (*The NeuroNERDS*). You help students with study-related queries, platform support, academic motivation, and group-related information.
 
-🎯 Your Role:
-- Act as a study companion and mentor.
-- Provide accurate, helpful academic answers across subjects.
-- Assist with platform-related questions, updates, and features.
+Key guidelines:
+- Be concise and direct - match the user's energy level
+- For simple greetings, respond simply (e.g., "Hi! How can I help you today?")
+- Only provide detailed explanations when specifically asked
 - Share study strategies and gentle motivation.
-- Represent the group with intelligence, warmth, and clarity.
-
-📷 Image Analysis:
-- When users upload images, you'll receive OCR text as [Text in Image] and descriptions as [Image Description] or [Image Context]
+- Use web search for current events: "[SEARCH_NEEDED: query]"
+- Reply in Bengali if user writes in Bengali
+- Stay helpful and student-focused
+Image Analysis:
+- For images, use provided [Text in Image] or [Image Description] data
 - Use this information to answer questions about the image content
 - Help with solving problems, explaining diagrams, reading text, or analyzing visual content
 - Be specific about what you can see in the provided image analysis
-
-🔍 Web Search Intelligence:
-- If you need current information, recent news, latest updates, or real-time data to answer properly, respond with: "[SEARCH_NEEDED: search_query_here]"
-- Use web search for: current events, latest news, recent developments, live data, today's information, breaking news, recent discoveries
-- Don't search for: basic academic concepts, historical facts, general knowledge, math problems, established scientific principles
-- After receiving search results, provide a natural response incorporating the information without mentioning the search
-
-🗣️ Tone & Communication Style:
-- Friendly, clear, concise, and student-focused.
-- Never show what you are reasoning or thinking in <think></think> tags.
-- Avoid unnecessary humor or filler (e.g., no "ahaha", "lol").
-- Use friendly emojis when helpful 🙂 but don't overuse.
-- Write short and to-the-point unless detail is requested.
-- If the user types in Bangla, reply fully in Bangla.
-- When you receive image analysis data like [Text in Image] or [Image Description], use that information to help the user with their question about the image.
-
-📚 What You Can Talk About:
-- Chapter-wise quiz features
-- Real-time battle mode
-- Math LaTeX support
-- Leaderboard & achievement system
-- Mobile-friendly UI & dark mode
-- Admin panel tools
-- AI-powered LaTeX generator
-
-👥 Community Info:
+Community Info:
 - Community name: *The NeuroNERDS*
-- Groups:
-  - *The Neuronerds* – Main academic group
-  - *NerdTalks XY* – Boys' group
-  - *NerdTalks XX* – Girls' group
+  - Akhyar Fardin – CEO & Admin  
+  - Ahmed Azmain Mahtab – Developer & Management Lead  
+  - Md. Tanvir Mahtab – Co-founder & Managing Director 
+  - And some boys and girls
+  -all are reading in Intermediate(11-12)  class in Chattogram College, Bangladesh
+    
 
-📌 Key Members:
--Boys
-    - Akhyar Fardin – CEO & Admin  
-    - Ahmed Azmain Mahtab – Developer & Management Lead  
-    - Md. Tanvir Mahtab – Co-founder & Managing Director  
-    - Ahnaf Akif   
-    - Md. Tahshin Mahmud Irham 
-    - Muntasir
-    - Samiul Alam Akib 
-    - Jitu Chakraborty 
-    - Amdad Hossen Nafiz
--Girls
-    - Zahin Ushrut (Parsa)
-    - Shakira Nowshin
-    - Nanzibah Azmaeen 
-    - Ayesha Siddika Aziz Nishu
-    - Fathema Zahra 
-
-At present all the members are Students of *Chattogram College*,Bangladesh and reading in class XI and are passionate about learning and helping each other succeed.
-
-🌟 Always stay respectful, motivating, and helpful.
-You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`;
+You help with academics, platform features, and general questions. Keep it natural! 🤖`;
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -534,6 +493,42 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
     setShowChatMenu(false);
   };
 
+  const deleteChat = async (chatId) => {
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const userId = userData.id || 'guest';
+    
+    // Remove from localStorage
+    localStorage.removeItem(`ai_chat_${userId}_${chatId}`);
+    
+    // Update chat history
+    const updatedChats = chatHistory.filter(chat => chat.id !== chatId);
+    setChatHistory(updatedChats);
+    localStorage.setItem(`chat_history_${userId}`, JSON.stringify(updatedChats));
+    
+    // If current chat is deleted, start new chat
+    if (currentChatId === chatId) {
+      setMessages([]);
+      setCurrentChatId(null);
+      setIsNewChat(true);
+    }
+    
+    setShowChatOptions(null);
+  };
+
+  const archiveChat = async (chatId) => {
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const userId = userData.id || 'guest';
+    
+    // Mark as archived in chat history
+    const updatedChats = chatHistory.map(chat => 
+      chat.id === chatId ? { ...chat, archived: true } : chat
+    );
+    setChatHistory(updatedChats.filter(chat => !chat.archived));
+    localStorage.setItem(`chat_history_${userId}`, JSON.stringify(updatedChats));
+    
+    setShowChatOptions(null);
+  };
+
   const quickActions = [
     { icon: '📚', text: 'Help with homework', prompt: 'Help me with my homework' },
     { icon: '🧮', text: 'Solve math problem', prompt: 'Help me solve this math problem' },
@@ -555,23 +550,26 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
   const isValidPrompt = (text) => {
     if (!text || !text.trim()) return false;
     const cleanText = text.trim().toLowerCase();
-    const invalidPatterns = /^(\.{1,}|\?{1,}|!{1,}|[a-z]{1,2}|hi|hey|hello)$/;
-    return cleanText.length >= 3 && !invalidPatterns.test(cleanText);
+    const invalidPatterns = /^(\.{1,}|\?{1,}|!{1,})$/;
+    return cleanText.length >= 1 && !invalidPatterns.test(cleanText);
   };
 
   const handleSendMessage = async () => {
     if (!inputText.trim() && !selectedImage) return;
+    if (isSending) return;
     
-    if (selectedImage && !isValidPrompt(inputText)) {
+    if (selectedImage && !inputText.trim()) {
       const errorMessage = {
         id: Date.now(),
         type: 'bot',
-        content: '⚠️ Please provide a clear description of what you want me to do with this image. For example: "What is this?", "Help me solve this", "Explain this diagram", etc.',
+        content: '⚠️ Please tell me what you\'d like to know about this image.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
       return;
     }
+    
+    setIsSending(true);
 
     // Create new chat if this is the first message
     if (messages.length === 0 && !currentChatId) {
@@ -701,6 +699,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
       setMessages(prev => [...prev, errorResponse]);
     } finally {
       setIsTyping(false);
+      setIsSending(false);
     }
   };
 
@@ -761,26 +760,66 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
           
           <div className="space-y-2">
             {chatHistory.map((chat) => (
-              <button
-                key={chat.id}
-                onClick={() => loadChat(chat.id)}
-                className={`w-full text-left p-3 rounded-lg transition-colors ${
-                  currentChatId === chat.id 
-                    ? 'bg-blue-600/20 border border-blue-500/30' 
-                    : 'hover:bg-gray-800/50'
-                }`}
-              >
-                <div className="text-sm font-medium text-gray-200 truncate">
-                  {chat.title || 'Untitled Chat'}
+              <div key={chat.id} className="relative group">
+                <button
+                  onClick={() => loadChat(chat.id)}
+                  className={`w-full text-left p-3 rounded-lg transition-colors pr-10 ${
+                    currentChatId === chat.id 
+                      ? 'bg-blue-600/20 border border-blue-500/30' 
+                      : 'hover:bg-gray-800/50'
+                  }`}
+                >
+                  <div className="text-sm font-medium text-gray-200 truncate">
+                    {chat.title || 'Untitled Chat'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    {new Date(chat.lastMessage).toLocaleDateString()}
+                  </div>
+                </button>
+                
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowChatOptions(showChatOptions === chat.id ? null : chat.id);
+                    }}
+                    className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <FaEllipsisV className="text-xs" />
+                  </button>
+                  
+                  {showChatOptions === chat.id && (
+                    <div className="absolute right-0 top-8 bg-gray-800/95 backdrop-blur-xl rounded-lg border border-gray-700/50 py-1 min-w-40 shadow-xl z-50">
+                      <button
+                        onClick={() => deleteChat(chat.id)}
+                        className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center space-x-2"
+                      >
+                        <FaTrash className="text-xs" />
+                        <span>Delete conversation</span>
+                      </button>
+                      <button
+                        onClick={() => archiveChat(chat.id)}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2"
+                      >
+                        <FaArchive className="text-xs" />
+                        <span>Archive</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div className="text-xs text-gray-400 mt-1">
-                  {new Date(chat.lastMessage).toLocaleDateString()}
-                </div>
-              </button>
+              </div>
             ))}
           </div>
         </div>
       </motion.div>
+      
+      {/* Overlay to close chat options */}
+      {showChatOptions && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowChatOptions(null)}
+        />
+      )}
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col relative z-10 w-full">
@@ -845,7 +884,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                   NeuraX
                 </h1>
                 <p className="text-lg md:text-xl text-gray-400 mb-6 md:mb-8">
-                  How can I help you today?
+                  Your AI study companion
                 </p>
               </motion.div>
               
@@ -1078,10 +1117,15 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                   ref={inputRef}
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey && !isSending) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
                   placeholder={isListening ? "🎤 Listening..." : enableWebSearch ? "Ask anything with web search 🌐" : selectedImage ? "What would you like to know about this image?" : "Message NeuraX..."}
                   className="w-full px-3 md:px-4 py-3 bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 focus:border-blue-500/50 rounded-2xl focus:outline-none text-gray-100 placeholder-gray-400 transition-all duration-200 resize-none scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 text-sm md:text-base"
-                  disabled={isTyping || isStreaming || isProcessingOCR || isListening}
+                  disabled={isTyping || isStreaming || isProcessingOCR || isListening || isSending}
                   rows={1}
                   style={{ minHeight: '48px', maxHeight: '120px' }}
                   onInput={(e) => {
@@ -1199,14 +1243,14 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
               ) : (
                 <motion.button
                   onClick={handleSendMessage}
-                  disabled={(!inputText.trim() && !selectedImage) || isProcessingOCR}
+                  disabled={(!inputText.trim() && !selectedImage) || isProcessingOCR || isSending}
                   className={`p-2.5 md:p-3 rounded-xl transition-all duration-200 flex-shrink-0 ${
-                    (!inputText.trim() && !selectedImage) || isProcessingOCR
+                    (!inputText.trim() && !selectedImage) || isProcessingOCR || isSending
                       ? 'bg-gray-800/50 text-gray-500 border border-gray-700/50 cursor-not-allowed'
                       : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border border-blue-500/30 shadow-lg hover:shadow-xl'
                   }`}
-                  whileHover={(!inputText.trim() && !selectedImage) || isProcessingOCR ? {} : { scale: 1.05 }}
-                  whileTap={(!inputText.trim() && !selectedImage) || isProcessingOCR ? {} : { scale: 0.95 }}
+                  whileHover={(!inputText.trim() && !selectedImage) || isProcessingOCR || isSending ? {} : { scale: 1.05 }}
+                  whileTap={(!inputText.trim() && !selectedImage) || isProcessingOCR || isSending ? {} : { scale: 0.95 }}
                 >
                   <FaPaperPlane className="text-xs md:text-sm" />
                 </motion.button>
