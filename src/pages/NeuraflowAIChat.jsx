@@ -54,6 +54,7 @@ const NeuraflowAIChat = () => {
       
       recognitionRef.current.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
+        console.log('Speech recognized:', transcript);
         
         // Auto-detect Bengali and switch language
         const bengaliPattern = /[\u0980-\u09FF]/;
@@ -65,13 +66,24 @@ const NeuraflowAIChat = () => {
         setIsListening(false);
       };
       
-      recognitionRef.current.onerror = () => {
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
         setIsListening(false);
+        if (event.error === 'not-allowed') {
+          alert('Microphone access denied. Please allow microphone permission.');
+        }
       };
       
       recognitionRef.current.onend = () => {
+        console.log('Speech recognition ended');
         setIsListening(false);
       };
+      
+      recognitionRef.current.onstart = () => {
+        console.log('Speech recognition started');
+      };
+    } else {
+      console.warn('Speech recognition not supported');
     }
     
     if ('speechSynthesis' in window) {
@@ -364,10 +376,22 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
     }
   };
 
-  const startListening = () => {
-    if (recognitionRef.current && !isListening) {
-      setIsListening(true);
-      recognitionRef.current.start();
+  const startListening = async () => {
+    if (!recognitionRef.current) {
+      alert('Speech recognition not supported in this browser');
+      return;
+    }
+    
+    if (!isListening) {
+      try {
+        // Request microphone permission
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        setIsListening(true);
+        recognitionRef.current.start();
+      } catch (error) {
+        console.error('Microphone permission denied:', error);
+        alert('Please allow microphone access to use voice input');
+      }
     }
   };
 
