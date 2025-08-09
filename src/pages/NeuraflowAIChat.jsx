@@ -42,7 +42,7 @@ const NeuraflowAIChat = () => {
     { id: 'qwen/qwen3-32b', name: 'Qwen 32B', description: 'Fast responses & multilingual support' },
     { id: 'qwen/qwen3-235b-a22b:free', name: 'Bengali Expert', description: 'Perfect for Bengali language support' },
     { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Code Expert', description: 'Best for coding & complex reasoning' },
-    { id: 'DavidAU/Llama-3.2-8X3B-MOE-Dark-Champion-Instruct-uncensored-abliterated-18.4B-GGUF', name: 'Dark Champion', description: 'Uncensored & powerful reasoning' }
+    { id: 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free', name: 'Dolphin Mistral', description: 'Unfiltered and Full Controll' }
   ];
 
   // Initialize speech recognition and synthesis
