@@ -1045,13 +1045,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
               </div>
             )}
             
-            {!isListening && !isTyping && !isStreaming && messages.length <= 1 && (
-              <div className="mb-3 md:mb-4 text-center hidden md:block">
-                <p className="text-xs text-gray-500">
-                  Press <kbd className="px-2 py-1 bg-gray-800 border border-gray-600 rounded text-xs font-mono">Space</kbd> for voice • Multiple AI models • Real-time web search
-                </p>
-              </div>
-            )}
+
             
             <div className="flex items-end space-x-2 md:space-x-3">
               <div className="flex-1 relative">
