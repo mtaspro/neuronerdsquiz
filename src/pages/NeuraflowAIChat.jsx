@@ -13,7 +13,7 @@ const NeuraflowAIChat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('qwen/qwq-32b:free');
+  const [selectedModel, setSelectedModel] = useState('deepseek/deepseek-chat-v3-0324:free');
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
@@ -37,7 +37,7 @@ const NeuraflowAIChat = () => {
   const synthRef = useRef(null);
 
   const models = [
-    { id: 'qwen/qwq-32b:free', name: 'Math Expert', description: 'Best for math & scientific problems' },
+    { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'DeepSeek Chat', description: 'Advanced conversational AI model' },
     { id: 'qwen/qwen3-235b-a22b:free', name: 'Bengali Expert', description: 'Perfect for Bengali language support' },
     { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Code Expert', description: 'Best for coding & complex reasoning' }
   ];
