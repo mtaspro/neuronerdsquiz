@@ -26,9 +26,9 @@ router.get('/chapters', authMiddleware, async (req, res) => {
     const user = await User.findById(req.user.userId);
     let filter = {};
     
-    // If not admin, only show visible chapters
-    if (!user || !user.isAdmin) {
-      filter.visible = true;
+    // Only super admins can see hidden chapters
+    if (!user || !user.isSuperAdmin) {
+      filter.visible = { $ne: false }; // Show chapters where visible is true or undefined
     }
     
     const chapters = await Chapter.find(filter).sort('order');
