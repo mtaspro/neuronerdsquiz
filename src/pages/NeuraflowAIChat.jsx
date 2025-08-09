@@ -23,6 +23,10 @@ const NeuraflowAIChat = () => {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [showChatMenu, setShowChatMenu] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [chatHistory, setChatHistory] = useState([]);
+  const [currentChatId, setCurrentChatId] = useState(null);
+  const [isNewChat, setIsNewChat] = useState(true);
 
   const [ocrProgress, setOcrProgress] = useState(0);
   const [searchStatus, setSearchStatus] = useState('');
@@ -97,60 +101,63 @@ const NeuraflowAIChat = () => {
     };
   }, [isListening, isTyping, isStreaming, isProcessingOCR]);
 
-  // Load conversation history on component mount
+  // Load chat history list on component mount
   useEffect(() => {
-    const loadConversationHistory = async () => {
+    loadChatHistory();
+  }, []);
+
+  const loadChatHistory = async () => {
+    try {
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
       const userId = userData.id || 'guest';
       
-      // Try to load from server first (for logged-in users)
       if (userId !== 'guest') {
-        try {
-          const apiUrl = import.meta.env.VITE_API_URL || '';
-          const token = localStorage.getItem('authToken');
-          const response = await axios.get(`${apiUrl}/api/ai-chat/history`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          if (response.data.messages && response.data.messages.length > 0) {
-            const parsedMessages = response.data.messages.map(msg => ({
-              ...msg,
-              timestamp: new Date(msg.timestamp)
-            }));
-            setMessages(parsedMessages);
-            return;
-          }
-        } catch (error) {
-          console.log('No server history found, checking local storage');
-        }
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const token = localStorage.getItem('authToken');
+        const response = await axios.get(`${apiUrl}/api/ai-chat/history-list`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setChatHistory(response.data.chats || []);
       }
+    } catch (error) {
+      console.log('No chat history found');
+    }
+  };
+
+  const startNewChat = () => {
+    setMessages([]);
+    setCurrentChatId(null);
+    setIsNewChat(true);
+    setShowHistory(false);
+  };
+
+  const loadChat = async (chatId) => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get(`${apiUrl}/api/ai-chat/history/${chatId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
-      // Fallback to local storage
-      const savedMessages = localStorage.getItem(`ai_chat_${userId}`);
-      if (savedMessages) {
-        try {
-          const parsedMessages = JSON.parse(savedMessages).map(msg => ({
-            ...msg,
-            timestamp: new Date(msg.timestamp)
-          }));
-          setMessages(parsedMessages);
-        } catch (error) {
-          console.error('Error loading chat history:', error);
-          setMessages(getWelcomeMessage());
-        }
-      } else {
-        setMessages(getWelcomeMessage());
-      }
-    };
-    
-    loadConversationHistory();
-  }, []);
+      const parsedMessages = response.data.messages.map(msg => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp)
+      }));
+      
+      setMessages(parsedMessages);
+      setCurrentChatId(chatId);
+      setIsNewChat(false);
+      setShowHistory(false);
+    } catch (error) {
+      console.error('Error loading chat:', error);
+    }
+  };
   
   const getWelcomeMessage = () => [
     {
       id: 1,
       type: 'bot',
-      content: "👋 Hello! I'm **NeuraX**, your advanced AI assistant! ⚡\n\nI'm here to help you with:\n• 📚 Academic questions across all subjects\n• 🎯 Quiz platform features and updates\n• 🏆 Study strategies and tips\n• 💬 General conversations\n\nHow can I assist you today?",
+      content: "👋 Hello! I'm **NeuraX**, your advanced AI assistant! ⚡\n\nI can help you with:\n• 📚 Academic questions across all subjects\n• 🔍 Real-time web search\n• 📷 Image analysis & OCR\n• 🎨 Image generation\n• 🎤 Voice interactions\n• 💬 General conversations\n\nWhat would you like to explore today?",
       timestamp: new Date()
     }
   ];
@@ -177,7 +184,7 @@ const NeuraflowAIChat = () => {
   }, [messages, isTyping]);
 
   // System prompt for NeuraX
-  const systemPrompt = `You are NeuraX (নিউর‌এক্স), a smart and friendly assistant developed for the Neuronerds Quiz Platform and its WhatsApp student community (*The NeuroNERDS*). You help students with study-related queries, platform support, academic motivation, and group-related information.
+  const systemPrompt = `You are NeuraX (নিউরএক্স), a smart and friendly assistant developed for the Neuronerds Quiz Platform and its WhatsApp student community (*The NeuroNERDS*). You help students with study-related queries, platform support, academic motivation, and group-related information.
 
 🎯 Your Role:
 - Act as a study companion and mentor.
@@ -291,13 +298,12 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
       const response = await fetch('https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base', {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' // Free tier, no key needed for basic usage
+          'Authorization': 'Bearer hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
         },
         body: formData
       });
       
       if (!response.ok) {
-        // Fallback to local processing if API fails
         return await generateLocalCaption(imageFile);
       }
       
@@ -310,7 +316,6 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
   };
 
   const generateLocalCaption = async (imageFile) => {
-    // Simple local caption based on file properties
     const fileSize = (imageFile.size / 1024).toFixed(1);
     const fileType = imageFile.type.split('/')[1].toUpperCase();
     return `${fileType} image (${fileSize} KB) - Image analysis available`;
@@ -331,7 +336,6 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
       return response.data.imageUrl;
     } catch (error) {
       console.error('Image upload error:', error);
-      // Fallback to blob URL if upload fails
       return URL.createObjectURL(imageFile);
     }
   };
@@ -352,7 +356,6 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
 
   const speakText = (text) => {
     if (synthRef.current && !isSpeaking) {
-      // Stop any ongoing speech
       synthRef.current.cancel();
       
       const utterance = new SpeechSynthesisUtterance(text);
@@ -427,7 +430,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
       const imageMessage = {
         id: Date.now(),
         type: 'bot',
-        content: '', // No text, only image
+        content: '',
         image: generatedImageUrl,
         timestamp: new Date()
       };
@@ -454,10 +457,8 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
     const userData = JSON.parse(localStorage.getItem('userData') || '{}');
     const userId = userData.id || 'guest';
     
-    // Clear local storage
     localStorage.removeItem(`ai_chat_${userId}`);
     
-    // Clear server history for logged-in users
     if (userId !== 'guest') {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -495,7 +496,6 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
   const isValidPrompt = (text) => {
     if (!text || !text.trim()) return false;
     const cleanText = text.trim().toLowerCase();
-    // Invalid prompts: empty, just dots, single chars, unclear
     const invalidPatterns = /^(\.{1,}|\?{1,}|!{1,}|[a-z]{1,2}|hi|hey|hello)$/;
     return cleanText.length >= 3 && !invalidPatterns.test(cleanText);
   };
@@ -503,7 +503,6 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
   const handleSendMessage = async () => {
     if (!inputText.trim() && !selectedImage) return;
     
-    // Validate prompt if image is selected
     if (selectedImage && !isValidPrompt(inputText)) {
       const errorMessage = {
         id: Date.now(),
@@ -516,29 +515,23 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
     }
 
     let messageContent = inputText;
-    let imageText = '';
+    let uploadedImageUrl = null;
     
-    // Process image if selected and prompt is valid
     if (selectedImage && isValidPrompt(inputText)) {
       setIsProcessingOCR(true);
       
-      // Upload image to cloud storage first
       const imageUrl = await uploadImageToCloud(selectedImage);
       
-      // Run OCR and captioning in parallel
       const [ocrText, caption] = await Promise.all([
         extractTextFromImage(selectedImage),
         generateImageCaption(selectedImage)
       ]);
       
-      // Smart decision: use OCR if significant text found, otherwise use caption
       let imageAnalysis = '';
       if (ocrText && ocrText.length > 10) {
-        // Significant text found, prioritize OCR
         imageAnalysis = `[Text in Image]: ${ocrText}`;
         if (caption) imageAnalysis += `\n[Image Context]: ${caption}`;
       } else if (caption) {
-        // No significant text, use caption only
         imageAnalysis = `[Image Description]: ${caption}`;
       }
       
@@ -546,19 +539,19 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
         messageContent = inputText ? `${inputText}\n\n${imageAnalysis}` : imageAnalysis;
       }
       
-      // Update user message with cloud URL instead of blob URL
-      userMessage.image = imageUrl;
-      
+      uploadedImageUrl = imageUrl;
       setIsProcessingOCR(false);
     }
-    
-    // Don't modify messageContent here - let AI decide if search is needed
 
     const userMessage = {
       id: Date.now(),
       type: 'user',
       content: messageContent,
-      image: selectedImage ? (isValidPrompt(inputText) ? null : URL.createObjectURL(selectedImage)) : null, // Will be updated after cloud upload
+      image: selectedImage
+        ? (isValidPrompt(inputText)
+            ? uploadedImageUrl
+            : URL.createObjectURL(selectedImage))
+        : null,
       timestamp: new Date()
     };
 
@@ -574,7 +567,6 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
     try {
       const aiResult = await getAIResponse(currentInput);
       
-      // Check if AI wants to generate an image directly
       if (aiResult.generateImage) {
         await handleImageGeneration(aiResult.generateImage);
         return;
@@ -582,11 +574,9 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
       
       const response = aiResult.response || aiResult;
       
-      // Start streaming effect
       setIsStreaming(true);
       setStreamingMessage('');
       
-      // Simulate typewriter effect
       let currentText = '';
       const words = response.split(' ');
       
@@ -596,7 +586,6 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
         await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 50));
       }
       
-      // Add final message
       const botResponse = {
         id: Date.now() + 1,
         type: 'bot',
@@ -607,7 +596,6 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
       setIsStreaming(false);
       setStreamingMessage('');
       
-      // Auto-speak normal responses (skip confirmations)
       if (synthRef.current && response && !response.includes('Should I generate this image')) {
         setTimeout(() => speakText(response), 500);
       }
@@ -628,7 +616,6 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
   const getAIResponse = async (userInput) => {
     const apiUrl = import.meta.env.VITE_API_URL || '';
     
-    // Get recent conversation history for context (last 5 pairs = 10 messages)
     const recentMessages = messages.slice(-10).map(msg => ({
       role: msg.type === 'user' ? 'user' : 'assistant',
       content: msg.content
@@ -649,459 +636,512 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
   };
 
   return (
-    <div className="flex flex-col h-screen bg-black text-white overflow-hidden">
+    <div className="flex h-screen bg-black text-white overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-purple-900/20"></div>
         <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]"></div>
       </div>
       
-      {/* Header */}
+      {/* Sidebar */}
       <motion.div 
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="relative z-10 border-b border-gray-800/50 backdrop-blur-xl bg-black/20 px-6 py-4"
+        initial={{ x: -300 }}
+        animate={{ x: showHistory ? 0 : -300 }}
+        className="fixed left-0 top-0 h-full w-80 bg-gray-900/95 backdrop-blur-xl border-r border-gray-700/50 z-50 overflow-y-auto"
       >
-        <div className="flex items-center justify-between max-w-6xl mx-auto">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <motion.div
-                animate={isTyping ? {
-                  boxShadow: [
-                    "0 0 0 0 rgba(59, 130, 246, 0.8)",
-                    "0 0 0 20px rgba(59, 130, 246, 0)"
-                  ]
-                } : {}}
-                transition={{ duration: 2, repeat: isTyping ? Infinity : 0 }}
-                className="relative"
-              >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5">
-                  <div className="w-full h-full rounded-xl bg-black flex items-center justify-center">
-                    <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">X</span>
-                  </div>
-                </div>
-              </motion.div>
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-black animate-pulse"></div>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">NeuraX</h1>
-              <p className="text-xs text-gray-400 font-medium">Advanced AI Assistant</p>
-            </div>
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-gray-200">Chat History</h2>
+            <button
+              onClick={() => setShowHistory(false)}
+              className="p-2 hover:bg-gray-800/50 rounded-lg transition-colors"
+            >
+              <FaTimes className="text-gray-400" />
+            </button>
           </div>
           
-          {/* Header Controls */}
-          <div className="flex items-center space-x-2">
-            <div className="flex items-center space-x-1 px-3 py-1.5 bg-gray-800/50 rounded-full border border-gray-700/50">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-xs text-gray-300">Online</span>
-            </div>
-            
-            <button
-              onClick={() => setShowChatMenu(!showChatMenu)}
-              className="p-2 hover:bg-gray-800/50 rounded-lg transition-colors border border-gray-700/50"
-            >
-              <FaCog className="text-gray-400 text-sm" />
-            </button>
-            
-            {showChatMenu && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="absolute top-full right-0 mt-2 bg-gray-900/95 backdrop-blur-xl rounded-xl border border-gray-700/50 p-2 min-w-48 z-50 shadow-2xl"
+          <button
+            onClick={startNewChat}
+            className="w-full mb-4 p-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 flex items-center space-x-2"
+          >
+            <span>✨</span>
+            <span>New Chat</span>
+          </button>
+          
+          <div className="space-y-2">
+            {chatHistory.map((chat) => (
+              <button
+                key={chat.id}
+                onClick={() => loadChat(chat.id)}
+                className={`w-full text-left p-3 rounded-lg transition-colors ${
+                  currentChatId === chat.id 
+                    ? 'bg-blue-600/20 border border-blue-500/30' 
+                    : 'hover:bg-gray-800/50'
+                }`}
               >
-                <button
-                  onClick={clearChatHistory}
-                  className="w-full text-left px-3 py-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors flex items-center space-x-2"
-                >
-                  <span>🗑️</span>
-                  <span>Clear History</span>
-                </button>
-              </motion.div>
-            )}
+                <div className="text-sm font-medium text-gray-200 truncate">
+                  {chat.title || 'Untitled Chat'}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  {new Date(chat.lastMessage).toLocaleDateString()}
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       </motion.div>
-
-      {/* Quick Actions */}
-      {messages.length <= 1 && (
-        <div className="relative z-10 border-b border-gray-800/30 px-6 py-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-gray-300">Quick Start</h3>
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col relative z-10">
+        {/* Header */}
+        <div className="border-b border-gray-800/50 backdrop-blur-xl bg-black/20 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
               <button
-                onClick={() => setShowQuickActions(!showQuickActions)}
-                className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                onClick={() => setShowHistory(true)}
+                className="p-2 hover:bg-gray-800/50 rounded-lg transition-colors"
               >
-                {showQuickActions ? 'Show Less' : 'Show More'}
+                <div className="w-5 h-5 flex flex-col justify-center space-y-1">
+                  <div className="w-full h-0.5 bg-gray-400"></div>
+                  <div className="w-full h-0.5 bg-gray-400"></div>
+                  <div className="w-full h-0.5 bg-gray-400"></div>
+                </div>
               </button>
+              
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5">
+                  <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
+                    <span className="text-sm font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">X</span>
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">NeuraX</h1>
+                </div>
+              </div>
             </div>
-            <div className={`grid grid-cols-2 lg:grid-cols-3 gap-3 ${!showQuickActions ? 'max-h-24 overflow-hidden' : ''}`}>
-              {quickActions.slice(0, showQuickActions ? quickActions.length : 4).map((action, index) => (
-                <motion.button
-                  key={index}
-                  onClick={() => handleQuickAction(action)}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="group flex items-center space-x-3 p-4 bg-gray-900/50 hover:bg-gray-800/50 rounded-xl border border-gray-700/30 hover:border-gray-600/50 transition-all duration-200 backdrop-blur-sm"
-                >
-                  <div className="text-xl group-hover:scale-110 transition-transform">{action.icon}</div>
-                  <span className="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">{action.text}</span>
-                </motion.button>
-              ))}
+            
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={startNewChat}
+                className="px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors text-sm border border-gray-700/50"
+              >
+                New Chat
+              </button>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Messages */}
-      <div className="relative z-10 flex-1 overflow-y-auto px-6 py-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-700">
-        <div className="max-w-6xl mx-auto space-y-6">
-          <AnimatePresence>
-            {messages.map((message) => (
+        {/* Welcome Screen or Messages */}
+        {messages.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center px-6">
+            <div className="max-w-2xl mx-auto text-center">
               <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="mb-8"
               >
-                <div className={`flex items-start space-x-4 max-w-4xl ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                  {/* Avatar */}
-                  <div className="flex-shrink-0 mt-1">
-                    {message.type === 'bot' ? (
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5">
-                        <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
-                          <span className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">X</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center">
-                        <FaUser className="text-gray-300 text-xs" />
-                      </div>
-                    )}
+                <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-1">
+                  <div className="w-full h-full rounded-2xl bg-black flex items-center justify-center">
+                    <span className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">X</span>
                   </div>
-
-                  {/* Message Bubble */}
+                </div>
+              </motion.div>
+              
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
+                  Hello, I'm NeuraX
+                </h1>
+                <p className="text-xl text-gray-400 mb-8">
+                  Your advanced AI assistant with multimodal capabilities
+                </p>
+              </motion.div>
+              
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8"
+              >
+                {[
+                  { icon: '🎤', title: 'Voice Chat', desc: 'Speak naturally' },
+                  { icon: '🔍', title: 'Web Search', desc: 'Real-time info' },
+                  { icon: '📷', title: 'Image Analysis', desc: 'OCR & captioning' },
+                  { icon: '🎨', title: 'Image Generation', desc: 'Create visuals' },
+                  { icon: '📐', title: 'Math Support', desc: 'LaTeX rendering' },
+                  { icon: '🌐', title: 'Bilingual', desc: 'Bengali & English' }
+                ].map((capability, index) => (
                   <motion.div
-                    whileHover={{ scale: 1.01 }}
-                    className={`group relative max-w-3xl ${
-                      message.type === 'user'
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-tr-md px-4 py-3 shadow-lg'
-                        : 'bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 text-gray-100 rounded-2xl rounded-tl-md px-4 py-3'
-                    }`}
+                    key={capability.title}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
+                    className="p-4 bg-gray-900/30 backdrop-blur-sm rounded-xl border border-gray-700/30 hover:border-gray-600/50 transition-all duration-200"
                   >
-                    {message.image && (
-                      <div className="mb-3">
-                        <img 
-                          src={message.image} 
-                          alt="Uploaded" 
-                          className="max-w-sm rounded-xl shadow-lg border border-gray-600/30"
-                        />
+                    <div className="text-2xl mb-2">{capability.icon}</div>
+                    <div className="text-sm font-medium text-gray-200">{capability.title}</div>
+                    <div className="text-xs text-gray-400">{capability.desc}</div>
+                  </motion.div>
+                ))}
+              </motion.div>
+              
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+                className="grid grid-cols-1 md:grid-cols-2 gap-3"
+              >
+                {quickActions.slice(0, 4).map((action, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleQuickAction(action)}
+                    className="flex items-center space-x-3 p-4 bg-gray-800/30 hover:bg-gray-700/50 rounded-xl border border-gray-700/30 hover:border-gray-600/50 transition-all duration-200 text-left"
+                  >
+                    <span className="text-xl">{action.icon}</span>
+                    <span className="text-sm font-medium text-gray-200">{action.text}</span>
+                  </button>
+                ))}
+              </motion.div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto px-6 py-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-700">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <AnimatePresence>
+                {messages.map((message) => (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className={`flex items-start space-x-4 max-w-4xl ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                      <div className="flex-shrink-0 mt-1">
+                        {message.type === 'bot' ? (
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5">
+                            <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
+                              <span className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">X</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center">
+                            <FaUser className="text-gray-300 text-xs" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                    <div className="prose prose-sm max-w-none prose-invert">
-                      <MathText>{message.content}</MathText>
-                    </div>
-                    
-                    {/* Message Actions */}
-                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-700/20">
-                      <span className="text-xs text-gray-400">
-                        {formatTimestamp(message.timestamp)}
-                      </span>
-                      {message.type === 'bot' && (
-                        <button
-                          onClick={() => speakText(message.content)}
-                          className="flex items-center space-x-1 px-2 py-1 text-xs text-gray-400 hover:text-blue-400 transition-colors rounded-md hover:bg-gray-800/30"
-                          disabled={isSpeaking}
-                        >
-                          <FaVolumeUp className="text-xs" />
-                          <span>{isSpeaking ? 'Playing' : 'Listen'}</span>
-                        </button>
-                      )}
+
+                      <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        className={`group relative max-w-3xl ${
+                          message.type === 'user'
+                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-tr-md px-4 py-3 shadow-lg'
+                            : 'bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 text-gray-100 rounded-2xl rounded-tl-md px-4 py-3'
+                        }`}
+                      >
+                        {message.image && (
+                          <div className="mb-3">
+                            <img 
+                              src={message.image} 
+                              alt="Uploaded" 
+                              className="max-w-sm rounded-xl shadow-lg border border-gray-600/30"
+                            />
+                          </div>
+                        )}
+                        <div className="prose prose-sm max-w-none prose-invert">
+                          <MathText>{message.content}</MathText>
+                        </div>
+                        
+                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-700/20">
+                          <span className="text-xs text-gray-400">
+                            {formatTimestamp(message.timestamp)}
+                          </span>
+                          {message.type === 'bot' && (
+                            <button
+                              onClick={() => speakText(message.content)}
+                              className="flex items-center space-x-1 px-2 py-1 text-xs text-gray-400 hover:text-blue-400 transition-colors rounded-md hover:bg-gray-800/30"
+                              disabled={isSpeaking}
+                            >
+                              <FaVolumeUp className="text-xs" />
+                              <span>{isSpeaking ? 'Playing' : 'Listen'}</span>
+                            </button>
+                          )}
+                        </div>
+                      </motion.div>
                     </div>
                   </motion.div>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                ))}
+              </AnimatePresence>
 
-          {/* Streaming Message */}
-          {isStreaming && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex justify-start"
-            >
-              <div className="flex items-start space-x-4 max-w-4xl">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5 mt-1">
-                  <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
-                    <span className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">X</span>
-                  </div>
-                </div>
-                <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 text-gray-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-3xl">
-                  <div className="prose prose-sm max-w-none prose-invert">
-                    <MathText>{streamingMessage}</MathText>
-                    <span className="inline-block w-0.5 h-4 bg-blue-400 ml-1 animate-pulse"></span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Typing Indicator */}
-          <AnimatePresence>
-            {isTyping && !isStreaming && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="flex justify-start"
-              >
-                <div className="flex items-start space-x-4 max-w-4xl">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5 mt-1">
-                    <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
-                      <motion.span 
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                        className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
-                      >
-                        X
-                      </motion.span>
-                    </div>
-                  </div>
-                  <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 rounded-2xl rounded-tl-md px-4 py-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex space-x-1">
-                        <motion.div 
-                          className="w-2 h-2 bg-blue-400 rounded-full"
-                          animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                          transition={{ duration: 1, repeat: Infinity, delay: 0 }}
-                        />
-                        <motion.div 
-                          className="w-2 h-2 bg-purple-400 rounded-full"
-                          animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                          transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
-                        />
-                        <motion.div 
-                          className="w-2 h-2 bg-pink-400 rounded-full"
-                          animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                          transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
-                        />
+              {isStreaming && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex justify-start"
+                >
+                  <div className="flex items-start space-x-4 max-w-4xl">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5 mt-1">
+                      <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
+                        <span className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">X</span>
                       </div>
-                      <span className="text-sm text-gray-400 font-medium">Thinking...</span>
+                    </div>
+                    <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 text-gray-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-3xl">
+                      <div className="prose prose-sm max-w-none prose-invert">
+                        <MathText>{streamingMessage}</MathText>
+                        <span className="inline-block w-0.5 h-4 bg-blue-400 ml-1 animate-pulse"></span>
+                      </div>
                     </div>
                   </div>
+                </motion.div>
+              )}
+
+              <AnimatePresence>
+                {isTyping && !isStreaming && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex justify-start"
+                  >
+                    <div className="flex items-start space-x-4 max-w-4xl">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5 mt-1">
+                        <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
+                          <motion.span 
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                            className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
+                          >
+                            X
+                          </motion.span>
+                        </div>
+                      </div>
+                      <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 rounded-2xl rounded-tl-md px-4 py-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex space-x-1">
+                            <motion.div 
+                              className="w-2 h-2 bg-blue-400 rounded-full"
+                              animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                              transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                            />
+                            <motion.div 
+                              className="w-2 h-2 bg-purple-400 rounded-full"
+                              animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                              transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+                            />
+                            <motion.div 
+                              className="w-2 h-2 bg-pink-400 rounded-full"
+                              animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                              transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+                            />
+                          </div>
+                          <span className="text-sm text-gray-400 font-medium">Thinking...</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+        )}
+
+        {/* Input Bar */}
+        <div className="border-t border-gray-800/30 backdrop-blur-xl bg-black/20 px-6 py-6">
+          <div className="max-w-4xl mx-auto">
+            {selectedImage && (
+              <div className="mb-4 flex items-center space-x-3 bg-gray-900/50 backdrop-blur-sm rounded-xl p-3 border border-gray-700/30">
+                <img 
+                  src={URL.createObjectURL(selectedImage)} 
+                  alt="Selected" 
+                  className="w-12 h-12 object-cover rounded-lg border border-gray-600/30"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-200">{selectedImage.name}</p>
+                  {isProcessingOCR ? (
+                    <div className="flex items-center space-x-2 mt-1">
+                      <div className="w-32 bg-gray-700 rounded-full h-1.5">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full transition-all duration-300"
+                          style={{ width: `${ocrProgress}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs text-blue-400">{ocrProgress}%</span>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-400">Ready for analysis</p>
+                  )}
                 </div>
-              </motion.div>
+                <button
+                  onClick={handleRemoveImage}
+                  className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                >
+                  <FaTimes className="text-sm" />
+                </button>
+              </div>
             )}
-          </AnimatePresence>
-
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-      {/* Input Bar */}
-      <motion.div 
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="relative z-10 border-t border-gray-800/30 backdrop-blur-xl bg-black/20 px-6 py-6"
-      >
-        <div className="max-w-6xl mx-auto">
-          {/* Image Preview */}
-          {selectedImage && (
-            <div className="mb-4 flex items-center space-x-3 bg-gray-900/50 backdrop-blur-sm rounded-xl p-3 border border-gray-700/30">
-              <img 
-                src={URL.createObjectURL(selectedImage)} 
-                alt="Selected" 
-                className="w-12 h-12 object-cover rounded-lg border border-gray-600/30"
-              />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-200">{selectedImage.name}</p>
-                {isProcessingOCR ? (
-                  <div className="flex items-center space-x-2 mt-1">
-                    <div className="w-32 bg-gray-700 rounded-full h-1.5">
-                      <div 
-                        className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full transition-all duration-300"
-                        style={{ width: `${ocrProgress}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-xs text-blue-400">{ocrProgress}%</span>
-                  </div>
-                ) : (
-                  <p className="text-xs text-gray-400">Ready for analysis</p>
+            
+            {(isGeneratingImage || searchStatus) && (
+              <div className="mb-4 flex items-center justify-center space-x-3 bg-gray-900/30 backdrop-blur-sm rounded-xl p-3 border border-gray-700/20">
+                {isGeneratingImage && (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-400 border-t-transparent"></div>
+                    <span className="text-sm text-purple-300">Creating image...</span>
+                  </>
+                )}
+                {searchStatus && (
+                  <>
+                    <div className="animate-pulse w-2 h-2 bg-blue-400 rounded-full"></div>
+                    <span className="text-sm text-blue-300">{searchStatus}</span>
+                  </>
                 )}
               </div>
-              <button
-                onClick={handleRemoveImage}
-                className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-              >
-                <FaTimes className="text-sm" />
-              </button>
-            </div>
-          )}
-          
-          {/* Status Indicators */}
-          {(isGeneratingImage || searchStatus) && (
-            <div className="mb-4 flex items-center justify-center space-x-3 bg-gray-900/30 backdrop-blur-sm rounded-xl p-3 border border-gray-700/20">
-              {isGeneratingImage && (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-400 border-t-transparent"></div>
-                  <span className="text-sm text-purple-300">Creating image...</span>
-                </>
-              )}
-              {searchStatus && (
-                <>
-                  <div className="animate-pulse w-2 h-2 bg-blue-400 rounded-full"></div>
-                  <span className="text-sm text-blue-300">{searchStatus}</span>
-                </>
-              )}
-            </div>
-          )}
-          
-          {/* Voice Hint */}
-          {!isListening && !isTyping && !isStreaming && messages.length <= 1 && (
-            <div className="mb-4 text-center">
-              <p className="text-xs text-gray-500">
-                Press <kbd className="px-2 py-1 bg-gray-800 border border-gray-600 rounded text-xs font-mono">Space</kbd> for voice • Multiple AI models • Real-time web search
-              </p>
-            </div>
-          )}
-          
-          <div className="flex items-end space-x-3">
-            <div className="flex-1 relative">
-              <motion.textarea
-                ref={inputRef}
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
-                placeholder={isListening ? "🎤 Listening..." : isGeneratingImage ? "🎨 Creating..." : enableWebSearch ? "Ask anything with web search 🌐" : selectedImage ? "What would you like to know about this image?" : "Message NeuraX..."}
-                className="w-full px-4 py-3 bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 focus:border-blue-500/50 rounded-2xl focus:outline-none text-gray-100 placeholder-gray-400 transition-all duration-200 resize-none scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600"
-                disabled={isTyping || isStreaming || isProcessingOCR || isListening || isGeneratingImage}
-                rows={1}
-                style={{ minHeight: '48px', maxHeight: '120px' }}
-                onInput={(e) => {
-                  e.target.style.height = 'auto';
-                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-                }}
-              />
-              {inputText && (
-                <div className="absolute right-3 bottom-2 text-xs text-gray-500">
-                  {inputText.length}
-                </div>
-              )}
-            </div>
-            {/* Control Panel */}
-            <div className="flex items-center space-x-2">
-              {/* Web Search Toggle */}
-              <button
-                onClick={() => setEnableWebSearch(!enableWebSearch)}
-                className={`p-2.5 rounded-xl transition-all duration-200 ${
-                  enableWebSearch 
-                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
-                    : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
-                }`}
-                disabled={isTyping || isStreaming || isProcessingOCR}
-                title={enableWebSearch ? 'Web search ON' : 'Enable web search'}
-              >
-                <FaSearch className="text-sm" />
-              </button>
+            )}
+            
+            {!isListening && !isTyping && !isStreaming && messages.length <= 1 && (
+              <div className="mb-4 text-center">
+                <p className="text-xs text-gray-500">
+                  Press <kbd className="px-2 py-1 bg-gray-800 border border-gray-600 rounded text-xs font-mono">Space</kbd> for voice • Multiple AI models • Real-time web search
+                </p>
+              </div>
+            )}
+            
+            <div className="flex items-end space-x-3">
+              <div className="flex-1 relative">
+                <motion.textarea
+                  ref={inputRef}
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
+                  placeholder={isListening ? "🎤 Listening..." : isGeneratingImage ? "🎨 Creating..." : enableWebSearch ? "Ask anything with web search 🌐" : selectedImage ? "What would you like to know about this image?" : "Message NeuraX..."}
+                  className="w-full px-4 py-3 bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 focus:border-blue-500/50 rounded-2xl focus:outline-none text-gray-100 placeholder-gray-400 transition-all duration-200 resize-none scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600"
+                  disabled={isTyping || isStreaming || isProcessingOCR || isListening || isGeneratingImage}
+                  rows={1}
+                  style={{ minHeight: '48px', maxHeight: '120px' }}
+                  onInput={(e) => {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                  }}
+                />
+                {inputText && (
+                  <div className="absolute right-3 bottom-2 text-xs text-gray-500">
+                    {inputText.length}
+                  </div>
+                )}
+              </div>
               
-              {/* Voice Input */}
-              <button
-                onClick={isListening ? stopListening : startListening}
-                className={`p-2.5 rounded-xl transition-all duration-200 ${
-                  isListening 
-                    ? 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse'
-                    : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
-                }`}
-                disabled={isTyping || isStreaming || isProcessingOCR}
-                title={isListening ? 'Stop recording' : 'Voice input'}
-              >
-                {isListening ? <FaMicrophoneSlash className="text-sm" /> : <FaMicrophone className="text-sm" />}
-              </button>
-              
-              {/* Image Upload */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="p-2.5 bg-gray-800/50 text-gray-400 border border-gray-700/50 rounded-xl hover:bg-gray-700/50 transition-all duration-200"
-                disabled={isTyping || isStreaming || isProcessingOCR}
-                title="Upload image"
-              >
-                <FaImage className="text-sm" />
-              </button>
-              
-              {/* Model Selector */}
-              <div className="relative">
+              <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => setShowModelSelector(!showModelSelector)}
-                  className="p-2.5 bg-gray-800/50 text-gray-400 border border-gray-700/50 rounded-xl hover:bg-gray-700/50 transition-all duration-200"
-                  title="AI Model"
+                  onClick={() => setEnableWebSearch(!enableWebSearch)}
+                  className={`p-2.5 rounded-xl transition-all duration-200 ${
+                    enableWebSearch 
+                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                      : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
+                  }`}
+                  disabled={isTyping || isStreaming || isProcessingOCR}
+                  title={enableWebSearch ? 'Web search ON' : 'Enable web search'}
                 >
-                  <FaCog className="text-sm" />
+                  <FaSearch className="text-sm" />
                 </button>
                 
-                <AnimatePresence>
-                  {showModelSelector && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="absolute bottom-full right-0 mb-2 bg-gray-900/95 backdrop-blur-xl rounded-xl border border-gray-700/50 p-2 min-w-64 shadow-2xl"
-                    >
-                      {models.map(model => (
-                        <button
-                          key={model.id}
-                          onClick={() => {
-                            setSelectedModel(model.id);
-                            setShowModelSelector(false);
-                          }}
-                          className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                            selectedModel === model.id
-                              ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                              : 'hover:bg-gray-800/50 text-gray-300'
-                          }`}
-                        >
-                          <div className="font-medium text-sm">{model.name}</div>
-                          <div className="text-xs text-gray-400">{model.description}</div>
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <button
+                  onClick={isListening ? stopListening : startListening}
+                  className={`p-2.5 rounded-xl transition-all duration-200 ${
+                    isListening 
+                      ? 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse'
+                      : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
+                  }`}
+                  disabled={isTyping || isStreaming || isProcessingOCR}
+                  title={isListening ? 'Stop recording' : 'Voice input'}
+                >
+                  {isListening ? <FaMicrophoneSlash className="text-sm" /> : <FaMicrophone className="text-sm" />}
+                </button>
+                
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-2.5 bg-gray-800/50 text-gray-400 border border-gray-700/50 rounded-xl hover:bg-gray-700/50 transition-all duration-200"
+                  disabled={isTyping || isStreaming || isProcessingOCR}
+                  title="Upload image"
+                >
+                  <FaImage className="text-sm" />
+                </button>
+                
+                <div className="relative">
+                  <button
+                    onClick={() => setShowModelSelector(!showModelSelector)}
+                    className="p-2.5 bg-gray-800/50 text-gray-400 border border-gray-700/50 rounded-xl hover:bg-gray-700/50 transition-all duration-200"
+                    title="AI Model"
+                  >
+                    <FaCog className="text-sm" />
+                  </button>
+                  
+                  <AnimatePresence>
+                    {showModelSelector && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="absolute bottom-full right-0 mb-2 bg-gray-900/95 backdrop-blur-xl rounded-xl border border-gray-700/50 p-2 min-w-64 shadow-2xl"
+                      >
+                        {models.map(model => (
+                          <button
+                            key={model.id}
+                            onClick={() => {
+                              setSelectedModel(model.id);
+                              setShowModelSelector(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                              selectedModel === model.id
+                                ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                                : 'hover:bg-gray-800/50 text-gray-300'
+                            }`}
+                          >
+                            <div className="font-medium text-sm">{model.name}</div>
+                            <div className="text-xs text-gray-400">{model.description}</div>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
-            </div>
-            
-            {/* Send Button */}
-            <motion.button
-              onClick={handleSendMessage}
-              disabled={(!inputText.trim() && !selectedImage) || isTyping || isStreaming || isProcessingOCR}
-              className={`p-3 rounded-xl transition-all duration-200 ${
-                (!inputText.trim() && !selectedImage) || isTyping || isStreaming || isProcessingOCR
-                  ? 'bg-gray-800/50 text-gray-500 border border-gray-700/50 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border border-blue-500/30 shadow-lg hover:shadow-xl'
-              }`}
-              whileHover={(!inputText.trim() && !selectedImage) || isTyping || isStreaming || isProcessingOCR ? {} : { scale: 1.05 }}
-              whileTap={(!inputText.trim() && !selectedImage) || isTyping || isStreaming || isProcessingOCR ? {} : { scale: 0.95 }}
-            >
-              <motion.div
-                animate={{ rotate: isTyping || isStreaming || isProcessingOCR ? 360 : 0 }}
-                transition={{ duration: 1, repeat: (isTyping || isStreaming || isProcessingOCR) ? Infinity : 0, ease: "linear" }}
+              
+              <motion.button
+                onClick={handleSendMessage}
+                disabled={(!inputText.trim() && !selectedImage) || isTyping || isStreaming || isProcessingOCR}
+                className={`p-3 rounded-xl transition-all duration-200 ${
+                  (!inputText.trim() && !selectedImage) || isTyping || isStreaming || isProcessingOCR
+                    ? 'bg-gray-800/50 text-gray-500 border border-gray-700/50 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border border-blue-500/30 shadow-lg hover:shadow-xl'
+                }`}
+                whileHover={(!inputText.trim() && !selectedImage) || isTyping || isStreaming || isProcessingOCR ? {} : { scale: 1.05 }}
+                whileTap={(!inputText.trim() && !selectedImage) || isTyping || isStreaming || isProcessingOCR ? {} : { scale: 0.95 }}
               >
-                <FaPaperPlane className="text-sm" />
-              </motion.div>
-            </motion.button>
+                <motion.div
+                  animate={{ rotate: isTyping || isStreaming || isProcessingOCR ? 360 : 0 }}
+                  transition={{ duration: 1, repeat: (isTyping || isStreaming || isProcessingOCR) ? Infinity : 0, ease: "linear" }}
+                >
+                  <FaPaperPlane className="text-sm" />
+                </motion.div>
+              </motion.button>
+            </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

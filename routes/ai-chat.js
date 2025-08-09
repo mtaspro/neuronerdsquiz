@@ -184,12 +184,55 @@ router.get('/history', authMiddleware, async (req, res) => {
   }
 });
 
+// Get chat history list
+router.get('/history-list', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    
+    const chats = await ChatHistory.find({ userId })
+      .select('_id messages createdAt lastUpdated')
+      .sort({ lastUpdated: -1 })
+      .limit(50);
+    
+    const chatList = chats.map(chat => ({
+      id: chat._id,
+      title: chat.messages.length > 0 ? chat.messages[0].content.substring(0, 50) + '...' : 'New Chat',
+      lastMessage: chat.lastUpdated,
+      messageCount: chat.messages.length
+    }));
+    
+    res.json({ chats: chatList });
+  } catch (error) {
+    console.error('Get chat list error:', error);
+    res.status(500).json({ error: 'Failed to get chat list' });
+  }
+});
+
+// Get specific chat history
+router.get('/history/:chatId', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { chatId } = req.params;
+    
+    const chat = await ChatHistory.findOne({ _id: chatId, userId });
+    
+    if (chat) {
+      res.json({ messages: chat.messages });
+    } else {
+      res.status(404).json({ error: 'Chat not found' });
+    }
+  } catch (error) {
+    console.error('Get specific chat error:', error);
+    res.status(500).json({ error: 'Failed to get chat' });
+  }
+});
+
 // Clear chat history
 router.delete('/history', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.userId;
     
-    await ChatHistory.findOneAndDelete({ userId });
+    await ChatHistory.deleteMany({ userId });
     
     res.json({ message: 'Chat history cleared' });
   } catch (error) {

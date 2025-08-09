@@ -4,8 +4,7 @@ const chatHistorySchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    unique: true
+    required: true
   },
   messages: [{
     id: Number,
@@ -24,7 +23,14 @@ const chatHistorySchema = new mongoose.Schema({
   lastUpdated: {
     type: Date,
     default: Date.now
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
 });
+
+// Index for efficient queries
+chatHistorySchema.index({ userId: 1, lastUpdated: -1 });
 
 export default mongoose.model('ChatHistory', chatHistorySchema);
