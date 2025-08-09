@@ -334,28 +334,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
   };
 
   const generateImageCaption = async (imageFile) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', imageFile);
-      
-      const response = await fetch('https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-        },
-        body: formData
-      });
-      
-      if (!response.ok) {
-        return await generateLocalCaption(imageFile);
-      }
-      
-      const result = await response.json();
-      return result[0]?.generated_text || 'Unable to generate caption';
-    } catch (error) {
-      console.error('Caption Error:', error);
-      return await generateLocalCaption(imageFile);
-    }
+    return await generateLocalCaption(imageFile);
   };
 
   const generateLocalCaption = async (imageFile) => {
@@ -481,6 +460,15 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
       };
       
       setMessages(prev => [...prev, imageMessage]);
+    } else {
+      const errorMessage = {
+        id: Date.now(),
+        type: 'bot',
+        content: '❌ Sorry, image generation is temporarily unavailable. Please check the API credentials or try again later.',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
     }
   };
 
@@ -1144,7 +1132,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                   <FaImage className="text-xs md:text-sm" />
                 </button>
                 
-                <div className="relative hidden md:block">
+                <div className="relative">
                   <button
                     onClick={() => setShowModelSelector(!showModelSelector)}
                     className="p-2.5 bg-gray-800/50 text-gray-400 border border-gray-700/50 rounded-xl hover:bg-gray-700/50 transition-all duration-200"
