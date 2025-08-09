@@ -914,7 +914,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                             />
                           </div>
                         )}
-                        <div className="prose prose-sm max-w-none prose-invert">
+                        <div className="prose prose-sm max-w-none prose-invert prose-headings:text-gray-100 prose-headings:font-semibold prose-p:text-gray-200 prose-p:leading-relaxed prose-strong:text-white prose-strong:font-semibold prose-ul:text-gray-200 prose-ol:text-gray-200 prose-li:mb-1 prose-code:text-blue-300 prose-code:bg-gray-800/50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-blockquote:border-l-blue-400 prose-blockquote:bg-gray-800/30 prose-blockquote:text-gray-300">
                           <MathText>{message.content}</MathText>
                         </div>
                         
@@ -949,7 +949,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                       <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
                     </div>
                     <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 text-gray-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-3xl">
-                      <div className="prose prose-sm max-w-none prose-invert">
+                      <div className="prose prose-sm max-w-none prose-invert prose-headings:text-gray-100 prose-headings:font-semibold prose-p:text-gray-200 prose-p:leading-relaxed prose-strong:text-white prose-strong:font-semibold prose-ul:text-gray-200 prose-ol:text-gray-200 prose-li:mb-1 prose-code:text-blue-300 prose-code:bg-gray-800/50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-blockquote:border-l-blue-400 prose-blockquote:bg-gray-800/30 prose-blockquote:text-gray-300">
                         <MathText>{streamingMessage}</MathText>
                         <span className="inline-block w-0.5 h-4 bg-blue-400 ml-1 animate-pulse"></span>
                       </div>
