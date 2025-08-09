@@ -5,6 +5,7 @@ import ChatHistory from '../models/ChatHistory.js';
 const router = express.Router();
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 // AI Chat endpoint
 router.post('/', async (req, res) => {
@@ -15,8 +16,8 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    if (!OPENROUTER_API_KEY) {
-      return res.status(500).json({ error: 'OpenRouter API key not configured' });
+    if (!OPENROUTER_API_KEY && !GROQ_API_KEY) {
+      return res.status(500).json({ error: 'AI API keys not configured' });
     }
 
     // Build messages array with conversation history
@@ -26,9 +27,23 @@ router.post('/', async (req, res) => {
       { role: 'user', content: message.trim() }
     ];
 
+    // Determine API endpoint and headers based on model
+    const isGroqModel = model === 'qwen/qwen3-32b';
+    const apiUrl = isGroqModel ? 'https://api.groq.com/openai/v1/chat/completions' : 'https://openrouter.ai/api/v1/chat/completions';
+    const apiKey = isGroqModel ? GROQ_API_KEY : OPENROUTER_API_KEY;
+    const headers = isGroqModel ? {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    } : {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://github.com/mtaspro/neuronerds-quiz',
+      'X-Title': 'Neuraflow AI Chat'
+    };
+
     // First AI call to check if search is needed
     let response = await axios.post(
-      'https://openrouter.ai/api/v1/chat/completions',
+      apiUrl,
       {
         model: model || 'meta-llama/llama-3.3-70b-instruct:free',
         messages: messages,
@@ -36,14 +51,7 @@ router.post('/', async (req, res) => {
         max_tokens: 1000,
         top_p: 0.9
       },
-      {
-        headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://github.com/mtaspro/neuronerds-quiz',
-          'X-Title': 'Neuraflow AI Chat'
-        }
-      }
+      { headers }
     );
     
     let aiResponse = response.data.choices?.[0]?.message?.content?.trim();
@@ -103,7 +111,7 @@ router.post('/', async (req, res) => {
         });
         
         response = await axios.post(
-          'https://openrouter.ai/api/v1/chat/completions',
+          apiUrl,
           {
             model: model || 'meta-llama/llama-3.3-70b-instruct:free',
             messages: messages,
@@ -111,14 +119,7 @@ router.post('/', async (req, res) => {
             max_tokens: 1000,
             top_p: 0.9
           },
-          {
-            headers: {
-              'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://github.com/mtaspro/neuronerds-quiz',
-              'X-Title': 'Neuraflow AI Chat'
-            }
-          }
+          { headers }
         );
         
         aiResponse = response.data.choices?.[0]?.message?.content?.trim();
