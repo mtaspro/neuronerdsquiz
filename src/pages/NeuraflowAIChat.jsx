@@ -191,7 +191,7 @@ const NeuraflowAIChat = () => {
     {
       id: 1,
       type: 'bot',
-      content: "👋 Hello! I'm **NeuraX**, your advanced AI assistant! ⚡\n\nI can help you with:\n• 📚 Academic questions across all subjects\n• 🔍 Real-time web search\n• 📷 Image analysis & OCR\n• 🎨 Image generation\n• 🎤 Voice interactions\n• 💬 General conversations\n\nWhat would you like to explore today?",
+      content: "👋 Hello! I'm **NeuraX**, your advanced AI assistant! ⚡\n\nI can help you with:\n• 📚 Academic questions across all subjects\n• 🔍 Real-time web search\n• 📷 Image analysis & OCR\n• 🎤 Voice interactions\n• 💬 General conversations\n\nWhat would you like to explore today?",
       timestamp: new Date()
     }
   ];
@@ -241,12 +241,6 @@ const NeuraflowAIChat = () => {
 - Use web search for: current events, latest news, recent developments, live data, today's information, breaking news, recent discoveries
 - Don't search for: basic academic concepts, historical facts, general knowledge, math problems, established scientific principles
 - After receiving search results, provide a natural response incorporating the information without mentioning the search
-
-🎨 Image Generation Intelligence:
-- If user asks to create, generate, draw, make an image, respond with: "[IMAGE_CONFIRM: improved_prompt_here] - Should I generate this image for you?"
-- Improve the prompt by adding artistic details, style, and quality descriptors
-- Wait for user confirmation before generating
-- After confirmation, respond only with: "[GENERATE_IMAGE: final_prompt]"
 
 🗣️ Tone & Communication Style:
 - Friendly, clear, concise, and student-focused.
@@ -512,9 +506,9 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
     { icon: '📚', text: 'Help with homework', prompt: 'Help me with my homework' },
     { icon: '🧮', text: 'Solve math problem', prompt: 'Help me solve this math problem' },
     { icon: '🔍', text: 'Search latest news', prompt: 'What are the latest news today?', enableSearch: true },
-    { icon: '🎨', text: 'Generate image', prompt: 'Create an image of ' },
     { icon: '📖', text: 'Explain concept', prompt: 'Explain this concept to me' },
-    { icon: '🌐', text: 'Translate text', prompt: 'Translate this text' }
+    { icon: '🌐', text: 'Translate text', prompt: 'Translate this text' },
+    { icon: '📷', text: 'Analyze image', prompt: 'Upload an image to analyze' }
   ];
 
   const handleQuickAction = (action) => {
@@ -624,10 +618,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
     try {
       const aiResult = await getAIResponse(currentInput);
       
-      if (aiResult.generateImage) {
-        await handleImageGeneration(aiResult.generateImage);
-        return;
-      }
+      // Image generation removed
       
       const response = aiResult.response || aiResult;
       
@@ -836,7 +827,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                   { icon: '🎤', title: 'Voice Chat', desc: 'Speak naturally' },
                   { icon: '🔍', title: 'Web Search', desc: 'Real-time info' },
                   { icon: '📷', title: 'Image Analysis', desc: 'OCR & captioning' },
-                  { icon: '🎨', title: 'Image Generation', desc: 'Create visuals' },
+                  { icon: '📷', title: 'Image Analysis', desc: 'OCR & understanding' },
                   { icon: '📐', title: 'Math Support', desc: 'LaTeX rendering' },
                   { icon: '🌐', title: 'Bilingual', desc: 'Bengali & English' }
                 ].map((capability, index) => (
@@ -1040,20 +1031,10 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
               </div>
             )}
             
-            {(isGeneratingImage || searchStatus) && (
+            {searchStatus && (
               <div className="mb-3 md:mb-4 flex items-center justify-center space-x-3 bg-gray-900/30 backdrop-blur-sm rounded-xl p-3 border border-gray-700/20">
-                {isGeneratingImage && (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-400 border-t-transparent"></div>
-                    <span className="text-sm text-purple-300">Creating image...</span>
-                  </>
-                )}
-                {searchStatus && (
-                  <>
-                    <div className="animate-pulse w-2 h-2 bg-blue-400 rounded-full"></div>
-                    <span className="text-sm text-blue-300">{searchStatus}</span>
-                  </>
-                )}
+                <div className="animate-pulse w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span className="text-sm text-blue-300">{searchStatus}</span>
               </div>
             )}
             
@@ -1072,9 +1053,9 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
-                  placeholder={isListening ? "🎤 Listening..." : isGeneratingImage ? "🎨 Creating..." : enableWebSearch ? "Ask anything with web search 🌐" : selectedImage ? "What would you like to know about this image?" : "Message NeuraX..."}
+                  placeholder={isListening ? "🎤 Listening..." : enableWebSearch ? "Ask anything with web search 🌐" : selectedImage ? "What would you like to know about this image?" : "Message NeuraX..."}
                   className="w-full px-3 md:px-4 py-3 bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 focus:border-blue-500/50 rounded-2xl focus:outline-none text-gray-100 placeholder-gray-400 transition-all duration-200 resize-none scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 text-sm md:text-base"
-                  disabled={isTyping || isStreaming || isProcessingOCR || isListening || isGeneratingImage}
+                  disabled={isTyping || isStreaming || isProcessingOCR || isListening}
                   rows={1}
                   style={{ minHeight: '48px', maxHeight: '120px' }}
                   onInput={(e) => {

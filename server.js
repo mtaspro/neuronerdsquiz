@@ -17,7 +17,7 @@ import battleRouter from './routes/battle.js';
 import { router as latexRouter } from './routes/latex.js';
 import { router as aiChatRouter } from './routes/ai-chat.js';
 import { router as webSearchRouter } from './routes/web-search.js';
-import { router as imageGenRouter } from './routes/image-generation.js';
+
 import { router as uploadImageRouter } from './routes/upload-image.js';
 import themeRouter from './routes/theme.js';
 import BattleService from './services/battleService.js';
@@ -453,8 +453,7 @@ console.log('Mounting AI chat router...');
 app.use('/api/ai-chat', aiChatRouter);
 console.log('Mounting web search router...');
 app.use('/api/web-search', webSearchRouter);
-console.log('Mounting image generation router...');
-app.use('/api/generate-image', imageGenRouter);
+
 console.log('Mounting image upload router...');
 app.use('/api/upload-image', uploadImageRouter);
 console.log('Mounting theme router...');
