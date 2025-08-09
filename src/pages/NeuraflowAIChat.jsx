@@ -1075,7 +1075,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
               <div className="flex items-center space-x-1 md:space-x-2">
                 <button
                   onClick={() => setEnableWebSearch(!enableWebSearch)}
-                  className={`p-2 md:p-2.5 rounded-xl transition-all duration-200 ${
+                  className={`flex items-center space-x-1 px-2 md:px-3 py-2 md:py-2.5 rounded-xl transition-all duration-200 ${
                     enableWebSearch 
                       ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
                       : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
@@ -1084,11 +1084,12 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                   title={enableWebSearch ? 'Web search ON' : 'Enable web search'}
                 >
                   <FaSearch className="text-xs md:text-sm" />
+                  <span className="text-xs hidden sm:inline">{enableWebSearch ? 'ON' : 'Web'}</span>
                 </button>
                 
                 <button
                   onClick={isListening ? stopListening : startListening}
-                  className={`p-2 md:p-2.5 rounded-xl transition-all duration-200 ${
+                  className={`flex items-center space-x-1 px-2 md:px-3 py-2 md:py-2.5 rounded-xl transition-all duration-200 ${
                     isListening 
                       ? 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse'
                       : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
@@ -1097,6 +1098,7 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                   title={isListening ? 'Stop recording' : 'Voice input'}
                 >
                   {isListening ? <FaMicrophoneSlash className="text-xs md:text-sm" /> : <FaMicrophone className="text-xs md:text-sm" />}
+                  <span className="text-xs hidden sm:inline">{isListening ? 'Stop' : 'Voice'}</span>
                 </button>
                 
                 <input
@@ -1108,11 +1110,12 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-2 md:p-2.5 bg-gray-800/50 text-gray-400 border border-gray-700/50 rounded-xl hover:bg-gray-700/50 transition-all duration-200"
+                  className="flex items-center space-x-1 px-2 md:px-3 py-2 md:py-2.5 bg-gray-800/50 text-gray-400 border border-gray-700/50 rounded-xl hover:bg-gray-700/50 transition-all duration-200"
                   disabled={isTyping || isStreaming || isProcessingOCR}
                   title="Upload image"
                 >
                   <FaImage className="text-xs md:text-sm" />
+                  <span className="text-xs hidden sm:inline">Image</span>
                 </button>
                 
                 <div className="relative">
