@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import MathText from '../components/MathText';
 import axios from 'axios';
 import Tesseract from 'tesseract.js';
-import botAvatar from '../assets/botavatar.png';
+import neuraXAvatar from '../assets/NeuraXavatar.png';
 
 const NeuraflowAIChat = () => {
   const [messages, setMessages] = useState([]);
@@ -709,10 +709,8 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
               </button>
               
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5">
-                  <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
-                    <span className="text-sm font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">X</span>
-                  </div>
+                <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-600/30">
+                  <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
                 </div>
                 <div>
                   <h1 className="text-lg font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">NeuraX</h1>
@@ -741,10 +739,8 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                 transition={{ duration: 0.5 }}
                 className="mb-8"
               >
-                <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-1">
-                  <div className="w-full h-full rounded-2xl bg-black flex items-center justify-center">
-                    <span className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">X</span>
-                  </div>
+                <div className="w-24 h-24 mx-auto rounded-3xl overflow-hidden shadow-2xl bg-white/5 backdrop-blur-sm border border-gray-700/30">
+                  <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
                 </div>
               </motion.div>
               
@@ -753,11 +749,11 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
-                <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
-                  Hello, I'm NeuraX
+                <h1 className="text-5xl font-bold mb-4 text-white">
+                  NeuraX
                 </h1>
                 <p className="text-xl text-gray-400 mb-8">
-                  Your advanced AI assistant with multimodal capabilities
+                  How can I help you today?
                 </p>
               </motion.div>
               
@@ -824,10 +820,8 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                     <div className={`flex items-start space-x-4 max-w-4xl ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                       <div className="flex-shrink-0 mt-1">
                         {message.type === 'bot' ? (
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5">
-                            <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
-                              <span className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">X</span>
-                            </div>
+                          <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-600/30">
+                            <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
                           </div>
                         ) : (
                           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center">
@@ -885,10 +879,8 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                   className="flex justify-start"
                 >
                   <div className="flex items-start space-x-4 max-w-4xl">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5 mt-1">
-                      <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
-                        <span className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">X</span>
-                      </div>
+                    <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-600/30 mt-1">
+                      <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
                     </div>
                     <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 text-gray-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-3xl">
                       <div className="prose prose-sm max-w-none prose-invert">
@@ -910,16 +902,8 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
                     className="flex justify-start"
                   >
                     <div className="flex items-start space-x-4 max-w-4xl">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-0.5 mt-1">
-                        <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
-                          <motion.span 
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                            className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
-                          >
-                            X
-                          </motion.span>
-                        </div>
+                      <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-600/30 mt-1">
+                        <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
                       </div>
                       <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 rounded-2xl rounded-tl-md px-4 py-3">
                         <div className="flex items-center space-x-3">
