@@ -733,6 +733,14 @@ You help with academics, platform features, and general questions. Keep it natur
         <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]"></div>
       </div>
       
+      {/* Sidebar Overlay */}
+      {showHistory && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={() => setShowHistory(false)}
+        />
+      )}
+      
       {/* Sidebar */}
       <motion.div 
         initial={{ x: -300 }}
@@ -789,17 +797,17 @@ You help with academics, platform features, and general questions. Keep it natur
                   </button>
                   
                   {showChatOptions === chat.id && (
-                    <div className="absolute right-0 top-8 bg-gray-800/95 backdrop-blur-xl rounded-lg border border-gray-700/50 py-1 min-w-40 shadow-xl z-50">
+                    <div className="absolute right-0 top-8 bg-gray-800 backdrop-blur-xl rounded-lg border border-gray-600 py-2 min-w-40 shadow-2xl z-50">
                       <button
                         onClick={() => deleteChat(chat.id)}
-                        className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center space-x-2"
+                        className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/20 hover:text-red-300 flex items-center space-x-2 transition-colors"
                       >
                         <FaTrash className="text-xs" />
                         <span>Delete conversation</span>
                       </button>
                       <button
                         onClick={() => archiveChat(chat.id)}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2"
+                        className="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-gray-600/50 hover:text-white flex items-center space-x-2 transition-colors"
                       >
                         <FaArchive className="text-xs" />
                         <span>Archive</span>
