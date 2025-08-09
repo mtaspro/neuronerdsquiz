@@ -143,7 +143,10 @@ router.post('/', async (req, res) => {
     });
     aiResponse = aiResponse.replace(/\[GENERATE_IMAGE:.*?\]/g, '').trim();
 
-    res.json({ response: aiResponse });
+    // Final cleanup and ensure string response
+    const finalResponse = String(aiResponse || 'I apologize, but I encountered an issue processing your request.');
+    
+    res.json({ response: finalResponse });
   } catch (error) {
     console.error('AI Chat error:', error?.response?.data || error.message);
     res.status(500).json({ 

@@ -599,8 +599,8 @@ You are *NeuraX* — the intelligent, reliable friend of every student. 🤖✨`
       setIsStreaming(false);
       setStreamingMessage('');
       
-      if (synthRef.current && response && !response.includes('Should I generate this image')) {
-        setTimeout(() => speakText(response), 500);
+      if (synthRef.current && responseText && !responseText.includes('Should I generate this image')) {
+        setTimeout(() => speakText(responseText), 500);
       }
     } catch (error) {
       console.error('AI response error:', error);
