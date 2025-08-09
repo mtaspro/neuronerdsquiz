@@ -6,6 +6,7 @@ const router = express.Router();
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY;
 
 // AI Chat endpoint
 router.post('/', async (req, res) => {
@@ -16,7 +17,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    if (!OPENROUTER_API_KEY && !GROQ_API_KEY) {
+    if (!OPENROUTER_API_KEY && !GROQ_API_KEY && !HUGGINGFACE_API_KEY) {
       return res.status(500).json({ error: 'AI API keys not configured' });
     }
 
@@ -29,32 +30,72 @@ router.post('/', async (req, res) => {
 
     // Determine API endpoint and headers based on model
     const isGroqModel = model === 'qwen/qwen3-32b';
-    const apiUrl = isGroqModel ? 'https://api.groq.com/openai/v1/chat/completions' : 'https://openrouter.ai/api/v1/chat/completions';
-    const apiKey = isGroqModel ? GROQ_API_KEY : OPENROUTER_API_KEY;
-    const headers = isGroqModel ? {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    } : {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://github.com/mtaspro/neuronerds-quiz',
-      'X-Title': 'Neuraflow AI Chat'
-    };
+    const isHuggingFaceModel = model.includes('DavidAU/Llama-3.2-8X3B-MOE-Dark-Champion');
+    
+    let apiUrl, apiKey, headers;
+    
+    if (isHuggingFaceModel) {
+      apiUrl = `https://api-inference.huggingface.co/models/${model}`;
+      apiKey = HUGGINGFACE_API_KEY;
+      headers = {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      };
+    } else if (isGroqModel) {
+      apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
+      apiKey = GROQ_API_KEY;
+      headers = {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      };
+    } else {
+      apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+      apiKey = OPENROUTER_API_KEY;
+      headers = {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://github.com/mtaspro/neuronerds-quiz',
+        'X-Title': 'Neuraflow AI Chat'
+      };
+    }
 
     // First AI call to check if search is needed
-    let response = await axios.post(
-      apiUrl,
-      {
+    let requestBody, response;
+    
+    if (isHuggingFaceModel) {
+      // Hugging Face format
+      const prompt = messages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
+      requestBody = {
+        inputs: prompt,
+        parameters: {
+          max_new_tokens: 1000,
+          temperature: 0.7,
+          top_p: 0.9,
+          return_full_text: false
+        }
+      };
+    } else {
+      // OpenAI format for Groq and OpenRouter
+      requestBody = {
         model: model || 'meta-llama/llama-3.3-70b-instruct:free',
         messages: messages,
         temperature: 0.7,
         max_tokens: 1000,
         top_p: 0.9
-      },
-      { headers }
-    );
+      };
+    }
     
-    let aiResponse = response.data.choices?.[0]?.message?.content?.trim();
+    response = await axios.post(apiUrl, requestBody, { headers });
+    
+    let aiResponse;
+    
+    if (isHuggingFaceModel) {
+      // Hugging Face response format
+      aiResponse = response.data[0]?.generated_text?.trim();
+    } else {
+      // OpenAI format response
+      aiResponse = response.data.choices?.[0]?.message?.content?.trim();
+    }
     
     if (!aiResponse) {
       return res.status(500).json({ error: 'Failed to get AI response' });
@@ -110,19 +151,34 @@ router.post('/', async (req, res) => {
           content: `Here are the current web search results for "${searchQuery}":\n\n${searchContext}\n\nPlease provide a comprehensive answer using this information.`
         });
         
-        response = await axios.post(
-          apiUrl,
-          {
+        if (isHuggingFaceModel) {
+          const prompt = messages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
+          requestBody = {
+            inputs: prompt,
+            parameters: {
+              max_new_tokens: 1000,
+              temperature: 0.7,
+              top_p: 0.9,
+              return_full_text: false
+            }
+          };
+        } else {
+          requestBody = {
             model: model || 'meta-llama/llama-3.3-70b-instruct:free',
             messages: messages,
             temperature: 0.7,
             max_tokens: 1000,
             top_p: 0.9
-          },
-          { headers }
-        );
+          };
+        }
         
-        aiResponse = response.data.choices?.[0]?.message?.content?.trim();
+        response = await axios.post(apiUrl, requestBody, { headers });
+        
+        if (isHuggingFaceModel) {
+          aiResponse = response.data[0]?.generated_text?.trim();
+        } else {
+          aiResponse = response.data.choices?.[0]?.message?.content?.trim();
+        }
         
         // Ensure aiResponse is always a string
         if (aiResponse) {
