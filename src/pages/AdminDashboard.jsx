@@ -57,6 +57,10 @@ export default function AdminDashboard() {
   const [showBulkParser, setShowBulkParser] = useState(false);
   const [parsingLoading, setParsingLoading] = useState(false);
   const [usedQuestions, setUsedQuestions] = useState(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [questionsPerPage] = useState(50);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedChapterFilter, setSelectedChapterFilter] = useState('');
 
   // Get question count for a chapter
   const getQuestionCount = (chapterName) => {
@@ -550,6 +554,49 @@ export default function AdminDashboard() {
   function handleRemoveParsedQuestion(index) {
     setParsedQuestions(prev => prev.filter((_, i) => i !== index));
   }
+
+  // Get filtered questions
+  const getFilteredQuestions = () => {
+    let filtered = questions;
+    
+    // Filter by selected chapter
+    if (selectedChapterFilter) {
+      filtered = filtered.filter(q => q.chapter === selectedChapterFilter);
+    }
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(q => 
+        q.question.toLowerCase().includes(query) ||
+        q.chapter.toLowerCase().includes(query) ||
+        q.options.some(opt => opt.toLowerCase().includes(query))
+      );
+    }
+    
+    return filtered;
+  };
+
+  // Get paginated questions
+  const getPaginatedQuestions = () => {
+    const filtered = getFilteredQuestions();
+    const startIndex = (currentPage - 1) * questionsPerPage;
+    const endIndex = startIndex + questionsPerPage;
+    return filtered.slice(startIndex, endIndex);
+  };
+
+  // Get total pages
+  const getTotalPages = () => {
+    const filtered = getFilteredQuestions();
+    return Math.ceil(filtered.length / questionsPerPage);
+  };
+
+  // Reset pagination when filters change
+  const handleFilterChange = (newChapter, newSearch) => {
+    setSelectedChapterFilter(newChapter);
+    setSearchQuery(newSearch);
+    setCurrentPage(1);
+  };
 
   // Update battle config
   function handleUpdateQuizConfig(chapterId, examQuestions, battleQuestions) {
@@ -1272,149 +1319,232 @@ export default function AdminDashboard() {
 
             {/* Questions List */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
-                Manage Questions ({questions.filter(q => !newQuestion.chapter || q.chapter === newQuestion.chapter).length})
-              </h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
+                  Manage Questions ({getFilteredQuestions().length} total)
+                </h3>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Page {currentPage} of {getTotalPages()}
+                </div>
+              </div>
+              
+              {/* Search and Filter Controls */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Search Questions</label>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => handleFilterChange(selectedChapterFilter, e.target.value)}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                    placeholder="Search by question text, chapter, or options..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Filter by Chapter</label>
+                  <select
+                    value={selectedChapterFilter}
+                    onChange={e => handleFilterChange(e.target.value, searchQuery)}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                  >
+                    <option value="">All Chapters</option>
+                    {chapters.map(ch => (
+                      <option key={ch._id} value={ch.name}>
+                        {ch.name} ({getQuestionCount(ch.name)} questions)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
               {loading ? (
                 <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading questions...</div>
+              ) : getFilteredQuestions().length === 0 ? (
+                <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                  {searchQuery || selectedChapterFilter ? 'No questions match your filters.' : 'No questions found.'}
+                </div>
               ) : (
-                <div className="space-y-4">
-                  {questions.filter(q => !newQuestion.chapter || q.chapter === newQuestion.chapter).map(q => (
-                    <div key={q._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
-                      {editingId === q._id ? (
-                        <form onSubmit={handleEditQuestion} className="space-y-3">
-                          <div>
-                            <textarea
-                              value={editQuestion.question}
-                              onChange={e => setEditQuestion({...editQuestion, question: e.target.value})}
-                              className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
-                              rows="3"
-                              placeholder="Enter question text. Use LaTeX: $x^2$ for inline math, $$\frac{a}{b}$$ for display math"
-                              required
-                            />
-                            {editQuestion.question && (
-                              <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-500 rounded border">
-                                <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Preview:</div>
-                                <div className="text-gray-800 dark:text-white">
-                                  <MathText>{editQuestion.question}</MathText>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                          <select
-                            value={editQuestion.chapter}
-                            onChange={e => setEditQuestion({...editQuestion, chapter: e.target.value})}
-                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
-                            required
-                          >
-                            <option value="">Select Chapter</option>
-                            {chapters.map(ch => (
-                              <option key={ch._id} value={ch.name}>{ch.name}{ch.description ? ` - ${ch.description}` : ''}</option>
-                            ))}
-                          </select>
-                          {editQuestion.options.map((opt, i) => (
-                            <div key={i} className="space-y-1">
-                              <input
-                                type="text"
-                                value={opt}
-                                onChange={e => {
-                                  const newOpts = [...editQuestion.options];
-                                  newOpts[i] = e.target.value;
-                                  setEditQuestion({...editQuestion, options: newOpts});
-                                }}
+                <>
+                  <div className="space-y-4">
+                    {getPaginatedQuestions().map(q => (
+                      <div key={q._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                        {editingId === q._id ? (
+                          <form onSubmit={handleEditQuestion} className="space-y-3">
+                            <div>
+                              <textarea
+                                value={editQuestion.question}
+                                onChange={e => setEditQuestion({...editQuestion, question: e.target.value})}
                                 className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
-                                placeholder={`Option ${i + 1} (LaTeX supported: $x^2$, $$\frac{a}{b}$$)`}
+                                rows="3"
+                                placeholder="Enter question text. Use LaTeX: $x^2$ for inline math, $$\frac{a}{b}$$ for display math"
                                 required
                               />
-                              {opt && (
-                                <div className="p-2 bg-gray-100 dark:bg-gray-500 rounded text-sm">
-                                  <span className="text-gray-600 dark:text-gray-300">Preview: </span>
-                                  <MathText>{opt}</MathText>
+                              {editQuestion.question && (
+                                <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-500 rounded border">
+                                  <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Preview:</div>
+                                  <div className="text-gray-800 dark:text-white">
+                                    <MathText>{editQuestion.question}</MathText>
+                                  </div>
                                 </div>
                               )}
                             </div>
-                          ))}
-                          <select
-                            value={typeof editQuestion.correctAnswer === 'number' ? editQuestion.correctAnswer : editQuestion.options.indexOf(editQuestion.correctAnswer)}
-                            onChange={e => setEditQuestion({...editQuestion, correctAnswer: parseInt(e.target.value)})}
-                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
-                            required
-                          >
-                            <option value={0}>A - {editQuestion.options[0] || 'Option 1'}</option>
-                            <option value={1}>B - {editQuestion.options[1] || 'Option 2'}</option>
-                            <option value={2}>C - {editQuestion.options[2] || 'Option 3'}</option>
-                            <option value={3}>D - {editQuestion.options[3] || 'Option 4'}</option>
-                          </select>
-                          <input
-                            type="number"
-                            value={editQuestion.duration}
-                            onChange={e => setEditQuestion({...editQuestion, duration: parseInt(e.target.value) || 60})}
-                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
-                            placeholder="Duration (seconds)"
-                            min="30"
-                            max="600"
-                          />
-                          <textarea
-                            value={editQuestion.explanation || ''}
-                            onChange={e => setEditQuestion({...editQuestion, explanation: e.target.value})}
-                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
-                            rows="3"
-                            placeholder="Explanation (LaTeX supported: $x^2$, $$\frac{a}{b}$$)"
-                          />
-                          {editQuestion.explanation && (
-                            <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-500 rounded border">
-                              <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Preview:</div>
-                              <div className="text-gray-800 dark:text-white">
-                                <MathText>{editQuestion.explanation}</MathText>
+                            <select
+                              value={editQuestion.chapter}
+                              onChange={e => setEditQuestion({...editQuestion, chapter: e.target.value})}
+                              className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                              required
+                            >
+                              <option value="">Select Chapter</option>
+                              {chapters.map(ch => (
+                                <option key={ch._id} value={ch.name}>{ch.name}{ch.description ? ` - ${ch.description}` : ''}</option>
+                              ))}
+                            </select>
+                            {editQuestion.options.map((opt, i) => (
+                              <div key={i} className="space-y-1">
+                                <input
+                                  type="text"
+                                  value={opt}
+                                  onChange={e => {
+                                    const newOpts = [...editQuestion.options];
+                                    newOpts[i] = e.target.value;
+                                    setEditQuestion({...editQuestion, options: newOpts});
+                                  }}
+                                  className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                                  placeholder={`Option ${i + 1} (LaTeX supported: $x^2$, $$\frac{a}{b}$$)`}
+                                  required
+                                />
+                                {opt && (
+                                  <div className="p-2 bg-gray-100 dark:bg-gray-500 rounded text-sm">
+                                    <span className="text-gray-600 dark:text-gray-300">Preview: </span>
+                                    <MathText>{opt}</MathText>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                            <select
+                              value={typeof editQuestion.correctAnswer === 'number' ? editQuestion.correctAnswer : editQuestion.options.indexOf(editQuestion.correctAnswer)}
+                              onChange={e => setEditQuestion({...editQuestion, correctAnswer: parseInt(e.target.value)})}
+                              className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                              required
+                            >
+                              <option value={0}>A - {editQuestion.options[0] || 'Option 1'}</option>
+                              <option value={1}>B - {editQuestion.options[1] || 'Option 2'}</option>
+                              <option value={2}>C - {editQuestion.options[2] || 'Option 3'}</option>
+                              <option value={3}>D - {editQuestion.options[3] || 'Option 4'}</option>
+                            </select>
+                            <input
+                              type="number"
+                              value={editQuestion.duration}
+                              onChange={e => setEditQuestion({...editQuestion, duration: parseInt(e.target.value) || 60})}
+                              className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                              placeholder="Duration (seconds)"
+                              min="30"
+                              max="600"
+                            />
+                            <textarea
+                              value={editQuestion.explanation || ''}
+                              onChange={e => setEditQuestion({...editQuestion, explanation: e.target.value})}
+                              className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                              rows="3"
+                              placeholder="Explanation (LaTeX supported: $x^2$, $$\frac{a}{b}$$)"
+                            />
+                            {editQuestion.explanation && (
+                              <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-500 rounded border">
+                                <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Preview:</div>
+                                <div className="text-gray-800 dark:text-white">
+                                  <MathText>{editQuestion.explanation}</MathText>
+                                </div>
+                              </div>
+                            )}
+                            <div className="flex gap-2">
+                              <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm disabled:opacity-50 text-white transition-colors">
+                                Save
+                              </button>
+                              <button type="button" onClick={() => { setEditingId(null); setEditQuestion(null); }} className="bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded text-sm text-white transition-colors">
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
+                          <div>
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-800 dark:text-white">
+                                  <MathText>{q.question}</MathText>
+                                </h4>
+                                <p className="text-gray-600 dark:text-gray-300 text-sm">Chapter: {q.chapter}</p>
+                                <p className="text-gray-600 dark:text-gray-300 text-sm">Duration: {q.duration}s</p>
+                                <ul className="mt-2 space-y-1">
+                                  {q.options.map((opt, i) => (
+                                    <li key={i} className={`text-sm ${opt === q.correctAnswer ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-gray-600 dark:text-gray-300'}`}>
+                                      {String.fromCharCode(65 + i)}. <MathText>{opt}</MathText>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div className="flex gap-2 ml-4">
+                                <button
+                                  onClick={() => { setEditingId(q._id); setEditQuestion({...q}); }}
+                                  className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm text-white transition-colors"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteQuestion(q._id)}
+                                  className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm text-white transition-colors"
+                                >
+                                  Delete
+                                </button>
                               </div>
                             </div>
-                          )}
-                          <div className="flex gap-2">
-                            <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm disabled:opacity-50 text-white transition-colors">
-                              Save
-                            </button>
-                            <button type="button" onClick={() => { setEditingId(null); setEditQuestion(null); }} className="bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded text-sm text-white transition-colors">
-                              Cancel
-                            </button>
                           </div>
-                        </form>
-                      ) : (
-                        <div>
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-gray-800 dark:text-white">
-                                <MathText>{q.question}</MathText>
-                              </h4>
-                              <p className="text-gray-600 dark:text-gray-300 text-sm">Chapter: {q.chapter}</p>
-                              <p className="text-gray-600 dark:text-gray-300 text-sm">Duration: {q.duration}s</p>
-                              <ul className="mt-2 space-y-1">
-                                {q.options.map((opt, i) => (
-                                  <li key={i} className={`text-sm ${opt === q.correctAnswer ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-gray-600 dark:text-gray-300'}`}>
-                                    {String.fromCharCode(65 + i)}. <MathText>{opt}</MathText>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div className="flex gap-2 ml-4">
-                              <button
-                                onClick={() => { setEditingId(q._id); setEditQuestion({...q}); }}
-                                className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm text-white transition-colors"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDeleteQuestion(q._id)}
-                                className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm text-white transition-colors"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Pagination Controls */}
+                  {getTotalPages() > 1 && (
+                    <div className="flex justify-center items-center space-x-2 mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                      >
+                        Previous
+                      </button>
+                      
+                      <div className="flex space-x-1">
+                        {Array.from({ length: Math.min(5, getTotalPages()) }, (_, i) => {
+                          const pageNum = Math.max(1, Math.min(getTotalPages() - 4, currentPage - 2)) + i;
+                          if (pageNum > getTotalPages()) return null;
+                          
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => setCurrentPage(pageNum)}
+                              className={`px-3 py-1 rounded transition-colors ${
+                                currentPage === pageNum
+                                  ? 'bg-cyan-600 text-white'
+                                  : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(getTotalPages(), prev + 1))}
+                        disabled={currentPage === getTotalPages()}
+                        className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                      >
+                        Next
+                      </button>
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               )}
             </div>
           </div>
