@@ -47,7 +47,7 @@ const EventShowdown = ({ eventData }) => {
   return (
     <div className="event-showdown">
       <audio ref={audioRef} loop>
-        <source src="/assets/The Neuronerds Showdown.mp3" type="audio/mpeg" />
+        <source src="/src/assets/The Neuronerds Showdown.mp3" type="audio/mpeg" />
       </audio>
       
       <div className="hero-section">

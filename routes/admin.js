@@ -156,6 +156,40 @@ router.post('/users/:id/request-deletion', authMiddleware, requireAdmin, async (
   }
 });
 
+// Request user score reset (creates request for SuperAdmin approval)
+router.post('/users/:id/request-score-reset', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { reason } = req.body;
+    
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ error: 'Reason is required for score reset request' });
+    }
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const AdminRequest = (await import('../models/AdminRequest.js')).default;
+    const request = new AdminRequest({
+      type: 'USER_SCORE_RESET',
+      requestedBy: req.user.userId,
+      requestedByUsername: req.user.email,
+      targetUserId: userId,
+      targetUsername: user.username,
+      reason: reason.trim()
+    });
+    
+    await request.save();
+    res.json({ message: 'User score reset request submitted for SuperAdmin approval' });
+    
+  } catch (error) {
+    console.error('Error creating score reset request:', error);
+    res.status(500).json({ error: 'Failed to create score reset request' });
+  }
+});
+
 // List all chapters (all chapters visible in manage section)
 router.get('/chapters', authMiddleware, requireAdmin, async (req, res) => {
   try {

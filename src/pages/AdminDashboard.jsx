@@ -29,12 +29,25 @@ export default function AdminDashboard() {
           headers: authHeader() 
         });
         
-        if (!response.data.valid || !response.data.user?.isAdmin) {
+        if (!response.data.valid) {
+          // Clear auth data for deleted/invalid users
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
           navigate('/login');
+          return;
         }
+        
+        if (!response.data.user?.isAdmin) {
+          navigate('/login');
+          return;
+        }
+        
         setLoading(false);
       } catch (err) {
         console.error('AdminDashboard - Access Check Error:', err);
+        // Clear auth data on any error
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
         navigate('/login');
       }
     };
@@ -102,11 +115,11 @@ export default function AdminDashboard() {
         const errorMessage = err.response?.data?.error || err.message || 'Failed to load users';
         setError(errorMessage);
         
-        // If token is invalid, clear auth data
+        // If token is invalid or user deleted, clear auth data
         if (err.response?.status === 401) {
           localStorage.removeItem('authToken');
           localStorage.removeItem('userData');
-          window.location.href = '/login';
+          navigate('/login');
         }
       } finally {
         setLoading(false);
@@ -138,7 +151,7 @@ export default function AdminDashboard() {
         if (err.response?.status === 401) {
           localStorage.removeItem('authToken');
           localStorage.removeItem('userData');
-          window.location.href = '/login';
+          navigate('/login');
         }
       } finally {
         setLoading(false);
@@ -170,7 +183,7 @@ export default function AdminDashboard() {
         if (err.response?.status === 401) {
           localStorage.removeItem('authToken');
           localStorage.removeItem('userData');
-          window.location.href = '/login';
+          navigate('/login');
         }
       } finally {
         setLoading(false);
@@ -202,7 +215,7 @@ export default function AdminDashboard() {
         if (err.response?.status === 401) {
           localStorage.removeItem('authToken');
           localStorage.removeItem('userData');
-          window.location.href = '/login';
+          navigate('/login');
         }
       } finally {
         setLoading(false);
@@ -234,7 +247,7 @@ export default function AdminDashboard() {
         if (err.response?.status === 401) {
           localStorage.removeItem('authToken');
           localStorage.removeItem('userData');
-          window.location.href = '/login';
+          navigate('/login');
         }
       } finally {
         setLoading(false);
@@ -267,24 +280,24 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false));
   }
 
-  // Request user deletion (same as reset score - deletes all user data)
+  // Request user score reset (reset scores, stats, badges - keep account)
   function handleResetUserScore(userId, username) {
-    const reason = prompt(`Please provide a reason for deleting user "${username}" and all their data:`);
+    const reason = prompt(`Please provide a reason for resetting "${username}"'s scores and stats:`);
     if (!reason || !reason.trim()) return;
     
-    if (!window.confirm(`Submit deletion request for user "${username}"? This will delete all their scores, stats, and data. SuperAdmin approval required.`)) return;
+    if (!window.confirm(`Submit score reset request for user "${username}"? This will reset all their scores, stats, badges, and leaderboard data. SuperAdmin approval required.`)) return;
     
     setLoading(true);
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.post(`${apiUrl}/api/admin/users/${userId}/request-deletion`, {
+    axios.post(`${apiUrl}/api/admin/users/${userId}/request-score-reset`, {
       reason: reason.trim()
     }, { headers: authHeader() })
       .then(() => {
         setError('');
-        alert(`User deletion request for "${username}" submitted! Awaiting SuperAdmin approval.`);
+        alert(`Score reset request for "${username}" submitted! Awaiting SuperAdmin approval.`);
       })
       .catch(err => {
-        const errorMsg = err.response?.data?.error || 'Failed to submit deletion request';
+        const errorMsg = err.response?.data?.error || 'Failed to submit score reset request';
         setError(errorMsg);
       })
       .finally(() => setLoading(false));
@@ -687,9 +700,9 @@ export default function AdminDashboard() {
                             onClick={() => handleResetUserScore(u._id, u.username)}
                             disabled={loading}
                             className="bg-orange-600 hover:bg-orange-700 px-3 py-1 rounded text-sm text-white transition-colors disabled:opacity-50"
-                            title="Request user deletion (requires SuperAdmin approval)"
+                            title="Reset user's scores, stats, and badges (requires SuperAdmin approval)"
                           >
-                            Request Deletion
+                            Reset Score
                           </button>
                           {!u.isAdmin && (
                             <button
@@ -1365,6 +1378,48 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 <>
+                  {/* Pagination Controls */}
+                  {getTotalPages() > 1 && (
+                    <div className="flex justify-center items-center space-x-2 mb-6 pb-4 border-b border-gray-200 dark:border-gray-600">
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                      >
+                        Previous
+                      </button>
+                      
+                      <div className="flex space-x-1">
+                        {Array.from({ length: Math.min(5, getTotalPages()) }, (_, i) => {
+                          const pageNum = Math.max(1, Math.min(getTotalPages() - 4, currentPage - 2)) + i;
+                          if (pageNum > getTotalPages()) return null;
+                          
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => setCurrentPage(pageNum)}
+                              className={`px-3 py-1 rounded transition-colors ${
+                                currentPage === pageNum
+                                  ? 'bg-cyan-600 text-white'
+                                  : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(getTotalPages(), prev + 1))}
+                        disabled={currentPage === getTotalPages()}
+                        className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                  
                   <div className="space-y-4">
                     {getPaginatedQuestions().map(q => (
                       <div key={q._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
@@ -1502,48 +1557,6 @@ export default function AdminDashboard() {
                       </div>
                     ))}
                   </div>
-                  
-                  {/* Pagination Controls */}
-                  {getTotalPages() > 1 && (
-                    <div className="flex justify-center items-center space-x-2 mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-                      <button
-                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                        disabled={currentPage === 1}
-                        className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
-                      >
-                        Previous
-                      </button>
-                      
-                      <div className="flex space-x-1">
-                        {Array.from({ length: Math.min(5, getTotalPages()) }, (_, i) => {
-                          const pageNum = Math.max(1, Math.min(getTotalPages() - 4, currentPage - 2)) + i;
-                          if (pageNum > getTotalPages()) return null;
-                          
-                          return (
-                            <button
-                              key={pageNum}
-                              onClick={() => setCurrentPage(pageNum)}
-                              className={`px-3 py-1 rounded transition-colors ${
-                                currentPage === pageNum
-                                  ? 'bg-cyan-600 text-white'
-                                  : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
-                              }`}
-                            >
-                              {pageNum}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      
-                      <button
-                        onClick={() => setCurrentPage(prev => Math.min(getTotalPages(), prev + 1))}
-                        disabled={currentPage === getTotalPages()}
-                        className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
-                      >
-                        Next
-                      </button>
-                    </div>
-                  )}
                 </>
               )}
             </div>
