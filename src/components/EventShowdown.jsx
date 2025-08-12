@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import './EventShowdown.css';
 
 const EventShowdown = ({ eventData }) => {
+  const [timeLeft, setTimeLeft] = useState('');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
+
   // Don't render if no active event
   if (!eventData || !eventData.isActive) {
     return null;
   }
-  const [timeLeft, setTimeLeft] = useState('');
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef(null);
 
   useEffect(() => {
     if (!eventData?.endTime) return;
