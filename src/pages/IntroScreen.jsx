@@ -41,7 +41,8 @@ export default function IntroScreen() {
       const token = localStorage.getItem('authToken');
       if (token) {
         try {
-          const response = await fetch('/api/theme/current', {
+          const apiUrl = import.meta.env.VITE_API_URL || '';
+          const response = await fetch(`${apiUrl}/api/theme/current`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           const data = await response.json();
@@ -129,7 +130,8 @@ export default function IntroScreen() {
     const token = localStorage.getItem('authToken');
     if (token) {
       try {
-        await fetch('/api/theme/set', {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        await fetch(`${apiUrl}/api/theme/set`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

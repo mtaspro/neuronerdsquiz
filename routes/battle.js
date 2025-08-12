@@ -17,7 +17,7 @@ router.post('/create', authMiddleware, async (req, res) => {
     }
     
     // Set active battle room
-    activeBattleRoom = { id: roomId, chapter };
+    activeBattleRoom = { id: roomId, chapter, status: 'waiting' };
     
     // Broadcast to all connected clients via socket
     if (req.app.get('io')) {
@@ -34,6 +34,29 @@ router.post('/create', authMiddleware, async (req, res) => {
 // Get active battle room
 router.get('/active', (req, res) => {
   res.json({ battleRoom: activeBattleRoom });
+});
+
+// Start battle (mark as started)
+router.post('/start', authMiddleware, (req, res) => {
+  try {
+    const { roomId } = req.body;
+    
+    if (activeBattleRoom && activeBattleRoom.id === roomId) {
+      activeBattleRoom.status = 'started';
+      
+      // Broadcast to all connected clients
+      if (req.app.get('io')) {
+        req.app.get('io').emit('battleStarted', activeBattleRoom);
+      }
+      
+      res.json({ success: true, battleRoom: activeBattleRoom });
+    } else {
+      res.status(404).json({ error: 'Battle room not found' });
+    }
+  } catch (error) {
+    console.error('Error starting battle:', error);
+    res.status(500).json({ error: 'Failed to start battle' });
+  }
 });
 
 // Close battle room

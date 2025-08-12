@@ -403,6 +403,45 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Spectator functionality
+  socket.on('joinSpectator', ({ roomId }) => {
+    console.log(`Spectator joining room ${roomId}`);
+    
+    try {
+      const room = battleService.getRoom(roomId);
+      if (room) {
+        socket.join(roomId);
+        
+        // Send current room state to spectator
+        socket.emit('spectatorJoined', {
+          room: {
+            id: roomId,
+            users: Array.from(room.users.values()).map(user => ({
+              id: user.id,
+              username: user.username,
+              isReady: user.isReady,
+              currentQuestion: user.currentQuestion || 0,
+              score: user.score || 0
+            })),
+            status: room.status,
+            questions: room.questions || []
+          }
+        });
+        
+        console.log(`Spectator joined room ${roomId}`);
+      } else {
+        socket.emit('error', { message: 'Battle room not found' });
+      }
+    } catch (error) {
+      socket.emit('error', { message: error.message });
+    }
+  });
+
+  socket.on('leaveSpectator', ({ roomId }) => {
+    console.log(`Spectator leaving room ${roomId}`);
+    socket.leave(roomId);
+  });
+
   // Disconnect handling
   socket.on('disconnect', () => {
     console.log(`User disconnected: ${socket.id}`);

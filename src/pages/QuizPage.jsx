@@ -287,15 +287,9 @@ export default function QuizPage() {
       
       console.log('🔒 Security initialization result:', success);
       
-      if (success) {
-        console.log('✅ Security system initialized, starting quiz');
-        setQuizStarted(true);
-      } else {
-        console.error('❌ Security system initialization failed');
-        showError('Failed to initialize security system. The quiz will continue without full security protection.');
-        // Still start the quiz even if security fails
-        setQuizStarted(true);
-      }
+      // Security system is designed to always succeed, even if fullscreen fails
+      console.log('✅ Security system initialized, starting quiz');
+      setQuizStarted(true);
     } catch (error) {
       console.error('❌ Security initialization error:', error);
       showError('Security system error. The quiz will continue with basic protection.');

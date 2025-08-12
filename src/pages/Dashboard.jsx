@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog, FaQuestionCircle, FaCopy } from 'react-icons/fa';
+import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog, FaQuestionCircle, FaCopy, FaEye } from 'react-icons/fa';
 import { getAvatarUrl, getFallbackAvatar } from '../utils/avatarUtils';
 import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
 import { useNotification } from '../components/NotificationSystem';
+import SpectatorAccess from '../components/SpectatorAccess';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -19,6 +20,7 @@ const Dashboard = () => {
   const [showBattleModal, setShowBattleModal] = useState(false);
   const [selectedBattleChapter, setSelectedBattleChapter] = useState('');
   const [activeBattleRoom, setActiveBattleRoom] = useState(null);
+  const [showSpectatorModal, setShowSpectatorModal] = useState(false);
   
   // Notification hook
   const { success, info } = useNotification();
@@ -405,24 +407,54 @@ const Dashboard = () => {
                 </div>
               )}
               <motion.button
-                whileHover={{ scale: activeBattleRoom ? 1.05 : 1 }}
-                whileTap={{ scale: activeBattleRoom ? 0.95 : 1 }}
+                whileHover={{ scale: (activeBattleRoom && activeBattleRoom.status === 'waiting') ? 1.05 : 1 }}
+                whileTap={{ scale: (activeBattleRoom && activeBattleRoom.status === 'waiting') ? 0.95 : 1 }}
                 onClick={handleJoinBattle}
-                disabled={!activeBattleRoom}
+                disabled={!activeBattleRoom || activeBattleRoom.status !== 'waiting'}
                 className={`w-full font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                  activeBattleRoom 
+                  activeBattleRoom && activeBattleRoom.status === 'waiting'
                     ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white focus:ring-green-500 animate-pulse' 
                     : 'bg-gray-400 text-gray-600 cursor-not-allowed'
                 }`}
               >
                 <div className="flex items-center justify-center space-x-2">
                   <FaPlay className="text-sm" />
-                  <span>{activeBattleRoom ? 'Join Battle Now!' : 'No Battle Available'}</span>
+                  <span>
+                    {!activeBattleRoom 
+                      ? 'No Battle Available' 
+                      : activeBattleRoom.status === 'started' 
+                      ? 'Battle In Progress' 
+                      : 'Join Battle Now!'}
+                  </span>
                 </div>
               </motion.button>
-              {!activeBattleRoom && (
+              {!activeBattleRoom ? (
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
                   Waiting for an admin to create a battle room...
+                </p>
+              ) : activeBattleRoom.status === 'started' && (
+                <p className="text-sm text-orange-500 dark:text-orange-400 text-center">
+                  Battle has already started. Wait for the next one!
+                </p>
+              )}
+              
+              {/* Spectator Mode Button */}
+              {activeBattleRoom && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowSpectatorModal(true)}
+                  className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 mt-3"
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <FaEye className="text-sm" />
+                    <span>Watch Battle</span>
+                  </div>
+                </motion.button>
+              )}
+              {activeBattleRoom && (
+                <p className="text-xs text-purple-400 text-center mt-1">
+                  Spectate the active battle in real-time
                 </p>
               )}
             </div>
@@ -497,6 +529,16 @@ const Dashboard = () => {
         setShouldShowTour={setShouldShowTour}
         onTourComplete={markTutorialAsCompleted}
       />
+      
+      {/* Spectator Access Modal */}
+      {activeBattleRoom && (
+        <SpectatorAccess
+          isOpen={showSpectatorModal}
+          onClose={() => setShowSpectatorModal(false)}
+          roomId={activeBattleRoom.id}
+          autoJoin={true}
+        />
+      )}
     </div>
   );
 };

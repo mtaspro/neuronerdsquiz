@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaEye, FaPlay, FaTimes } from 'react-icons/fa';
 import SpectatorMode from './SpectatorMode';
 
-const SpectatorAccess = ({ isOpen, onClose }) => {
-  const [roomId, setRoomId] = useState('');
+const SpectatorAccess = ({ isOpen, onClose, roomId: propRoomId, autoJoin = false }) => {
+  const [roomId, setRoomId] = useState(propRoomId || '');
   const [spectatorMode, setSpectatorMode] = useState(false);
   const [error, setError] = useState('');
+
+  // Auto-join if roomId is provided
+  useEffect(() => {
+    if (autoJoin && propRoomId && isOpen) {
+      setRoomId(propRoomId);
+      setSpectatorMode(true);
+    }
+  }, [autoJoin, propRoomId, isOpen]);
 
   const handleJoinAsSpectator = () => {
     if (!roomId.trim()) {
