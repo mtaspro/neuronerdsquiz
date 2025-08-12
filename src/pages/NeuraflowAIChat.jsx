@@ -462,6 +462,7 @@ You help with academics, platform features, and general questions. Keep it natur
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const token = localStorage.getItem('authToken');
       await axios.post(`${apiUrl}/api/ai-chat/save-history`, {
+        chatId: currentChatId,
         messages: messages
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -760,10 +761,35 @@ You help with academics, platform features, and general questions. Keep it natur
           
           <button
             onClick={startNewChat}
-            className="w-full mb-4 p-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 flex items-center space-x-2"
+            className="w-full mb-3 p-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 flex items-center space-x-2"
           >
             <span>✨</span>
             <span>New Chat</span>
+          </button>
+          
+          <button
+            onClick={() => {
+              if (window.confirm('Delete all conversations? This cannot be undone.')) {
+                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                const userId = userData.id || 'guest';
+                
+                // Clear all chat data
+                chatHistory.forEach(chat => {
+                  localStorage.removeItem(`ai_chat_${userId}_${chat.id}`);
+                });
+                localStorage.removeItem(`chat_history_${userId}`);
+                
+                setChatHistory([]);
+                setMessages([]);
+                setCurrentChatId(null);
+                setIsNewChat(true);
+                setShowHistory(false);
+              }
+            }}
+            className="w-full mb-4 p-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 text-sm"
+          >
+            <FaTrash className="text-xs" />
+            <span>Delete All</span>
           </button>
           
           <div className="space-y-2">
@@ -800,14 +826,14 @@ You help with academics, platform features, and general questions. Keep it natur
                     <div className="absolute right-0 top-8 bg-gray-800 backdrop-blur-xl rounded-lg border border-gray-600 py-2 min-w-40 shadow-2xl z-50">
                       <button
                         onClick={() => deleteChat(chat.id)}
-                        className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/20 hover:text-red-300 flex items-center space-x-2 transition-colors"
+                        className="w-full text-left px-4 py-3 text-sm text-red-300 bg-red-500/10 hover:bg-red-500/20 hover:text-red-200 flex items-center space-x-2 transition-colors border border-red-500/20 rounded-md mx-2 mb-1"
                       >
                         <FaTrash className="text-xs" />
                         <span>Delete conversation</span>
                       </button>
                       <button
                         onClick={() => archiveChat(chat.id)}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-gray-600/50 hover:text-white flex items-center space-x-2 transition-colors"
+                        className="w-full text-left px-4 py-3 text-sm text-gray-200 bg-gray-600/30 hover:bg-gray-600/50 hover:text-white flex items-center space-x-2 transition-colors border border-gray-500/30 rounded-md mx-2"
                       >
                         <FaArchive className="text-xs" />
                         <span>Archive</span>

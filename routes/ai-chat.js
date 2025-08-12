@@ -171,17 +171,30 @@ router.post('/', async (req, res) => {
 // Save chat history
 router.post('/save-history', authMiddleware, async (req, res) => {
   try {
-    const { messages } = req.body;
+    const { chatId, messages } = req.body;
     const userId = req.user.userId;
     
-    await ChatHistory.findOneAndUpdate(
-      { userId },
-      { 
-        messages,
-        lastUpdated: new Date()
-      },
-      { upsert: true }
-    );
+    if (chatId) {
+      // Save individual chat
+      await ChatHistory.findOneAndUpdate(
+        { _id: chatId, userId },
+        { 
+          messages,
+          lastUpdated: new Date()
+        },
+        { upsert: true }
+      );
+    } else {
+      // Fallback: save as main chat
+      await ChatHistory.findOneAndUpdate(
+        { userId },
+        { 
+          messages,
+          lastUpdated: new Date()
+        },
+        { upsert: true }
+      );
+    }
     
     res.json({ message: 'Chat history saved' });
   } catch (error) {
