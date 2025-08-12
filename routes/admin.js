@@ -256,13 +256,22 @@ router.put('/chapters/:id', authMiddleware, requireAdmin, async (req, res) => {
   }
 });
 
-// Delete a chapter
+// Delete a chapter (only if created by current admin)
 router.delete('/chapters/:id', authMiddleware, requireAdmin, async (req, res) => {
   try {
-    const chapter = await Chapter.findByIdAndDelete(req.params.id);
+    const currentUserId = req.user.userId;
+    const chapter = await Chapter.findById(req.params.id);
+    
     if (!chapter) {
       return res.status(404).json({ error: 'Chapter not found' });
     }
+    
+    // Allow deletion if chapter has no creator (legacy) or created by current admin
+    if (chapter.createdBy && chapter.createdBy.toString() !== currentUserId) {
+      return res.status(403).json({ error: 'You can only delete chapters you created' });
+    }
+    
+    await Chapter.findByIdAndDelete(req.params.id);
     // Also delete all questions in this chapter
     await Quiz.deleteMany({ chapter: chapter.name });
     res.json({ message: 'Chapter and its questions deleted' });

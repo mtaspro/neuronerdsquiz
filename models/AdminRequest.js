@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const adminRequestSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['USER_DELETION', 'LEADERBOARD_RESET'],
+    enum: ['USER_DELETION', 'USER_SCORE_RESET', 'LEADERBOARD_RESET'],
     required: true
   },
   requestedBy: {

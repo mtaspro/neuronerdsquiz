@@ -257,24 +257,29 @@ export default function AdminDashboard() {
     loadQuizConfigs();
   }, [tab]);
 
-  // Delete user
+  // Request user deletion
   function handleDeleteUser(userId, username, isAdmin) {
     if (isAdmin) {
       setError('Cannot delete admin users');
       return;
     }
     
-    if (!window.confirm(`Delete user "${username}"? This will permanently remove the user and all their data. This action cannot be undone.`)) return;
+    const reason = prompt(`Please provide a reason for deleting user "${username}":`);
+    if (!reason || !reason.trim()) return;
+    
+    if (!window.confirm(`Submit deletion request for user "${username}"? This will require SuperAdmin approval.`)) return;
     
     setLoading(true);
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.delete(`${apiUrl}/api/admin/users/${userId}`, { headers: authHeader() })
+    axios.post(`${apiUrl}/api/admin/users/${userId}/request-deletion`, {
+      reason: reason.trim()
+    }, { headers: authHeader() })
       .then(() => {
-        setUsers(users => users.filter(u => u._id !== userId));
-        setError(''); // Clear any previous errors
+        setError('');
+        alert(`Deletion request for "${username}" submitted! Awaiting SuperAdmin approval.`);
       })
       .catch(err => {
-        const errorMsg = err.response?.data?.error || 'Failed to delete user';
+        const errorMsg = err.response?.data?.error || 'Failed to submit deletion request';
         setError(errorMsg);
       })
       .finally(() => setLoading(false));
@@ -709,9 +714,9 @@ export default function AdminDashboard() {
                               onClick={() => handleDeleteUser(u._id, u.username, u.isAdmin)}
                               disabled={loading}
                               className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm text-white transition-colors disabled:opacity-50"
-                              title="Delete user permanently"
+                              title="Request user deletion (requires SuperAdmin approval)"
                             >
-                              Delete User
+                              Request Delete
                             </button>
                           )}
                         </div>
@@ -939,12 +944,32 @@ export default function AdminDashboard() {
 
             {/* Chapters List */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Manage Chapters</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Manage Chapters</h3>
+                <select
+                  value={selectedChapterFilter}
+                  onChange={e => setSelectedChapterFilter(e.target.value)}
+                  className="px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                >
+                  <option value="">All Creators</option>
+                  <option value="mine">My Chapters</option>
+                  {[...new Set(chapters.map(ch => ch.createdBy?.username).filter(Boolean))].map(creator => (
+                    <option key={creator} value={creator}>{creator}</option>
+                  ))}
+                </select>
+              </div>
               {loading ? (
                 <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading chapters...</div>
               ) : (
                 <div className="space-y-4">
-                  {chapters.map(chapter => (
+                  {chapters.filter(chapter => {
+                    if (!selectedChapterFilter) return true;
+                    if (selectedChapterFilter === 'mine') {
+                      const currentUser = JSON.parse(localStorage.getItem('userData') || '{}');
+                      return chapter.createdBy?._id === currentUser.id;
+                    }
+                    return chapter.createdBy?.username === selectedChapterFilter;
+                  }).map(chapter => (
                     <div key={chapter._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                       {editingId === chapter._id ? (
                         <form onSubmit={handleEditChapter} className="space-y-3">
@@ -1018,6 +1043,11 @@ export default function AdminDashboard() {
                               )}
                               <p className="text-gray-500 dark:text-gray-400 text-xs">Order: {chapter.order}</p>
                               <p className="text-gray-500 dark:text-gray-400 text-xs">
+                                Created by: <span className="text-blue-600 dark:text-blue-400">
+                                  {chapter.createdBy?.username || 'System'}
+                                </span>
+                              </p>
+                              <p className="text-gray-500 dark:text-gray-400 text-xs">
                                 Status: <span className={chapter.visible !== false ? 'text-green-600' : 'text-red-600'}>
                                   {chapter.visible !== false ? 'Visible' : 'Hidden'}
                                 </span>
@@ -1031,13 +1061,23 @@ export default function AdminDashboard() {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => { setEditingId(chapter._id); setEditChapter({...chapter}); }}
-                                className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm text-white transition-colors"
+                                disabled={!chapter.canEdit}
+                                className={`px-3 py-1 rounded text-sm transition-colors ${
+                                  chapter.canEdit 
+                                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                                    : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                                }`}
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => handleDeleteChapter(chapter._id)}
-                                className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm text-white transition-colors"
+                                disabled={!chapter.canEdit}
+                                className={`px-3 py-1 rounded text-sm transition-colors ${
+                                  chapter.canEdit 
+                                    ? 'bg-red-600 hover:bg-red-700 text-white' 
+                                    : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                                }`}
                               >
                                 Delete
                               </button>

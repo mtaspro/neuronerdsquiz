@@ -43,13 +43,22 @@ export default function QuizPage() {
   // Define handleSubmit first to avoid circular dependency
   const handleSubmit = useCallback(async (finalAnswers = answers) => {
     try {
-      // Calculate score
+      // Ensure all answers have values (use -1 for unanswered)
+      const processedAnswers = finalAnswers.map(answer => 
+        answer !== undefined && answer !== null ? answer : -1
+      );
+      
+      // Calculate score (handle unanswered questions)
       let score = 0;
       let correctAnswers = 0;
       
       questions.forEach((q, i) => {
-        const isCorrect = (typeof q.correctAnswerIndex === 'number' && finalAnswers[i] === q.correctAnswerIndex) ||
-                         (typeof q.correctAnswer === 'string' && q.options[finalAnswers[i]] === q.correctAnswer);
+        const answer = processedAnswers[i];
+        const hasAnswer = answer !== -1;
+        const isCorrect = hasAnswer && (
+          (typeof q.correctAnswerIndex === 'number' && answer === q.correctAnswerIndex) ||
+          (typeof q.correctAnswer === 'string' && q.options[answer] === q.correctAnswer)
+        );
         if (isCorrect) {
           score++;
           correctAnswers++;
@@ -69,7 +78,7 @@ export default function QuizPage() {
         correctAnswers,
         timeSpent,
         chapter,
-        answers: finalAnswers,
+        answers: processedAnswers,
         questions // Include questions for quiz ID generation
       };
 
@@ -92,7 +101,7 @@ export default function QuizPage() {
           badgesUpdated: result.badgesUpdated,
           currentBadges: result.currentBadges,
           questions: questions,
-          userAnswers: finalAnswers,
+          userAnswers: processedAnswers,
           timeSpent: timeSpent,
           chapter: chapter
         } 
@@ -102,11 +111,18 @@ export default function QuizPage() {
       console.error('Error submitting quiz:', error);
       showError('Failed to submit quiz. Please try again.');
       
-      // Fallback to local result calculation
+      // Fallback to local result calculation (handle unanswered questions)
+      const fallbackProcessedAnswers = finalAnswers.map(answer => 
+        answer !== undefined && answer !== null ? answer : -1
+      );
       let score = 0;
       questions.forEach((q, i) => {
-        if ((typeof q.correctAnswerIndex === 'number' && finalAnswers[i] === q.correctAnswerIndex) ||
-            (typeof q.correctAnswer === 'string' && q.options[finalAnswers[i]] === q.correctAnswer)) {
+        const answer = fallbackProcessedAnswers[i];
+        const hasAnswer = answer !== -1;
+        if (hasAnswer && (
+          (typeof q.correctAnswerIndex === 'number' && answer === q.correctAnswerIndex) ||
+          (typeof q.correctAnswer === 'string' && q.options[answer] === q.correctAnswer)
+        )) {
           score++;
         }
       });
@@ -116,7 +132,7 @@ export default function QuizPage() {
           total: questions.length, 
           error: true,
           questions: questions,
-          userAnswers: finalAnswers,
+          userAnswers: fallbackProcessedAnswers,
           timeSpent: (duration - timer) * 1000,
           chapter: chapter,
           practiceMode: practiceMode

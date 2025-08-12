@@ -20,15 +20,37 @@ function generateQuizId(chapter, questions) {
   return `${chapter}-${hash.substring(0, 8)}`;
 }
 
-// Get all active chapters (filtered by visibility for regular users)
+// Get all active chapters (filtered by visibility and admin ownership)
 router.get('/chapters', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
     let filter = {};
     
-    // Only super admins can see hidden chapters
-    if (!user || !user.isSuperAdmin) {
-      filter.visible = { $ne: false }; // Show chapters where visible is true or undefined
+    if (user.isAdmin || user.isSuperAdmin) {
+      // Admins see chapters they created OR chapters marked as visible to all
+      filter = {
+        $and: [
+          { visible: { $ne: false } }, // Must be visible
+          {
+            $or: [
+              { createdBy: user._id }, // Created by current admin
+              { adminVisible: true }, // OR marked as visible to all admins
+              { createdBy: { $exists: false } } // OR legacy chapters with no creator
+            ]
+          }
+        ]
+      };
+    } else {
+      // Regular users only see chapters that are visible and either:
+      // 1. Have no creator (legacy), OR
+      // 2. Are marked as visible to users
+      filter = {
+        visible: { $ne: false },
+        $or: [
+          { createdBy: { $exists: false } }, // Legacy chapters
+          { adminVisible: true } // Chapters marked as visible to all
+        ]
+      };
     }
     
     const chapters = await Chapter.find(filter).sort('order');
@@ -180,8 +202,13 @@ router.post('/submit', authMiddleware, async (req, res) => {
     for (let i = 0; i < questions.length; i++) {
       const question = questions[i];
       const answer = answers[i];
-      const isCorrect = (typeof question.correctAnswerIndex === 'number' && answer === question.correctAnswerIndex) ||
-                       (typeof question.correctAnswer === 'string' && question.options[answer] === question.correctAnswer);
+      
+      // Handle unanswered questions (security violations, time up, etc.)
+      const selectedAnswer = answer !== undefined && answer !== null ? answer : -1; // -1 indicates no answer
+      const isCorrect = selectedAnswer !== -1 && (
+        (typeof question.correctAnswerIndex === 'number' && selectedAnswer === question.correctAnswerIndex) ||
+        (typeof question.correctAnswer === 'string' && question.options[selectedAnswer] === question.correctAnswer)
+      );
       
       try {
         const questionRecord = new UserQuestionRecord({
@@ -190,7 +217,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
           questionId: question._id,
           chapter,
           isCorrect,
-          selectedAnswer: answer,
+          selectedAnswer,
           timeSpent: Math.floor(timeSpent / totalQuestions)
         });
         

@@ -82,6 +82,9 @@ const OnboardingTour = ({
 
   const steps = getSteps();
 
+  // State for position updates
+  const [positionKey, setPositionKey] = useState(0);
+
   // Find target element
   useEffect(() => {
     if (shouldShowTour && steps[currentStep]) {
@@ -94,6 +97,35 @@ const OnboardingTour = ({
       }
     }
   }, [shouldShowTour, currentStep, steps]);
+
+  // Update positions on scroll and resize
+  useEffect(() => {
+    if (!shouldShowTour) return;
+
+    const updatePositions = () => {
+      setPositionKey(prev => prev + 1);
+    };
+
+    const handleScroll = () => {
+      updatePositions();
+    };
+
+    const handleResize = () => {
+      updatePositions();
+    };
+
+    // Add event listeners
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize, { passive: true });
+    document.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('scroll', handleScroll);
+    };
+  }, [shouldShowTour]);
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -200,12 +232,14 @@ const OnboardingTour = ({
       >
         {/* Overlay */}
         <div 
+          key={`overlay-${positionKey}`}
           className="absolute inset-0 bg-black bg-opacity-50 transition-all duration-300"
           style={getSpotlightStyle()}
         />
 
         {/* Tooltip */}
         <motion.div
+          key={`tooltip-${positionKey}`}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
@@ -269,6 +303,7 @@ const OnboardingTour = ({
         {/* Beacon for target element */}
         {targetElement && steps[currentStep]?.target !== 'body' && (
           <motion.div
+            key={`beacon-${positionKey}`}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             className="absolute pointer-events-none z-[10002]"
