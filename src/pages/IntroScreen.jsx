@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaPalette } from "react-icons/fa";
 import ThemeSelector from "../components/ThemeSelector";
+import EventShowdown from "../components/EventShowdown";
 
 // Import all theme videos
 import techVideo from "../assets/tech-bg.mp4";
@@ -21,6 +22,7 @@ export default function IntroScreen() {
 
   const [currentTheme, setCurrentTheme] = useState('tech-bg');
   const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const [eventData, setEventData] = useState(null);
   const navigate = useNavigate();
   const videoRef = useRef(null);
 
@@ -72,10 +74,12 @@ export default function IntroScreen() {
     const handleThemeChange = () => loadTheme();
     window.addEventListener('storage', handleThemeChange);
     window.addEventListener('themeChanged', handleThemeChange);
+    window.addEventListener('globalThemeChanged', handleThemeChange);
     
     return () => {
       window.removeEventListener('storage', handleThemeChange);
       window.removeEventListener('themeChanged', handleThemeChange);
+      window.removeEventListener('globalThemeChanged', handleThemeChange);
     };
   }, []);
 
@@ -91,6 +95,27 @@ export default function IntroScreen() {
     // Listen to storage events (multi-tab)
     window.addEventListener('storage', checkAuth);
     return () => window.removeEventListener('storage', checkAuth);
+  }, []);
+
+  // Load event data
+  useEffect(() => {
+    const loadEventData = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await fetch(`${apiUrl}/api/superadmin/showdown-event`);
+        const data = await response.json();
+        if (data.isActive) {
+          setEventData(data);
+        }
+      } catch (error) {
+        console.error('Error loading event data:', error);
+      }
+    };
+
+    loadEventData();
+    // Poll for event updates every 30 seconds
+    const interval = setInterval(loadEventData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   // Generate floating particles
@@ -239,6 +264,9 @@ export default function IntroScreen() {
           }}
         />
       </motion.div>
+
+      {/* Event Showdown */}
+      {eventData && <EventShowdown eventData={eventData} />}
 
       {/* Content Container */}
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
