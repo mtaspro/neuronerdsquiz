@@ -134,9 +134,9 @@ const SecurityInitModal = ({
                     Automatic Fullscreen
                   </h3>
                   <p className="text-sm text-blue-700 dark:text-blue-300">
-                    When you click "Accept & Start {quizType === 'battle' ? 'Battle' : 'Quiz'}", the browser will automatically 
-                    enter fullscreen mode to provide an optimal exam environment. If fullscreen fails, 
-                    the quiz will continue with other security measures.
+                    On desktop browsers, the {quizType === 'battle' ? 'battle' : 'quiz'} will attempt to enter fullscreen mode. 
+                    <strong>Mobile devices:</strong> Fullscreen may not work on phones/tablets due to browser limitations, 
+                    but all other security features will remain active.
                   </p>
                 </div>
               </div>

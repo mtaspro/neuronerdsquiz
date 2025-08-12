@@ -84,6 +84,15 @@ const useExamSecurity = ({
       return true;
     }
     
+    // Check if device is mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      console.log('📱 Mobile device detected - fullscreen may not work properly');
+      console.log('📱 Mobile browsers have limited fullscreen support, continuing without fullscreen');
+      return true; // Skip fullscreen on mobile devices
+    }
+    
     // Check if fullscreen is supported
     const element = document.documentElement;
     const isFullscreenSupported = !!(
