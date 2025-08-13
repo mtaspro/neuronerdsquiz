@@ -96,7 +96,7 @@ export default function QuizPage() {
       const result = response.data;
       
       // Check for division promotion
-      if (result.divisionPromotion) {
+      if (result.divisionPromotion && result.divisionPromotion.oldDivision && result.divisionPromotion.newDivision) {
         setPromotionData({
           oldDivision: result.divisionPromotion.oldDivision,
           newDivision: result.divisionPromotion.newDivision,

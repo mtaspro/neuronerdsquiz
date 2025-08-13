@@ -11,6 +11,11 @@ export default function DivisionPromotion({
 }) {
   const [showContinue, setShowContinue] = useState(false);
   
+  // Add null checks to prevent errors
+  if (!newDivision || !oldDivision) {
+    return null;
+  }
+  
   const newDivisionInfo = getDivisionInfo(newDivision.division, newDivision.stage);
   const oldDivisionInfo = getDivisionInfo(oldDivision.division, oldDivision.stage);
 
