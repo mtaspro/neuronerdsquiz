@@ -182,8 +182,7 @@ export default function QuizLeaderboardCard({ player, index }) {
         <div className="absolute inset-0 rounded-2xl animate-pulse" style={{boxShadow: '0 0 15px rgba(245, 158, 11, 0.3), inset 0 0 15px rgba(245, 158, 11, 0.1)'}} />
       )}
       
-      {/* Overlay for all custom card backgrounds to improve text readability */}
-      <div className="absolute inset-0 bg-black/10 rounded-2xl" />
+
       
       {/* Division badge with pulse animation */}
       <div className="absolute top-3 right-3 bg-black/60 text-white text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/20 z-10 animate-pulse hover:animate-none transition-all duration-300 hover:scale-110">
