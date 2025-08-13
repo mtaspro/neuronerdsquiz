@@ -25,8 +25,8 @@ const EventShowdown = ({ eventData }) => {
         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        const centiseconds = Math.floor((distance % 1000) / 10);
-        setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}.${centiseconds.toString().padStart(2, '0')}s`);
+        const hundredths = Math.floor((distance % 1000) / 10);
+        setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s:${hundredths.toString().padStart(2, '0')}`);
       } else {
         setTimeLeft('Event Ended');
       }
