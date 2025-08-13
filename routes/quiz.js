@@ -5,6 +5,7 @@ import UserScore from '../models/UserScore.js';
 import User from '../models/User.js';
 import UserQuizRecord from '../models/UserQuizRecord.js';
 import UserQuestionRecord from '../models/UserQuestionRecord.js';
+import UserStats from '../models/UserStats.js';
 import BadgeService from '../services/badgeService.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import crypto from 'crypto';
@@ -288,6 +289,50 @@ router.post('/submit', authMiddleware, async (req, res) => {
       // Continue without failing the entire request
     }
 
+    // Get user stats before update for division comparison
+    let oldDivision = null;
+    let newDivision = null;
+    let divisionPromotion = null;
+    
+    try {
+      const userStats = await UserStats.findOne({ userId }) || {
+        totalQuizzes: 0,
+        averageScore: 0,
+        currentStreak: user.currentStreak || 0
+      };
+      
+      // Calculate old division
+      const oldUserStats = {
+        totalQuizzes: userStats.totalQuizzes || 0,
+        averageScore: userStats.averageScore || 0,
+        streak: user.currentStreak || 0
+      };
+      
+      // Import division calculation function
+      const { calculateDivision } = await import('../utils/divisionUtils.js');
+      oldDivision = calculateDivision(oldUserStats);
+      
+      // Calculate new division after this quiz
+      const newUserStats = {
+        totalQuizzes: (userStats.totalQuizzes || 0) + 1,
+        averageScore: userStats.totalQuizzes > 0 
+          ? ((userStats.averageScore * userStats.totalQuizzes) + (score / totalQuestions * 100)) / (userStats.totalQuizzes + 1)
+          : (score / totalQuestions * 100),
+        streak: user.currentStreak || 0
+      };
+      
+      newDivision = calculateDivision(newUserStats);
+      
+      // Check for promotion
+      if (oldDivision.division !== newDivision.division || 
+          (oldDivision.division === newDivision.division && oldDivision.stage < newDivision.stage)) {
+        divisionPromotion = { oldDivision, newDivision };
+        console.log(`🎉 Division promotion for ${user.username}: ${oldDivision.division} ${oldDivision.stage} → ${newDivision.division} ${newDivision.stage}`);
+      }
+    } catch (divisionError) {
+      console.error('Error calculating division:', divisionError);
+    }
+
     // Update user stats and recalculate badges
     let userBadges = [];
     try {
@@ -316,7 +361,8 @@ router.post('/submit', authMiddleware, async (req, res) => {
       solvedQuestionsCount,
       totalQuestionsInChapter,
       remainingQuestions: totalQuestionsInChapter - solvedQuestionsCount,
-      allQuestionsSolved
+      allQuestionsSolved,
+      divisionPromotion
     });
 
   } catch (error) {

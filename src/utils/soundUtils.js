@@ -1,3 +1,9 @@
+// Import your MP3 files
+import clickSoundFile from '../assets/sounds/click.mp3';
+import successSoundFile from '../assets/sounds/success.mp3';
+import errorSoundFile from '../assets/sounds/error.mp3';
+// Add more imports as needed
+
 // Sound utility for website interactions
 class SoundManager {
   constructor() {
@@ -95,11 +101,10 @@ class SoundManager {
 // Create global sound manager instance
 const soundManager = new SoundManager();
 
-// Load default sounds (you can replace these with your own sound files)
-// For now, using data URLs for basic sounds - replace with your imported files
-soundManager.loadSound('click', 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT', 0.3);
-soundManager.loadSound('success', 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT', 0.4);
-soundManager.loadSound('error', 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT', 0.4);
+// Load sounds from imported MP3 files
+soundManager.loadSound('click', clickSoundFile, 0.3);
+soundManager.loadSound('success', successSoundFile, 0.4);
+soundManager.loadSound('error', errorSoundFile, 0.4);
 soundManager.loadSound('transition', 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT', 0.2);
 
 // Quiz sounds

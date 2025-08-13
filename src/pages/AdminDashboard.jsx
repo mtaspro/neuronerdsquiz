@@ -635,20 +635,37 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false));
   }
 
-  // Request leaderboard reset (SuperAdmin approval required)
-  function handleResetLeaderboard() {
-    const reason = prompt('Please provide a reason for leaderboard reset:');
+  // Request quiz leaderboard reset (SuperAdmin approval required)
+  function handleResetQuizLeaderboard() {
+    const reason = prompt('Please provide a reason for quiz leaderboard reset:');
     if (!reason || !reason.trim()) return;
     
-    if (!window.confirm('Submit leaderboard reset request? SuperAdmin approval is required.')) return;
+    if (!window.confirm('Submit QUIZ leaderboard reset request? This will reset quiz scores, stats, and quiz-related data. SuperAdmin approval is required.')) return;
     
     setLoading(true);
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.post(`${apiUrl}/api/admin/leaderboard/request-reset`, {
+    axios.post(`${apiUrl}/api/admin/leaderboard/request-quiz-reset`, {
       reason: reason.trim()
     }, { headers: authHeader() })
-      .then(() => setResetMsg('Leaderboard reset request submitted! Awaiting SuperAdmin approval.'))
-      .catch(err => setError(err.response?.data?.error || 'Failed to submit reset request'))
+      .then(() => setResetMsg('Quiz leaderboard reset request submitted! Awaiting SuperAdmin approval.'))
+      .catch(err => setError(err.response?.data?.error || 'Failed to submit quiz reset request'))
+      .finally(() => setLoading(false));
+  }
+
+  // Request battle leaderboard reset (SuperAdmin approval required)
+  function handleResetBattleLeaderboard() {
+    const reason = prompt('Please provide a reason for battle leaderboard reset:');
+    if (!reason || !reason.trim()) return;
+    
+    if (!window.confirm('Submit BATTLE leaderboard reset request? This will reset battle scores and battle-related data. SuperAdmin approval is required.')) return;
+    
+    setLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.post(`${apiUrl}/api/admin/leaderboard/request-battle-reset`, {
+      reason: reason.trim()
+    }, { headers: authHeader() })
+      .then(() => setResetMsg('Battle leaderboard reset request submitted! Awaiting SuperAdmin approval.'))
+      .catch(err => setError(err.response?.data?.error || 'Failed to submit battle reset request'))
       .finally(() => setLoading(false));
   }
 
@@ -1663,25 +1680,67 @@ export default function AdminDashboard() {
         )}
 
         {tab === 'Leaderboard Reset' && (
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-            <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Request Leaderboard Reset</h3>
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-700 mb-4">
+          <div className="space-y-6">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-700">
               <p className="text-yellow-800 dark:text-yellow-300 text-sm">
-                ⚠️ <strong>SuperAdmin Approval Required:</strong> Leaderboard reset requests must be approved by SuperAdmin for security.
+                ⚠️ <strong>SuperAdmin Approval Required:</strong> All leaderboard reset requests must be approved by SuperAdmin for security.
               </p>
             </div>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              This will request to delete all user scores, stats, and badges from both general and battle leaderboards. 
-              You'll need to provide a reason for the reset.
-            </p>
-            <button
-              onClick={handleResetLeaderboard}
-              disabled={loading}
-              className="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors"
-            >
-              {loading ? 'Submitting Request...' : 'Request Leaderboard Reset'}
-            </button>
-            {resetMsg && <p className="text-green-600 dark:text-green-400 mt-2">{resetMsg}</p>}
+            
+            {/* Quiz Leaderboard Reset */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">📚 Quiz Leaderboard Reset</h3>
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700 mb-4">
+                <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">This will reset:</h4>
+                <ul className="text-blue-700 dark:text-blue-300 text-sm space-y-1">
+                  <li>• Quiz scores and leaderboard rankings</li>
+                  <li>• User quiz statistics and averages</li>
+                  <li>• Quiz-related badges and achievements</li>
+                  <li>• Division rankings and progress</li>
+                  <li>• Quiz completion records</li>
+                </ul>
+                <p className="text-blue-600 dark:text-blue-400 text-sm mt-2 font-medium">
+                  ✅ Battle leaderboard will NOT be affected
+                </p>
+              </div>
+              <button
+                onClick={handleResetQuizLeaderboard}
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors"
+              >
+                {loading ? 'Submitting Request...' : 'Request Quiz Leaderboard Reset'}
+              </button>
+            </div>
+            
+            {/* Battle Leaderboard Reset */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">⚔️ Battle Leaderboard Reset</h3>
+              <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-700 mb-4">
+                <h4 className="font-semibold text-red-800 dark:text-red-300 mb-2">This will reset:</h4>
+                <ul className="text-red-700 dark:text-red-300 text-sm space-y-1">
+                  <li>• Battle scores and global rankings</li>
+                  <li>• Battle win/loss statistics</li>
+                  <li>• Battle-related achievements</li>
+                  <li>• Battle history and records</li>
+                </ul>
+                <p className="text-red-600 dark:text-red-400 text-sm mt-2 font-medium">
+                  ✅ Quiz leaderboard will NOT be affected
+                </p>
+              </div>
+              <button
+                onClick={handleResetBattleLeaderboard}
+                disabled={loading}
+                className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors"
+              >
+                {loading ? 'Submitting Request...' : 'Request Battle Leaderboard Reset'}
+              </button>
+            </div>
+            
+            {resetMsg && (
+              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-700">
+                <p className="text-green-600 dark:text-green-400">{resetMsg}</p>
+              </div>
+            )}
           </div>
         )}
       </div>

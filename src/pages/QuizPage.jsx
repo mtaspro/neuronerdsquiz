@@ -9,6 +9,8 @@ import SecurityWarning from "../components/SecurityWarning";
 import SecurityInitModal from "../components/SecurityInitModal";
 import MathText from "../components/MathText";
 import soundManager from "../utils/soundUtils";
+import DivisionPromotion from "../components/DivisionPromotion";
+import { calculateDivision } from "../utils/divisionUtils";
 import axios from "axios";
 
 export default function QuizPage() {
@@ -34,6 +36,10 @@ export default function QuizPage() {
   const [hasAttempted, setHasAttempted] = useState(false);
   const [previousAttempt, setPreviousAttempt] = useState(null);
   const [checkingAttempt, setCheckingAttempt] = useState(false);
+  
+  // Division promotion states
+  const [showPromotion, setShowPromotion] = useState(false);
+  const [promotionData, setPromotionData] = useState(null);
 
   // Security system state
   const [showSecurityModal, setShowSecurityModal] = useState(false);
@@ -88,6 +94,31 @@ export default function QuizPage() {
       });
 
       const result = response.data;
+      
+      // Check for division promotion
+      if (result.divisionPromotion) {
+        setPromotionData({
+          oldDivision: result.divisionPromotion.oldDivision,
+          newDivision: result.divisionPromotion.newDivision,
+          resultData: {
+            score, 
+            total: questions.length,
+            practiceMode: result.practiceMode,
+            isFirstAttempt: result.isFirstAttempt,
+            previousBestScore: result.previousBestScore,
+            improved: result.improved,
+            leaderboardUpdated: result.leaderboardUpdated,
+            badgesUpdated: result.badgesUpdated,
+            currentBadges: result.currentBadges,
+            questions: questions,
+            userAnswers: processedAnswers,
+            timeSpent: timeSpent,
+            chapter: chapter
+          }
+        });
+        setShowPromotion(true);
+        return;
+      }
       
       // Navigate to result with additional info
       navigate("/result", { 
@@ -435,8 +466,21 @@ export default function QuizPage() {
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
+  // Handle promotion continue
+  const handlePromotionContinue = () => {
+    setShowPromotion(false);
+    navigate("/result", { state: promotionData.resultData });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200">
+      {/* Division Promotion Modal */}
+      <DivisionPromotion
+        oldDivision={promotionData?.oldDivision}
+        newDivision={promotionData?.newDivision}
+        onContinue={handlePromotionContinue}
+        isVisible={showPromotion}
+      />
       {/* Security Initialization Modal */}
       <SecurityInitModal
         isOpen={showSecurityModal}

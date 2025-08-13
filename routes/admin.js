@@ -500,7 +500,59 @@ router.put('/quiz-configs/:chapterId', authMiddleware, requireAdmin, async (req,
   }
 });
 
-// Request leaderboard reset (creates request for SuperAdmin approval)
+// Request quiz leaderboard reset (creates request for SuperAdmin approval)
+router.post('/leaderboard/request-quiz-reset', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ error: 'Reason is required for quiz reset request' });
+    }
+    
+    const AdminRequest = (await import('../models/AdminRequest.js')).default;
+    const request = new AdminRequest({
+      type: 'QUIZ_LEADERBOARD_RESET',
+      requestedBy: req.user.userId,
+      requestedByUsername: req.user.email,
+      reason: reason.trim()
+    });
+    
+    await request.save();
+    res.json({ message: 'Quiz leaderboard reset request submitted for SuperAdmin approval' });
+    
+  } catch (error) {
+    console.error('Error creating quiz reset request:', error);
+    res.status(500).json({ error: 'Failed to create quiz reset request' });
+  }
+});
+
+// Request battle leaderboard reset (creates request for SuperAdmin approval)
+router.post('/leaderboard/request-battle-reset', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ error: 'Reason is required for battle reset request' });
+    }
+    
+    const AdminRequest = (await import('../models/AdminRequest.js')).default;
+    const request = new AdminRequest({
+      type: 'BATTLE_LEADERBOARD_RESET',
+      requestedBy: req.user.userId,
+      requestedByUsername: req.user.email,
+      reason: reason.trim()
+    });
+    
+    await request.save();
+    res.json({ message: 'Battle leaderboard reset request submitted for SuperAdmin approval' });
+    
+  } catch (error) {
+    console.error('Error creating battle reset request:', error);
+    res.status(500).json({ error: 'Failed to create battle reset request' });
+  }
+});
+
+// Request full leaderboard reset (creates request for SuperAdmin approval) - Legacy endpoint
 router.post('/leaderboard/request-reset', authMiddleware, requireAdmin, async (req, res) => {
   try {
     const { reason } = req.body;
@@ -518,7 +570,7 @@ router.post('/leaderboard/request-reset', authMiddleware, requireAdmin, async (r
     });
     
     await request.save();
-    res.json({ message: 'Leaderboard reset request submitted for SuperAdmin approval' });
+    res.json({ message: 'Full leaderboard reset request submitted for SuperAdmin approval' });
     
   } catch (error) {
     console.error('Error creating reset request:', error);
