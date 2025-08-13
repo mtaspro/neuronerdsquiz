@@ -144,33 +144,18 @@ class SoundManager {
 const soundManager = new SoundManager();
 
 // Load sounds from imported MP3 files
-soundManager.loadSound('click', clickSoundFile, 0.3);
-soundManager.loadSound('success', successSoundFile, 0.4);
-soundManager.loadSound('error', errorSoundFile, 0.4);
+soundManager.loadSound('click', click, 0.3);
+soundManager.loadSound('success', success, 0.4);
 soundManager.loadSound('transition', transition, 0.2);
 
 // Quiz sounds
 soundManager.loadSound('questionNext', questionNext, 0.3);
-soundManager.loadSound('correctAnswer', correctAnswer, 0.5);
-soundManager.loadSound('wrongAnswer', wrongAnswer, 0.4);
 soundManager.loadSound('quizComplete', quizComplete, 0.6);
 
 // Battle sounds
 soundManager.loadSound('battleStart', battleStart, 0.7);
-soundManager.loadSound('battleWin', battleWin, 0.6);
-soundManager.loadSound('battleLose', battleLose, 0.5);
 
 // Achievement sounds
-// The 0.8 is the volume level for this sound (ranges from 0.0 to 1.0, where 1.0 is maximum volume)
 soundManager.loadSound('badgeUnlock', badgeUnlock, 0.8);
-soundManager.loadSound('levelUp', levelUp, 0.7);
-
-// Form sounds
-soundManager.loadSound('keyType', keyType, 0.1);
-soundManager.loadSound('formSubmit', formSubmit, 0.4);
-
-// Leaderboard sounds
-soundManager.loadSound('cardHover', cardHover, 0.2);
-soundManager.loadSound('premiumCard', premiumCard, 0.5);
 
 export default soundManager;
