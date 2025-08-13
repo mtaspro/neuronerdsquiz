@@ -37,7 +37,42 @@ leaderboardRouter.get('/leaderboard/general', async (req, res) => {
   }
 });
 
-
+// GET /leaderboard/battle - returns top 50 users with enhanced battle stats
+leaderboardRouter.get('/leaderboard/battle', async (req, res) => {
+  try {
+    // Get battle scores with user stats
+    const battleUsers = await UserScore.find({ type: 'battle' })
+      .populate('userId', 'username avatar badges currentStreak')
+      .sort({ score: -1 })
+      .limit(50);
+    
+    const enhancedUsers = await Promise.all(battleUsers.map(async (userScore) => {
+      const user = userScore.userId;
+      if (!user) return null;
+      
+      // Get user stats for battle data
+      const userStats = await UserStats.findOne({ userId: user._id });
+      
+      return {
+        username: user.username,
+        avatar: user.avatar,
+        score: userScore.score,
+        battlesWon: userStats?.battlesWon || 0,
+        totalBattles: userStats?.totalBattles || 0,
+        winRate: userStats?.battleWinRate || 0,
+        streak: user.currentStreak || 0,
+        badges: user.badges || userStats?.currentBadges || []
+      };
+    }));
+    
+    // Filter out null entries and return
+    const validUsers = enhancedUsers.filter(user => user !== null);
+    res.json(validUsers);
+  } catch (err) {
+    console.error('Battle leaderboard error:', err);
+    res.status(500).json({ error: 'Failed to fetch battle leaderboard.' });
+  }
+});
 
 // GET /leaderboard - legacy endpoint (returns general)
 leaderboardRouter.get('/leaderboard', async (req, res) => {
