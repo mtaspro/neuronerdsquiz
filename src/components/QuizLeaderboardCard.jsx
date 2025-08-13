@@ -218,7 +218,7 @@ export default function QuizLeaderboardCard({ player, index }) {
       
       {/* Main stats with hover animations */}
       <div className="relative grid grid-cols-2 gap-3 mb-4 z-10">
-        <div className="bg-black/40 rounded-lg p-3 text-center backdrop-blur-sm border border-white/20 hover:bg-black/50 hover:scale-105 transition-all duration-300 cursor-pointer">
+        <div className="bg-black/10 rounded-lg p-3 text-center backdrop-blur-sm border border-white/20 hover:bg-black/50 hover:scale-105 transition-all duration-300 cursor-pointer">
           <div className="text-xl font-bold text-white drop-shadow-lg animate-pulse">
             {Math.round(player.averageScore || 0)}%
           </div>
@@ -226,7 +226,7 @@ export default function QuizLeaderboardCard({ player, index }) {
             Avg Score
           </div>
         </div>
-        <div className="bg-black/40 rounded-lg p-3 text-center backdrop-blur-sm border border-white/20 hover:bg-black/50 hover:scale-105 transition-all duration-300 cursor-pointer">
+        <div className="bg-black/10 rounded-lg p-3 text-center backdrop-blur-sm border border-white/20 hover:bg-black/50 hover:scale-105 transition-all duration-300 cursor-pointer">
           <div className="text-xl font-bold text-white drop-shadow-lg animate-pulse" style={{animationDelay: '0.5s'}}>
             {player.totalQuizzes || 0}
           </div>
@@ -274,7 +274,7 @@ export default function QuizLeaderboardCard({ player, index }) {
             {stage === 2 ? 'Max Stage' : `To ${divisionInfo.name} ${divisionInfo.stages && divisionInfo.stages[stage + 1] ? divisionInfo.stages[stage + 1] : 'I'}`}
           </span>
         </div>
-        <div className="w-full bg-black/40 rounded-full h-2 backdrop-blur-sm border border-white/20">
+        <div className="w-full bg-black/10 rounded-full h-2 backdrop-blur-sm border border-white/20">
           <div 
             className="bg-white/80 h-2 rounded-full transition-all duration-500 shadow-sm"
             style={{ width: `${Math.min(((userStats.totalQuizzes * userStats.averageScore / 100) % 50) * 2, 100)}%` }}
