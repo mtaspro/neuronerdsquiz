@@ -179,10 +179,9 @@ export default function IntroScreen() {
       'tech-bg3': 'from-orange-50 via-red-50 to-pink-50 dark:from-gray-900 dark:via-orange-900 dark:to-red-900',
       'tech-bg4': 'from-slate-50 via-gray-50 to-zinc-50 dark:from-gray-900 dark:via-slate-900 dark:to-zinc-900',
       'tech-bg5': 'from-blue-50 via-cyan-50 to-teal-50 dark:from-gray-900 dark:via-blue-900 dark:to-cyan-900',
-      'tech-bg6': 'from-purple-50 via-pink-50 to-fuchsia-50 dark:from-gray-900 dark:via-purple-900 dark:to-fuchsia-900',
+      'tech-bg6': 'from-amber-100 via-yellow-100 to-orange-100 dark:from-gray-900 dark:via-amber-900 dark:to-yellow-900', 
     };
-    return gradients[currentTheme] || gradients['tech-bg'];
-  };
+       };
 
   const getThemeName = () => {
     const names = {
