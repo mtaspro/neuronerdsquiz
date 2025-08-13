@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './EventShowdown.css';
 import soundManager from '../utils/soundUtils';
+import backgroundMusicFile from '../assets/The Neuronerds Showdown.mp3';
 
 const EventShowdown = ({ eventData }) => {
   const [timeLeft, setTimeLeft] = useState('');
@@ -35,29 +36,31 @@ const EventShowdown = ({ eventData }) => {
   }, [eventData?.endTime]);
 
   const toggleSound = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-        soundManager.stopBackgroundMusic();
-      } else {
-        audioRef.current.play();
-        soundManager.playBackgroundMusic();
-      }
-      setIsPlaying(!isPlaying);
+    if (isPlaying) {
+      soundManager.stopBackgroundMusic();
+      setIsPlaying(false);
+    } else {
+      soundManager.playBackgroundMusic();
+      setIsPlaying(true);
     }
   };
 
-  // Load event music when component mounts
+  // Load and auto-play event music when component mounts
   useEffect(() => {
     if (eventData?.isActive) {
-      soundManager.loadBackgroundMusic('/src/assets/The Neuronerds Showdown.mp3', 0.3);
+      soundManager.loadBackgroundMusic(backgroundMusicFile, 0.3);
+      // Auto-play background music when event is active
+      setTimeout(() => {
+        soundManager.playBackgroundMusic();
+        setIsPlaying(true);
+      }, 1000);
     }
   }, [eventData?.isActive]);
 
   return (
     <div className="event-showdown">
       <audio ref={audioRef} loop>
-        <source src="/src/assets/The Neuronerds Showdown.mp3" type="audio/mpeg" />
+        <source src={backgroundMusicFile} type="audio/mpeg" />
       </audio>
       
       <div className="hero-section">

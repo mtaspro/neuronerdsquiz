@@ -25,6 +25,7 @@ import { DarkModeProvider } from './contexts/DarkModeContext';
 import OnboardingTour from './components/OnboardingTour';
 import { useOnboarding } from './hooks/useOnboarding';
 import { MathProvider } from './components/MathText';
+import soundManager from './utils/soundUtils';
 
 // Optional Navbar
 import { useState } from "react";
@@ -284,6 +285,21 @@ function AppContent() {
     setShouldShowTour,
     markTutorialAsCompleted
   } = useOnboarding();
+
+  // Add global click listener to start background music on user interaction
+  React.useEffect(() => {
+    const handleUserInteraction = () => {
+      soundManager.startMusicOnInteraction();
+    };
+    
+    document.addEventListener('click', handleUserInteraction);
+    document.addEventListener('touchstart', handleUserInteraction);
+    
+    return () => {
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+    };
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">

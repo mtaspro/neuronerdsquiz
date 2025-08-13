@@ -51,10 +51,25 @@ class SoundManager {
   // Load background music
   loadBackgroundMusic(src, volume = 0.3) {
     try {
+      // Stop current music if playing
+      if (this.backgroundMusic) {
+        this.backgroundMusic.pause();
+      }
+      
       this.backgroundMusic = new Audio(src);
       this.backgroundMusic.volume = volume;
       this.backgroundMusic.loop = true;
       this.backgroundMusic.preload = 'auto';
+      
+      // Add event listeners for better control
+      this.backgroundMusic.addEventListener('canplaythrough', () => {
+        console.log('Background music loaded and ready');
+      });
+      
+      this.backgroundMusic.addEventListener('error', (e) => {
+        console.warn('Background music error:', e);
+      });
+      
     } catch (error) {
       console.warn('Failed to load background music', error);
     }
@@ -62,10 +77,26 @@ class SoundManager {
 
   // Play background music
   playBackgroundMusic() {
-    if (!this.musicEnabled || !this.backgroundMusic) return;
+    if (!this.musicEnabled || !this.backgroundMusic) {
+      console.log('Music disabled or not loaded');
+      return;
+    }
     
     try {
-      this.backgroundMusic.play().catch(e => console.warn('Background music play failed', e));
+      console.log('Attempting to play background music');
+      const playPromise = this.backgroundMusic.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log('Background music started successfully');
+          })
+          .catch(e => {
+            console.warn('Background music play failed - user interaction required:', e.message);
+            // Store that we want to play music, will start on next user interaction
+            this.pendingMusicPlay = true;
+          });
+      }
     } catch (error) {
       console.warn('Error playing background music', error);
     }
@@ -91,6 +122,14 @@ class SoundManager {
     }
     
     return this.musicEnabled;
+  }
+  
+  // Start music on user interaction (call this on any click/touch)
+  startMusicOnInteraction() {
+    if (this.pendingMusicPlay && this.musicEnabled && this.backgroundMusic) {
+      this.playBackgroundMusic();
+      this.pendingMusicPlay = false;
+    }
   }
 
   // Set volume for all sounds
