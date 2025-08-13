@@ -61,6 +61,9 @@ const getStandardCardStyle = () => ({
 });
 
 export default function BattleLeaderboardCard({ player, rank, index }) {
+  // Add safety check
+  if (!player) return null;
+  
   const isPremium = rank <= 5;
   const style = isPremium ? getPremiumCardStyle(rank) : getStandardCardStyle();
   

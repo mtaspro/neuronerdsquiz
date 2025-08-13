@@ -5,6 +5,9 @@ import { calculateDivision, getDivisionInfo, getChampionMultiplier } from '../ut
 import soundManager from '../utils/soundUtils';
 
 export default function QuizLeaderboardCard({ player, index }) {
+  // Add safety checks
+  if (!player) return null;
+  
   // Calculate user's division and stage
   const userStats = {
     totalQuizzes: player.totalQuizzes || 0,
@@ -12,7 +15,9 @@ export default function QuizLeaderboardCard({ player, index }) {
     streak: player.currentStreak || 0
   };
   
-  const { division, stage } = calculateDivision(userStats);
+  const divisionResult = calculateDivision(userStats);
+  const division = divisionResult?.division || 'AMATEUR';
+  const stage = divisionResult?.stage || 0;
   const divisionInfo = getDivisionInfo(division, stage);
   const championMultiplier = division === 'CHAMPION' ? getChampionMultiplier(userStats) : 1;
   
@@ -203,7 +208,7 @@ export default function QuizLeaderboardCard({ player, index }) {
             Progress
           </span>
           <span className={cardStyle.textColor === 'text-white' ? 'text-white/70' : 'text-gray-600'}>
-            {stage === 2 ? 'Max Stage' : `To ${divisionInfo.name} ${divisionInfo.stages[stage + 1] || 'I'}`}
+            {stage === 2 ? 'Max Stage' : `To ${divisionInfo.name} ${divisionInfo.stages && divisionInfo.stages[stage + 1] ? divisionInfo.stages[stage + 1] : 'I'}`}
           </span>
         </div>
         <div className="w-full bg-black/20 rounded-full h-2">

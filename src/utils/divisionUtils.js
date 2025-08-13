@@ -29,9 +29,12 @@ export function getDivisionInfo(division, stage) {
   const divisionData = DIVISIONS[division];
   if (!divisionData) return { name: 'Amateur', stage: 'III', gradient: DIVISIONS.AMATEUR.gradient };
   
+  // Ensure stage is a valid number and within bounds
+  const validStage = typeof stage === 'number' && stage >= 0 && stage <= 2 ? stage : 0;
+  
   return {
     name: divisionData.name,
-    stage: divisionData.stages[stage] || 'III',
+    stage: divisionData.stages && divisionData.stages[validStage] ? divisionData.stages[validStage] : 'III',
     gradient: divisionData.gradient,
     color: divisionData.color
   };
