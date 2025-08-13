@@ -25,8 +25,7 @@ const EventShowdown = ({ eventData }) => {
         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        const hundredths = Math.floor((distance % 1000) / 10);
-        setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s:${hundredths.toString().padStart(2, '0')}`);
+        setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
       } else {
         setTimeLeft('Event Ended');
       }
@@ -55,8 +54,6 @@ const EventShowdown = ({ eventData }) => {
     }
   }, [eventData?.isActive]);
 
-  const isOngoing = eventData?.status === 'ongoing';
-
   return (
     <div className="event-showdown">
       <audio ref={audioRef} loop>
@@ -65,7 +62,7 @@ const EventShowdown = ({ eventData }) => {
       
       <div className="hero-section">
         <h1 className="event-title">🔥 The NeuroNerds Showdown</h1>
-        <p className="event-subtitle">🏆 15 Days. Fierce Battles. Only One Winner.</p>
+        <p className="event-subtitle">🏆 Epic Battle Event. Compete for Glory!</p>
         
         <div className="sound-toggle" onClick={toggleSound}>
           🔊 {isPlaying ? 'Mute' : 'Epic Music'}
@@ -74,9 +71,9 @@ const EventShowdown = ({ eventData }) => {
 
       <div className="event-card">
         <div className="countdown-section">
-          <div className="timer">⏳ {timeLeft || '3 Days Left'}</div>
-          <div className={`status-tag ${isOngoing ? 'ongoing' : 'upcoming'}`}>
-            {isOngoing ? '🔥 Ongoing' : '🛡️ Upcoming'}
+          <div className="timer">⏳ Event Ends: {timeLeft || 'Loading...'}</div>
+          <div className="status-tag ongoing">
+            🔥 Live Event
           </div>
         </div>
         
