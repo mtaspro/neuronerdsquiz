@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './EventShowdown.css';
+import soundManager from '../utils/soundUtils';
 
 const EventShowdown = ({ eventData }) => {
   const [timeLeft, setTimeLeft] = useState('');
@@ -23,7 +24,9 @@ const EventShowdown = ({ eventData }) => {
         const days = Math.floor(distance / (1000 * 60 * 60 * 24));
         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        setTimeLeft(`${days}d ${hours}h ${minutes}m`);
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        const centiseconds = Math.floor((distance % 1000) / 10);
+        setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}.${centiseconds.toString().padStart(2, '0')}s`);
       } else {
         setTimeLeft('Event Ended');
       }
@@ -36,12 +39,21 @@ const EventShowdown = ({ eventData }) => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        soundManager.stopBackgroundMusic();
       } else {
         audioRef.current.play();
+        soundManager.playBackgroundMusic();
       }
       setIsPlaying(!isPlaying);
     }
   };
+
+  // Load event music when component mounts
+  useEffect(() => {
+    if (eventData?.isActive) {
+      soundManager.loadBackgroundMusic('/src/assets/The Neuronerds Showdown.mp3', 0.3);
+    }
+  }, [eventData?.isActive]);
 
   const isOngoing = eventData?.status === 'ongoing';
 

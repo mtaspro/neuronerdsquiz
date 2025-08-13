@@ -8,6 +8,7 @@ import useExamSecurity from "../hooks/useExamSecurity";
 import SecurityWarning from "../components/SecurityWarning";
 import SecurityInitModal from "../components/SecurityInitModal";
 import MathText from "../components/MathText";
+import soundManager from "../utils/soundUtils";
 import axios from "axios";
 
 export default function QuizPage() {
@@ -268,9 +269,12 @@ export default function QuizPage() {
       setAnswers(updatedAnswers);
       setSelectedOption(null);
       setWarning(false);
+      
       if (currentQuestionIndex === questions.length - 1) {
+        soundManager.play('quizComplete');
         handleSubmit(updatedAnswers);
       } else {
+        soundManager.play('questionNext');
         setCurrentQuestionIndex((i) => i + 1);
         setTimer(duration);
       }
@@ -336,6 +340,7 @@ export default function QuizPage() {
   };
 
   const handleOptionSelect = useCallback((idx) => {
+    soundManager.play('click');
     setSelectedOption(idx);
   }, []);
 
@@ -345,11 +350,15 @@ export default function QuizPage() {
     setAnswers(updatedAnswers);
     setSelectedOption(null);
     setWarning(false);
+    
     if (currentQuestionIndex === questions.length - 1) {
       // Submit quiz when on last question
+      soundManager.play('quizComplete');
       setTimeout(() => handleSubmit(updatedAnswers), 0);
       return;
     }
+    
+    soundManager.play('questionNext');
     setCurrentQuestionIndex((i) => i + 1);
     setTimer(duration);
   }, [answers, currentQuestionIndex, selectedOption, questions.length, duration]);

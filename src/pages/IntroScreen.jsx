@@ -40,6 +40,14 @@ export default function IntroScreen() {
   // Load user's effective theme (personal or global default)
   useEffect(() => {
     const loadTheme = async () => {
+      // First check localStorage for user's personal choice
+      const savedTheme = localStorage.getItem('selectedTheme');
+      if (savedTheme && themeVideos[savedTheme]) {
+        setCurrentTheme(savedTheme);
+        return;
+      }
+      
+      // If no personal choice, get from API
       const token = localStorage.getItem('authToken');
       if (token) {
         try {
@@ -53,17 +61,6 @@ export default function IntroScreen() {
           }
         } catch (error) {
           console.error('Error loading theme:', error);
-          // Fallback to localStorage
-          const savedTheme = localStorage.getItem('selectedTheme');
-          if (savedTheme && themeVideos[savedTheme]) {
-            setCurrentTheme(savedTheme);
-          }
-        }
-      } else {
-        // Not logged in, use localStorage
-        const savedTheme = localStorage.getItem('selectedTheme');
-        if (savedTheme && themeVideos[savedTheme]) {
-          setCurrentTheme(savedTheme);
         }
       }
     };
@@ -74,12 +71,10 @@ export default function IntroScreen() {
     const handleThemeChange = () => loadTheme();
     window.addEventListener('storage', handleThemeChange);
     window.addEventListener('themeChanged', handleThemeChange);
-    window.addEventListener('globalThemeChanged', handleThemeChange);
     
     return () => {
       window.removeEventListener('storage', handleThemeChange);
       window.removeEventListener('themeChanged', handleThemeChange);
-      window.removeEventListener('globalThemeChanged', handleThemeChange);
     };
   }, []);
 

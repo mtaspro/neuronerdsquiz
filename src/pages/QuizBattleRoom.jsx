@@ -9,6 +9,7 @@ import useExamSecurity from '../hooks/useExamSecurity';
 import SecurityWarning from '../components/SecurityWarning';
 import SecurityInitModal from '../components/SecurityInitModal';
 import MathText from '../components/MathText';
+import soundManager from '../utils/soundUtils';
 
 const QuizBattleRoom = () => {
   const { roomId } = useParams();
@@ -171,6 +172,12 @@ const QuizBattleRoom = () => {
           console.log('🏆 Battle ended:', data);
           setBattleEnded(true);
           setResults(data.results);
+          
+          // Play win/lose sound based on result
+          const currentUserResult = data.results.find(r => r.userId === userData._id);
+          const isWinner = currentUserResult && data.results[0].userId === userData._id;
+          soundManager.play(isWinner ? 'battleWin' : 'battleLose');
+          
           addNotification('battle-ended', 'Battle Complete!', 'The quiz battle has ended!');
           success('Battle completed! Check your results!');
           
@@ -260,6 +267,7 @@ const QuizBattleRoom = () => {
 
   const handleStartBattle = async () => {
     try {
+      soundManager.play('battleStart');
       let questionsToUse = [];
       
       // Try to fetch questions from the selected chapter
@@ -349,6 +357,7 @@ const QuizBattleRoom = () => {
     if (answered) return;
     // In battle mode, once an answer is selected, it cannot be changed
     if (selectedAnswer !== null) return;
+    soundManager.play('click');
     setSelectedAnswer(answerIndex);
   };
 
@@ -357,6 +366,9 @@ const QuizBattleRoom = () => {
 
     const isCorrect = selectedAnswer === questions[currentQuestion].correctAnswer;
     const finalTimeSpent = Date.now() - questionStartTime;
+
+    // Play sound based on answer
+    soundManager.play(isCorrect ? 'correctAnswer' : 'wrongAnswer');
 
     battleSocketHelpers.submitAnswer(
       roomId,
@@ -373,6 +385,7 @@ const QuizBattleRoom = () => {
 
   const handleNextQuestion = () => {
     if (currentQuestion < questions.length - 1) {
+      soundManager.play('questionNext');
       setCurrentQuestion(prev => prev + 1);
       setSelectedAnswer(null);
       setAnswered(false);

@@ -8,6 +8,8 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
 import { useNotification } from '../components/NotificationSystem';
 import SpectatorAccess from '../components/SpectatorAccess';
+import SoundToggle from '../components/SoundToggle';
+import soundManager from '../utils/soundUtils';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -146,9 +148,11 @@ const Dashboard = () => {
 
   const handleStartQuiz = () => {
     if (!selectedChapter) {
+      soundManager.play('error');
       alert('Please select a chapter to start the quiz.');
       return;
     }
+    soundManager.play('success');
     navigate('/quiz', { state: { chapter: selectedChapter } });
   };
 
@@ -229,6 +233,7 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="flex space-x-2">
+                <SoundToggle className="text-xs" />
                 <button
                   onClick={handleDeleteAccount}
                   className="bg-red-800 hover:bg-red-900 px-2 sm:px-4 py-2 rounded-lg transition-colors text-white text-xs sm:text-sm"
@@ -279,6 +284,7 @@ const Dashboard = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleStartQuiz}
+              onMouseEnter={() => soundManager.play('click')}
               className="start-quiz-btn bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 w-full"
             >
               <div className="flex items-center justify-center space-x-2">
@@ -291,7 +297,8 @@ const Dashboard = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/leaderboard')}
+              onClick={() => { soundManager.play('transition'); navigate('/leaderboard'); }}
+              onMouseEnter={() => soundManager.play('click')}
               className="leaderboard-link bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 w-full mt-4"
             >
               <div className="flex items-center justify-center space-x-2">
@@ -304,7 +311,8 @@ const Dashboard = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/badges')}
+              onClick={() => { soundManager.play('transition'); navigate('/badges'); }}
+              onMouseEnter={() => soundManager.play('click')}
               className="badges-link bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 w-full mt-4"
             >
               <div className="flex items-center justify-center space-x-2">
@@ -317,7 +325,8 @@ const Dashboard = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/profile/edit')}
+              onClick={() => { soundManager.play('transition'); navigate('/profile/edit'); }}
+              onMouseEnter={() => soundManager.play('click')}
               className="profile-section bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full mt-4"
             >
               <div className="flex items-center justify-center space-x-2">
@@ -330,7 +339,8 @@ const Dashboard = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/about')}
+              onClick={() => { soundManager.play('transition'); navigate('/about'); }}
+              onMouseEnter={() => soundManager.play('click')}
               className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 w-full mt-4"
             >
               <div className="flex items-center justify-center space-x-2">

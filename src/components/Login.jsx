@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { apiHelpers } from '../utils/api';
+import useTypingSound from '../hooks/useTypingSound';
+import soundManager from '../utils/soundUtils';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +15,7 @@ const Login = () => {
   const [serverError, setServerError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { handleKeyDown } = useTypingSound();
 
   const validateForm = () => {
     const newErrors = {};
@@ -42,6 +45,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    soundManager.play('formSubmit');
     setServerError('');
     if (!validateForm()) return;
     setIsLoading(true);
@@ -57,16 +61,19 @@ const Login = () => {
       console.log('Login response:', res.data);
 
       if (res.data && res.data.token && res.data.user) {
+        soundManager.play('success');
         localStorage.setItem('authToken', res.data.token);
         localStorage.setItem('userData', JSON.stringify(res.data.user));
         // Dispatch custom event to update navbar
         window.dispatchEvent(new Event('userAuthChange'));
         navigate('/dashboard');
       } else {
+        soundManager.play('error');
         setServerError('Invalid response from server.');
       }
     } catch (error) {
       console.error('Login error:', error);
+      soundManager.play('error');
       
       if (error.response && error.response.data && error.response.data.error) {
         setServerError(error.response.data.error);
@@ -142,6 +149,7 @@ const Login = () => {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
                 className={`appearance-none relative block w-full max-w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 text-sm leading-tight transition-colors ${
                   errors.email 
                     ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
@@ -166,6 +174,7 @@ const Login = () => {
                 required
                 value={formData.password}
                 onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
                 className={`appearance-none relative block w-full max-w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 text-sm leading-tight transition-colors ${
                   errors.password 
                     ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 

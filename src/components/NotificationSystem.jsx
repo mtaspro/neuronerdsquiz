@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaTimes, FaExclamationCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaTimes, FaExclamationCircle, FaTrophy } from 'react-icons/fa';
+import soundManager from '../utils/soundUtils';
 
 // Notification Context
 const NotificationContext = createContext();
@@ -25,6 +26,13 @@ export const NotificationProvider = ({ children }) => {
       duration: 5000,
       ...notification,
     };
+
+    // Play sound based on notification type
+    if (newNotification.type === 'badge' || newNotification.type === 'achievement') {
+      soundManager.play('badgeUnlock');
+    } else if (newNotification.type === 'levelUp') {
+      soundManager.play('levelUp');
+    }
 
     setNotifications(prev => [...prev, newNotification]);
 
@@ -63,6 +71,14 @@ export const NotificationProvider = ({ children }) => {
     return addNotification({ ...options, type: 'info', message });
   }, [addNotification]);
 
+  const badge = useCallback((message, options = {}) => {
+    return addNotification({ ...options, type: 'badge', message, duration: 8000 });
+  }, [addNotification]);
+
+  const levelUp = useCallback((message, options = {}) => {
+    return addNotification({ ...options, type: 'levelUp', message, duration: 8000 });
+  }, [addNotification]);
+
   const value = {
     notifications,
     addNotification,
@@ -72,6 +88,8 @@ export const NotificationProvider = ({ children }) => {
     error,
     warning,
     info,
+    badge,
+    levelUp,
   };
 
   return (
@@ -114,6 +132,20 @@ const Notification = ({ notification, onRemove }) => {
       borderColor: 'border-blue-200 dark:border-blue-800',
       iconColor: 'text-blue-500',
       textColor: 'text-blue-800 dark:text-blue-200',
+    },
+    badge: {
+      icon: FaTrophy,
+      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+      borderColor: 'border-purple-200 dark:border-purple-800',
+      iconColor: 'text-purple-500',
+      textColor: 'text-purple-800 dark:text-purple-200',
+    },
+    levelUp: {
+      icon: FaTrophy,
+      bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
+      borderColor: 'border-yellow-200 dark:border-yellow-800',
+      iconColor: 'text-yellow-500',
+      textColor: 'text-yellow-800 dark:text-yellow-200',
     },
   };
 
