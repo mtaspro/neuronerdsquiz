@@ -149,7 +149,7 @@ export default function QuizLeaderboardCard({ player, index }) {
         soundManager.play(division === 'CHAMPION' || division === 'LEGENDARY' ? 'premiumCard' : 'cardHover');
       }}
       className={`relative bg-cover bg-center bg-no-repeat rounded-2xl p-6 ${cardStyle.glow} ${cardStyle.border} overflow-hidden transform-gpu transition-all duration-300 hover:shadow-2xl cursor-pointer`}
-      style={division === 'WORLD_CLASS' ? { backgroundImage: `url(${worldClassCardBg})` } : division === 'LEGENDARY' ? { backgroundImage: `url(${legendaryCardBg})` } : division === 'PRO' ? { backgroundImage: `url(${proCardBg})` } : division === 'CHAMPION' ? { backgroundImage: `url(${championCardBg})` } : division === 'SEMI_PRO' ? { backgroundImage: `url(${semiProCardBg})` } : division === 'AMATEUR' ? { backgroundImage: `url(${amateurCardBg})` } : {}}
+      style={division === 'WORLD_CLASS' ? { backgroundImage: `url(${worldClassCardBg})`, filter: 'brightness(1.3) contrast(1.1)' } : division === 'LEGENDARY' ? { backgroundImage: `url(${legendaryCardBg})`, filter: 'brightness(1.3) contrast(1.1)' } : division === 'PRO' ? { backgroundImage: `url(${proCardBg})`, filter: 'brightness(1.3) contrast(1.1)' } : division === 'CHAMPION' ? { backgroundImage: `url(${championCardBg})`, filter: 'brightness(1.3) contrast(1.1)' } : division === 'SEMI_PRO' ? { backgroundImage: `url(${semiProCardBg})`, filter: 'brightness(1.3) contrast(1.1)' } : division === 'AMATEUR' ? { backgroundImage: `url(${amateurCardBg})`, filter: 'brightness(1.3) contrast(1.1)' } : {}}
     >
       {/* Animated effects for all divisions */}
       {/* Floating particles */}
