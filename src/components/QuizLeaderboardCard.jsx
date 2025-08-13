@@ -56,7 +56,7 @@ export default function QuizLeaderboardCard({ player, index }) {
     const baseStyle = {
       glow: 'shadow-lg',
       border: 'border-2',
-      shine: false
+      shine: true
     };
     
     switch (division) {
