@@ -8,27 +8,45 @@ const leaderboardRouter = express.Router();
 // GET /leaderboard/general - returns top 50 users with enhanced stats for division ranking
 leaderboardRouter.get('/leaderboard/general', async (req, res) => {
   try {
-    // Get user stats with populated user data
-    const userStats = await UserStats.find({ totalQuizzes: { $gt: 0 } })
+    // Get user stats with populated user data (including users with 0 quizzes)
+    const userStats = await UserStats.find({})
       .populate('userId', 'username avatar badges currentStreak bestScore')
-      .sort({ averageScore: -1 })
+      .sort({ averageScore: -1, totalQuizzes: -1 })
       .limit(50);
     
-    const enhancedUsers = userStats.map(stats => {
+    let enhancedUsers = userStats.map(stats => {
       const user = stats.userId;
       if (!user) return null;
       
       return {
         username: user.username,
         avatar: user.avatar,
-        score: Math.round(stats.averageScore),
-        totalQuizzes: stats.totalQuizzes,
-        averageScore: stats.averageScore,
+        score: Math.round(stats.averageScore || 0),
+        totalQuizzes: stats.totalQuizzes || 0,
+        averageScore: stats.averageScore || 0,
         currentStreak: user.currentStreak || 0,
         bestScore: user.bestScore || 0,
         badges: user.badges || stats.currentBadges || []
       };
     }).filter(user => user !== null);
+    
+    // If no users with quiz data, show all registered users as Amateur
+    if (enhancedUsers.length === 0) {
+      const allUsers = await User.find({})
+        .select('username avatar badges currentStreak bestScore')
+        .limit(50);
+      
+      enhancedUsers = allUsers.map(user => ({
+        username: user.username,
+        avatar: user.avatar,
+        score: 0,
+        totalQuizzes: 0,
+        averageScore: 0,
+        currentStreak: 0,
+        bestScore: 0,
+        badges: user.badges || []
+      }));
+    }
     
     res.json(enhancedUsers);
   } catch (err) {
