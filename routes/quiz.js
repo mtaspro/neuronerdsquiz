@@ -8,6 +8,7 @@ import UserQuestionRecord from '../models/UserQuestionRecord.js';
 import UserStats from '../models/UserStats.js';
 import BadgeService from '../services/badgeService.js';
 import authMiddleware from '../middleware/authMiddleware.js';
+import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 import crypto from 'crypto';
 
 const router = express.Router();
@@ -22,7 +23,7 @@ function generateQuizId(chapter, questions) {
 }
 
 // Get all active chapters (filtered by visibility and admin ownership)
-router.get('/chapters', authMiddleware, async (req, res) => {
+router.get('/chapters', sessionMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
     let filter = {};
@@ -127,7 +128,7 @@ router.get('/questions', async (req, res) => {
 });
 
 // Check if user has already attempted a quiz
-router.post('/check-attempt', authMiddleware, async (req, res) => {
+router.post('/check-attempt', sessionMiddleware, async (req, res) => {
   try {
     const { chapter, questions } = req.body;
     const userId = req.user.userId;
@@ -167,7 +168,7 @@ router.post('/check-attempt', authMiddleware, async (req, res) => {
 });
 
 // Submit quiz results
-router.post('/submit', authMiddleware, async (req, res) => {
+router.post('/submit', sessionMiddleware, async (req, res) => {
   try {
     const { 
       score, 
@@ -372,7 +373,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
 });
 
 // Get user's quiz history
-router.get('/my-history', authMiddleware, async (req, res) => {
+router.get('/my-history', sessionMiddleware, async (req, res) => {
   try {
     const userId = req.user.userId;
     const { chapter, limit = 10 } = req.query;
@@ -393,7 +394,7 @@ router.get('/my-history', authMiddleware, async (req, res) => {
 });
 
 // Get quiz statistics
-router.get('/stats', authMiddleware, async (req, res) => {
+router.get('/stats', sessionMiddleware, async (req, res) => {
   try {
     const userId = req.user.userId;
     
