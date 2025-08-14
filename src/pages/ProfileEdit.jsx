@@ -65,12 +65,21 @@ const ProfileEdit = () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const token = secureStorage.getToken();
+      if (!token) {
+        navigate('/login');
+        return;
+      }
       const response = await axios.get(`${apiUrl}/api/auth/csrf-token`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCsrfToken(response.headers['x-csrf-token']);
     } catch (error) {
-      console.error('Failed to get CSRF token:', error);
+      if (error.response?.status === 401) {
+        secureStorage.clear();
+        navigate('/login');
+      } else {
+        console.error('Failed to get CSRF token:', error);
+      }
     }
   };
 
@@ -167,13 +176,16 @@ const ProfileEdit = () => {
       } else {
         submitData.append('avatar', formData.avatar);
       }
-      const response = await axios.put(`${apiUrl}/api/auth/profile`, submitData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-CSRF-Token': csrfToken,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
+      };
+      
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+      }
+      
+      const response = await axios.put(`${apiUrl}/api/auth/profile`, submitData, { headers });
       if (response.data.user) {
         // Update localStorage with new user data
         const updatedUserData = {

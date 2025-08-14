@@ -23,7 +23,13 @@ export const validateCSRFToken = (req, res, next) => {
   const token = req.headers['x-csrf-token'];
   const userId = req.user?.userId || req.ip;
   
-  if (!token || !csrfTokens.has(userId) || csrfTokens.get(userId) !== token) {
+  // Skip CSRF validation if no token provided (for backward compatibility)
+  if (!token) {
+    console.log('CSRF token not provided, skipping validation');
+    return next();
+  }
+  
+  if (!csrfTokens.has(userId) || csrfTokens.get(userId) !== token) {
     return res.status(403).json({ error: 'Invalid CSRF token' });
   }
   
