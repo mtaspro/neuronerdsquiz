@@ -1,12 +1,13 @@
 import express from 'express';
 import authMiddleware from '../middleware/authMiddleware.js';
+import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 import User from '../models/User.js';
 import GlobalSettings from '../models/GlobalSettings.js';
 
 const router = express.Router();
 
 // Get user's effective theme (personal or global default)
-router.get('/current', authMiddleware, async (req, res) => {
+router.get('/current', sessionMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
     
@@ -26,7 +27,7 @@ router.get('/current', authMiddleware, async (req, res) => {
 });
 
 // Set user's personal theme
-router.post('/set', authMiddleware, async (req, res) => {
+router.post('/set', sessionMiddleware, async (req, res) => {
   try {
     const { theme } = req.body;
     

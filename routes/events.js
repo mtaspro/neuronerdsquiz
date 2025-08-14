@@ -1,5 +1,6 @@
 import express from 'express';
 import authMiddleware, { requireAdmin, requireSuperAdmin } from '../middleware/authMiddleware.js';
+import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 import BattleEvent from '../models/BattleEvent.js';
 import UserScore from '../models/UserScore.js';
 
@@ -20,7 +21,7 @@ router.get('/current', async (req, res) => {
 });
 
 // Create new battle event (SuperAdmin only)
-router.post('/create', authMiddleware, requireSuperAdmin, async (req, res) => {
+router.post('/create', sessionMiddleware, requireSuperAdmin, async (req, res) => {
   try {
     const { title, description, prizeAmount, startDate, endDate } = req.body;
     
@@ -41,7 +42,7 @@ router.post('/create', authMiddleware, requireSuperAdmin, async (req, res) => {
 });
 
 // End event and declare winner (SuperAdmin only)
-router.post('/:id/end', authMiddleware, requireSuperAdmin, async (req, res) => {
+router.post('/:id/end', sessionMiddleware, requireSuperAdmin, async (req, res) => {
   try {
     const event = await BattleEvent.findById(req.params.id);
     if (!event) {

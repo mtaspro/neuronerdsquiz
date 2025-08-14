@@ -1,5 +1,6 @@
 import express from 'express';
 import authMiddleware, { requireAdmin } from '../middleware/authMiddleware.js';
+import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 import User from '../models/User.js';
 import UserScore from '../models/UserScore.js';
 import Quiz from '../models/Quiz.js';
@@ -15,19 +16,19 @@ import axios from 'axios';
 const router = express.Router();
 
 // List all users
-router.get('/users', authMiddleware, requireAdmin, async (req, res) => {
+router.get('/users', sessionMiddleware, requireAdmin, async (req, res) => {
   const users = await User.find({}, '-password');
   res.json(users);
 });
 
 // List all subjects
-router.get('/subjects', authMiddleware, requireAdmin, async (req, res) => {
+router.get('/subjects', sessionMiddleware, requireAdmin, async (req, res) => {
   const subjects = await Subject.find().sort('order');
   res.json(subjects);
 });
 
 // Add a new subject
-router.post('/subjects', authMiddleware, requireAdmin, async (req, res) => {
+router.post('/subjects', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const subject = new Subject(req.body);
     await subject.save();
@@ -42,7 +43,7 @@ router.post('/subjects', authMiddleware, requireAdmin, async (req, res) => {
 });
 
 // Edit a subject
-router.put('/subjects/:id', authMiddleware, requireAdmin, async (req, res) => {
+router.put('/subjects/:id', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const subject = await Subject.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!subject) {
@@ -59,7 +60,7 @@ router.put('/subjects/:id', authMiddleware, requireAdmin, async (req, res) => {
 });
 
 // Delete a subject
-router.delete('/subjects/:id', authMiddleware, requireAdmin, async (req, res) => {
+router.delete('/subjects/:id', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const subject = await Subject.findByIdAndDelete(req.params.id);
     if (!subject) {
@@ -78,7 +79,7 @@ router.delete('/subjects/:id', authMiddleware, requireAdmin, async (req, res) =>
 });
 
 // Reset a user's score and stats
-router.post('/users/:id/reset-score', authMiddleware, requireAdmin, async (req, res) => {
+router.post('/users/:id/reset-score', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
     
@@ -119,7 +120,7 @@ router.post('/users/:id/reset-score', authMiddleware, requireAdmin, async (req, 
 });
 
 // Request user deletion (creates request for SuperAdmin approval)
-router.post('/users/:id/request-deletion', authMiddleware, requireAdmin, async (req, res) => {
+router.post('/users/:id/request-deletion', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
     const { reason } = req.body;
@@ -157,7 +158,7 @@ router.post('/users/:id/request-deletion', authMiddleware, requireAdmin, async (
 });
 
 // Request user score reset (creates request for SuperAdmin approval)
-router.post('/users/:id/request-score-reset', authMiddleware, requireAdmin, async (req, res) => {
+router.post('/users/:id/request-score-reset', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
     const { reason } = req.body;
@@ -191,7 +192,7 @@ router.post('/users/:id/request-score-reset', authMiddleware, requireAdmin, asyn
 });
 
 // List all chapters (all chapters visible in manage section)
-router.get('/chapters', authMiddleware, requireAdmin, async (req, res) => {
+router.get('/chapters', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const currentUserId = req.user.userId;
     const chapters = await Chapter.find().sort('order').populate('createdBy', 'username');
@@ -209,7 +210,7 @@ router.get('/chapters', authMiddleware, requireAdmin, async (req, res) => {
 });
 
 // Add a new chapter
-router.post('/chapters', authMiddleware, requireAdmin, async (req, res) => {
+router.post('/chapters', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     // Drop unique index if it exists
     try {
@@ -234,7 +235,7 @@ router.post('/chapters', authMiddleware, requireAdmin, async (req, res) => {
 });
 
 // Edit a chapter (only if created by current admin)
-router.put('/chapters/:id', authMiddleware, requireAdmin, async (req, res) => {
+router.put('/chapters/:id', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const currentUserId = req.user.userId;
     const chapter = await Chapter.findById(req.params.id);
@@ -257,7 +258,7 @@ router.put('/chapters/:id', authMiddleware, requireAdmin, async (req, res) => {
 });
 
 // Delete a chapter (only if created by current admin)
-router.delete('/chapters/:id', authMiddleware, requireAdmin, async (req, res) => {
+router.delete('/chapters/:id', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const currentUserId = req.user.userId;
     const chapter = await Chapter.findById(req.params.id);
@@ -281,7 +282,7 @@ router.delete('/chapters/:id', authMiddleware, requireAdmin, async (req, res) =>
 });
 
 // List all questions (filtered by chapter admin visibility)
-router.get('/questions', authMiddleware, requireAdmin, async (req, res) => {
+router.get('/questions', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const currentUserId = req.user.userId;
     
@@ -309,7 +310,7 @@ router.get('/questions', authMiddleware, requireAdmin, async (req, res) => {
 });
 
 // Add a new question
-router.post('/questions', authMiddleware, requireAdmin, async (req, res) => {
+router.post('/questions', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const questionData = {
       ...req.body,
@@ -325,7 +326,7 @@ router.post('/questions', authMiddleware, requireAdmin, async (req, res) => {
 });
 
 // Add multiple questions in bulk
-router.post('/questions/bulk', authMiddleware, requireAdmin, async (req, res) => {
+router.post('/questions/bulk', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const { questions } = req.body;
     
@@ -351,7 +352,7 @@ router.post('/questions/bulk', authMiddleware, requireAdmin, async (req, res) =>
 });
 
 // Edit a question (only if created by current admin)
-router.put('/questions/:id', authMiddleware, requireAdmin, async (req, res) => {
+router.put('/questions/:id', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const currentUserId = req.user.userId;
     const question = await Quiz.findById(req.params.id);
@@ -372,7 +373,7 @@ router.put('/questions/:id', authMiddleware, requireAdmin, async (req, res) => {
 });
 
 // Delete a question (only if created by current admin)
-router.delete('/questions/:id', authMiddleware, requireAdmin, async (req, res) => {
+router.delete('/questions/:id', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const currentUserId = req.user.userId;
     const question = await Quiz.findById(req.params.id);
@@ -393,7 +394,7 @@ router.delete('/questions/:id', authMiddleware, requireAdmin, async (req, res) =
 });
 
 // Parse bulk questions using regex fallback
-router.post('/parse-bulk-questions', authMiddleware, requireAdmin, async (req, res) => {
+router.post('/parse-bulk-questions', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const { bulkText } = req.body;
     
@@ -452,7 +453,7 @@ router.post('/parse-bulk-questions', authMiddleware, requireAdmin, async (req, r
 });
 
 // Get quiz configurations
-router.get('/quiz-configs', authMiddleware, requireAdmin, async (req, res) => {
+router.get('/quiz-configs', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const configs = await QuizConfig.find();
     res.json(configs);
@@ -463,7 +464,7 @@ router.get('/quiz-configs', authMiddleware, requireAdmin, async (req, res) => {
 });
 
 // Update quiz configuration
-router.put('/quiz-configs/:chapterId', authMiddleware, requireAdmin, async (req, res) => {
+router.put('/quiz-configs/:chapterId', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const { chapterId } = req.params;
     const { examQuestions, battleQuestions } = req.body;
@@ -501,7 +502,7 @@ router.put('/quiz-configs/:chapterId', authMiddleware, requireAdmin, async (req,
 });
 
 // Request quiz leaderboard reset (creates request for SuperAdmin approval)
-router.post('/leaderboard/request-quiz-reset', authMiddleware, requireAdmin, async (req, res) => {
+router.post('/leaderboard/request-quiz-reset', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const { reason } = req.body;
     
@@ -527,7 +528,7 @@ router.post('/leaderboard/request-quiz-reset', authMiddleware, requireAdmin, asy
 });
 
 // Request battle leaderboard reset (creates request for SuperAdmin approval)
-router.post('/leaderboard/request-battle-reset', authMiddleware, requireAdmin, async (req, res) => {
+router.post('/leaderboard/request-battle-reset', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const { reason } = req.body;
     
@@ -553,7 +554,7 @@ router.post('/leaderboard/request-battle-reset', authMiddleware, requireAdmin, a
 });
 
 // Request full leaderboard reset (creates request for SuperAdmin approval) - Legacy endpoint
-router.post('/leaderboard/request-reset', authMiddleware, requireAdmin, async (req, res) => {
+router.post('/leaderboard/request-reset', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const { reason } = req.body;
     

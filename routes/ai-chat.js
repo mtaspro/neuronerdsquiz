@@ -1,6 +1,7 @@
 import express from 'express';
 import axios from 'axios';
 import authMiddleware from '../middleware/authMiddleware.js';
+import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 import ChatHistory from '../models/ChatHistory.js';
 const router = express.Router();
 
@@ -169,7 +170,7 @@ router.post('/', async (req, res) => {
 });
 
 // Save chat history
-router.post('/save-history', authMiddleware, async (req, res) => {
+router.post('/save-history', sessionMiddleware, async (req, res) => {
   try {
     const { chatId, messages } = req.body;
     const userId = req.user.userId;
@@ -204,7 +205,7 @@ router.post('/save-history', authMiddleware, async (req, res) => {
 });
 
 // Get chat history
-router.get('/history', authMiddleware, async (req, res) => {
+router.get('/history', sessionMiddleware, async (req, res) => {
   try {
     const userId = req.user.userId;
     
@@ -222,7 +223,7 @@ router.get('/history', authMiddleware, async (req, res) => {
 });
 
 // Get chat history list
-router.get('/history-list', authMiddleware, async (req, res) => {
+router.get('/history-list', sessionMiddleware, async (req, res) => {
   try {
     const userId = req.user.userId;
     
@@ -246,7 +247,7 @@ router.get('/history-list', authMiddleware, async (req, res) => {
 });
 
 // Get specific chat history
-router.get('/history/:chatId', authMiddleware, async (req, res) => {
+router.get('/history/:chatId', sessionMiddleware, async (req, res) => {
   try {
     const userId = req.user.userId;
     const { chatId } = req.params;
@@ -265,7 +266,7 @@ router.get('/history/:chatId', authMiddleware, async (req, res) => {
 });
 
 // Clear chat history
-router.delete('/history', authMiddleware, async (req, res) => {
+router.delete('/history', sessionMiddleware, async (req, res) => {
   try {
     const userId = req.user.userId;
     

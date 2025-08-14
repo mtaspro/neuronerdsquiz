@@ -1,5 +1,6 @@
 import express from 'express';
 import authMiddleware, { requireSuperAdmin } from '../middleware/authMiddleware.js';
+import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 import AdminRequest from '../models/AdminRequest.js';
 import User from '../models/User.js';
 import UserScore from '../models/UserScore.js';
@@ -29,7 +30,7 @@ router.get('/showdown-event', async (req, res) => {
 });
 
 // Get all pending requests
-router.get('/requests', authMiddleware, requireSuperAdmin, async (req, res) => {
+router.get('/requests', sessionMiddleware, requireSuperAdmin, async (req, res) => {
   try {
     const requests = await AdminRequest.find({ status: 'PENDING' })
       .populate('requestedBy', 'username email')
@@ -44,7 +45,7 @@ router.get('/requests', authMiddleware, requireSuperAdmin, async (req, res) => {
 });
 
 // Get all requests (with history)
-router.get('/requests/all', authMiddleware, requireSuperAdmin, async (req, res) => {
+router.get('/requests/all', sessionMiddleware, requireSuperAdmin, async (req, res) => {
   try {
     const requests = await AdminRequest.find()
       .populate('requestedBy', 'username email')
@@ -60,7 +61,7 @@ router.get('/requests/all', authMiddleware, requireSuperAdmin, async (req, res) 
 });
 
 // Approve/Reject request
-router.post('/requests/:id/review', authMiddleware, requireSuperAdmin, async (req, res) => {
+router.post('/requests/:id/review', sessionMiddleware, requireSuperAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { action, notes } = req.body; // action: 'APPROVE' or 'REJECT'
@@ -200,7 +201,7 @@ async function executeLeaderboardReset() {
 }
 
 // Set global default theme
-router.post('/set-global-theme', authMiddleware, requireSuperAdmin, async (req, res) => {
+router.post('/set-global-theme', sessionMiddleware, requireSuperAdmin, async (req, res) => {
   try {
     const { theme } = req.body;
     
@@ -222,7 +223,7 @@ router.post('/set-global-theme', authMiddleware, requireSuperAdmin, async (req, 
 });
 
 // Get global settings
-router.get('/global-settings', authMiddleware, requireSuperAdmin, async (req, res) => {
+router.get('/global-settings', sessionMiddleware, requireSuperAdmin, async (req, res) => {
   try {
     const settings = await GlobalSettings.find().populate('updatedBy', 'username');
     res.json(settings);
@@ -233,7 +234,7 @@ router.get('/global-settings', authMiddleware, requireSuperAdmin, async (req, re
 });
 
 // Start Neuronerds Showdown event
-router.post('/start-showdown-event', authMiddleware, requireSuperAdmin, async (req, res) => {
+router.post('/start-showdown-event', sessionMiddleware, requireSuperAdmin, async (req, res) => {
   try {
     const { endTime } = req.body;
     
@@ -269,7 +270,7 @@ router.post('/start-showdown-event', authMiddleware, requireSuperAdmin, async (r
 });
 
 // End Neuronerds Showdown event
-router.post('/end-showdown-event', authMiddleware, requireSuperAdmin, async (req, res) => {
+router.post('/end-showdown-event', sessionMiddleware, requireSuperAdmin, async (req, res) => {
   try {
     await GlobalSettings.findOneAndUpdate(
       { settingKey: 'showdownEvent' },

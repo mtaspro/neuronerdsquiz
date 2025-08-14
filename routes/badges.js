@@ -1,6 +1,7 @@
 import express from 'express';
 import BadgeService from '../services/badgeService.js';
 import authMiddleware from '../middleware/authMiddleware.js';
+import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 import UserStats from '../models/UserStats.js';
 import Badge from '../models/Badge.js';
 
@@ -30,7 +31,7 @@ router.get('/all', async (req, res) => {
 });
 
 // Get user's current badges
-router.get('/user/:userId', authMiddleware, async (req, res) => {
+router.get('/user/:userId', sessionMiddleware, async (req, res) => {
   try {
     const { userId } = req.params;
     const badges = await badgeService.getUserBadges(userId);
@@ -42,7 +43,7 @@ router.get('/user/:userId', authMiddleware, async (req, res) => {
 });
 
 // Get current user's badges
-router.get('/my-badges', authMiddleware, async (req, res) => {
+router.get('/my-badges', sessionMiddleware, async (req, res) => {
   try {
     const badges = await badgeService.getUserBadges(req.user.userId);
     res.json(badges);
@@ -53,7 +54,7 @@ router.get('/my-badges', authMiddleware, async (req, res) => {
 });
 
 // Get user's stats and badge history
-router.get('/stats/:userId', authMiddleware, async (req, res) => {
+router.get('/stats/:userId', sessionMiddleware, async (req, res) => {
   try {
     const { userId } = req.params;
     const userStats = await UserStats.findOne({ userId });
@@ -94,7 +95,7 @@ router.get('/stats/:userId', authMiddleware, async (req, res) => {
 });
 
 // Get current user's stats
-router.get('/my-stats', authMiddleware, async (req, res) => {
+router.get('/my-stats', sessionMiddleware, async (req, res) => {
   try {
     const userStats = await UserStats.findOne({ userId: req.user.userId });
     
@@ -148,7 +149,7 @@ router.get('/leaderboard/:badgeName', async (req, res) => {
 });
 
 // Manually recalculate all badges (admin only)
-router.post('/recalculate', authMiddleware, async (req, res) => {
+router.post('/recalculate', sessionMiddleware, async (req, res) => {
   try {
     // Check if user is admin (you might want to add admin middleware)
     const notifications = await badgeService.recalculateAllBadges();
@@ -163,7 +164,7 @@ router.post('/recalculate', authMiddleware, async (req, res) => {
 });
 
 // Update user stats after quiz (internal endpoint)
-router.post('/update-quiz-stats', authMiddleware, async (req, res) => {
+router.post('/update-quiz-stats', sessionMiddleware, async (req, res) => {
   try {
     const { userId, score, totalQuestions, correctAnswers, timeSpent } = req.body;
     
@@ -183,7 +184,7 @@ router.post('/update-quiz-stats', authMiddleware, async (req, res) => {
 });
 
 // Update battle stats (internal endpoint)
-router.post('/update-battle-stats', authMiddleware, async (req, res) => {
+router.post('/update-battle-stats', sessionMiddleware, async (req, res) => {
   try {
     const { userId, won, score, timeSpent } = req.body;
     

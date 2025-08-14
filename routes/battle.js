@@ -1,5 +1,6 @@
 import express from 'express';
 import authMiddleware from '../middleware/authMiddleware.js';
+import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 
 const router = express.Router();
 
@@ -7,7 +8,7 @@ const router = express.Router();
 let activeBattleRoom = null;
 
 // Create battle room (admin only)
-router.post('/create', authMiddleware, async (req, res) => {
+router.post('/create', sessionMiddleware, async (req, res) => {
   try {
     const { roomId, chapter } = req.body;
     
@@ -37,7 +38,7 @@ router.get('/active', (req, res) => {
 });
 
 // Start battle (mark as started)
-router.post('/start', authMiddleware, (req, res) => {
+router.post('/start', sessionMiddleware, (req, res) => {
   try {
     const { roomId } = req.body;
     
@@ -60,7 +61,7 @@ router.post('/start', authMiddleware, (req, res) => {
 });
 
 // Close battle room
-router.post('/close', authMiddleware, (req, res) => {
+router.post('/close', sessionMiddleware, (req, res) => {
   try {
     if (!req.user.isAdmin) {
       return res.status(403).json({ error: 'Only admins can close battle rooms' });
