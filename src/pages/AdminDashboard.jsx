@@ -44,7 +44,6 @@ export default function AdminDashboard() {
         
         setLoading(false);
       } catch (err) {
-        console.error('AdminDashboard - Access Check Error:', err);
         // Clear auth data on any error
         localStorage.removeItem('authToken');
         localStorage.removeItem('userData');
@@ -90,13 +89,11 @@ export default function AdminDashboard() {
       
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        console.log('AdminDashboard - API URL:', apiUrl);
         
         // First validate the token
         const validationResponse = await axios.get(`${apiUrl}/api/auth/validate`, { 
           headers: authHeader() 
         });
-        console.log('AdminDashboard - Token validation response:', validationResponse.data);
         
         if (!validationResponse.data.valid) {
           throw new Error('Invalid token');
@@ -111,7 +108,6 @@ export default function AdminDashboard() {
         });
         setUsers(response.data);
       } catch (err) {
-        console.error('AdminDashboard - Error:', err.response || err);
         const errorMessage = err.response?.data?.error || err.message || 'Failed to load users';
         setError(errorMessage);
         
@@ -144,7 +140,6 @@ export default function AdminDashboard() {
         });
         setSubjects(response.data);
       } catch (err) {
-        console.error('AdminDashboard - Subjects Error:', err.response || err);
         const errorMessage = err.response?.data?.error || err.message || 'Failed to load subjects';
         setError(errorMessage);
         
@@ -176,7 +171,6 @@ export default function AdminDashboard() {
         });
         setChapters(response.data);
       } catch (err) {
-        console.error('AdminDashboard - Chapters Error:', err.response || err);
         const errorMessage = err.response?.data?.error || err.message || 'Failed to load chapters';
         setError(errorMessage);
         
@@ -208,7 +202,6 @@ export default function AdminDashboard() {
         });
         setQuestions(response.data);
       } catch (err) {
-        console.error('AdminDashboard - Questions Error:', err.response || err);
         const errorMessage = err.response?.data?.error || err.message || 'Failed to load questions';
         setError(errorMessage);
         
@@ -240,7 +233,6 @@ export default function AdminDashboard() {
         });
         setQuizConfigs(response.data);
       } catch (err) {
-        console.error('AdminDashboard - Quiz Configs Error:', err.response || err);
         const errorMessage = err.response?.data?.error || err.message || 'Failed to load quiz configs';
         setError(errorMessage);
         
