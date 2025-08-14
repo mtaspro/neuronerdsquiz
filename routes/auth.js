@@ -4,9 +4,12 @@ import bcrypt from 'bcrypt';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import User from '../models/User.js';
 import UserScore from '../models/UserScore.js';
+import UserSession from '../models/UserSession.js';
 import authMiddleware from '../middleware/authMiddleware.js';
+import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 import { generateCSRFToken, validateCSRFToken } from '../middleware/csrfMiddleware.js';
 
 const router = express.Router();
@@ -104,9 +107,15 @@ router.post('/register', async (req, res) => {
       return res.status(500).json({ error: 'Server configuration error.' });
     }
 
-    const token = jwt.sign({ userId: user._id, email: user.email, isAdmin: user.isAdmin, isSuperAdmin: user.isSuperAdmin }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    // Create session in MongoDB
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    const session = new UserSession({
+      userId: user._id,
+      sessionToken
+    });
+    await session.save();
     
-    // Return both token and user data (excluding password)
+    // Return session token and user data (excluding password)
     const userData = {
       _id: user._id,
       email: user.email,
@@ -117,7 +126,7 @@ router.post('/register', async (req, res) => {
     };
     
     console.log('Registration successful for user:', email);
-    res.status(201).json({ token, user: userData });
+    res.status(201).json({ token: sessionToken, user: userData });
   } catch (err) {
     console.error('Registration error:', err);
     console.error('Error details:', err.message);
@@ -150,9 +159,15 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
-    const token = jwt.sign({ userId: user._id, email: user.email, isAdmin: user.isAdmin, isSuperAdmin: user.isSuperAdmin }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    // Create session in MongoDB
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    const session = new UserSession({
+      userId: user._id,
+      sessionToken
+    });
+    await session.save();
     
-    // Return both token and user data (excluding password)
+    // Return session token and user data (excluding password)
     const userData = {
       _id: user._id,
       email: user.email,
@@ -163,15 +178,15 @@ router.post('/login', async (req, res) => {
     };
     
     console.log('Login successful for user:', email);
-    res.json({ token, user: userData });
+    res.json({ token: sessionToken, user: userData });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Login failed.' });
   }
 });
 
-// Validate token and user existence - CRITICAL SECURITY ENDPOINT
-router.get('/validate', authMiddleware, async (req, res) => {
+// Validate session and user existence - CRITICAL SECURITY ENDPOINT
+router.get('/validate', sessionMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('-password');
     
@@ -218,7 +233,7 @@ router.get('/validate', authMiddleware, async (req, res) => {
 });
 
 // Sample protected route
-router.get('/me', authMiddleware, async (req, res) => {
+router.get('/me', sessionMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('-password');
     if (!user) {
@@ -244,12 +259,12 @@ router.get('/me', authMiddleware, async (req, res) => {
 });
 
 // Get CSRF token
-router.get('/csrf-token', authMiddleware, generateCSRFToken, (req, res) => {
+router.get('/csrf-token', sessionMiddleware, generateCSRFToken, (req, res) => {
   res.json({ message: 'CSRF token generated' });
 });
 
 // Profile update route
-router.put('/profile', authMiddleware, validateCSRFToken, upload.single('profilePicture'), async (req, res) => {
+router.put('/profile', sessionMiddleware, validateCSRFToken, upload.single('profilePicture'), async (req, res) => {
   try {
     const { username, email, currentPassword, newPassword, avatar } = req.body;
     const userId = req.user.userId;
@@ -368,8 +383,19 @@ router.put('/profile', authMiddleware, validateCSRFToken, upload.single('profile
   }
 });
 
+// Logout route
+router.post('/logout', sessionMiddleware, async (req, res) => {
+  try {
+    const sessionToken = req.headers.authorization?.replace('Bearer ', '');
+    await UserSession.deleteOne({ sessionToken });
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Logout failed' });
+  }
+});
+
 // Delete account route - allows users to delete their own account
-router.delete('/delete-account', authMiddleware, async (req, res) => {
+router.delete('/delete-account', sessionMiddleware, async (req, res) => {
   try {
     const userId = req.user.userId;
     

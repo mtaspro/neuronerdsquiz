@@ -1,53 +1,35 @@
-// Secure storage utility to mitigate XSS risks
+// Simple session storage for MongoDB-based sessions
 class SecureStorage {
-  constructor() {
-    this.memoryStorage = new Map();
-  }
-
-  // Store token in memory (more secure than localStorage)
+  // Store session token
   setToken(token) {
-    this.memoryStorage.set('authToken', token);
-    // Also set a flag in localStorage to track login state (without sensitive data)
-    localStorage.setItem('isLoggedIn', 'true');
+    sessionStorage.setItem('sessionToken', token);
   }
 
-  // Get token from memory
+  // Get session token
   getToken() {
-    return this.memoryStorage.get('authToken');
+    return sessionStorage.getItem('sessionToken');
   }
 
-  // Store user data (non-sensitive parts only in localStorage)
+  // Store user data
   setUserData(userData) {
-    // Store non-sensitive data in localStorage
-    const safeUserData = {
-      id: userData.id,
-      username: userData.username,
-      isAdmin: userData.isAdmin,
-      isSuperAdmin: userData.isSuperAdmin
-    };
-    localStorage.setItem('userData', JSON.stringify(safeUserData));
-    
-    // Store full data in memory
-    this.memoryStorage.set('fullUserData', userData);
+    sessionStorage.setItem('userData', JSON.stringify(userData));
   }
 
   // Get user data
   getUserData() {
-    return this.memoryStorage.get('fullUserData') || 
-           JSON.parse(localStorage.getItem('userData') || 'null');
+    const data = sessionStorage.getItem('userData');
+    return data ? JSON.parse(data) : null;
   }
 
-  // Clear all auth data
+  // Clear all data
   clear() {
-    this.memoryStorage.clear();
-    localStorage.removeItem('authToken'); // Remove any legacy tokens
-    localStorage.removeItem('userData');
-    localStorage.removeItem('isLoggedIn');
+    sessionStorage.removeItem('sessionToken');
+    sessionStorage.removeItem('userData');
   }
 
   // Check if user is logged in
   isLoggedIn() {
-    return this.memoryStorage.has('authToken') || localStorage.getItem('isLoggedIn') === 'true';
+    return !!this.getToken();
   }
 }
 
