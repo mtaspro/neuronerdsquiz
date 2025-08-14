@@ -187,12 +187,13 @@ const ProfileEdit = () => {
       
       const response = await axios.put(`${apiUrl}/api/auth/profile`, submitData, { headers });
       if (response.data.user) {
-        // Update localStorage with new user data
+        // Update secureStorage with new user data
+        const currentUserData = secureStorage.getUserData() || {};
         const updatedUserData = {
-          ...JSON.parse(localStorage.getItem('userData') || '{}'),
+          ...currentUserData,
           ...response.data.user
         };
-        localStorage.setItem('userData', JSON.stringify(updatedUserData));
+        secureStorage.setUserData(updatedUserData);
         setSuccessMessage('Profile updated successfully!');
         // Clear password fields
         setFormData(prev => ({
@@ -219,7 +220,7 @@ const ProfileEdit = () => {
 
   // Handle image load error with fallback
   const handleImageError = (e) => {
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const userData = secureStorage.getUserData() || {};
     e.target.src = getFallbackAvatar(userData.username || 'User');
   };
 

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { apiHelpers } from '../utils/api';
 import useTypingSound from '../hooks/useTypingSound';
 import soundManager from '../utils/soundUtils';
+import { secureStorage } from '../utils/secureStorage.js';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -62,8 +63,8 @@ const Login = () => {
 
       if (res.data && res.data.token && res.data.user) {
         soundManager.play('success');
-        localStorage.setItem('authToken', res.data.token);
-        localStorage.setItem('userData', JSON.stringify(res.data.user));
+        secureStorage.setToken(res.data.token);
+        secureStorage.setUserData(res.data.user);
         // Dispatch custom event to update navbar
         window.dispatchEvent(new Event('userAuthChange'));
         navigate('/dashboard');

@@ -26,6 +26,7 @@ import OnboardingTour from './components/OnboardingTour';
 import { useOnboarding } from './hooks/useOnboarding';
 import { MathProvider } from './components/MathText';
 import soundManager from './utils/soundUtils';
+import { secureStorage } from './utils/secureStorage.js';
 
 // Optional Navbar
 import { useState } from "react";
@@ -51,15 +52,14 @@ function Navbar() {
   
   React.useEffect(() => {
     function checkAuth() {
-      const userData = localStorage.getItem('userData');
-      const token = localStorage.getItem('authToken');
+      const userData = secureStorage.getUserData();
+      const token = secureStorage.getToken();
       
       if (userData && token) {
         try {
-          const user = JSON.parse(userData);
           setIsAuthenticated(true);
-          setIsAdmin(user.isAdmin === true);
-          setIsSuperAdmin(user.isSuperAdmin === true);
+          setIsAdmin(userData.isAdmin === true);
+          setIsSuperAdmin(userData.isSuperAdmin === true);
         } catch (error) {
           setIsAuthenticated(false);
           setIsAdmin(false);

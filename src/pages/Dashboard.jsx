@@ -10,6 +10,8 @@ import { useNotification } from '../components/NotificationSystem';
 import SpectatorAccess from '../components/SpectatorAccess';
 import SoundToggle from '../components/SoundToggle';
 import soundManager from '../utils/soundUtils';
+import { secureStorage } from '../utils/secureStorage.js';
+import { authHeader } from '../utils/auth.js';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -55,13 +57,12 @@ const Dashboard = () => {
   const { shouldShowTour, setShouldShowTour, startTour, markTutorialAsCompleted } = useOnboarding();
 
   useEffect(() => {
-    const userData = localStorage.getItem('userData');
-    const token = localStorage.getItem('authToken');
+    const userData = secureStorage.getUserData();
+    const token = secureStorage.getToken();
     
     if (userData && token) {
       try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
+        setUser(userData);
         
         // Check if this is a new user and start the tour
         const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
@@ -86,16 +87,14 @@ const Dashboard = () => {
       try {
         setChaptersLoading(true);
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        const token = localStorage.getItem('authToken');
         const response = await axios.get(`${apiUrl}/api/quizzes/chapters`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: authHeader()
         });
         setChapters(response.data);
       } catch (error) {
         console.error('Failed to fetch chapters:', error);
         if (error.response?.status === 401) {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userData');
+          secureStorage.clear();
           navigate('/login');
         }
         setChapters([]);
@@ -108,8 +107,7 @@ const Dashboard = () => {
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
+    secureStorage.clear();
     window.dispatchEvent(new Event('userAuthChange')); // Dispatch event
     navigate('/login');
   };
@@ -126,15 +124,13 @@ const Dashboard = () => {
     try {
       setIsLoading(true);
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('authToken');
       
       await axios.delete(`${apiUrl}/api/auth/delete-account`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: authHeader()
       });
       
       // Clear auth data and redirect
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userData');
+      secureStorage.clear();
       window.dispatchEvent(new Event('userAuthChange'));
       alert('Your account has been successfully deleted.');
       navigate('/login');
@@ -170,7 +166,7 @@ const Dashboard = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          ...authHeader()
         },
         body: JSON.stringify({
           roomId,

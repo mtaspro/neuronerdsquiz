@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { apiHelpers } from '../utils/api';
+import { secureStorage } from '../utils/secureStorage.js';
 
 const Register = () => {
   // Avatar options from ProfileEdit
@@ -124,12 +125,12 @@ const Register = () => {
       console.log('Registration response:', res.data);
 
       if (res.data && res.data.token && res.data.user) {
-        localStorage.setItem('authToken', res.data.token);
-        localStorage.setItem('userData', JSON.stringify({
+        secureStorage.setToken(res.data.token);
+        secureStorage.setUserData({
           ...res.data.user,
           username: formData.username,
           avatar: formData.avatar
-        }));
+        });
         window.dispatchEvent(new Event('userAuthChange')); // Dispatch event
         navigate('/dashboard');
       } else {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { secureStorage } from '../utils/secureStorage.js';
 
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
@@ -8,20 +9,17 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = () => {
-      const token = localStorage.getItem('authToken');
-      const userData = localStorage.getItem('userData');
+      const token = secureStorage.getToken();
+      const userData = secureStorage.getUserData();
       
       // Check if both token and user data exist
       if (token && userData) {
         try {
-          // Validate that userData is valid JSON
-          JSON.parse(userData);
           setIsAuthenticated(true);
         } catch (error) {
-          console.error('Invalid user data in localStorage:', error);
+          console.error('Invalid user data in secureStorage:', error);
           // Clear invalid data
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userData');
+          secureStorage.clear();
           setIsAuthenticated(false);
         }
       } else {
