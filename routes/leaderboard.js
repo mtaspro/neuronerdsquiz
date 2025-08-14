@@ -2,6 +2,7 @@ import express from 'express';
 import UserScore from '../models/UserScore.js';
 import User from '../models/User.js';
 import UserStats from '../models/UserStats.js';
+import authMiddleware from '../middleware/authMiddleware.js';
 
 const leaderboardRouter = express.Router();
 
@@ -93,7 +94,7 @@ leaderboardRouter.get('/leaderboard/battle', async (req, res) => {
 });
 
 // GET /leaderboard - legacy endpoint (returns general)
-leaderboardRouter.get('/leaderboard', async (req, res) => {
+leaderboardRouter.get('/leaderboard', authMiddleware, async (req, res) => {
   try {
     const topUsers = await UserScore.find({ type: { $ne: 'battle' } })
       .sort({ score: -1 })

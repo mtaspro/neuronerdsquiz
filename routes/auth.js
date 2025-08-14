@@ -7,6 +7,7 @@ import fs from 'fs';
 import User from '../models/User.js';
 import UserScore from '../models/UserScore.js';
 import authMiddleware from '../middleware/authMiddleware.js';
+import { generateCSRFToken, validateCSRFToken } from '../middleware/csrfMiddleware.js';
 
 const router = express.Router();
 
@@ -242,8 +243,13 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
+// Get CSRF token
+router.get('/csrf-token', authMiddleware, generateCSRFToken, (req, res) => {
+  res.json({ message: 'CSRF token generated' });
+});
+
 // Profile update route
-router.put('/profile', authMiddleware, upload.single('profilePicture'), async (req, res) => {
+router.put('/profile', authMiddleware, validateCSRFToken, upload.single('profilePicture'), async (req, res) => {
   try {
     const { username, email, currentPassword, newPassword, avatar } = req.body;
     const userId = req.user.userId;

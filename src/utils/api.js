@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { secureStorage } from './secureStorage.js';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -15,7 +16,7 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken');
+    const token = secureStorage.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -33,8 +34,7 @@ api.interceptors.response.use(
     // Handle common errors
     if (error.response?.status === 401) {
       // Unauthorized - clear token and redirect to login
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userData');
+      secureStorage.clear();
       window.location.href = '/login';
     } else if (error.response?.status === 403) {
       // Forbidden - show error message

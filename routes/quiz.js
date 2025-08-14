@@ -190,7 +190,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Questions array is required' });
     }
 
-    console.log(`📝 Quiz submitted by ${user.username}: ${score}/${totalQuestions} in ${timeSpent}ms`);
+    console.log(`📝 Quiz submitted by ${encodeURIComponent(user.username)}: ${score}/${totalQuestions} in ${timeSpent}ms`);
 
     // Check if chapter is in practice mode
     const chapterDoc = await Chapter.findOne({ name: chapter });
@@ -228,7 +228,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
       } catch (recordError) {
         if (recordError.code === 11000) {
           // Question already solved - this is practice mode
-          console.log(`⚠️ Question ${question._id} already solved by ${user.username}`);
+          console.log(`⚠️ Question ${question._id} already solved by ${encodeURIComponent(user.username)}`);
         } else {
           throw recordError;
         }
@@ -244,7 +244,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
     
     if (practiceMode) {
       const reason = isChapterPracticeMode ? 'chapter is in practice mode' : 'all questions already solved';
-      console.log(`🔄 Practice attempt by ${user.username} for chapter ${chapter} (${reason})`);
+      console.log(`🔄 Practice attempt by ${encodeURIComponent(user.username)} for chapter ${encodeURIComponent(chapter)} (${reason})`);
       
       return res.json({
         message: `Quiz completed in practice mode (${reason})`,

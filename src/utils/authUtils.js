@@ -1,11 +1,12 @@
 import axios from 'axios';
+import { secureStorage } from './secureStorage.js';
 
 // Authentication utility functions
 export const authUtils = {
   // Validate token with backend
   async validateToken() {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = secureStorage.getToken();
       if (!token) {
         return { valid: false, error: 'No token found' };
       }
@@ -33,8 +34,7 @@ export const authUtils = {
 
   // Clear authentication data
   clearAuth() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
+    secureStorage.clear();
     window.dispatchEvent(new Event('userAuthChange'));
   },
 
@@ -50,7 +50,7 @@ export const authUtils = {
     
     // Update user data if validation successful
     if (validation.user) {
-      localStorage.setItem('userData', JSON.stringify(validation.user));
+      secureStorage.setUserData(validation.user);
     }
     
     return true;
@@ -85,9 +85,9 @@ export const authUtils = {
 
       const { token, user } = response.data;
       
-      // Store auth data
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('userData', JSON.stringify(user));
+      // Store auth data securely
+      secureStorage.setToken(token);
+      secureStorage.setUserData(user);
       window.dispatchEvent(new Event('userAuthChange'));
       
       return { success: true, user };
@@ -108,9 +108,9 @@ export const authUtils = {
 
       const { token, user } = response.data;
       
-      // Store auth data
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('userData', JSON.stringify(user));
+      // Store auth data securely
+      secureStorage.setToken(token);
+      secureStorage.setUserData(user);
       window.dispatchEvent(new Event('userAuthChange'));
       
       return { success: true, user };

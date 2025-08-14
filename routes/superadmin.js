@@ -13,7 +13,7 @@ import GlobalSettings from '../models/GlobalSettings.js';
 const router = express.Router();
 
 // Get current showdown event status
-router.get('/showdown-event', async (req, res) => {
+router.get('/showdown-event', authMiddleware, async (req, res) => {
   try {
     const eventSettings = await GlobalSettings.findOne({ settingKey: 'showdownEvent' });
     

@@ -148,7 +148,7 @@ export default function QuizLeaderboardCard({ player, index }) {
       onHoverStart={() => {
         soundManager.play(division === 'CHAMPION' || division === 'LEGENDARY' ? 'premiumCard' : 'cardHover');
       }}
-      className={`relative bg-cover bg-center bg-no-repeat rounded-2xl p-6 ${cardStyle.glow} ${cardStyle.border} overflow-hidden transform-gpu transition-all duration-300 hover:shadow-2xl cursor-pointer`}
+      className={`relative bg-cover bg-center bg-no-repeat rounded-2xl p-3 sm:p-4 md:p-6 mx-2 sm:mx-0 ${cardStyle.glow} ${cardStyle.border} overflow-hidden transform-gpu transition-all duration-300 hover:shadow-2xl cursor-pointer w-full max-w-sm`}
       style={division === 'WORLD_CLASS' ? { backgroundImage: `url(${worldClassCardBg})`, filter: 'brightness(1.3) contrast(1.1)' } : division === 'LEGENDARY' ? { backgroundImage: `url(${legendaryCardBg})`, filter: 'brightness(1.3) contrast(1.1)' } : division === 'PRO' ? { backgroundImage: `url(${proCardBg})`, filter: 'brightness(1.3) contrast(1.1)' } : division === 'CHAMPION' ? { backgroundImage: `url(${championCardBg})`, filter: 'brightness(1.3) contrast(1.1)' } : division === 'SEMI_PRO' ? { backgroundImage: `url(${semiProCardBg})`, filter: 'brightness(1.3) contrast(1.1)' } : division === 'AMATEUR' ? { backgroundImage: `url(${amateurCardBg})`, filter: 'brightness(1.3) contrast(1.1)' } : {}}
     >
       {/* Animated effects for all divisions */}
@@ -185,49 +185,50 @@ export default function QuizLeaderboardCard({ player, index }) {
 
       
       {/* Division badge with pulse animation */}
-      <div className="absolute top-3 right-3 bg-black/60 text-white text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/20 z-10 animate-pulse hover:animate-none transition-all duration-300 hover:scale-110">
+      <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-black/60 text-white text-xs font-bold px-2 py-1 sm:px-3 sm:py-1.5 rounded-full backdrop-blur-sm border border-white/20 z-10 animate-pulse hover:animate-none transition-all duration-300 hover:scale-110">
         <div className="flex items-center space-x-1">
           <span className="animate-bounce" style={{animationDelay: '0.5s'}}>{getDivisionIcon()}</span>
-          <span>{divisionInfo.name} {divisionInfo.stage}</span>
+          <span className="hidden sm:inline">{divisionInfo.name} {divisionInfo.stage}</span>
+          <span className="sm:hidden">{divisionInfo.name.slice(0,3)} {divisionInfo.stage}</span>
           {championMultiplier > 1 && <span className="text-yellow-300 animate-pulse">({championMultiplier}x)</span>}
         </div>
       </div>
       
       {/* Player header */}
-      <div className="relative flex items-start space-x-3 mb-4 mt-8 z-10">
+      <div className="relative flex items-start space-x-2 sm:space-x-3 mb-3 sm:mb-4 mt-6 sm:mt-8 z-10">
         <div className="relative flex-shrink-0">
           {/* Animated avatar ring */}
           <div className="absolute inset-0 rounded-full animate-spin" style={{animation: 'spin 8s linear infinite', background: `conic-gradient(from 0deg, ${cardStyle.gradient?.includes('red') ? '#ff6b6b' : cardStyle.gradient?.includes('cyan') ? '#22d3ee' : cardStyle.gradient?.includes('slate') ? '#94a3b8' : cardStyle.gradient?.includes('yellow') ? '#fbbf24' : cardStyle.gradient?.includes('gray') ? '#9ca3af' : '#f59e0b'}, transparent, ${cardStyle.gradient?.includes('red') ? '#ff6b6b' : cardStyle.gradient?.includes('cyan') ? '#22d3ee' : cardStyle.gradient?.includes('slate') ? '#94a3b8' : cardStyle.gradient?.includes('yellow') ? '#fbbf24' : cardStyle.gradient?.includes('gray') ? '#9ca3af' : '#f59e0b'})`}} />
           <img
             src={getAvatarUrl(player.avatar)}
             alt={player.username}
-            className="relative w-14 h-14 rounded-full border-3 border-white/70 object-cover shadow-lg hover:scale-110 transition-transform duration-300"
+            className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full border-3 border-white/70 object-cover shadow-lg hover:scale-110 transition-transform duration-300"
             onError={(e) => { e.target.src = getFallbackAvatar(player.username); }}
           />
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-bold text-white mb-1 truncate drop-shadow-lg">
+          <h3 className="text-base sm:text-lg font-bold text-white mb-1 truncate drop-shadow-lg">
             {player.username}
           </h3>
-          <div className="text-white/90 text-sm font-medium drop-shadow-md">
+          <div className="text-white/90 text-xs sm:text-sm font-medium drop-shadow-md">
             Division Rank #{index + 1}
           </div>
         </div>
       </div>
       
       {/* Main stats with hover animations */}
-      <div className="relative grid grid-cols-2 gap-3 mb-4 z-10">
-        <div className="bg-black/10 rounded-lg p-3 text-center backdrop-blur-sm border border-white/20 hover:bg-black/50 hover:scale-105 transition-all duration-300 cursor-pointer">
-          <div className="text-xl font-bold text-white drop-shadow-lg animate-pulse">
-        <div className="bg-black/10 rounded-lg p-3 text-center border border-white/20 hover:bg-black/50 hover:scale-105 transition-all duration-300 cursor-pointer"></div>            {Math.round(player.averageScore || 0)}%
+      <div className="relative grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4 z-10">
+        <div className="bg-black/10 rounded-lg p-2 sm:p-3 text-center border border-white/20 hover:bg-black/50 hover:scale-105 transition-all duration-300 cursor-pointer">
+          <div className="text-lg sm:text-xl font-bold text-white drop-shadow-lg animate-pulse">
+            {Math.round(player.averageScore || 0)}%
           </div>
           <div className="text-white/80 text-xs font-medium drop-shadow-md">
             Avg Score
           </div>
         </div>
-        <div className="bg-black/10 rounded-lg p-3 text-center border border-white/20 hover:bg-black/50 hover:scale-105 transition-all duration-300 cursor-pointer">
-          <div className="text-xl font-bold text-white drop-shadow-lg animate-pulse" style={{animationDelay: '0.5s'}}>
+        <div className="bg-black/10 rounded-lg p-2 sm:p-3 text-center border border-white/20 hover:bg-black/50 hover:scale-105 transition-all duration-300 cursor-pointer">
+          <div className="text-lg sm:text-xl font-bold text-white drop-shadow-lg animate-pulse" style={{animationDelay: '0.5s'}}>
             {player.totalQuizzes || 0}
           </div>
           <div className="text-white/80 text-xs font-medium drop-shadow-md">
@@ -237,9 +238,9 @@ export default function QuizLeaderboardCard({ player, index }) {
       </div>
       
       {/* Additional stats */}
-      <div className="relative grid grid-cols-3 gap-3 text-center mb-4 z-10">
+      <div className="relative grid grid-cols-3 gap-2 sm:gap-3 text-center mb-3 sm:mb-4 z-10">
         <div>
-          <div className="text-white font-bold text-lg drop-shadow-lg">
+          <div className="text-white font-bold text-base sm:text-lg drop-shadow-lg">
             {player.currentStreak || 0}
           </div>
           <div className="text-white/70 text-xs font-medium drop-shadow-md">
@@ -247,7 +248,7 @@ export default function QuizLeaderboardCard({ player, index }) {
           </div>
         </div>
         <div>
-          <div className="text-white font-bold text-lg drop-shadow-lg">
+          <div className="text-white font-bold text-base sm:text-lg drop-shadow-lg">
             {player.bestScore || 0}
           </div>
           <div className="text-white/70 text-xs font-medium drop-shadow-md">
@@ -255,7 +256,7 @@ export default function QuizLeaderboardCard({ player, index }) {
           </div>
         </div>
         <div>
-          <div className="text-white font-bold text-lg drop-shadow-lg">
+          <div className="text-white font-bold text-base sm:text-lg drop-shadow-lg">
             {player.badges?.length || 0}
           </div>
           <div className="text-white/70 text-xs font-medium drop-shadow-md">
@@ -265,12 +266,12 @@ export default function QuizLeaderboardCard({ player, index }) {
       </div>
       
       {/* Progress bar to next division */}
-      <div className="relative mb-4 z-10">
-        <div className="flex justify-between text-xs mb-2">
+      <div className="relative mb-3 sm:mb-4 z-10">
+        <div className="flex justify-between text-xs mb-1 sm:mb-2">
           <span className="text-white/80 font-medium drop-shadow-md">
             Progress
           </span>
-          <span className="text-white/80 font-medium drop-shadow-md">
+          <span className="text-white/80 font-medium drop-shadow-md truncate ml-2">
             {stage === 2 ? 'Max Stage' : `To ${divisionInfo.name} ${divisionInfo.stages && divisionInfo.stages[stage + 1] ? divisionInfo.stages[stage + 1] : 'I'}`}
           </span>
         </div>

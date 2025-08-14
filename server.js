@@ -44,7 +44,7 @@ const allowedOrigins = [
 // Enhanced CORS configuration with explicit headers
 const corsOptions = {
   origin: (origin, callback) => {
-    console.log('🌐 CORS request from origin:', origin);
+    console.log('🌐 CORS request from origin:', encodeURIComponent(origin || 'null'));
     
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) {
@@ -54,23 +54,23 @@ const corsOptions = {
     
     // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
-      console.log('✅ Origin found in allowed list:', origin);
+      console.log('✅ Origin found in allowed list:', encodeURIComponent(origin));
       return callback(null, true);
     }
     
     // Allow any Vercel app domain
     if (origin.includes('.vercel.app')) {
-      console.log('✅ Allowing Vercel domain:', origin);
+      console.log('✅ Allowing Vercel domain:', encodeURIComponent(origin));
       return callback(null, true);
     }
     
     // Allow localhost with any port
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      console.log('✅ Allowing localhost:', origin);
+      console.log('✅ Allowing localhost:', encodeURIComponent(origin));
       return callback(null, true);
     }
     
-    console.log('❌ CORS blocked origin:', origin);
+    console.log('❌ CORS blocked origin:', encodeURIComponent(origin));
     callback(new Error('Not allowed by CORS'));
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
@@ -106,7 +106,7 @@ app.use(cors(corsOptions));
 // Additional manual CORS handling for preflight requests
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  console.log(`🔍 Manual CORS check for ${req.method} ${req.path} from origin: ${origin}`);
+  console.log(`🔍 Manual CORS check for ${req.method} ${req.path} from origin: ${encodeURIComponent(origin || 'null')}`);
   
   // Set CORS headers for all requests
   if (origin) {
@@ -118,9 +118,9 @@ app.use((req, res, next) => {
     
     if (isAllowed) {
       res.header('Access-Control-Allow-Origin', origin);
-      console.log(`✅ Manual CORS: Allowing origin ${origin}`);
+      console.log(`✅ Manual CORS: Allowing origin ${encodeURIComponent(origin)}`);
     } else {
-      console.log(`❌ Manual CORS: Blocking origin ${origin}`);
+      console.log(`❌ Manual CORS: Blocking origin ${encodeURIComponent(origin)}`);
     }
   } else {
     // Allow requests with no origin

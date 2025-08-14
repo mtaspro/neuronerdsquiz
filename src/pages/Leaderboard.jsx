@@ -149,7 +149,7 @@ export default function Leaderboard() {
         </motion.div>
 
         {/* Leaderboard Cards */}
-        <div className={activeTab === 'battle' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'}>
+        <div className={activeTab === 'battle' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-2 sm:px-0' : 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 px-2 sm:px-0'}>
           {sortedPlayers.map((player, index) => {
             if (activeTab === 'battle') {
               return (
