@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { FaUser, FaCamera, FaUpload, FaSave, FaArrowLeft } from 'react-icons/fa';
 import { getAvatarUrl, getFallbackAvatar } from '../utils/avatarUtils';
+import { secureStorage } from '../utils/secureStorage.js';
 
 const ProfileEdit = () => {
   const [formData, setFormData] = useState({
@@ -21,6 +22,7 @@ const ProfileEdit = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
   const [useCustomImage, setUseCustomImage] = useState(false);
+  const [csrfToken, setCsrfToken] = useState('');
   const navigate = useNavigate();
 
   // Cool and professional avatar options - 4 for boys, 4 for girls
@@ -39,8 +41,8 @@ const ProfileEdit = () => {
 
   useEffect(() => {
     // Load current user data
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-    if (userData._id) {
+    const userData = secureStorage.getUserData();
+    if (userData?._id) {
       setFormData(prev => ({
         ...prev,
         username: userData.username || '',
@@ -51,10 +53,26 @@ const ProfileEdit = () => {
       const avatarUrl = getAvatarUrl(userData.avatar || avatarOptions[0]);
       setPreviewImage(avatarUrl);
       setUseCustomImage(!avatarOptions.includes(userData.avatar || ''));
+      
+      // Get CSRF token
+      fetchCSRFToken();
     } else {
       navigate('/login');
     }
   }, [navigate]);
+
+  const fetchCSRFToken = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      const response = await axios.get(`${apiUrl}/api/auth/csrf-token`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCsrfToken(response.headers['x-csrf-token']);
+    } catch (error) {
+      console.error('Failed to get CSRF token:', error);
+    }
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -135,7 +153,7 @@ const ProfileEdit = () => {
     setIsLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('authToken');
+      const token = secureStorage.getToken();
       // Prepare form data for file upload
       const submitData = new FormData();
       submitData.append('username', formData.username);
@@ -152,6 +170,7 @@ const ProfileEdit = () => {
       const response = await axios.put(`${apiUrl}/api/auth/profile`, submitData, {
         headers: {
           'Authorization': `Bearer ${token}`,
+          'X-CSRF-Token': csrfToken,
           'Content-Type': 'multipart/form-data'
         }
       });
