@@ -349,7 +349,11 @@ export default function AdminDashboard() {
     const apiUrl = import.meta.env.VITE_API_URL || '';
     axios.put(`${apiUrl}/api/admin/chapters/${editingId}`, editChapter, { headers: authHeader() })
       .then(res => {
-        setChapters(chs => chs.map(ch => ch._id === editingId ? res.data : ch));
+        // Reload chapters from server to get fresh data
+        return axios.get(`${apiUrl}/api/admin/chapters`, { headers: authHeader() });
+      })
+      .then(res => {
+        setChapters(res.data);
         setEditingId(null);
         setEditChapter(null);
       })
