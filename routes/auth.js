@@ -11,31 +11,15 @@ import UserSession from '../models/UserSession.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 import { generateCSRFToken, validateCSRFToken } from '../middleware/csrfMiddleware.js';
+import { upload } from '../cloudinary-setup.js';
+import { uploadToCloudinary } from '../utils/cloudinaryConfig.js';
 
 const router = express.Router();
 
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  },
+// Multer memory storage for Cloudinary upload
+const memoryUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -73,7 +57,7 @@ router.post('/test-register', async (req, res) => {
 });
 
 // Registration route
-router.post('/register', async (req, res) => {
+router.post('/register', memoryUpload.single('profilePicture'), async (req, res) => {
   const { email, password, username, avatar } = req.body;
   console.log('Registration attempt for email:', email);
   console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
@@ -89,11 +73,23 @@ router.post('/register', async (req, res) => {
     if (existingUser)
       return res.status(409).json({ error: 'Email already registered.' });
 
+    let userAvatar = avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(email)}&background=random`;
+    
+    // Handle profile picture upload during registration
+    if (req.file) {
+      try {
+        userAvatar = await uploadToCloudinary(req.file.buffer, 'profile-pictures');
+      } catch (error) {
+        console.error('Cloudinary upload error during registration:', error);
+        // Continue with default avatar if upload fails
+      }
+    }
+    
     const user = new User({ 
       email, 
       password,
       username: username || email.split('@')[0], // Use email prefix if no username
-      avatar: avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(email)}&background=random`
+      avatar: userAvatar
     });
     console.log('Creating new user with email:', email);
     console.log('User object before save:', { email: user.email, hasPassword: !!user.password, username: user.username });
@@ -199,17 +195,8 @@ router.get('/validate', sessionMiddleware, async (req, res) => {
       });
     }
     
-    // Check if uploaded avatar file still exists, if not use default
+    // Avatar validation - Cloudinary URLs are always accessible
     let avatar = user.avatar;
-    if (avatar && avatar.startsWith('/uploads/')) {
-      const filePath = path.join(process.cwd(), avatar);
-      if (!fs.existsSync(filePath)) {
-        // File missing, update to default avatar
-        avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=random`;
-        await User.findByIdAndUpdate(user._id, { avatar });
-        await UserScore.updateMany({ userId: user._id }, { avatar });
-      }
-    }
     
     res.json({ 
       valid: true,
@@ -264,7 +251,7 @@ router.get('/csrf-token', sessionMiddleware, generateCSRFToken, (req, res) => {
 });
 
 // Profile update route
-router.put('/profile', sessionMiddleware, validateCSRFToken, upload.single('profilePicture'), async (req, res) => {
+router.put('/profile', sessionMiddleware, validateCSRFToken, memoryUpload.single('profilePicture'), async (req, res) => {
   try {
     const { username, email, currentPassword, newPassword, avatar } = req.body;
     const userId = req.user.userId;
@@ -321,26 +308,16 @@ router.put('/profile', sessionMiddleware, validateCSRFToken, upload.single('prof
     
     // Handle avatar/profile picture
     if (req.file) {
-      // Delete old profile picture if it exists and is a file
-      if (user.avatar && user.avatar.startsWith('/uploads/')) {
-        const oldFilePath = path.join(process.cwd(), user.avatar);
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath);
-        }
+      try {
+        // Upload to Cloudinary
+        const cloudinaryUrl = await uploadToCloudinary(req.file.buffer, 'profile-pictures');
+        user.avatar = cloudinaryUrl;
+      } catch (error) {
+        console.error('Cloudinary upload error:', error);
+        return res.status(500).json({ error: 'Failed to upload profile picture.' });
       }
-      
-      // Set new profile picture path
-      user.avatar = `/uploads/${req.file.filename}`;
     } else if (avatar) {
       // Using predefined avatar
-      // Delete old profile picture if it was a custom upload
-      if (user.avatar && user.avatar.startsWith('/uploads/')) {
-        const oldFilePath = path.join(process.cwd(), user.avatar);
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath);
-        }
-      }
-      
       user.avatar = avatar;
     }
     
@@ -370,15 +347,6 @@ router.put('/profile', sessionMiddleware, validateCSRFToken, upload.single('prof
     
   } catch (error) {
     console.error('Profile update error:', error);
-    
-    // Clean up uploaded file if there was an error
-    if (req.file) {
-      const filePath = path.join(uploadsDir, req.file.filename);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    }
-    
     res.status(500).json({ error: 'Failed to update profile.' });
   }
 });
@@ -406,13 +374,7 @@ router.delete('/delete-account', sessionMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'User not found.' });
     }
     
-    // Delete profile picture if it exists
-    if (user.avatar && user.avatar.startsWith('/uploads/')) {
-      const filePath = path.join(process.cwd(), user.avatar);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    }
+    // Note: Cloudinary images don't need manual deletion as they persist in the cloud
     
     console.log('User account deleted:', user.email);
     res.json({ message: 'Account deleted successfully' });

@@ -975,7 +975,7 @@ export default function AdminDashboard() {
                     if (!selectedChapterFilter) return true;
                     if (selectedChapterFilter === 'mine') {
                       const currentUser = JSON.parse(localStorage.getItem('userData') || '{}');
-                      return chapter.createdBy?._id === currentUser.id;
+                      return chapter.createdBy?._id === currentUser._id;
                     }
                     return chapter.createdBy?.username === selectedChapterFilter;
                   }).map(chapter => (
