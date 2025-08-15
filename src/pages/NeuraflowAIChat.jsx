@@ -311,9 +311,51 @@ You help with academics, platform features, and general questions. Keep it natur
   };
 
   const generateLocalCaption = async (imageFile) => {
-    const fileSize = (imageFile.size / 1024).toFixed(1);
-    const fileType = imageFile.type.split('/')[1].toUpperCase();
-    return `${fileType} image (${fileSize} KB) - Image analysis available`;
+    // Create a more detailed image analysis
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        
+        // Basic image analysis
+        const aspectRatio = (img.width / img.height).toFixed(2);
+        const fileSize = (imageFile.size / 1024).toFixed(1);
+        const fileType = imageFile.type.split('/')[1].toUpperCase();
+        
+        // Analyze dominant colors (simplified)
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        let r = 0, g = 0, b = 0;
+        const pixelCount = data.length / 4;
+        
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i];
+          g += data[i + 1];
+          b += data[i + 2];
+        }
+        
+        r = Math.round(r / pixelCount);
+        g = Math.round(g / pixelCount);
+        b = Math.round(b / pixelCount);
+        
+        const brightness = (r + g + b) / 3;
+        const colorTone = brightness > 128 ? 'bright' : 'dark';
+        
+        resolve(`${fileType} image (${fileSize} KB, ${img.width}x${img.height}, ${aspectRatio} aspect ratio) - Shows a ${colorTone} colored image with visual content that can be analyzed`);
+      };
+      
+      img.onerror = () => {
+        const fileSize = (imageFile.size / 1024).toFixed(1);
+        const fileType = imageFile.type.split('/')[1].toUpperCase();
+        resolve(`${fileType} image (${fileSize} KB) - Visual content available for analysis`);
+      };
+      
+      img.src = URL.createObjectURL(imageFile);
+    });
   };
 
   const uploadImageToCloud = async (imageFile) => {
