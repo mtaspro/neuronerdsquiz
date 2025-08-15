@@ -11,7 +11,7 @@ import UserSession from '../models/UserSession.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 import { generateCSRFToken, validateCSRFToken } from '../middleware/csrfMiddleware.js';
-import { upload } from '../cloudinary-setup.js';
+
 import { uploadToCloudinary } from '../utils/cloudinaryConfig.js';
 
 const router = express.Router();
