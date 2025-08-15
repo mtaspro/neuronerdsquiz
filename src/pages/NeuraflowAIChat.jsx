@@ -389,10 +389,8 @@ You help with academics, platform features, and general questions. Keep it natur
     try {
       setSearchStatus('Searching the web...');
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      // Add date context for fresher results
-      const enhancedQuery = `${query.trim()} 2024 2025 latest recent`;
       const response = await axios.post(`${apiUrl}/api/web-search`, {
-        query: enhancedQuery
+        query: query.trim()
       });
       
       const results = response.data.results;

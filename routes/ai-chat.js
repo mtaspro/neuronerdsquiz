@@ -156,6 +156,12 @@ router.post('/', async (req, res) => {
       return confirmMatch ? confirmMatch[1] + ' - Should I generate this image for you?' : match;
     });
     aiResponse = aiResponse.replace(/\[GENERATE_IMAGE:.*?\]/g, '').trim();
+    
+    // Remove common reasoning patterns
+    aiResponse = aiResponse.replace(/^(Let me think about this|I need to search for|Looking at this query|Based on the search results?)[^\n]*\n?/gm, '').trim();
+    aiResponse = aiResponse.replace(/^(It seems|I see that|I notice that|From what I can tell)[^\n]*\n?/gm, '').trim();
+    aiResponse = aiResponse.replace(/\*\*?Thinking\*\*?:?[^\n]*\n?/gi, '').trim();
+    aiResponse = aiResponse.replace(/\*\*?Analysis\*\*?:?[^\n]*\n?/gi, '').trim();
 
     // Final cleanup and ensure string response
     const finalResponse = String(aiResponse || 'I apologize, but I encountered an issue processing your request.');
