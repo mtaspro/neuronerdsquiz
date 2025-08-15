@@ -32,8 +32,7 @@ export default function AdminDashboard() {
         
         if (!response.data.valid) {
           // Clear auth data for deleted/invalid users
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userData');
+          secureStorage.clear();
           navigate('/login');
           return;
         }
@@ -46,8 +45,7 @@ export default function AdminDashboard() {
         setLoading(false);
       } catch (err) {
         // Clear auth data on any error
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userData');
+        secureStorage.clear();
         navigate('/login');
       }
     };
@@ -1071,23 +1069,13 @@ export default function AdminDashboard() {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => { setEditingId(chapter._id); setEditChapter({...chapter}); }}
-                                disabled={!chapter.canEdit}
-                                className={`px-3 py-1 rounded text-sm transition-colors ${
-                                  chapter.canEdit 
-                                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                                    : 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                                }`}
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors"
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => handleDeleteChapter(chapter._id)}
-                                disabled={!chapter.canEdit}
-                                className={`px-3 py-1 rounded text-sm transition-colors ${
-                                  chapter.canEdit 
-                                    ? 'bg-red-600 hover:bg-red-700 text-white' 
-                                    : 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                                }`}
+                                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
                               >
                                 Delete
                               </button>
