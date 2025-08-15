@@ -4,6 +4,7 @@ import MathText from '../components/MathText';
 import AILatexGenerator from '../components/AILatexGenerator';
 import axios from 'axios';
 import { authHeader } from '../utils/auth';
+import { secureStorage } from '../utils/secureStorage.js';
 
 const TABS = ['Users', 'Subjects', 'Chapters', 'Questions', 'Quiz Config', 'Leaderboard Reset'];
 
@@ -974,7 +975,7 @@ export default function AdminDashboard() {
                   {chapters.filter(chapter => {
                     if (!selectedChapterFilter) return true;
                     if (selectedChapterFilter === 'mine') {
-                      const currentUser = JSON.parse(localStorage.getItem('userData') || '{}');
+                      const currentUser = secureStorage.getUserData() || {};
                       return chapter.createdBy?._id === currentUser._id;
                     }
                     return chapter.createdBy?.username === selectedChapterFilter;
