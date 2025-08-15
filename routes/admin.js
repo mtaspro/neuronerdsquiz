@@ -234,19 +234,13 @@ router.post('/chapters', sessionMiddleware, requireAdmin, async (req, res) => {
   }
 });
 
-// Edit a chapter (only if created by current admin)
+// Edit a chapter
 router.put('/chapters/:id', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
-    const currentUserId = req.user.userId;
     const chapter = await Chapter.findById(req.params.id);
     
     if (!chapter) {
       return res.status(404).json({ error: 'Chapter not found' });
-    }
-    
-    // Allow editing if chapter has no creator (legacy) or created by current admin
-    if (chapter.createdBy && chapter.createdBy.toString() !== currentUserId) {
-      return res.status(403).json({ error: 'You can only edit chapters you created' });
     }
     
     const updatedChapter = await Chapter.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -257,19 +251,13 @@ router.put('/chapters/:id', sessionMiddleware, requireAdmin, async (req, res) =>
   }
 });
 
-// Delete a chapter (only if created by current admin)
+// Delete a chapter
 router.delete('/chapters/:id', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
-    const currentUserId = req.user.userId;
     const chapter = await Chapter.findById(req.params.id);
     
     if (!chapter) {
       return res.status(404).json({ error: 'Chapter not found' });
-    }
-    
-    // Allow deletion if chapter has no creator (legacy) or created by current admin
-    if (chapter.createdBy && chapter.createdBy.toString() !== currentUserId) {
-      return res.status(403).json({ error: 'You can only delete chapters you created' });
     }
     
     await Chapter.findByIdAndDelete(req.params.id);
