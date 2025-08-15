@@ -309,15 +309,21 @@ router.put('/profile', sessionMiddleware, validateCSRFToken, memoryUpload.single
     // Handle avatar/profile picture
     if (req.file) {
       try {
+        console.log('📸 Uploading profile picture to Cloudinary...');
+        console.log('File size:', req.file.size, 'bytes');
+        console.log('File type:', req.file.mimetype);
+        
         // Upload to Cloudinary
         const cloudinaryUrl = await uploadToCloudinary(req.file.buffer, 'profile-pictures');
+        console.log('✅ Cloudinary upload successful:', cloudinaryUrl);
         user.avatar = cloudinaryUrl;
       } catch (error) {
-        console.error('Cloudinary upload error:', error);
+        console.error('❌ Cloudinary upload error:', error);
         return res.status(500).json({ error: 'Failed to upload profile picture.' });
       }
     } else if (avatar) {
       // Using predefined avatar
+      console.log('🎭 Using predefined avatar:', avatar);
       user.avatar = avatar;
     }
     
