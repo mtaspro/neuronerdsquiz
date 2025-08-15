@@ -178,6 +178,11 @@ const QuizBattleRoom = () => {
           const isWinner = currentUserResult && data.results[0].userId === userData._id;
           soundManager.play(isWinner ? 'battleWin' : 'battleLose');
           
+          // Submit battle score to leaderboard
+          if (currentUserResult) {
+            submitBattleScore(currentUserResult.score, isWinner);
+          }
+          
           addNotification('battle-ended', 'Battle Complete!', 'The quiz battle has ended!');
           success('Battle completed! Check your results!');
           
@@ -438,6 +443,30 @@ const QuizBattleRoom = () => {
   const handleLeaveRoom = () => {
     battleSocketHelpers.leaveRoom(roomId, userData._id);
     navigate('/dashboard');
+  };
+
+  const submitBattleScore = async (score, won) => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = localStorage.getItem('sessionToken');
+      
+      const response = await fetch(`${apiUrl}/api/leaderboard/battle-score`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ score, won })
+      });
+      
+      if (response.ok) {
+        console.log('✅ Battle score submitted successfully');
+      } else {
+        console.error('❌ Failed to submit battle score:', response.statusText);
+      }
+    } catch (error) {
+      console.error('❌ Error submitting battle score:', error);
+    }
   };
 
   const addNotification = (type, title, message) => {
