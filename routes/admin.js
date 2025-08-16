@@ -24,10 +24,17 @@ router.get('/users', sessionMiddleware, requireAdmin, async (req, res) => {
 router.put('/users/:id/whatsapp', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const { phoneNumber, whatsappNotifications } = req.body;
+    
+    // Format phone number for Bangladesh
+    let formattedPhone = phoneNumber || '';
+    if (formattedPhone && formattedPhone.startsWith('01')) {
+      formattedPhone = '+880' + formattedPhone.substring(1);
+    }
+    
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { 
-        phoneNumber: phoneNumber || '',
+        phoneNumber: formattedPhone,
         whatsappNotifications: whatsappNotifications === true || whatsappNotifications === 'true'
       },
       { new: true }

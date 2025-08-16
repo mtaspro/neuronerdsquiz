@@ -305,7 +305,13 @@ router.put('/profile', sessionMiddleware, validateCSRFToken, memoryUpload.single
     // Update basic info
     user.username = username;
     user.email = email;
-    user.phoneNumber = phoneNumber || '';
+    
+    // Format phone number for Bangladesh
+    let formattedPhone = phoneNumber || '';
+    if (formattedPhone && formattedPhone.startsWith('01')) {
+      formattedPhone = '+880' + formattedPhone.substring(1);
+    }
+    user.phoneNumber = formattedPhone;
     user.whatsappNotifications = whatsappNotifications === 'true' || whatsappNotifications === true;
     
     // Handle avatar/profile picture

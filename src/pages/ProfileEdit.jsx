@@ -387,7 +387,7 @@ const ProfileEdit = () => {
                   id="phoneNumber"
                   name="phoneNumber"
                   type="tel"
-                  placeholder="e.g., +1234567890"
+                  placeholder="e.g., 01712345678 (auto-formats to +8801712345678)"
                   value={formData.phoneNumber}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-colors border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
