@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { secureStorage } from '../utils/secureStorage.js';
 
 const AdminRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
@@ -9,26 +10,23 @@ const AdminRoute = ({ children }) => {
 
   useEffect(() => {
     const checkAdminAuth = () => {
-      const token = localStorage.getItem('authToken');
-      const userData = localStorage.getItem('userData');
+      const token = secureStorage.getToken();
+      const userData = secureStorage.getUserData();
       
       // Check if both token and user data exist
       if (token && userData) {
         try {
-          const user = JSON.parse(userData);
           setIsAuthenticated(true);
           
           // Check if user has admin privileges
-          // For demo purposes, we'll check if email contains 'admin' or if there's an isAdmin flag
-          const hasAdminAccess = user.isAdmin === true || 
-                                user.email?.toLowerCase().includes('admin') ||
-                                user.username?.toLowerCase().includes('admin');
+          const hasAdminAccess = userData.isAdmin === true || 
+                                userData.email?.toLowerCase().includes('admin') ||
+                                userData.username?.toLowerCase().includes('admin');
           
           setIsAdmin(hasAdminAccess);
         } catch (error) {
-          console.error('Invalid user data in localStorage:', error);
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userData');
+          console.error('Invalid user data:', error);
+          secureStorage.clear();
           setIsAuthenticated(false);
           setIsAdmin(false);
         }
