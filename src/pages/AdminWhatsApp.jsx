@@ -25,7 +25,7 @@ const AdminWhatsApp = () => {
       const response = await axios.get(`${apiUrl}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUsers(response.data.users.filter(user => user.whatsappNotifications && user.phoneNumber));
+      setUsers(response.data.users.filter(user => user.phoneNumber));
     } catch (error) {
       console.error('Failed to fetch users:', error);
     }
@@ -161,13 +161,18 @@ const AdminWhatsApp = () => {
                 Send to Individual
               </h3>
               <div className="flex gap-2">
-                <input
-                  type="tel"
+                <select
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+1234567890"
                   className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700"
-                />
+                >
+                  <option value="">Select User</option>
+                  {users.map(user => (
+                    <option key={user._id} value={user.phoneNumber}>
+                      {user.username} ({user.phoneNumber})
+                    </option>
+                  ))}
+                </select>
                 <button
                   onClick={() => sendMessage('individual')}
                   disabled={isLoading}
@@ -182,6 +187,14 @@ const AdminWhatsApp = () => {
             {/* Group Message */}
             <div className="mb-6">
               <h3 className="font-semibold mb-2">Send to Group</h3>
+              <div className="mb-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-700">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  <strong>How to get Group ID:</strong><br/>
+                  1. Open WhatsApp Web<br/>
+                  2. Go to the group chat<br/>
+                  3. Check browser URL - copy the part after "chat/" (e.g., 120363418978278612@g.us)
+                </p>
+              </div>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -222,7 +235,7 @@ const AdminWhatsApp = () => {
           >
             <h2 className="text-xl font-bold mb-4">Select Users</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Users with WhatsApp notifications enabled ({users.length} total)
+              Users with phone numbers ({users.length} total)
             </p>
 
             <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -254,7 +267,7 @@ const AdminWhatsApp = () => {
 
             {users.length === 0 && (
               <p className="text-center text-gray-500 dark:text-gray-400 py-8">
-                No users with WhatsApp notifications enabled
+                No users with phone numbers found
               </p>
             )}
           </motion.div>
