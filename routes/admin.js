@@ -1,6 +1,5 @@
 import express from 'express';
-import authMiddleware, { requireAdmin } from '../middleware/authMiddleware.js';
-import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
+import { sessionMiddleware, requireAdmin } from '../middleware/sessionMiddleware.js';
 import User from '../models/User.js';
 import UserScore from '../models/UserScore.js';
 import Quiz from '../models/Quiz.js';

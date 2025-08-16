@@ -30,3 +30,17 @@ export const sessionMiddleware = async (req, res, next) => {
     res.status(401).json({ error: 'Session validation failed' });
   }
 };
+
+export const requireAdmin = (req, res, next) => {
+  if (!req.user?.isAdmin) {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+};
+
+export const requireSuperAdmin = (req, res, next) => {
+  if (!req.user?.isSuperAdmin) {
+    return res.status(403).json({ error: 'SuperAdmin access required' });
+  }
+  next();
+};
