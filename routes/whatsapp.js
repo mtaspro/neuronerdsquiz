@@ -1,7 +1,7 @@
 import express from 'express';
 import whatsappService from '../services/whatsappService.js';
 import User from '../models/User.js';
-import sessionMiddleware from '../middleware/sessionMiddleware.js';
+import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 
 const router = express.Router();
 
