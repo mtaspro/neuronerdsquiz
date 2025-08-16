@@ -10,6 +10,8 @@ const ProfileEdit = () => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
+    phoneNumber: '',
+    whatsappNotifications: false,
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
@@ -47,6 +49,8 @@ const ProfileEdit = () => {
         ...prev,
         username: userData.username || '',
         email: userData.email || '',
+        phoneNumber: userData.phoneNumber || '',
+        whatsappNotifications: userData.whatsappNotifications || false,
         avatar: userData.avatar || avatarOptions[0]
       }));
       // Use the avatar utility to get the correct URL for display
@@ -167,6 +171,8 @@ const ProfileEdit = () => {
       const submitData = new FormData();
       submitData.append('username', formData.username);
       submitData.append('email', formData.email);
+      submitData.append('phoneNumber', formData.phoneNumber);
+      submitData.append('whatsappNotifications', formData.whatsappNotifications);
       if (formData.newPassword) {
         submitData.append('currentPassword', formData.currentPassword);
         submitData.append('newPassword', formData.newPassword);
@@ -372,6 +378,33 @@ const ProfileEdit = () => {
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
                 )}
+              </div>
+              <div>
+                <label htmlFor="phoneNumber" className="block text-sm font-medium mb-1">
+                  Phone Number (for WhatsApp notifications)
+                </label>
+                <input
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  type="tel"
+                  placeholder="e.g., +1234567890"
+                  value={formData.phoneNumber}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-colors border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  id="whatsappNotifications"
+                  name="whatsappNotifications"
+                  type="checkbox"
+                  checked={formData.whatsappNotifications}
+                  onChange={(e) => setFormData(prev => ({ ...prev, whatsappNotifications: e.target.checked }))}
+                  className="w-4 h-4 text-cyan-600 bg-gray-100 border-gray-300 rounded focus:ring-cyan-500 dark:focus:ring-cyan-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                />
+                <label htmlFor="whatsappNotifications" className="text-sm font-medium">
+                  Enable WhatsApp notifications for battles and events
+                </label>
               </div>
             </div>
             {/* Password Change */}

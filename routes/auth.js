@@ -253,7 +253,7 @@ router.get('/csrf-token', sessionMiddleware, generateCSRFToken, (req, res) => {
 // Profile update route
 router.put('/profile', sessionMiddleware, validateCSRFToken, memoryUpload.single('profilePicture'), async (req, res) => {
   try {
-    const { username, email, currentPassword, newPassword, avatar } = req.body;
+    const { username, email, phoneNumber, whatsappNotifications, currentPassword, newPassword, avatar } = req.body;
     const userId = req.user.userId;
     
     console.log('Profile update request for user:', userId);
@@ -305,6 +305,8 @@ router.put('/profile', sessionMiddleware, validateCSRFToken, memoryUpload.single
     // Update basic info
     user.username = username;
     user.email = email;
+    user.phoneNumber = phoneNumber || '';
+    user.whatsappNotifications = whatsappNotifications === 'true' || whatsappNotifications === true;
     
     // Handle avatar/profile picture
     if (req.file) {

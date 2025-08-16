@@ -21,6 +21,29 @@ router.get('/users', sessionMiddleware, requireAdmin, async (req, res) => {
   res.json(users);
 });
 
+// Update user WhatsApp info (admin only)
+router.put('/users/:id/whatsapp', sessionMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const { phoneNumber, whatsappNotifications } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { 
+        phoneNumber: phoneNumber || '',
+        whatsappNotifications: whatsappNotifications === true || whatsappNotifications === 'true'
+      },
+      { new: true }
+    ).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json({ message: 'User WhatsApp info updated', user });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update user WhatsApp info' });
+  }
+});
+
 // List all subjects
 router.get('/subjects', sessionMiddleware, requireAdmin, async (req, res) => {
   const subjects = await Subject.find().sort('order');

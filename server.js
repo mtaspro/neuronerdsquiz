@@ -20,8 +20,10 @@ import { router as webSearchRouter } from './routes/web-search.js';
 
 import { router as uploadImageRouter } from './routes/upload-image.js';
 import themeRouter from './routes/theme.js';
+import whatsappRouter from './routes/whatsapp.js';
 import BattleService from './services/battleService.js';
 import BadgeService from './services/badgeService.js';
+import whatsappService from './services/whatsappService.js';
 import UserScore from './models/UserScore.js';
 
 console.log('Auth router imported:', !!authRouter);
@@ -175,6 +177,8 @@ mongoose.connect(process.env.MONGO_URI, {
     console.log('✅ MongoDB connected!');
     // Initialize badges after MongoDB connection
     initializeBadges();
+    // Initialize WhatsApp service
+    whatsappService.initialize();
   })
   .catch((err) => {
     console.error('❌ MongoDB connection error:', err);
@@ -497,6 +501,8 @@ console.log('Mounting image upload router...');
 app.use('/api/upload-image', uploadImageRouter);
 console.log('Mounting theme router...');
 app.use('/api/theme', themeRouter);
+console.log('Mounting WhatsApp router...');
+app.use('/api/whatsapp', whatsappRouter);
 console.log('Mounting events router...');
 app.use('/api/events', (await import('./routes/events.js')).default);
 console.log('All routers mounted successfully');

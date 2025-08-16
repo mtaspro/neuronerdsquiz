@@ -12,6 +12,8 @@
     "build:vercel": "vite build"
   },
   "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.7.18",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "better-react-mathjax": "^2.3.0",

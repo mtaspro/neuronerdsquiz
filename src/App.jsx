@@ -13,6 +13,7 @@ import Register from "./components/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from './components/AdminRoute';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminWhatsApp from './pages/AdminWhatsApp';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import Badges from './pages/Badges';
 import About from './pages/About';
@@ -262,6 +263,14 @@ function AnimatedRoutes() {
             element={
               <AdminRoute>
                 <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/whatsapp"
+            element={
+              <AdminRoute>
+                <AdminWhatsApp />
               </AdminRoute>
             }
           />

@@ -6,7 +6,7 @@ import axios from 'axios';
 import { authHeader } from '../utils/auth';
 import { secureStorage } from '../utils/secureStorage.js';
 
-const TABS = ['Users', 'Subjects', 'Chapters', 'Questions', 'Quiz Config', 'Leaderboard Reset'];
+const TABS = ['Users', 'Subjects', 'Chapters', 'Questions', 'Quiz Config', 'Leaderboard Reset', 'WhatsApp'];
 
 
 
@@ -247,6 +247,40 @@ export default function AdminDashboard() {
 
     loadQuizConfigs();
   }, [tab]);
+
+  // Edit user WhatsApp settings
+  function handleEditWhatsApp(userId, username, currentPhone, currentNotifications) {
+    const phoneNumber = prompt(`Enter WhatsApp number for ${username}:`, currentPhone || '');
+    if (phoneNumber === null) return;
+    
+    const enableNotifications = window.confirm(`Enable WhatsApp notifications for ${username}?`);
+    
+    setLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.put(`${apiUrl}/api/admin/users/${userId}/whatsapp`, {
+      phoneNumber: phoneNumber.trim(),
+      whatsappNotifications: enableNotifications
+    }, { headers: authHeader() })
+      .then(() => {
+        setError('');
+        // Reload users to show updated data
+        const loadUsers = async () => {
+          try {
+            const response = await axios.get(`${apiUrl}/api/admin/users`, { headers: authHeader() });
+            setUsers(response.data);
+          } catch (err) {
+            console.error('Failed to reload users:', err);
+          }
+        };
+        loadUsers();
+        alert(`WhatsApp settings updated for ${username}`);
+      })
+      .catch(err => {
+        const errorMsg = err.response?.data?.error || 'Failed to update WhatsApp settings';
+        setError(errorMsg);
+      })
+      .finally(() => setLoading(false));
+  }
 
   // Request user deletion
   function handleDeleteUser(userId, username, isAdmin) {
@@ -701,6 +735,7 @@ export default function AdminDashboard() {
                   <tr>
                     <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Username</th>
                     <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Email</th>
+                    <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">WhatsApp</th>
                     <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Admin</th>
                     <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Actions</th>
                   </tr>
@@ -710,9 +745,25 @@ export default function AdminDashboard() {
                     <tr key={u._id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       <td className="p-4 text-gray-800 dark:text-white">{u.username}</td>
                       <td className="p-4 text-gray-600 dark:text-gray-300">{u.email}</td>
+                      <td className="p-4">
+                        <div className="text-xs">
+                          <div>{u.phoneNumber || 'No phone'}</div>
+                          <div className={u.whatsappNotifications ? 'text-green-600' : 'text-gray-400'}>
+                            {u.whatsappNotifications ? '🔔 On' : '🔕 Off'}
+                          </div>
+                        </div>
+                      </td>
                       <td className="p-4">{u.isAdmin ? '✅' : ''}</td>
                       <td className="p-4">
                         <div className="flex gap-2 flex-wrap">
+                          <button
+                            onClick={() => handleEditWhatsApp(u._id, u.username, u.phoneNumber, u.whatsappNotifications)}
+                            disabled={loading}
+                            className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm text-white transition-colors disabled:opacity-50"
+                            title="Edit WhatsApp settings"
+                          >
+                            WhatsApp
+                          </button>
                           <button
                             onClick={() => handleResetUserScore(u._id, u.username)}
                             disabled={loading}
@@ -1726,6 +1777,24 @@ export default function AdminDashboard() {
                 <p className="text-green-600 dark:text-green-400">{resetMsg}</p>
               </div>
             )}
+          </div>
+        )}
+
+        {tab === 'WhatsApp' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="text-6xl mb-4">📱</div>
+                <h3 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">WhatsApp Admin Panel</h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-4">Send notifications and messages to users via WhatsApp</p>
+                <button
+                  onClick={() => window.open('/admin/whatsapp', '_blank')}
+                  className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg text-white font-medium transition-colors"
+                >
+                  Open WhatsApp Panel
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

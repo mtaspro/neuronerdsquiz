@@ -24,6 +24,8 @@ const userSchema = new mongoose.Schema({
   isAdmin: { type: Boolean, default: false },
   isSuperAdmin: { type: Boolean, default: false },
   selectedTheme: { type: String, default: null }, // null means use global default
+  phoneNumber: { type: String, default: '' },
+  whatsappNotifications: { type: Boolean, default: false }
 });
 
 // Hash password before saving

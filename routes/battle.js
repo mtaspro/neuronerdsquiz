@@ -1,6 +1,8 @@
 import express from 'express';
 import authMiddleware from '../middleware/authMiddleware.js';
 import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
+import whatsappService from '../services/whatsappService.js';
+import User from '../models/User.js';
 
 const router = express.Router();
 
@@ -23,6 +25,14 @@ router.post('/create', sessionMiddleware, async (req, res) => {
     // Broadcast to all connected clients via socket
     if (req.app.get('io')) {
       req.app.get('io').emit('battleRoomCreated', activeBattleRoom);
+    }
+    
+    // Send WhatsApp notifications
+    const users = await User.find({ whatsappNotifications: true });
+    const phoneNumbers = users.map(user => user.phoneNumber).filter(phone => phone);
+    if (phoneNumbers.length > 0) {
+      const message = `🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\nJoin now and test your skills!`;
+      whatsappService.broadcastMessage(phoneNumbers, message);
     }
     
     res.json({ success: true, battleRoom: activeBattleRoom });
@@ -48,6 +58,14 @@ router.post('/start', sessionMiddleware, (req, res) => {
       // Broadcast to all connected clients
       if (req.app.get('io')) {
         req.app.get('io').emit('battleStarted', activeBattleRoom);
+      }
+      
+      // Send WhatsApp notifications
+      const users = await User.find({ whatsappNotifications: true });
+      const phoneNumbers = users.map(user => user.phoneNumber).filter(phone => phone);
+      if (phoneNumbers.length > 0) {
+        const message = `⚡ Battle Started! ⚡\n\nRoom: ${roomId}\nChapter: ${activeBattleRoom.chapter}\n\nThe battle has begun!`;
+        whatsappService.broadcastMessage(phoneNumbers, message);
       }
       
       res.json({ success: true, battleRoom: activeBattleRoom });
