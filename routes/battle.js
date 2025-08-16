@@ -48,7 +48,7 @@ router.get('/active', (req, res) => {
 });
 
 // Start battle (mark as started)
-router.post('/start', sessionMiddleware, (req, res) => {
+router.post('/start', sessionMiddleware, async (req, res) => {
   try {
     const { roomId } = req.body;
     
