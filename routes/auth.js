@@ -309,7 +309,9 @@ router.put('/profile', sessionMiddleware, validateCSRFToken, memoryUpload.single
     // Format phone number for Bangladesh
     let formattedPhone = phoneNumber || '';
     if (formattedPhone && formattedPhone.startsWith('01')) {
-      formattedPhone = '+880' + formattedPhone.substring(1);
+      formattedPhone = '880' + formattedPhone.substring(1); // Remove + for WhatsApp compatibility
+    } else if (formattedPhone && formattedPhone.startsWith('+880')) {
+      formattedPhone = formattedPhone.substring(1); // Remove + if present
     }
     user.phoneNumber = formattedPhone;
     user.whatsappNotifications = whatsappNotifications === 'true' || whatsappNotifications === true;
