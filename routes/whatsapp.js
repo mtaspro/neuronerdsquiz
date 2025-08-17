@@ -5,6 +5,29 @@ import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 
 const router = express.Router();
 
+// Get QR code for web scanning
+router.get('/qr', sessionMiddleware, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const status = whatsappService.getConnectionStatus();
+    const qr = whatsappService.getQRCode();
+    
+    if (qr) {
+      // Generate QR code as data URL for web display
+      const QRCode = await import('qrcode');
+      const qrDataURL = await QRCode.toDataURL(qr);
+      res.json({ qr: qrDataURL, status });
+    } else {
+      res.json({ qr: null, status });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Admin send message to user
 router.post('/send-message', sessionMiddleware, async (req, res) => {
   try {

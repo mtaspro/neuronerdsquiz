@@ -15,6 +15,7 @@ class WhatsAppService {
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 3;
     this.isInitializing = false;
+    this.currentQR = null;
     
     WhatsAppService.instance = this;
   }
@@ -53,6 +54,7 @@ class WhatsAppService {
         if (qr) {
           console.log('📱 Scan this QR code with WhatsApp:');
           qrcode.generate(qr, { small: true });
+          this.currentQR = qr; // Store QR for web display
         }
         
         this.handleConnection(update);
@@ -154,6 +156,18 @@ class WhatsAppService {
       results.push({ phone, success: result });
     }
     return results;
+  }
+
+  getQRCode() {
+    return this.currentQR;
+  }
+
+  getConnectionStatus() {
+    return {
+      isConnected: this.isConnected,
+      hasQR: !!this.currentQR,
+      isInitializing: this.isInitializing
+    };
   }
 }
 
