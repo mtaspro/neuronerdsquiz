@@ -59,6 +59,9 @@ class WhatsAppService {
         
         this.handleConnection(update);
       });
+
+      // Listen for incoming messages
+      this.sock.ev.on('messages.upsert', this.handleIncomingMessage.bind(this));
       
       console.log('WhatsApp service initialized');
     } catch (error) {
@@ -188,6 +191,74 @@ class WhatsAppService {
       return { success: true, groups };
     } catch (error) {
       return { success: false, error: error.message };
+    }
+  }
+
+  async sendGroupMessage(groupId, message) {
+    if (!this.isConnected || !this.sock) {
+      return { success: false, error: 'WhatsApp not connected' };
+    }
+
+    try {
+      console.log(`📤 Sending group message to ${groupId}: ${message}`);
+      
+      await this.sock.sendMessage(groupId, { text: message });
+      console.log('✅ Group message sent successfully');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Group message failed:', error.message);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async handleIncomingMessage(m) {
+    try {
+      const message = m.messages[0];
+      if (!message || message.key.fromMe) return; // Ignore our own messages
+
+      const messageText = message.message?.conversation || 
+                         message.message?.extendedTextMessage?.text || '';
+      
+      // Check if message starts with @n
+      if (messageText.startsWith('@n ')) {
+        const actualMessage = messageText.substring(3); // Remove '@n '
+        const senderPhone = message.key.remoteJid.replace('@s.whatsapp.net', '');
+        const senderName = message.pushName || senderPhone;
+        
+        console.log(`📬 Inbox message from ${senderName} (${senderPhone}): ${actualMessage}`);
+        
+        // Save to user inbox
+        await this.saveToUserInbox(senderPhone, senderName, actualMessage);
+      }
+    } catch (error) {
+      console.error('❌ Error handling incoming message:', error);
+    }
+  }
+
+  async saveToUserInbox(senderPhone, senderName, message) {
+    try {
+      const User = (await import('../models/User.js')).default;
+      const UserMessage = (await import('../models/UserMessage.js')).default;
+      
+      // Find user by phone number
+      const recipient = await User.findOne({ phoneNumber: senderPhone });
+      if (!recipient) {
+        console.log(`⚠️ No user found with phone ${senderPhone}`);
+        return;
+      }
+
+      // Save message to inbox
+      const inboxMessage = new UserMessage({
+        recipientId: recipient._id,
+        senderPhone,
+        senderName,
+        message
+      });
+      
+      await inboxMessage.save();
+      console.log(`✅ Message saved to ${recipient.username}'s inbox`);
+    } catch (error) {
+      console.error('❌ Error saving to inbox:', error);
     }
   }
 }

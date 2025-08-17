@@ -21,6 +21,7 @@ import { router as webSearchRouter } from './routes/web-search.js';
 import { router as uploadImageRouter } from './routes/upload-image.js';
 import themeRouter from './routes/theme.js';
 import whatsappRouter from './routes/whatsapp.js';
+import userRouter from './routes/user.js';
 import BattleService from './services/battleService.js';
 import BadgeService from './services/badgeService.js';
 import whatsappService from './services/whatsappService.js';
@@ -505,6 +506,8 @@ console.log('Mounting WhatsApp router...');
 app.use('/api/whatsapp', whatsappRouter);
 console.log('Mounting events router...');
 app.use('/api/events', (await import('./routes/events.js')).default);
+console.log('Mounting user router...');
+app.use('/api/user', userRouter);
 console.log('All routers mounted successfully');
 
 // Test route for API connectivity

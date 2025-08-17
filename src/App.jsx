@@ -15,6 +15,9 @@ import AdminRoute from './components/AdminRoute';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminWhatsApp from './pages/AdminWhatsApp';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
+import UserWhatsApp from './pages/UserWhatsApp';
+import UserInbox from './pages/UserInbox';
+import NotFound from './pages/NotFound';
 import Badges from './pages/Badges';
 import About from './pages/About';
 import NeuraflowAIChat from './pages/NeuraflowAIChat';
@@ -282,6 +285,23 @@ function AnimatedRoutes() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/whatsapp"
+            element={
+              <ProtectedRoute>
+                <UserWhatsApp />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inbox"
+            element={
+              <ProtectedRoute>
+                <UserInbox />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </motion.div>
     </AnimatePresence>
