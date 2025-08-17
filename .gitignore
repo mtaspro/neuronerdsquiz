@@ -23,5 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
+# Don't ignore session folder - we want to commit WhatsApp sessions
+# session/
+
 env files
 .env
