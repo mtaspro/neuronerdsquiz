@@ -26,7 +26,8 @@ export const sessionMiddleware = async (req, res, next) => {
       userId: session.userId._id,
       email: session.userId.email,
       isAdmin: session.userId.isAdmin,
-      isSuperAdmin: session.userId.isSuperAdmin
+      isSuperAdmin: session.userId.isSuperAdmin,
+      userData: session.userData || session.userId // Fallback to populated user data
     };
 
     next();

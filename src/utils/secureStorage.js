@@ -10,21 +10,38 @@ class SecureStorage {
     return localStorage.getItem('sessionToken');
   }
 
-  // Store user data
+  // Store user data (deprecated - now stored in MongoDB)
   setUserData(userData) {
-    localStorage.setItem('userData', JSON.stringify(userData));
+    // Keep for backward compatibility but don't store
+    console.log('User data now stored in MongoDB session');
   }
 
-  // Get user data
-  getUserData() {
-    const data = localStorage.getItem('userData');
-    return data ? JSON.parse(data) : null;
+  // Get user data from server
+  async getUserData() {
+    const token = this.getToken();
+    if (!token) return null;
+    
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/auth/validate`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data.user;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to get user data:', error);
+      return null;
+    }
   }
 
   // Clear all data
   clear() {
     localStorage.removeItem('sessionToken');
-    localStorage.removeItem('userData');
+    // userData no longer stored in browser
   }
 
   // Check if user is logged in

@@ -11,6 +11,10 @@ const userSessionSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  userData: {
+    type: Object, // Store user data in session
+    required: true
+  },
   expiresAt: {
     type: Date,
     required: true,
