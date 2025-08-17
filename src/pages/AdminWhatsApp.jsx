@@ -9,6 +9,7 @@ const AdminWhatsApp = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [groupId, setGroupId] = useState('');
   const [users, setUsers] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -16,6 +17,7 @@ const AdminWhatsApp = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchGroups();
   }, []);
 
   const fetchUsers = async () => {
@@ -28,6 +30,21 @@ const AdminWhatsApp = () => {
       setUsers(response.data.users.filter(user => user.phoneNumber));
     } catch (error) {
       console.error('Failed to fetch users:', error);
+    }
+  };
+
+  const fetchGroups = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      const response = await axios.get(`${apiUrl}/api/whatsapp/groups`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.success) {
+        setGroups(response.data.groups);
+      }
+    } catch (error) {
+      console.error('Failed to fetch groups:', error);
     }
   };
 
@@ -187,22 +204,19 @@ const AdminWhatsApp = () => {
             {/* Group Message */}
             <div className="mb-6">
               <h3 className="font-semibold mb-2">Send to Group</h3>
-              <div className="mb-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-700">
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  <strong>How to get Group ID:</strong><br/>
-                  1. Open WhatsApp Web<br/>
-                  2. Go to the group chat<br/>
-                  3. Check browser URL - copy the part after "chat/" (e.g., 120363418978278612@g.us)
-                </p>
-              </div>
               <div className="flex gap-2">
-                <input
-                  type="text"
+                <select
                   value={groupId}
                   onChange={(e) => setGroupId(e.target.value)}
-                  placeholder="Group ID (e.g., 120363418978278612@g.us)"
                   className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700"
-                />
+                >
+                  <option value="">Select Group</option>
+                  {groups.map(group => (
+                    <option key={group.id} value={group.id}>
+                      {group.name} ({group.participants} members)
+                    </option>
+                  ))}
+                </select>
                 <button
                   onClick={() => sendMessage('group')}
                   disabled={isLoading}
@@ -212,6 +226,11 @@ const AdminWhatsApp = () => {
                   Send
                 </button>
               </div>
+              {groups.length === 0 && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  No groups found. Make sure WhatsApp is connected and you're in some groups.
+                </p>
+              )}
             </div>
 
             {/* Broadcast */}
