@@ -98,22 +98,37 @@ class WhatsAppService {
     }
   }
 
-  async sendMessage(phoneNumber, message) {
+  async sendMessage(phoneNumber, message, retries = 2) {
     if (!this.isConnected || !this.sock) {
       console.log('❌ WhatsApp not connected');
       return { success: false, error: 'WhatsApp not connected' };
     }
     
-    try {
-      const jid = phoneNumber.includes('@') ? phoneNumber : `${phoneNumber}@s.whatsapp.net`;
-      console.log(`📤 Sending message to ${jid}: ${message}`);
-      
-      await this.sock.sendMessage(jid, { text: message });
-      console.log('✅ Message sent successfully');
-      return { success: true };
-    } catch (error) {
-      console.error('❌ WhatsApp send error:', error.message || error);
-      return { success: false, error: error.message || 'Failed to send message' };
+    const jid = phoneNumber.includes('@') ? phoneNumber : `${phoneNumber}@s.whatsapp.net`;
+    console.log(`📤 Sending message to ${jid}: ${message}`);
+    
+    for (let attempt = 1; attempt <= retries + 1; attempt++) {
+      try {
+        await Promise.race([
+          this.sock.sendMessage(jid, { text: message }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout')), 15000) // 15 second timeout
+          )
+        ]);
+        
+        console.log('✅ Message sent successfully');
+        return { success: true };
+      } catch (error) {
+        console.log(`❌ Attempt ${attempt} failed: ${error.message}`);
+        
+        if (attempt <= retries) {
+          console.log(`🔄 Retrying in 2 seconds... (${attempt}/${retries})`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } else {
+          console.error('❌ All attempts failed');
+          return { success: false, error: `Failed after ${retries + 1} attempts: ${error.message}` };
+        }
+      }
     }
   }
 
