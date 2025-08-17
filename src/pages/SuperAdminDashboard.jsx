@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { FaCheck, FaTimes, FaUser, FaTrash, FaHistory, FaPalette } from 'react-icons/fa';
 import { useNotification } from '../components/NotificationSystem';
+import { secureStorage } from '../utils/secureStorage.js';
 
 const SuperAdminDashboard = () => {
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -32,7 +33,7 @@ const SuperAdminDashboard = () => {
   const fetchRequests = async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('authToken');
+      const token = secureStorage.getToken();
       
       const [pendingRes, allRes] = await Promise.all([
         axios.get(`${apiUrl}/api/superadmin/requests`, {
@@ -56,7 +57,7 @@ const SuperAdminDashboard = () => {
   const fetchGlobalSettings = async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('authToken');
+      const token = secureStorage.getToken();
       
       const response = await axios.get(`${apiUrl}/api/superadmin/global-settings`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -74,7 +75,7 @@ const SuperAdminDashboard = () => {
   const handleSetGlobalTheme = async (theme) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('authToken');
+      const token = secureStorage.getToken();
       
       await axios.post(`${apiUrl}/api/superadmin/set-global-theme`, {
         theme
@@ -98,7 +99,7 @@ const SuperAdminDashboard = () => {
     
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('authToken');
+      const token = secureStorage.getToken();
       
       const endDateTime = new Date(`${eventEndDate}T${eventEndTime}`);
       
@@ -118,7 +119,7 @@ const SuperAdminDashboard = () => {
   const handleEndEvent = async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('authToken');
+      const token = secureStorage.getToken();
       
       await axios.post(`${apiUrl}/api/superadmin/end-showdown-event`, {}, {
         headers: { Authorization: `Bearer ${token}` }
@@ -134,7 +135,7 @@ const SuperAdminDashboard = () => {
   const handleReviewRequest = async (requestId, action, notes = '') => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('authToken');
+      const token = secureStorage.getToken();
       
       await axios.post(`${apiUrl}/api/superadmin/requests/${requestId}/review`, {
         action,

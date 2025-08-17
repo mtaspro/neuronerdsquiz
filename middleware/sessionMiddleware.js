@@ -18,6 +18,10 @@ export const sessionMiddleware = async (req, res, next) => {
       return res.status(401).json({ error: 'Invalid or expired session' });
     }
 
+    // Extend session expiry on each request (refresh for another 30 days)
+    session.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await session.save();
+
     req.user = {
       userId: session.userId._id,
       email: session.userId.email,

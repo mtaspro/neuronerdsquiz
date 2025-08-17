@@ -105,7 +105,7 @@ export default function AdminDashboard() {
         const response = await axios.get(`${apiUrl}/api/admin/users`, { 
           headers: authHeader() 
         });
-        setUsers(response.data);
+        setUsers(response.data.users || response.data);
       } catch (err) {
         const errorMessage = err.response?.data?.error || err.message || 'Failed to load users';
         setError(errorMessage);
@@ -267,7 +267,7 @@ export default function AdminDashboard() {
         const loadUsers = async () => {
           try {
             const response = await axios.get(`${apiUrl}/api/admin/users`, { headers: authHeader() });
-            setUsers(response.data);
+            setUsers(response.data.users || response.data);
           } catch (err) {
             console.error('Failed to reload users:', err);
           }
