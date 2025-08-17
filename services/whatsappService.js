@@ -6,11 +6,32 @@ import qrcode from 'qrcode-terminal';
 
 class WhatsAppService {
   constructor() {
+    if (WhatsAppService.instance) {
+      return WhatsAppService.instance;
+    }
+    
     this.sock = null;
     this.isConnected = false;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 3;
+    this.isInitializing = false;
+    
+    WhatsAppService.instance = this;
   }
 
   async initialize() {
+    if (this.isInitializing) {
+      console.log('⚠️ WhatsApp initialization already in progress...');
+      return;
+    }
+    
+    if (this.isConnected) {
+      console.log('✅ WhatsApp already connected');
+      return;
+    }
+    
+    this.isInitializing = true;
+    
     try {
       // Check if session folder exists
       if (!fs.existsSync('./session')) {
@@ -40,6 +61,8 @@ class WhatsAppService {
       console.log('WhatsApp service initialized');
     } catch (error) {
       console.error('WhatsApp initialization error:', error);
+    } finally {
+      this.isInitializing = false;
     }
   }
 
@@ -47,16 +70,31 @@ class WhatsAppService {
     const { connection, lastDisconnect } = update;
     
     if (connection === 'close') {
-      const shouldReconnect = (lastDisconnect?.error instanceof Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
-      console.log('Connection closed due to ', lastDisconnect?.error, ', reconnecting ', shouldReconnect);
+      const statusCode = (lastDisconnect?.error instanceof Boom)?.output?.statusCode;
+      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
       
-      if (shouldReconnect) {
-        this.initialize();
+      console.log('Connection closed due to ', lastDisconnect?.error?.message || 'Unknown error');
+      
+      // Handle specific error cases
+      if (lastDisconnect?.error?.message?.includes('conflict')) {
+        console.log('⚠️ WhatsApp Web conflict detected. Another session is active.');
+        console.log('💡 Close other WhatsApp Web sessions and restart server.');
+        return; // Don't reconnect on conflict
       }
+      
+      if (shouldReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
+        this.reconnectAttempts++;
+        console.log(`🔄 Reconnecting... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+        setTimeout(() => this.initialize(), 5000); // Wait 5 seconds before reconnecting
+      } else {
+        console.log('❌ Max reconnection attempts reached or logged out');
+      }
+      
       this.isConnected = false;
     } else if (connection === 'open') {
-      console.log('WhatsApp connected');
+      console.log('✅ WhatsApp connected');
       this.isConnected = true;
+      this.reconnectAttempts = 0; // Reset counter on successful connection
     }
   }
 
@@ -104,4 +142,9 @@ class WhatsAppService {
   }
 }
 
-export default new WhatsAppService();
+// Ensure only one instance per process
+if (!global.whatsappServiceInstance) {
+  global.whatsappServiceInstance = new WhatsAppService();
+}
+
+export default global.whatsappServiceInstance;
