@@ -171,6 +171,25 @@ class WhatsAppService {
       isInitializing: this.isInitializing
     };
   }
+
+  async getGroups() {
+    if (!this.isConnected || !this.sock) {
+      return { success: false, error: 'WhatsApp not connected' };
+    }
+
+    try {
+      const chats = await this.sock.groupFetchAllParticipating();
+      const groups = Object.values(chats).map(group => ({
+        id: group.id,
+        name: group.subject,
+        participants: group.participants?.length || 0
+      }));
+      
+      return { success: true, groups };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 // Ensure only one instance per process

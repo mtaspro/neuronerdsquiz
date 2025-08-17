@@ -5,6 +5,20 @@ import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 
 const router = express.Router();
 
+// Get all groups with their IDs
+router.get('/groups', sessionMiddleware, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const result = await whatsappService.getGroups();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get QR code for web scanning (public endpoint)
 router.get('/qr', async (req, res) => {
   try {
