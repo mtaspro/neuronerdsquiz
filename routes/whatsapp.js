@@ -5,12 +5,9 @@ import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 
 const router = express.Router();
 
-// Get QR code for web scanning
-router.get('/qr', sessionMiddleware, async (req, res) => {
+// Get QR code for web scanning (public endpoint)
+router.get('/qr', async (req, res) => {
   try {
-    if (!req.user.isAdmin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
 
     const status = whatsappService.getConnectionStatus();
     const qr = whatsappService.getQRCode();
