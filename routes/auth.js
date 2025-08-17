@@ -103,23 +103,26 @@ router.post('/register', memoryUpload.single('profilePicture'), async (req, res)
       return res.status(500).json({ error: 'Server configuration error.' });
     }
 
-    // Create session in MongoDB
-    const sessionToken = crypto.randomBytes(32).toString('hex');
-    const session = new UserSession({
-      userId: user._id,
-      sessionToken
-    });
-    await session.save();
-    
-    // Return session token and user data (excluding password)
+    // Create user data object
     const userData = {
       _id: user._id,
       email: user.email,
       isAdmin: user.isAdmin,
       isSuperAdmin: user.isSuperAdmin,
       username: user.username,
-      avatar: user.avatar
+      avatar: user.avatar,
+      phoneNumber: user.phoneNumber,
+      whatsappNotifications: user.whatsappNotifications
     };
+
+    // Create session in MongoDB with user data
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    const session = new UserSession({
+      userId: user._id,
+      sessionToken,
+      userData
+    });
+    await session.save();
     
     console.log('Registration successful for user:', email);
     res.status(201).json({ token: sessionToken, user: userData });
@@ -155,23 +158,26 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
-    // Create session in MongoDB
-    const sessionToken = crypto.randomBytes(32).toString('hex');
-    const session = new UserSession({
-      userId: user._id,
-      sessionToken
-    });
-    await session.save();
-    
-    // Return session token and user data (excluding password)
+    // Create user data object
     const userData = {
       _id: user._id,
       email: user.email,
       isAdmin: user.isAdmin,
       isSuperAdmin: user.isSuperAdmin,
       username: user.username,
-      avatar: user.avatar
+      avatar: user.avatar,
+      phoneNumber: user.phoneNumber,
+      whatsappNotifications: user.whatsappNotifications
     };
+
+    // Create session in MongoDB with user data
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    const session = new UserSession({
+      userId: user._id,
+      sessionToken,
+      userData
+    });
+    await session.save();
     
     console.log('Login successful for user:', email);
     res.json({ token: sessionToken, user: userData });
