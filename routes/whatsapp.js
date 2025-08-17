@@ -15,10 +15,50 @@ router.get('/qr', async (req, res) => {
     if (qr) {
       // Generate QR code as data URL for web display
       const QRCode = await import('qrcode');
-      const qrDataURL = await QRCode.toDataURL(qr);
-      res.json({ qr: qrDataURL, status });
+      const qrDataURL = await QRCode.toDataURL(qr, { width: 300 });
+      
+      // Return HTML page with QR code image
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>WhatsApp QR Code</title>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            .qr-container { margin: 20px auto; }
+            .status { color: #666; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <h1>📱 Scan with WhatsApp</h1>
+          <div class="qr-container">
+            <img src="${qrDataURL}" alt="WhatsApp QR Code" />
+          </div>
+          <div class="status">
+            <p>✅ QR Code Ready - Scan with your WhatsApp app</p>
+            <p><small>Refresh page if QR code expires</small></p>
+          </div>
+        </body>
+        </html>
+      `);
     } else {
-      res.json({ qr: null, status });
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>WhatsApp Status</title>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+          </style>
+        </head>
+        <body>
+          <h1>WhatsApp Status</h1>
+          <p>${status.isConnected ? '✅ WhatsApp Connected' : '❌ WhatsApp Not Connected'}</p>
+          <p>${status.isInitializing ? '🔄 Initializing...' : ''}</p>
+          <p><small>Refresh page to check for QR code</small></p>
+        </body>
+        </html>
+      `);
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
