@@ -110,7 +110,9 @@ class WhatsAppService {
     }
     
     try {
-      const jid = phoneNumber.includes('@') ? phoneNumber : `${phoneNumber}@s.whatsapp.net`;
+      // Always remove + sign if present
+      const cleanPhone = phoneNumber.replace('+', '');
+      const jid = cleanPhone.includes('@') ? cleanPhone : `${cleanPhone}@s.whatsapp.net`;
       console.log(`📤 Sending to ${jid}: ${message}`);
       
       // Simple send without complex retry logic
@@ -126,7 +128,8 @@ class WhatsAppService {
       
       // Try once more with different format
       try {
-        const jid = `${phoneNumber.replace('+', '')}@s.whatsapp.net`;
+        const cleanRetryPhone = phoneNumber.replace('+', '');
+        const jid = `${cleanRetryPhone}@s.whatsapp.net`;
         console.log(`🔄 Retry with format: ${jid}`);
         
         await this.sock.sendMessage(jid, { text: message });
