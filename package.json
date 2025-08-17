@@ -25,6 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.6.0",
     "multer": "^2.0.2",
+    "qrcode-terminal": "^0.12.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-icons": "^5.5.0",
