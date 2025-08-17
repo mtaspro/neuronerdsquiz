@@ -13,9 +13,13 @@ router.post('/send-message', sessionMiddleware, async (req, res) => {
     }
 
     const { phoneNumber, message } = req.body;
-    const success = await whatsappService.sendMessage(phoneNumber, message);
+    const result = await whatsappService.sendMessage(phoneNumber, message);
     
-    res.json({ success });
+    if (result.success) {
+      res.json({ success: true, message: 'Message sent successfully' });
+    } else {
+      res.status(500).json({ success: false, error: result.error });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

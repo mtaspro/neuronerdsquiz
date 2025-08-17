@@ -61,15 +61,21 @@ class WhatsAppService {
   }
 
   async sendMessage(phoneNumber, message) {
-    if (!this.isConnected || !this.sock) return false;
+    if (!this.isConnected || !this.sock) {
+      console.log('❌ WhatsApp not connected');
+      return { success: false, error: 'WhatsApp not connected' };
+    }
     
     try {
       const jid = phoneNumber.includes('@') ? phoneNumber : `${phoneNumber}@s.whatsapp.net`;
+      console.log(`📤 Sending message to ${jid}: ${message}`);
+      
       await this.sock.sendMessage(jid, { text: message });
-      return true;
+      console.log('✅ Message sent successfully');
+      return { success: true };
     } catch (error) {
-      console.error('WhatsApp send error:', error);
-      return false;
+      console.error('❌ WhatsApp send error:', error.message || error);
+      return { success: false, error: error.message || 'Failed to send message' };
     }
   }
 

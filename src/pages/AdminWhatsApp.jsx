@@ -78,13 +78,13 @@ const AdminWhatsApp = () => {
       });
 
       if (response.data.success || response.data.results) {
-        setSuccessMessage('Message sent successfully!');
+        setSuccessMessage(response.data.message || 'Message sent successfully!');
         setMessage('');
         setPhoneNumber('');
         setGroupId('');
         setSelectedUsers([]);
       } else {
-        setErrorMessage('Failed to send message');
+        setErrorMessage(response.data.error || 'Failed to send message');
       }
     } catch (error) {
       setErrorMessage(error.response?.data?.error || 'Failed to send message');
