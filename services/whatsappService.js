@@ -142,18 +142,7 @@ class WhatsAppService {
     }
   }
 
-  async sendGroupMessage(groupId, message) {
-    if (!this.isConnected || !this.sock) return false;
-    
-    try {
-      const jid = groupId.includes('@') ? groupId : `${groupId}@g.us`;
-      await this.sock.sendMessage(jid, { text: message });
-      return true;
-    } catch (error) {
-      console.error('WhatsApp group send error:', error);
-      return false;
-    }
-  }
+
 
   async broadcastMessage(phoneNumbers, message) {
     if (!this.isConnected || !phoneNumbers.length) return false;
@@ -243,8 +232,19 @@ class WhatsAppService {
       const User = (await import('../models/User.js')).default;
       const UserMessage = (await import('../models/UserMessage.js')).default;
       
-      // Find user by phone number
-      const recipient = await User.findOne({ phoneNumber: senderPhone });
+      // Try to find user by phone number (handle both +880 and 880 formats)
+      let recipient = await User.findOne({ phoneNumber: senderPhone });
+      
+      // If not found, try with +880 prefix
+      if (!recipient && !senderPhone.startsWith('+')) {
+        recipient = await User.findOne({ phoneNumber: `+${senderPhone}` });
+      }
+      
+      // If still not found, try without +880 prefix
+      if (!recipient && senderPhone.startsWith('+')) {
+        recipient = await User.findOne({ phoneNumber: senderPhone.substring(1) });
+      }
+      
       if (!recipient) {
         console.log(`⚠️ No user found with phone ${senderPhone}`);
         return;
@@ -253,9 +253,9 @@ class WhatsAppService {
       // Save message to inbox
       const inboxMessage = new UserMessage({
         recipientId: recipient._id,
-        senderPhone,
-        senderName,
-        message
+        senderPhone: senderPhone,
+        senderName: senderName,
+        message: message
       });
       
       await inboxMessage.save();

@@ -331,6 +331,34 @@ const Dashboard = () => {
               </div>
             </motion.button>
 
+            {/* WhatsApp Messenger Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => { soundManager.play('transition'); navigate('/whatsapp'); }}
+              onMouseEnter={() => soundManager.play('click')}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full mt-4"
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <span className="text-2xl">📱</span>
+                <span>WhatsApp Messenger</span>
+              </div>
+            </motion.button>
+
+            {/* Inbox Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => { soundManager.play('transition'); navigate('/inbox'); }}
+              onMouseEnter={() => soundManager.play('click')}
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full mt-4"
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <span className="text-2xl">📬</span>
+                <span>Inbox</span>
+              </div>
+            </motion.button>
+
             {/* Behind The Scenes Button */}
             <motion.button
               whileHover={{ scale: 1.05 }}
