@@ -1150,15 +1150,7 @@ export default function AdminDashboard() {
           <div className="space-y-6">
             {/* Easy Question Import */}
             <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-6 rounded-lg border-2 border-green-200 dark:border-green-700 mb-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold text-green-800 dark:text-green-300">🚀 Easy Question Import from Chorcha</h3>
-                <button
-                  onClick={() => window.open('/admin/mobile-parser', '_blank')}
-                  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white text-sm transition-colors"
-                >
-                  📱 Mobile Parser (No Console)
-                </button>
-              </div>
+              <h3 className="text-xl font-semibold text-green-800 dark:text-green-300 mb-4">🚀 Easy Question Import from Chorcha</h3>
               <div className="space-y-4">
                 <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-600">
                   <div className="flex items-center justify-between mb-2">
@@ -1190,9 +1182,6 @@ export default function AdminDashboard() {
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded border border-yellow-200 dark:border-yellow-700">
                   <p className="text-sm text-yellow-800 dark:text-yellow-300">
                     <strong>💡 Pro Tip:</strong> The script automatically extracts correct answers from the colored options!
-                  </p>
-                  <p className="text-sm text-blue-800 dark:text-blue-300 mt-2">
-                    <strong>📱 Mobile Users:</strong> Use the "Mobile Parser" button above - no browser console needed!
                   </p>
                 </div>
               </div>
