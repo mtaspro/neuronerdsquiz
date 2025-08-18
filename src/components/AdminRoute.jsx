@@ -9,23 +9,22 @@ const AdminRoute = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkAdminAuth = () => {
+    const checkAdminAuth = async () => {
       const token = secureStorage.getToken();
-      const userData = secureStorage.getUserData();
       
-      // Check if both token and user data exist
-      if (token && userData) {
+      if (token) {
         try {
-          setIsAuthenticated(true);
+          const userData = await secureStorage.getUserData();
           
-          // Check if user has admin privileges
-          const hasAdminAccess = userData.isAdmin === true || 
-                                userData.email?.toLowerCase().includes('admin') ||
-                                userData.username?.toLowerCase().includes('admin');
-          
-          setIsAdmin(hasAdminAccess);
+          if (userData) {
+            setIsAuthenticated(true);
+            setIsAdmin(userData.isAdmin === true);
+          } else {
+            setIsAuthenticated(false);
+            setIsAdmin(false);
+          }
         } catch (error) {
-          console.error('Invalid user data:', error);
+          console.error('Error getting user data:', error);
           secureStorage.clear();
           setIsAuthenticated(false);
           setIsAdmin(false);
