@@ -25,6 +25,7 @@ const Dashboard = () => {
   const [selectedBattleChapter, setSelectedBattleChapter] = useState('');
   const [activeBattleRoom, setActiveBattleRoom] = useState(null);
   const [showSpectatorModal, setShowSpectatorModal] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   
   // Notification hook
   const { success, info } = useNotification();
@@ -103,7 +104,24 @@ const Dashboard = () => {
       }
     };
 
+    const fetchUnreadCount = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await axios.get(`${apiUrl}/api/user/inbox/unread-count`, {
+          headers: authHeader()
+        });
+        setUnreadCount(response.data.count || 0);
+      } catch (error) {
+        console.error('Failed to fetch unread count:', error);
+      }
+    };
+
     fetchChapters();
+    fetchUnreadCount();
+    
+    // Poll for unread messages every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
   }, [navigate]);
 
   const handleLogout = () => {
@@ -337,11 +355,16 @@ const Dashboard = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => { soundManager.play('transition'); navigate('/whatsapp'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full mt-4"
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full mt-4 relative"
             >
               <div className="flex items-center justify-center space-x-2">
                 <span className="text-2xl">📱</span>
                 <span>WhatsApp Messenger</span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </div>
             </motion.button>
 

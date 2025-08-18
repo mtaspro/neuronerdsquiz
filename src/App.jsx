@@ -15,6 +15,7 @@ import AdminRoute from './components/AdminRoute';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminWhatsApp from './pages/AdminWhatsApp';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
+import MobileQuestionParser from './pages/MobileQuestionParser';
 import UserWhatsApp from './pages/UserWhatsApp';
 import UserInbox from './pages/UserInbox';
 import NotFound from './pages/NotFound';
@@ -274,6 +275,14 @@ function AnimatedRoutes() {
             element={
               <AdminRoute>
                 <AdminWhatsApp />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/mobile-parser"
+            element={
+              <AdminRoute>
+                <MobileQuestionParser />
               </AdminRoute>
             }
           />
