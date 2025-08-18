@@ -56,15 +56,21 @@ function Navbar() {
   };
   
   React.useEffect(() => {
-    function checkAuth() {
-      const userData = secureStorage.getUserData();
+    async function checkAuth() {
       const token = secureStorage.getToken();
       
-      if (userData && token) {
+      if (token) {
         try {
-          setIsAuthenticated(true);
-          setIsAdmin(userData.isAdmin === true);
-          setIsSuperAdmin(userData.isSuperAdmin === true);
+          const userData = await secureStorage.getUserData();
+          if (userData) {
+            setIsAuthenticated(true);
+            setIsAdmin(userData.isAdmin === true);
+            setIsSuperAdmin(userData.isSuperAdmin === true);
+          } else {
+            setIsAuthenticated(false);
+            setIsAdmin(false);
+            setIsSuperAdmin(false);
+          }
         } catch (error) {
           setIsAuthenticated(false);
           setIsAdmin(false);
