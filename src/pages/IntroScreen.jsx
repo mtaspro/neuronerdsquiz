@@ -80,16 +80,29 @@ export default function IntroScreen() {
 
   // Check auth state on mount & storage changes
   useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem('authToken');
-      const userData = localStorage.getItem('userData');
-      setIsAuthenticated(Boolean(token && userData));
+    const checkAuth = async () => {
+      try {
+        const { secureStorage } = await import('../utils/secureStorage.js');
+        const token = secureStorage.getToken();
+        const userData = await secureStorage.getUserData();
+        setIsAuthenticated(Boolean(token && userData));
+      } catch (error) {
+        console.error('Auth check error:', error);
+        setIsAuthenticated(false);
+      }
     };
 
     checkAuth();
-    // Listen to storage events (multi-tab)
-    window.addEventListener('storage', checkAuth);
-    return () => window.removeEventListener('storage', checkAuth);
+    
+    // Listen to auth changes
+    const handleAuthChange = () => checkAuth();
+    window.addEventListener('storage', handleAuthChange);
+    window.addEventListener('userAuthChange', handleAuthChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleAuthChange);
+      window.removeEventListener('userAuthChange', handleAuthChange);
+    };
   }, []);
 
   // Load event data
