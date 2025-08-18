@@ -8,16 +8,19 @@ const ProtectedRoute = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       const token = secureStorage.getToken();
-      const userData = secureStorage.getUserData();
       
-      // Check if both token and user data exist
-      if (token && userData) {
+      if (token) {
         try {
-          setIsAuthenticated(true);
+          const userData = await secureStorage.getUserData();
+          if (userData) {
+            setIsAuthenticated(true);
+          } else {
+            setIsAuthenticated(false);
+          }
         } catch (error) {
-          console.error('Invalid user data in secureStorage:', error);
+          console.error('Failed to validate authentication:', error);
           // Clear invalid data
           secureStorage.clear();
           setIsAuthenticated(false);

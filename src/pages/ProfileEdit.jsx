@@ -43,26 +43,35 @@ const ProfileEdit = () => {
 
   useEffect(() => {
     // Load current user data
-    const userData = secureStorage.getUserData();
-    if (userData?._id) {
-      setFormData(prev => ({
-        ...prev,
-        username: userData.username || '',
-        email: userData.email || '',
-        phoneNumber: userData.phoneNumber || '',
-        whatsappNotifications: userData.whatsappNotifications || false,
-        avatar: userData.avatar || avatarOptions[0]
-      }));
-      // Use the avatar utility to get the correct URL for display
-      const avatarUrl = getAvatarUrl(userData.avatar || avatarOptions[0]);
-      setPreviewImage(avatarUrl);
-      setUseCustomImage(!avatarOptions.includes(userData.avatar || ''));
-      
-      // Get CSRF token
-      fetchCSRFToken();
-    } else {
-      navigate('/login');
-    }
+    const loadUserData = async () => {
+      try {
+        const userData = await secureStorage.getUserData();
+        if (userData?._id) {
+          setFormData(prev => ({
+            ...prev,
+            username: userData.username || '',
+            email: userData.email || '',
+            phoneNumber: userData.phoneNumber || '',
+            whatsappNotifications: userData.whatsappNotifications || false,
+            avatar: userData.avatar || avatarOptions[0]
+          }));
+          // Use the avatar utility to get the correct URL for display
+          const avatarUrl = getAvatarUrl(userData.avatar || avatarOptions[0]);
+          setPreviewImage(avatarUrl);
+          setUseCustomImage(!avatarOptions.includes(userData.avatar || ''));
+          
+          // Get CSRF token
+          fetchCSRFToken();
+        } else {
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Failed to load user data:', error);
+        navigate('/login');
+      }
+    };
+    
+    loadUserData();
   }, [navigate]);
 
   const fetchCSRFToken = async () => {
@@ -193,13 +202,6 @@ const ProfileEdit = () => {
       
       const response = await axios.put(`${apiUrl}/api/auth/profile`, submitData, { headers });
       if (response.data.user) {
-        // Update secureStorage with new user data
-        const currentUserData = secureStorage.getUserData() || {};
-        const updatedUserData = {
-          ...currentUserData,
-          ...response.data.user
-        };
-        secureStorage.setUserData(updatedUserData);
         setSuccessMessage('Profile updated successfully!');
         // Clear password fields
         setFormData(prev => ({
@@ -225,9 +227,13 @@ const ProfileEdit = () => {
   };
 
   // Handle image load error with fallback
-  const handleImageError = (e) => {
-    const userData = secureStorage.getUserData() || {};
-    e.target.src = getFallbackAvatar(userData.username || 'User');
+  const handleImageError = async (e) => {
+    try {
+      const userData = await secureStorage.getUserData() || {};
+      e.target.src = getFallbackAvatar(userData.username || 'User');
+    } catch (error) {
+      e.target.src = getFallbackAvatar('User');
+    }
   };
 
   return (
