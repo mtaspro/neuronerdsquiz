@@ -71,7 +71,7 @@ export default function AdminDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [questionsPerPage] = useState(50);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedChapterFilter, setSelectedChapterFilter] = useState('');
+  const [selectedChapterFilter, setSelectedChapterFilter] = useState('none');
 
   // Get question count for a chapter
   const getQuestionCount = (chapterName) => {
@@ -604,6 +604,11 @@ export default function AdminDashboard() {
 
   // Get filtered questions
   const getFilteredQuestions = () => {
+    // If no filter is selected (default 'none'), return empty array
+    if (selectedChapterFilter === 'none') {
+      return [];
+    }
+    
     let filtered = questions;
     
     // Filter by selected chapter
@@ -1453,6 +1458,7 @@ export default function AdminDashboard() {
                     onChange={e => handleFilterChange(e.target.value, searchQuery)}
                     className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
                   >
+                    <option value="none">Select a chapter to view questions</option>
                     <option value="">All Chapters</option>
                     {chapters.map(ch => (
                       <option key={ch._id} value={ch.name}>
@@ -1467,7 +1473,8 @@ export default function AdminDashboard() {
                 <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading questions...</div>
               ) : getFilteredQuestions().length === 0 ? (
                 <div className="text-center py-8 text-gray-600 dark:text-gray-400">
-                  {searchQuery || selectedChapterFilter ? 'No questions match your filters.' : 'No questions found.'}
+                  {selectedChapterFilter === 'none' ? 'Please select a chapter to view questions.' : 
+                   searchQuery || selectedChapterFilter ? 'No questions match your filters.' : 'No questions found.'}
                 </div>
               ) : (
                 <>
