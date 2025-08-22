@@ -38,9 +38,12 @@ const Dashboard = () => {
         const response = await fetch(`${apiUrl}/api/battle/active`);
         const data = await response.json();
         
-        if (data.battleRoom) {
+        if (data.battleRoom && data.battleRoom.status !== 'expired') {
           setActiveBattleRoom(data.battleRoom);
           setBattleRoomId(data.battleRoom.id);
+        } else {
+          setActiveBattleRoom(null);
+          setBattleRoomId('');
         }
       } catch (error) {
         console.error('Failed to check existing battle room:', error);

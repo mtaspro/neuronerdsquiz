@@ -8,6 +8,7 @@ const router = express.Router();
 
 // Store active battle room (in production, use Redis or database)
 let activeBattleRoom = null;
+let battleRoomCreator = null; // Track who created the room
 
 // Create battle room (admin only)
 router.post('/create', sessionMiddleware, async (req, res) => {
@@ -21,6 +22,7 @@ router.post('/create', sessionMiddleware, async (req, res) => {
     
     // Set active battle room
     activeBattleRoom = { id: roomId, chapter, status: 'waiting' };
+    battleRoomCreator = req.user.id; // Track the creator
     
     // Broadcast to all connected clients via socket
     if (req.app.get('io')) {
@@ -99,6 +101,9 @@ router.post('/end', sessionMiddleware, (req, res) => {
         }
       }, 30000);
       
+      // Clear creator reference
+      battleRoomCreator = null;
+      
       res.json({ success: true, battleRoom: activeBattleRoom });
     } else {
       res.status(404).json({ error: 'Battle room not found' });
@@ -117,6 +122,7 @@ router.post('/close', sessionMiddleware, (req, res) => {
     }
     
     activeBattleRoom = null;
+    battleRoomCreator = null;
     
     // Broadcast to all connected clients
     if (req.app.get('io')) {
@@ -127,6 +133,44 @@ router.post('/close', sessionMiddleware, (req, res) => {
   } catch (error) {
     console.error('Error closing battle room:', error);
     res.status(500).json({ error: 'Failed to close battle room' });
+  }
+});
+
+// Expire battle room when creator leaves
+router.post('/expire', sessionMiddleware, (req, res) => {
+  try {
+    const { roomId, userId } = req.body;
+    
+    // Check if the user leaving is the creator and battle hasn't started
+    if (activeBattleRoom && 
+        activeBattleRoom.id === roomId && 
+        battleRoomCreator === userId && 
+        activeBattleRoom.status === 'waiting') {
+      
+      console.log(`Battle room ${roomId} expired - creator left before starting`);
+      activeBattleRoom.status = 'expired';
+      
+      // Broadcast expiration to all connected clients
+      if (req.app.get('io')) {
+        req.app.get('io').emit('battleRoomExpired', { roomId, reason: 'Creator left' });
+      }
+      
+      // Clear the battle room after 5 seconds
+      setTimeout(() => {
+        activeBattleRoom = null;
+        battleRoomCreator = null;
+        if (req.app.get('io')) {
+          req.app.get('io').emit('battleRoomClosed');
+        }
+      }, 5000);
+      
+      res.json({ success: true, expired: true });
+    } else {
+      res.json({ success: true, expired: false });
+    }
+  } catch (error) {
+    console.error('Error expiring battle room:', error);
+    res.status(500).json({ error: 'Failed to expire battle room' });
   }
 });
 

@@ -464,6 +464,9 @@ io.on('connection', (socket) => {
           username: user.username,
           totalUsers: updatedRoom.users.size
         });
+        
+        // Check if disconnected user was the room creator and battle hasn't started
+        // This requires importing the battle router's state - for now, we'll handle it via API call
       }
     }
   });

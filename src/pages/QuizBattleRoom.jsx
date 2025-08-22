@@ -479,9 +479,53 @@ const QuizBattleRoom = () => {
     };
   }, [securityActive, cleanupSecurity]);
 
-  const handleLeaveRoom = () => {
+  // Cleanup on component unmount (browser close, navigation, etc.)
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      if (userData?._id && isRoomCreator && !battleStarted) {
+        // Use navigator.sendBeacon for reliable cleanup on page unload
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const data = JSON.stringify({ roomId, userId: userData._id });
+        
+        try {
+          navigator.sendBeacon(`${apiUrl}/api/battle/expire`, data);
+        } catch (error) {
+          console.error('Failed to expire battle room on unload:', error);
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Also handle cleanup on component unmount
+      if (userData?._id && isRoomCreator && !battleStarted) {
+        handleLeaveRoom();
+      }
+    };
+  }, [userData?._id, isRoomCreator, battleStarted, roomId]);
+
+  const handleLeaveRoom = async () => {
     if (userData?._id) {
       battleSocketHelpers.leaveRoom(roomId, userData._id);
+      
+      // If user is room creator and battle hasn't started, expire the room
+      if (isRoomCreator && !battleStarted) {
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || '';
+          await fetch(`${apiUrl}/api/battle/expire`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${secureStorage.getToken()}`
+            },
+            body: JSON.stringify({ roomId, userId: userData._id })
+          });
+        } catch (error) {
+          console.error('Failed to expire battle room:', error);
+        }
+      }
     }
     navigate('/dashboard');
   };
