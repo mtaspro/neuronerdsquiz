@@ -704,9 +704,9 @@ const QuizBattleRoom = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               {/* Players List */}
               <div>
-                <h3 className="text-xl font-semibold mb-4 text-center">Players ({users.length})</h3>
+                <h3 className="text-xl font-semibold mb-4 text-center">Players ({users?.length || 0})</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {users.map((user, index) => (
+                  {users?.map((user, index) => (
                     <motion.div
                       key={user.id}
                       initial={{ opacity: 0, scale: 0.8 }}
@@ -799,7 +799,7 @@ const QuizBattleRoom = () => {
             </div>
 
             {/* Start Battle Button (Room Creator Only) */}
-            {isRoomCreator && users.length >= 2 && users.every(user => user.isReady) && securityInitialized && (
+            {isRoomCreator && users?.length >= 2 && users?.every(user => user.isReady) && securityInitialized && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
