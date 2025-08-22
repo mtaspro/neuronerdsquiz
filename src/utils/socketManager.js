@@ -313,10 +313,11 @@ export const battleSocketHelpers = {
   },
   
   // Start battle
-  startBattle: async (roomId, questions) => {
+  startBattle: async (roomId, questions, creatorUserId) => {
     await socketManager.emit('startBattle', {
       roomId,
-      questions
+      questions,
+      creatorUserId
     });
   },
   

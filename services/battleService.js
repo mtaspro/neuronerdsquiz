@@ -92,7 +92,7 @@ class BattleService {
   }
 
   // Start battle
-  startBattle(roomId, questions, socketId) {
+  startBattle(roomId, questions, creatorUserId) {
     const room = this.getRoom(roomId);
     if (!room) {
       throw new Error('Room not found');
@@ -100,7 +100,7 @@ class BattleService {
 
     // Check if user is the room creator (first user)
     const firstUser = Array.from(room.users.values())[0];
-    if (firstUser.socketId !== socketId) {
+    if (firstUser.id !== creatorUserId) {
       throw new Error('Only room creator can start the battle');
     }
 

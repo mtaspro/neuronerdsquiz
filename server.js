@@ -316,9 +316,9 @@ io.on('connection', (socket) => {
   });
 
   // Start battle
-  socket.on('startBattle', ({ roomId, questions }) => {
+  socket.on('startBattle', ({ roomId, questions, creatorUserId }) => {
     try {
-      const room = battleService.startBattle(roomId, questions, socket.id);
+      const room = battleService.startBattle(roomId, questions, creatorUserId);
       
       // Notify all users that battle is starting
       io.to(roomId).emit('battleStarted', {

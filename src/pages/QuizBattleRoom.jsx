@@ -368,7 +368,7 @@ const QuizBattleRoom = () => {
         console.error('Failed to mark battle as started:', error);
       }
       
-      battleSocketHelpers.startBattle(roomId, questionsToUse);
+      battleSocketHelpers.startBattle(roomId, questionsToUse, userData._id);
     } catch (error) {
       console.error('Error starting battle:', error);
       showError('Failed to start battle. Please try again.');
