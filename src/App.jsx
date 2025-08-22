@@ -32,6 +32,9 @@ import { useOnboarding } from './hooks/useOnboarding';
 import { MathProvider } from './components/MathText';
 import soundManager from './utils/soundUtils';
 import { secureStorage } from './utils/secureStorage.js';
+import MaintenanceOverlay from './components/MaintenanceOverlay';
+import MaintenanceNotification from './components/MaintenanceNotification';
+import { useMaintenance } from './hooks/useMaintenance';
 
 // Optional Navbar
 import { useState } from "react";
@@ -323,6 +326,13 @@ function AppContent() {
     markTutorialAsCompleted
   } = useOnboarding();
 
+  const {
+    isMaintenanceMode,
+    showNotification,
+    handleNotificationComplete,
+    isSuperAdmin
+  } = useMaintenance();
+
   // Add global click listener to start background music on user interaction
   React.useEffect(() => {
     const handleUserInteraction = () => {
@@ -349,6 +359,13 @@ function AppContent() {
         setShouldShowTour={setShouldShowTour}
         onTourComplete={markTutorialAsCompleted}
       />
+      
+      {/* Maintenance System */}
+      <MaintenanceNotification
+        isVisible={showNotification}
+        onComplete={handleNotificationComplete}
+      />
+      <MaintenanceOverlay isActive={isMaintenanceMode} isSuperAdmin={isSuperAdmin} />
     </div>
   );
 }

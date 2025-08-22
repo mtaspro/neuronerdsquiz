@@ -132,6 +132,38 @@ const SuperAdminDashboard = () => {
     }
   };
 
+  const handleEnableMaintenance = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      
+      await axios.post(`${apiUrl}/api/superadmin/maintenance/enable`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      success('Maintenance mode enabled! Users will receive 60s warning.');
+    } catch (error) {
+      console.error('Error enabling maintenance:', error);
+      showError('Failed to enable maintenance mode');
+    }
+  };
+
+  const handleDisableMaintenance = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      
+      await axios.post(`${apiUrl}/api/superadmin/maintenance/disable`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      success('Maintenance mode disabled! Site is back to normal.');
+    } catch (error) {
+      console.error('Error disabling maintenance:', error);
+      showError('Failed to disable maintenance mode');
+    }
+  };
+
   const handleReviewRequest = async (requestId, action, notes = '') => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -210,6 +242,31 @@ const SuperAdminDashboard = () => {
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
             Current global default: <span className="font-semibold">{themes.find(t => t.id === globalTheme)?.name}</span>
           </p>
+        </div>
+
+        {/* Maintenance Mode */}
+        <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="text-blue-600 text-xl">🔧</div>
+            <h2 className="text-xl font-semibold">Maintenance Mode</h2>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Control site-wide maintenance mode. Users get 60s warning before activation.
+          </p>
+          <div className="flex space-x-4">
+            <button
+              onClick={handleEnableMaintenance}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            >
+              ⚠️ Enable Maintenance Mode
+            </button>
+            <button
+              onClick={handleDisableMaintenance}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            >
+              ✅ Disable Maintenance Mode
+            </button>
+          </div>
         </div>
 
         {/* Event Management */}
