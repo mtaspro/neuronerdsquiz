@@ -78,6 +78,37 @@ router.post('/start', sessionMiddleware, async (req, res) => {
   }
 });
 
+// End battle (mark as ended)
+router.post('/end', sessionMiddleware, (req, res) => {
+  try {
+    const { roomId } = req.body;
+    
+    if (activeBattleRoom && activeBattleRoom.id === roomId) {
+      activeBattleRoom.status = 'ended';
+      
+      // Broadcast to all connected clients
+      if (req.app.get('io')) {
+        req.app.get('io').emit('battleEnded', activeBattleRoom);
+      }
+      
+      // Clear the battle room after 30 seconds
+      setTimeout(() => {
+        activeBattleRoom = null;
+        if (req.app.get('io')) {
+          req.app.get('io').emit('battleRoomClosed');
+        }
+      }, 30000);
+      
+      res.json({ success: true, battleRoom: activeBattleRoom });
+    } else {
+      res.status(404).json({ error: 'Battle room not found' });
+    }
+  } catch (error) {
+    console.error('Error ending battle:', error);
+    res.status(500).json({ error: 'Failed to end battle' });
+  }
+});
+
 // Close battle room
 router.post('/close', sessionMiddleware, (req, res) => {
   try {

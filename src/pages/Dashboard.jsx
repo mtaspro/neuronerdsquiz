@@ -488,7 +488,9 @@ const Dashboard = () => {
                     {!activeBattleRoom 
                       ? 'No Battle Available' 
                       : activeBattleRoom.status === 'started' 
-                      ? 'Battle In Progress' 
+                      ? 'Battle In Progress'
+                      : activeBattleRoom.status === 'ended'
+                      ? 'Battle Ended'
                       : 'Join Battle Now!'}
                   </span>
                 </div>
@@ -497,9 +499,13 @@ const Dashboard = () => {
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
                   Waiting for an admin to create a battle room...
                 </p>
-              ) : activeBattleRoom.status === 'started' && (
+              ) : activeBattleRoom.status === 'started' ? (
                 <p className="text-sm text-orange-500 dark:text-orange-400 text-center">
                   Battle has already started. Wait for the next one!
+                </p>
+              ) : activeBattleRoom.status === 'ended' && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                  Battle has ended. Wait for the next one!
                 </p>
               )}
               

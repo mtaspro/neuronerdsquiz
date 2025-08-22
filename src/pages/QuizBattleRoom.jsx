@@ -10,6 +10,7 @@ import SecurityWarning from '../components/SecurityWarning';
 import SecurityInitModal from '../components/SecurityInitModal';
 import MathText from '../components/MathText';
 import soundManager from '../utils/soundUtils';
+import { secureStorage } from '../utils/secureStorage.js';
 
 const QuizBattleRoom = () => {
   const { roomId } = useParams();
@@ -79,12 +80,29 @@ const QuizBattleRoom = () => {
     enableExitConfirmation: true
   });
 
-  // Get user data from localStorage
-  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  // Get user data from secureStorage
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    if (!userData._id) {
-      navigate('/login');
+    const loadUserData = async () => {
+      try {
+        const user = await secureStorage.getUserData();
+        if (!user?._id) {
+          navigate('/login');
+          return;
+        }
+        setUserData(user);
+      } catch (error) {
+        console.error('Failed to load user data:', error);
+        navigate('/login');
+      }
+    };
+    
+    loadUserData();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!userData?._id) {
       return;
     }
 
@@ -168,7 +186,7 @@ const QuizBattleRoom = () => {
           info(`${data.username} finished the quiz!`);
         });
 
-        socket.addListener('battleEnded', (data) => {
+        socket.addListener('battleEnded', async (data) => {
           console.log('🏆 Battle ended:', data);
           setBattleEnded(true);
           setResults(data.results);
@@ -181,6 +199,22 @@ const QuizBattleRoom = () => {
           // Submit battle score to leaderboard
           if (currentUserResult) {
             submitBattleScore(currentUserResult.score, isWinner);
+          }
+          
+          // Mark battle as ended in backend
+          try {
+            const apiUrl = import.meta.env.VITE_API_URL || '';
+            const token = secureStorage.getToken();
+            await fetch(`${apiUrl}/api/battle/end`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ roomId })
+            });
+          } catch (error) {
+            console.error('Failed to mark battle as ended:', error);
           }
           
           addNotification('battle-ended', 'Battle Complete!', 'The quiz battle has ended!');
@@ -343,7 +377,7 @@ const QuizBattleRoom = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            'Authorization': `Bearer ${secureStorage.getToken()}`
           },
           body: JSON.stringify({ roomId })
         });

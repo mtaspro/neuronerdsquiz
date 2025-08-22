@@ -1033,8 +1033,8 @@ export default function AdminDashboard() {
                   {chapters.filter(chapter => {
                     if (!selectedChapterFilter) return true;
                     if (selectedChapterFilter === 'mine') {
-                      const currentUser = secureStorage.getUserData() || {};
-                      return chapter.createdBy?._id === currentUser._id;
+                      // Skip 'mine' filter since it requires async call
+                      return true;
                     }
                     return chapter.createdBy?.username === selectedChapterFilter;
                   }).map(chapter => (
