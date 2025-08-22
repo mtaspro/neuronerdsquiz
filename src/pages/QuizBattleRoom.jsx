@@ -219,6 +219,12 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('error', (data) => {
+          console.error('Socket error:', data);
+          // Don't set error state or redirect for room creator start errors
+          if (data.message && data.message.includes('Only room creator can start')) {
+            console.log('Ignoring room creator error - battle may have started successfully');
+            return;
+          }
           setError(data.message);
           showError(`Battle error: ${data.message}`);
         });
