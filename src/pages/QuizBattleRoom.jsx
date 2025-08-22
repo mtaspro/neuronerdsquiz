@@ -106,53 +106,52 @@ const QuizBattleRoom = () => {
       return;
     }
 
-    // Log socket connection info for debugging
-    console.log('🔌 Socket connection info:', socket.getConnectionInfo());
+    let isInitialized = false;
 
-    // Initialize connection and set up event handlers
     const initializeSocket = async () => {
+      if (isInitialized) return;
+      isInitialized = true;
+
       try {
-        // Set up event handlers first
+        // Clear any existing listeners first
+        socket.removeAllListeners();
+
+        // Set up event handlers
         socket.addListener('connect', () => {
-          console.log('✅ Socket connect event fired');
           setConnected(true);
           info('Connected to battle server');
-          
-          // Join the battle room using helper
           const username = userData.username || userData.email?.split('@')[0] || 'User';
           socket.battleHelpers.joinRoom(roomId, userData._id, username);
         });
 
         socket.addListener('roomJoined', (data) => {
-          console.log('🏠 Joined room:', data);
           setRoomData(data);
           setUsers(data.users);
           success(`Joined battle room: ${roomId}`);
           
-          // Check if current user is the room creator (first user)
           if (data.users.length > 0 && data.users[0].id === userData._id) {
             setIsRoomCreator(true);
             info('You are the room creator');
           }
 
-          // Show security modal when room is joined
           if (!securityInitialized) {
             setShowSecurityModal(true);
           }
         });
 
         socket.addListener('userJoined', (data) => {
-          console.log('👤 User joined:', data);
-          setUsers(prev => [...prev, { id: data.userId, username: data.username, isReady: false }]);
+          setUsers(prev => {
+            // Prevent duplicate users
+            const exists = prev.some(user => user.id === data.userId);
+            if (exists) return prev;
+            return [...prev, { id: data.userId, username: data.username, isReady: false }];
+          });
           addNotification('user-joined', 'Player Joined', `${data.username} joined the battle!`);
-          info(`${data.username} joined the battle`);
         });
 
         socket.addListener('userLeft', (data) => {
-          console.log('👋 User left:', data);
           setUsers(prev => prev.filter(user => user.id !== data.userId));
           addNotification('user-left', 'Player Left', `${data.username} left the battle.`);
-          info(`${data.username} left the battle`);
         });
 
         socket.addListener('userReadyStatus', (data) => {
@@ -162,7 +161,6 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('battleStarted', (data) => {
-          console.log('🚀 Battle started:', data);
           setBattleStarted(true);
           setQuestions(data.questions);
           setCurrentQuestion(0);
@@ -172,7 +170,6 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('updateProgress', (data) => {
-          console.log('📊 Progress update:', data);
           setUsers(prev => prev.map(user => 
             user.id === data.userId 
               ? { ...user, currentQuestion: data.currentQuestion, score: data.score }
@@ -181,27 +178,21 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('userFinished', (data) => {
-          console.log('🏁 User finished:', data);
           addNotification('user-finished', 'Player Finished!', `${data.username} completed the quiz!`);
-          info(`${data.username} finished the quiz!`);
         });
 
         socket.addListener('battleEnded', async (data) => {
-          console.log('🏆 Battle ended:', data);
           setBattleEnded(true);
           setResults(data.results);
           
-          // Play win/lose sound based on result
           const currentUserResult = userData?._id ? data.results.find(r => r.userId === userData._id) : null;
           const isWinner = currentUserResult && userData?._id && data.results[0].userId === userData._id;
           soundManager.play(isWinner ? 'battleWin' : 'battleLose');
           
-          // Submit battle score to leaderboard
           if (currentUserResult && userData?._id) {
             submitBattleScore(currentUserResult.score, isWinner);
           }
           
-          // Mark battle as ended in backend
           try {
             const apiUrl = import.meta.env.VITE_API_URL || '';
             const token = secureStorage.getToken();
@@ -220,26 +211,22 @@ const QuizBattleRoom = () => {
           addNotification('battle-ended', 'Battle Complete!', 'The quiz battle has ended!');
           success('Battle completed! Check your results!');
           
-          // Auto-redirect to leaderboard after 3 seconds
           setTimeout(() => {
             navigate('/leaderboard');
           }, 3000);
         });
 
         socket.addListener('error', (data) => {
-          console.error('❌ Socket error:', data);
           setError(data.message);
           showError(`Battle error: ${data.message}`);
         });
 
         socket.addListener('connect_error', (error) => {
-          console.error('🔥 Connection error:', error);
           setError('Failed to connect to battle server');
           showError('Failed to connect to battle server. Please check your connection.');
         });
 
         socket.addListener('disconnect', (reason) => {
-          console.log('❌ Disconnected from server:', reason);
           setConnected(false);
           if (reason !== 'io client disconnect') {
             showError('Disconnected from battle server');
@@ -247,7 +234,6 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('chatMessage', (data) => {
-          console.log('Received chat message:', data);
           setChatMessages(prev => [...prev, {
             id: Date.now() + Math.random(),
             username: data.username,
@@ -256,23 +242,17 @@ const QuizBattleRoom = () => {
           }]);
         });
 
-        // Connect to socket
         await socket.connect();
         
-        // Check if socket is already connected and manually trigger room joining
         const connectionInfo = socket.getConnectionInfo();
         if (connectionInfo.connected) {
-          console.log('🔄 Socket already connected, manually joining room...');
           setConnected(true);
-          info('Connected to battle server');
-          
-          // Join the battle room using helper
           const username = userData.username || userData.email?.split('@')[0] || 'User';
           socket.battleHelpers.joinRoom(roomId, userData._id, username);
         }
 
       } catch (error) {
-        console.error('💥 Failed to initialize socket:', error);
+        console.error('Failed to initialize socket:', error);
         setError('Failed to connect to battle server');
         showError('Failed to connect to battle server. Please check your connection.');
       }
@@ -281,13 +261,11 @@ const QuizBattleRoom = () => {
     initializeSocket();
 
     return () => {
-      // Clean up event listeners for this component only
       if (socket) {
         socket.removeAllListeners();
       }
-      // Note: We don't disconnect the socket here to allow reuse
     };
-  }, [roomId, userData?._id, navigate, success, showError, info, socket]);
+  }, [roomId, userData?._id]);
 
   // Timer effect for tracking time spent on current question
   useEffect(() => {
