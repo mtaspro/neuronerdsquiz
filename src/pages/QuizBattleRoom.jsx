@@ -386,7 +386,7 @@ const QuizBattleRoom = () => {
   const handleSubmitAnswer = () => {
     if (selectedAnswer === null || answered) return;
 
-    const isCorrect = selectedAnswer === questions[currentQuestion].correctAnswer;
+    const isCorrect = selectedAnswer === questions?.[currentQuestion]?.correctAnswer;
     const finalTimeSpent = Date.now() - questionStartTime;
 
     // Play sound based on answer
@@ -560,7 +560,7 @@ const QuizBattleRoom = () => {
   }, [chatMessages]);
 
   const getProgressPercentage = (user) => {
-    if (!battleStarted || !questions.length) return 0;
+    if (!battleStarted || !questions?.length || !user?.currentQuestion) return 0;
     return (user.currentQuestion / questions.length) * 100;
   };
 
@@ -879,7 +879,7 @@ const QuizBattleRoom = () => {
             <div className="mb-8">
               <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full h-4 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-30"></div>
-                {users.map((user, index) => (
+                {users?.map((user, index) => (
                   <motion.div
                     key={user.id}
                     className="absolute top-0 h-full flex items-center"
@@ -922,11 +922,11 @@ const QuizBattleRoom = () => {
                   </div>
 
                   <h3 className="text-xl font-semibold mb-6">
-                    <MathText>{questions[currentQuestion]?.question}</MathText>
+                    <MathText>{questions?.[currentQuestion]?.question || 'Loading question...'}</MathText>
                   </h3>
 
                   <div className="space-y-3">
-                    {questions[currentQuestion]?.options.map((option, index) => (
+                    {questions?.[currentQuestion]?.options?.map((option, index) => (
                       <motion.button
                         key={index}
                         onClick={() => handleAnswerSelect(index)}
@@ -934,9 +934,9 @@ const QuizBattleRoom = () => {
                         className={`w-full p-4 rounded-lg text-left transition-all duration-200 ${
                           selectedAnswer === index
                             ? 'bg-blue-500 text-white shadow-lg'
-                            : answered && index === questions[currentQuestion].correctAnswer
+                            : answered && index === questions?.[currentQuestion]?.correctAnswer
                             ? 'bg-green-500 text-white'
-                            : answered && selectedAnswer === index && index !== questions[currentQuestion].correctAnswer
+                            : answered && selectedAnswer === index && index !== questions?.[currentQuestion]?.correctAnswer
                             ? 'bg-red-500 text-white'
                             : 'bg-white bg-opacity-10 hover:bg-opacity-20 text-white'
                         }`}
@@ -960,7 +960,7 @@ const QuizBattleRoom = () => {
                     </motion.button>
                   )}
 
-                  {answered && currentQuestion < questions.length - 1 && (
+                  {answered && currentQuestion < (questions?.length || 0) - 1 && (
                     <motion.button
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
