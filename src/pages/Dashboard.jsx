@@ -58,28 +58,36 @@ const Dashboard = () => {
   const { shouldShowTour, setShouldShowTour, startTour, markTutorialAsCompleted } = useOnboarding();
 
   useEffect(() => {
-    const userData = secureStorage.getUserData();
-    const token = secureStorage.getToken();
-    
-    if (userData && token) {
-      try {
-        setUser(userData);
-        
-        // Check if this is a new user and start the tour
-        const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
-        if (!hasSeenTutorial) {
-          console.log('🎯 Starting onboarding tour for new user');
-          startTour();
-          localStorage.setItem('hasSeenTutorial', 'true');
+    const loadUserData = async () => {
+      const token = secureStorage.getToken();
+      
+      if (token) {
+        try {
+          const userData = await secureStorage.getUserData();
+          if (userData) {
+            setUser(userData);
+            
+            // Check if this is a new user and start the tour
+            const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
+            if (!hasSeenTutorial) {
+              console.log('🎯 Starting onboarding tour for new user');
+              startTour();
+              localStorage.setItem('hasSeenTutorial', 'true');
+            }
+          } else {
+            navigate('/login');
+          }
+        } catch (error) {
+          console.error('Error loading user data:', error);
+          navigate('/login');
         }
-      } catch (error) {
-        console.error('Error parsing user data:', error);
+      } else {
         navigate('/login');
       }
-    } else {
-      navigate('/login');
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+    
+    loadUserData();
   }, [navigate]);
 
   // Fetch chapters from API
