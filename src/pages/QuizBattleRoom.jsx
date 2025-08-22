@@ -913,7 +913,7 @@ const QuizBattleRoom = () => {
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div className="text-sm text-gray-300">
-                      Question {currentQuestion + 1} of {questions.length}
+                      Question {currentQuestion + 1} of {questions?.length || 0}
                     </div>
                     <div className="flex items-center space-x-2 text-sm">
                       <FaClock className="text-yellow-400" />
@@ -981,7 +981,7 @@ const QuizBattleRoom = () => {
                     Players
                   </h3>
                   <div className="space-y-3">
-                    {users.map((user) => (
+                    {users?.map((user) => (
                       <div
                         key={user.id}
                         className="flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg"
@@ -993,13 +993,13 @@ const QuizBattleRoom = () => {
                           <span className="font-medium">{user.username}</span>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-semibold text-yellow-400">{user.score}</div>
+                          <div className="text-sm font-semibold text-yellow-400">{user.score || 0}</div>
                           <div className="text-xs text-gray-300">
-                            Q{user.currentQuestion + 1}/{questions.length}
+                            Q{(user.currentQuestion || 0) + 1}/{questions?.length || 0}
                           </div>
                         </div>
                       </div>
-                    ))}
+                    )) || []}
                   </div>
                 </div>
               </div>

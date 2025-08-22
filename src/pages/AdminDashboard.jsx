@@ -1704,8 +1704,11 @@ export default function AdminDashboard() {
                       
                       <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
                         <p className="text-sm text-blue-700 dark:text-blue-300">
-                          <strong>Note:</strong> This setting only affects battles. Questions will be randomly selected from the {questionCount} available questions. 
+                          <strong>Battle Questions:</strong> {config.battleQuestions || 0} questions will be randomly selected from all {questionCount} questions in this chapter for each battle. 
                           General quiz solving shows all unsolved questions progressively.
+                        </p>
+                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                          💡 Questions are selected randomly each time a battle starts, ensuring variety.
                         </p>
                       </div>
                     </div>
