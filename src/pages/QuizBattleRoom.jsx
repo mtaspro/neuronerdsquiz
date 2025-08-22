@@ -102,7 +102,7 @@ const QuizBattleRoom = () => {
   }, [navigate]);
 
   useEffect(() => {
-    if (!userData?._id) {
+    if (!userData?._id || !socket) {
       return;
     }
 
@@ -192,12 +192,12 @@ const QuizBattleRoom = () => {
           setResults(data.results);
           
           // Play win/lose sound based on result
-          const currentUserResult = data.results.find(r => r.userId === userData._id);
-          const isWinner = currentUserResult && data.results[0].userId === userData._id;
+          const currentUserResult = userData?._id ? data.results.find(r => r.userId === userData._id) : null;
+          const isWinner = currentUserResult && userData?._id && data.results[0].userId === userData._id;
           soundManager.play(isWinner ? 'battleWin' : 'battleLose');
           
           // Submit battle score to leaderboard
-          if (currentUserResult) {
+          if (currentUserResult && userData?._id) {
             submitBattleScore(currentUserResult.score, isWinner);
           }
           
@@ -282,10 +282,12 @@ const QuizBattleRoom = () => {
 
     return () => {
       // Clean up event listeners for this component only
-      socket.removeAllListeners();
+      if (socket) {
+        socket.removeAllListeners();
+      }
       // Note: We don't disconnect the socket here to allow reuse
     };
-  }, [roomId, userData._id, navigate, success, showError, info]);
+  }, [roomId, userData?._id, navigate, success, showError, info, socket]);
 
   // Timer effect for tracking time spent on current question
   useEffect(() => {
@@ -299,6 +301,7 @@ const QuizBattleRoom = () => {
   }, [battleStarted, questionStartTime, answered]);
 
   const handleReadyToggle = () => {
+    if (!userData?._id) return;
     const newReadyState = !isReady;
     setIsReady(newReadyState);
     battleSocketHelpers.setReady(roomId, userData._id, newReadyState);
@@ -409,14 +412,16 @@ const QuizBattleRoom = () => {
     // Play sound based on answer
     soundManager.play(isCorrect ? 'correctAnswer' : 'wrongAnswer');
 
-    battleSocketHelpers.submitAnswer(
-      roomId,
-      userData._id,
-      currentQuestion,
-      selectedAnswer,
-      isCorrect,
-      finalTimeSpent
-    );
+    if (userData?._id) {
+      battleSocketHelpers.submitAnswer(
+        roomId,
+        userData._id,
+        currentQuestion,
+        selectedAnswer,
+        isCorrect,
+        finalTimeSpent
+      );
+    }
 
     setAnswered(true);
     setTimeSpent(finalTimeSpent);
@@ -475,7 +480,9 @@ const QuizBattleRoom = () => {
   }, [securityActive, cleanupSecurity]);
 
   const handleLeaveRoom = () => {
-    battleSocketHelpers.leaveRoom(roomId, userData._id);
+    if (userData?._id) {
+      battleSocketHelpers.leaveRoom(roomId, userData._id);
+    }
     navigate('/dashboard');
   };
 
