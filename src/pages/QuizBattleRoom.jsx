@@ -140,13 +140,15 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('userJoined', (data) => {
-          setUsers(prev => {
-            // Prevent duplicate users
-            const exists = prev.some(user => user.id === data.userId);
-            if (exists) return prev;
-            return [...prev, { id: data.userId, username: data.username, isReady: false }];
-          });
-          addNotification('user-joined', 'Player Joined', `${data.username} joined the battle!`);
+          // Only show notification if it's not the current user
+          if (data.userId !== userData._id) {
+            setUsers(prev => {
+              const exists = prev.some(user => user.id === data.userId);
+              if (exists) return prev;
+              return [...prev, { id: data.userId, username: data.username, isReady: false }];
+            });
+            addNotification('user-joined', 'Player Joined', `${data.username} joined the battle!`);
+          }
         });
 
         socket.addListener('userLeft', (data) => {
@@ -418,24 +420,15 @@ const QuizBattleRoom = () => {
 
   // Security handlers
   const handleSecurityAccept = async () => {
-    setShowSecurityModal(false);
-    setSecurityActive(true);
-    setSecurityInitialized(true);
-    
     try {
-      console.log('🔒 Starting battle security initialization...');
-      
-      // Initialize security system
-      const success = await initializeSecurity();
-      
-      console.log('🔒 Battle security initialization result:', success);
-      
-      // Security system is designed to always succeed, even if fullscreen fails
-      console.log('✅ Battle security system initialized successfully');
+      setSecurityActive(true);
+      await initializeSecurity();
+      setSecurityInitialized(true);
+      setShowSecurityModal(false);
     } catch (error) {
-      console.error('❌ Battle security initialization error:', error);
-      showError('Security system error. The battle will continue with basic protection.');
-      // Continue with the battle even if security fails
+      console.error('Security initialization error:', error);
+      setSecurityInitialized(true);
+      setShowSecurityModal(false);
     }
   };
 
@@ -806,7 +799,7 @@ const QuizBattleRoom = () => {
             </div>
 
             {/* Start Battle Button (Room Creator Only) */}
-            {isRoomCreator && users.length >= 2 && users.every(user => user.isReady) && (
+            {isRoomCreator && users.length >= 2 && users.every(user => user.isReady) && securityInitialized && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
