@@ -185,29 +185,14 @@ const QuizBattleRoom = () => {
 
         socket.addListener('battleEnded', async (data) => {
           setBattleEnded(true);
-          setResults(data.results);
+          setResults(data.results || []);
           
-          const currentUserResult = userData?._id ? data.results.find(r => r.userId === userData._id) : null;
-          const isWinner = currentUserResult && userData?._id && data.results[0].userId === userData._id;
+          const currentUserResult = userData?._id && data.results ? data.results.find(r => r.userId === userData._id) : null;
+          const isWinner = currentUserResult && userData?._id && data.results && data.results[0] && data.results[0].userId === userData._id;
           soundManager.play(isWinner ? 'battleWin' : 'battleLose');
           
           if (currentUserResult && userData?._id) {
             submitBattleScore(currentUserResult.score, isWinner);
-          }
-          
-          try {
-            const apiUrl = import.meta.env.VITE_API_URL || '';
-            const token = secureStorage.getToken();
-            await fetch(`${apiUrl}/api/battle/end`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({ roomId })
-            });
-          } catch (error) {
-            console.error('Failed to mark battle as ended:', error);
           }
           
           addNotification('battle-ended', 'Battle Complete!', 'The quiz battle has ended!');
@@ -509,7 +494,7 @@ const QuizBattleRoom = () => {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const token = secureStorage.getToken();
       
-      const response = await fetch(`${apiUrl}/api/leaderboard/battle-score`, {
+      const response = await fetch(`${apiUrl}/api/battle-score`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -834,7 +819,7 @@ const QuizBattleRoom = () => {
             </div>
 
             <div className="space-y-4">
-              {results.map((result, index) => (
+              {(results || []).map((result, index) => (
                 <motion.div
                   key={result.userId}
                   initial={{ opacity: 0, x: -50 }}

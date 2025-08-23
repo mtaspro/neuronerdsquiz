@@ -364,6 +364,20 @@ io.on('connection', (socket) => {
         // Save battle results to leaderboard and update badges
         saveBattleResultsToLeaderboard(battleResults);
         
+        // Send WhatsApp notification for natural battle end
+        try {
+          const WhatsAppSettings = (await import('./models/WhatsAppSettings.js')).default;
+          const whatsappService = (await import('./services/whatsappService.js')).default;
+          
+          const setting = await WhatsAppSettings.findOne({ settingKey: 'battleNotificationGroup' });
+          if (setting?.settingValue) {
+            const message = `🏁 Battle Ended! 🏁\n\nRoom: ${roomId}\n\nAll participants have finished the battle!`;
+            await whatsappService.sendGroupMessage(setting.settingValue, message);
+          }
+        } catch (error) {
+          console.error('Failed to send battle end notification:', error);
+        }
+        
         io.to(roomId).emit('battleEnded', battleResults);
       }
 

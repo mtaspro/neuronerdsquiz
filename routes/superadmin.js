@@ -92,6 +92,9 @@ router.post('/requests/:id/review', sessionMiddleware, requireSuperAdmin, async 
       if (request.type === 'USER_DELETION') {
         await executeUserDeletion(request.targetUserId);
         message = `User ${request.targetUsername} deleted successfully`;
+      } else if (request.type === 'USER_SCORE_RESET') {
+        await executeUserScoreReset(request.targetUserId);
+        message = `User ${request.targetUsername} score reset successfully`;
       } else if (request.type === 'LEADERBOARD_RESET') {
         await executeLeaderboardReset();
         message = 'Full leaderboard reset completed successfully';
@@ -211,6 +214,7 @@ async function executeQuizLeaderboardReset() {
   
   // Delete only general (quiz) scores
   await UserScore.deleteMany({ type: 'general' });
+  await UserScore.deleteMany({ type: { $ne: 'battle' } }); // Also delete scores without type
   console.log('✅ Deleted quiz leaderboard scores');
   
   // Reset quiz-related user fields only
@@ -231,6 +235,20 @@ async function executeQuizLeaderboardReset() {
     }
   );
   console.log('✅ Reset quiz-related user stats');
+  
+  // Reset quiz stats in UserStats but keep battle stats
+  await UserStats.updateMany(
+    {},
+    {
+      $set: {
+        totalQuizzes: 0,
+        averageScore: 0,
+        bestScore: 0,
+        currentStreak: 0
+      }
+    }
+  );
+  console.log('✅ Reset quiz UserStats');
   
   console.log('🎉 Quiz leaderboard reset completed!');
 }
@@ -258,7 +276,56 @@ async function executeBattleLeaderboardReset() {
   );
   console.log('✅ Reset battle-related user stats');
   
+  // Reset battle stats in UserStats
+  await UserStats.updateMany(
+    {},
+    {
+      $set: {
+        totalBattles: 0,
+        battlesWon: 0,
+        battleWinRate: 0
+      }
+    }
+  );
+  console.log('✅ Reset battle UserStats');
+  
   console.log('🎉 Battle leaderboard reset completed!');
+}
+
+// Execute user score reset
+async function executeUserScoreReset(userId) {
+  const user = await User.findById(userId);
+  if (!user) return;
+  
+  // Delete user's scores from leaderboard
+  await UserScore.deleteMany({ userId: userId });
+  await UserScore.deleteMany({ username: user.username });
+  
+  // Delete user's stats
+  await UserStats.deleteMany({ userId: userId });
+  await UserStats.deleteMany({ username: user.username });
+  
+  // Reset user fields
+  await User.findByIdAndUpdate(userId, {
+    $set: {
+      totalScore: 0,
+      questionsAnswered: 0,
+      correctAnswers: 0,
+      incorrectAnswers: 0,
+      averageScore: 0,
+      bestScore: 0,
+      totalQuizzes: 0,
+      streak: 0,
+      lastQuizDate: null,
+      battleWins: 0,
+      battleLosses: 0,
+      battleDraws: 0,
+      totalBattles: 0,
+      battleScore: 0
+    }
+  });
+  
+  console.log(`✅ Reset all data for user: ${user.username}`);
 }
 
 // Set global default theme
