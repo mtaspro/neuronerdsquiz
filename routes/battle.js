@@ -29,13 +29,8 @@ router.post('/create', sessionMiddleware, async (req, res) => {
       req.app.get('io').emit('battleRoomCreated', activeBattleRoom);
     }
     
-    // Send WhatsApp notifications
-    const users = await User.find({ whatsappNotifications: true });
-    const phoneNumbers = users.map(user => user.phoneNumber).filter(phone => phone);
-    if (phoneNumbers.length > 0) {
-      const message = `🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\nJoin now and test your skills!`;
-      whatsappService.broadcastMessage(phoneNumbers, message);
-    }
+    // Send WhatsApp group notification
+    await sendBattleNotification(`🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\nVisit dashboard and join now to test your skills!`);
     
     res.json({ success: true, battleRoom: activeBattleRoom });
   } catch (error) {
@@ -62,13 +57,8 @@ router.post('/start', sessionMiddleware, async (req, res) => {
         req.app.get('io').emit('battleStarted', activeBattleRoom);
       }
       
-      // Send WhatsApp notifications
-      const users = await User.find({ whatsappNotifications: true });
-      const phoneNumbers = users.map(user => user.phoneNumber).filter(phone => phone);
-      if (phoneNumbers.length > 0) {
-        const message = `⚡ Battle Started! ⚡\n\nRoom: ${roomId}\nChapter: ${activeBattleRoom.chapter}\n\nThe battle has begun!`;
-        whatsappService.broadcastMessage(phoneNumbers, message);
-      }
+      // Send WhatsApp group notification
+      await sendBattleNotification(`⚡ Battle Started! ⚡\n\nRoom: ${roomId}\nChapter: ${activeBattleRoom.chapter}\n\nThe battle has begun!`);
       
       res.json({ success: true, battleRoom: activeBattleRoom });
     } else {
@@ -81,9 +71,9 @@ router.post('/start', sessionMiddleware, async (req, res) => {
 });
 
 // End battle (mark as ended)
-router.post('/end', sessionMiddleware, (req, res) => {
+router.post('/end', sessionMiddleware, async (req, res) => {
   try {
-    const { roomId } = req.body;
+    const { roomId, reason } = req.body;
     
     if (activeBattleRoom && activeBattleRoom.id === roomId) {
       activeBattleRoom.status = 'ended';
@@ -91,6 +81,13 @@ router.post('/end', sessionMiddleware, (req, res) => {
       // Broadcast to all connected clients
       if (req.app.get('io')) {
         req.app.get('io').emit('battleEnded', activeBattleRoom);
+      }
+      
+      // Send WhatsApp group notification based on reason
+      if (reason === 'stopped') {
+        await sendBattleNotification(`🛑 Battle Stopped! 🛑\n\nRoom: ${roomId}\nChapter: ${activeBattleRoom.chapter}\n\nThe battle was stopped by the admin.`);
+      } else {
+        await sendBattleNotification(`🏁 Battle Ended! 🏁\n\nRoom: ${roomId}\nChapter: ${activeBattleRoom.chapter}\n\nAll participants have finished the battle!`);
       }
       
       // Clear the battle room after 30 seconds
@@ -173,5 +170,19 @@ router.post('/expire', sessionMiddleware, (req, res) => {
     res.status(500).json({ error: 'Failed to expire battle room' });
   }
 });
+
+// Helper function to send battle notifications to configured group
+async function sendBattleNotification(message) {
+  try {
+    const WhatsAppSettings = (await import('../models/WhatsAppSettings.js')).default;
+    const setting = await WhatsAppSettings.findOne({ settingKey: 'battleNotificationGroup' });
+    
+    if (setting?.settingValue) {
+      await whatsappService.sendGroupMessage(setting.settingValue, message);
+    }
+  } catch (error) {
+    console.error('Error sending battle notification:', error);
+  }
+}
 
 export default router;

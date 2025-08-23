@@ -226,6 +226,42 @@ const Dashboard = () => {
     navigate(`/battle/${activeBattleRoom.id}`);
   };
 
+  const handleEndBattle = async () => {
+    if (!activeBattleRoom) return;
+    
+    if (!window.confirm('Are you sure you want to end this battle? This will stop the battle for all participants.')) {
+      return;
+    }
+    
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/battle/end`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeader()
+        },
+        body: JSON.stringify({ 
+          roomId: activeBattleRoom.id,
+          reason: 'stopped'
+        })
+      });
+      
+      if (response.ok) {
+        success('Battle ended successfully!', {
+          duration: 3000,
+          title: '🛑 Battle Stopped'
+        });
+        setActiveBattleRoom(null);
+      } else {
+        throw new Error('Failed to end battle');
+      }
+    } catch (error) {
+      console.error('Failed to end battle:', error);
+      alert('Failed to end battle. Please try again.');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center transition-colors duration-200">
@@ -447,9 +483,9 @@ const Dashboard = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleCreateBattle}
-                  disabled={!selectedBattleChapter}
-                  className={`w-full py-4 px-6 rounded-lg font-bold shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
-                    selectedBattleChapter 
+                  disabled={!selectedBattleChapter || (activeBattleRoom && activeBattleRoom.status === 'waiting')}
+                  className={`w-full py-4 px-6 rounded-lg font-bold shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 mb-3 ${
+                    selectedBattleChapter && (!activeBattleRoom || activeBattleRoom.status !== 'waiting')
                       ? 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white' 
                       : 'bg-gray-400 text-gray-600 cursor-not-allowed'
                   }`}
@@ -459,6 +495,21 @@ const Dashboard = () => {
                     <span>Create Battle Room</span>
                   </div>
                 </motion.button>
+                
+                {/* End Battle Button - Only show if battle is active */}
+                {activeBattleRoom && activeBattleRoom.status === 'started' && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleEndBattle}
+                    className="w-full py-3 px-4 rounded-lg font-bold shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white"
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <span>🛑</span>
+                      <span>End Battle</span>
+                    </div>
+                  </motion.button>
+                )}
               </div>
             )}
 

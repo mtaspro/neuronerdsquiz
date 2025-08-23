@@ -11,6 +11,7 @@ const AdminWhatsApp = () => {
   const [users, setUsers] = useState([]);
   const [groups, setGroups] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [battleGroupId, setBattleGroupId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -18,6 +19,7 @@ const AdminWhatsApp = () => {
   useEffect(() => {
     fetchUsers();
     fetchGroups();
+    fetchBattleGroup();
   }, []);
 
   const fetchUsers = async () => {
@@ -45,6 +47,49 @@ const AdminWhatsApp = () => {
       }
     } catch (error) {
       console.error('Failed to fetch groups:', error);
+    }
+  };
+
+  const fetchBattleGroup = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      const response = await axios.get(`${apiUrl}/api/whatsapp/battle-group`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBattleGroupId(response.data.groupId || '');
+    } catch (error) {
+      console.error('Failed to fetch battle group:', error);
+    }
+  };
+
+  const setBattleGroup = async () => {
+    if (!battleGroupId.trim()) {
+      setErrorMessage('Please select a group for battle notifications');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      const response = await axios.post(`${apiUrl}/api/whatsapp/set-battle-group`, 
+        { groupId: battleGroupId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        setSuccessMessage('Battle notification group set successfully!');
+      } else {
+        setErrorMessage(response.data.error || 'Failed to set battle group');
+      }
+    } catch (error) {
+      setErrorMessage(error.response?.data?.error || 'Failed to set battle group');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -231,6 +276,35 @@ const AdminWhatsApp = () => {
                   No groups found. Make sure WhatsApp is connected and you're in some groups.
                 </p>
               )}
+            </div>
+
+            {/* Battle Notifications */}
+            <div className="mb-6">
+              <h3 className="font-semibold mb-2">Battle Notifications</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                Set which group receives battle notifications (create, start, end)
+              </p>
+              <div className="flex gap-2">
+                <select
+                  value={battleGroupId}
+                  onChange={(e) => setBattleGroupId(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700"
+                >
+                  <option value="">Select Group for Battle Notifications</option>
+                  {groups.map(group => (
+                    <option key={group.id} value={group.id}>
+                      {group.name} ({group.participants} members)
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={setBattleGroup}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
+                >
+                  Set
+                </button>
+              </div>
             </div>
 
             {/* Broadcast */}

@@ -140,4 +140,45 @@ router.post('/send-group', sessionMiddleware, async (req, res) => {
   }
 });
 
+// Set battle notification group
+router.post('/set-battle-group', sessionMiddleware, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { groupId } = req.body;
+    const WhatsAppSettings = (await import('../models/WhatsAppSettings.js')).default;
+    
+    await WhatsAppSettings.findOneAndUpdate(
+      { settingKey: 'battleNotificationGroup' },
+      { 
+        settingValue: groupId,
+        updatedBy: req.user.userId
+      },
+      { upsert: true }
+    );
+    
+    res.json({ success: true, message: 'Battle notification group set successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get battle notification group
+router.get('/battle-group', sessionMiddleware, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const WhatsAppSettings = (await import('../models/WhatsAppSettings.js')).default;
+    const setting = await WhatsAppSettings.findOne({ settingKey: 'battleNotificationGroup' });
+    
+    res.json({ groupId: setting?.settingValue || null });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
