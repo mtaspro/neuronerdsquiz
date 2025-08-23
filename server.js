@@ -26,6 +26,7 @@ import maintenanceRouter from './routes/maintenance.js';
 import BattleService from './services/battleService.js';
 import BadgeService from './services/badgeService.js';
 import whatsappService from './services/whatsappService.js';
+import WhatsAppSettings from './models/WhatsAppSettings.js';
 import UserScore from './models/UserScore.js';
 
 console.log('Auth router imported:', !!authRouter);
@@ -224,6 +225,19 @@ async function addBalancedBonus(userId, username) {
   }
 }
 
+// Send battle end notification
+async function sendBattleEndNotification(roomId) {
+  try {
+    const setting = await WhatsAppSettings.findOne({ settingKey: 'battleNotificationGroup' });
+    if (setting?.settingValue) {
+      const message = `🏁 Battle Ended! 🏁\n\nRoom: ${roomId}\n\nAll participants have finished the battle!`;
+      await whatsappService.sendGroupMessage(setting.settingValue, message);
+    }
+  } catch (error) {
+    console.error('Failed to send battle end notification:', error);
+  }
+}
+
 // Function to save battle results to leaderboard
 async function saveBattleResultsToLeaderboard(battleResults) {
   try {
@@ -365,18 +379,7 @@ io.on('connection', (socket) => {
         saveBattleResultsToLeaderboard(battleResults);
         
         // Send WhatsApp notification for natural battle end
-        try {
-          const WhatsAppSettings = (await import('./models/WhatsAppSettings.js')).default;
-          const whatsappService = (await import('./services/whatsappService.js')).default;
-          
-          const setting = await WhatsAppSettings.findOne({ settingKey: 'battleNotificationGroup' });
-          if (setting?.settingValue) {
-            const message = `🏁 Battle Ended! 🏁\n\nRoom: ${roomId}\n\nAll participants have finished the battle!`;
-            await whatsappService.sendGroupMessage(setting.settingValue, message);
-          }
-        } catch (error) {
-          console.error('Failed to send battle end notification:', error);
-        }
+        sendBattleEndNotification(roomId);
         
         io.to(roomId).emit('battleEnded', battleResults);
       }
