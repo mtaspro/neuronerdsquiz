@@ -151,7 +151,7 @@ async function executeLeaderboardReset() {
   await UserStats.deleteMany({});
   console.log('✅ Deleted all user stats');
   
-  // Reset ALL user fields to zero
+  // Reset ALL user fields to zero and clear badges
   await User.updateMany(
     {},
     {
@@ -169,7 +169,8 @@ async function executeLeaderboardReset() {
         battleLosses: 0,
         battleDraws: 0,
         totalBattles: 0,
-        battleScore: 0
+        battleScore: 0,
+        badges: []
       }
     }
   );
@@ -216,7 +217,7 @@ async function executeQuizLeaderboardReset() {
   await UserScore.deleteMany({ $or: [{ type: 'general' }, { type: { $exists: false } }, { type: null }] });
   console.log('✅ Deleted quiz leaderboard scores');
   
-  // Reset ALL quiz-related user fields
+  // Reset ALL quiz-related user fields and badges
   await User.updateMany(
     {},
     {
@@ -230,7 +231,8 @@ async function executeQuizLeaderboardReset() {
         totalQuizzes: 0,
         streak: 0,
         currentStreak: 0,
-        lastQuizDate: null
+        lastQuizDate: null,
+        badges: []
       }
     }
   );
@@ -283,7 +285,7 @@ async function executeBattleLeaderboardReset() {
   await UserScore.deleteMany({ type: 'battle' });
   console.log('✅ Deleted battle leaderboard scores');
   
-  // Reset ALL battle-related user fields
+  // Reset ALL battle-related user fields and badges
   await User.updateMany(
     {},
     {
@@ -292,7 +294,8 @@ async function executeBattleLeaderboardReset() {
         battleLosses: 0,
         battleDraws: 0,
         totalBattles: 0,
-        battleScore: 0
+        battleScore: 0,
+        badges: []
       }
     }
   );
