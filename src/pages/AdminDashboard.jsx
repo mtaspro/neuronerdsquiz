@@ -26,7 +26,7 @@ export default function AdminDashboard() {
   // CRUD hooks for different entities
   const usersCRUD = useCRUD('users', {
     onSuccess: (operation, result) => {
-      if (operation === 'read') setUsers(result.users || result);
+      if (operation === 'read') setUsers(result);
       setError('');
     },
     onError: (operation, errorMsg) => setError(errorMsg)
@@ -121,6 +121,12 @@ export default function AdminDashboard() {
   const getQuestionCount = (chapterName) => {
     return questions.filter(q => q.chapter === chapterName).length;
   };
+
+  // Load users
+  useEffect(() => {
+    if (tab !== 'Users') return;
+    usersCRUD.read().catch(() => {});
+  }, [tab, usersCRUD]);
 
   // Load subjects
   useEffect(() => {

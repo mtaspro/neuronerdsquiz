@@ -94,7 +94,13 @@ router.post('/requests/:id/review', sessionMiddleware, requireSuperAdmin, async 
         message = `User ${request.targetUsername} deleted successfully`;
       } else if (request.type === 'LEADERBOARD_RESET') {
         await executeLeaderboardReset();
-        message = 'Leaderboard reset completed successfully';
+        message = 'Full leaderboard reset completed successfully';
+      } else if (request.type === 'QUIZ_LEADERBOARD_RESET') {
+        await executeQuizLeaderboardReset();
+        message = 'Quiz leaderboard reset completed successfully';
+      } else if (request.type === 'BATTLE_LEADERBOARD_RESET') {
+        await executeBattleLeaderboardReset();
+        message = 'Battle leaderboard reset completed successfully';
       }
     }
     
@@ -197,6 +203,62 @@ async function executeLeaderboardReset() {
   console.log('✅ Re-initialized badge system');
   
   console.log('🎉 Complete reset: Both leaderboards cleared, all stats reset, badges reset!');
+}
+
+// Execute quiz leaderboard reset only
+async function executeQuizLeaderboardReset() {
+  console.log('🔄 Starting quiz leaderboard reset...');
+  
+  // Delete only general (quiz) scores
+  await UserScore.deleteMany({ type: 'general' });
+  console.log('✅ Deleted quiz leaderboard scores');
+  
+  // Reset quiz-related user fields only
+  await User.updateMany(
+    {},
+    {
+      $set: {
+        totalScore: 0,
+        questionsAnswered: 0,
+        correctAnswers: 0,
+        incorrectAnswers: 0,
+        averageScore: 0,
+        bestScore: 0,
+        totalQuizzes: 0,
+        streak: 0,
+        lastQuizDate: null
+      }
+    }
+  );
+  console.log('✅ Reset quiz-related user stats');
+  
+  console.log('🎉 Quiz leaderboard reset completed!');
+}
+
+// Execute battle leaderboard reset only
+async function executeBattleLeaderboardReset() {
+  console.log('🔄 Starting battle leaderboard reset...');
+  
+  // Delete only battle scores
+  await UserScore.deleteMany({ type: 'battle' });
+  console.log('✅ Deleted battle leaderboard scores');
+  
+  // Reset battle-related user fields only
+  await User.updateMany(
+    {},
+    {
+      $set: {
+        battleWins: 0,
+        battleLosses: 0,
+        battleDraws: 0,
+        totalBattles: 0,
+        battleScore: 0
+      }
+    }
+  );
+  console.log('✅ Reset battle-related user stats');
+  
+  console.log('🎉 Battle leaderboard reset completed!');
 }
 
 // Set global default theme

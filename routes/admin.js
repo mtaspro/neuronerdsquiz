@@ -17,7 +17,7 @@ const router = express.Router();
 // List all users
 router.get('/users', sessionMiddleware, requireAdmin, async (req, res) => {
   const users = await User.find({}, '-password').select('+phoneNumber +whatsappNotifications');
-  res.json({ users });
+  res.json(users);
 });
 
 // Update user WhatsApp info (admin only)
