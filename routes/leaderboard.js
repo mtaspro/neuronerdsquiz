@@ -10,45 +10,43 @@ const leaderboardRouter = express.Router();
 // GET /leaderboard/general - returns top 50 users with enhanced stats for division ranking
 leaderboardRouter.get('/leaderboard/general', async (req, res) => {
   try {
-    // Get user stats with populated user data (including users with 0 quizzes)
-    const userStats = await UserStats.find({})
-      .populate('userId', 'username avatar badges currentStreak bestScore')
-      .sort({ averageScore: -1, totalQuizzes: -1 })
+    // Get all users first
+    const allUsers = await User.find({})
+      .select('username avatar badges currentStreak bestScore totalQuizzes averageScore')
       .limit(50);
     
-    let enhancedUsers = userStats.map(stats => {
-      const user = stats.userId;
-      if (!user) return null;
+    // Get user stats for additional data
+    const userStatsMap = new Map();
+    const userStats = await UserStats.find({});
+    userStats.forEach(stats => {
+      if (stats.userId) {
+        userStatsMap.set(stats.userId.toString(), stats);
+      }
+    });
+    
+    // Create enhanced users list - show all users if any have 0 scores
+    const enhancedUsers = allUsers.map(user => {
+      const stats = userStatsMap.get(user._id.toString());
       
       return {
         username: user.username,
         avatar: user.avatar,
-        score: Math.round(stats.averageScore || 0),
-        totalQuizzes: stats.totalQuizzes || 0,
-        averageScore: stats.averageScore || 0,
+        score: Math.round(stats?.averageScore || user.averageScore || 0),
+        totalQuizzes: stats?.totalQuizzes || user.totalQuizzes || 0,
+        averageScore: stats?.averageScore || user.averageScore || 0,
         currentStreak: user.currentStreak || 0,
         bestScore: user.bestScore || 0,
-        badges: user.badges || stats.currentBadges || []
+        badges: user.badges || stats?.currentBadges || []
       };
-    }).filter(user => user !== null);
+    });
     
-    // If no users with quiz data, show all registered users as Amateur
-    if (enhancedUsers.length === 0) {
-      const allUsers = await User.find({})
-        .select('username avatar badges currentStreak bestScore')
-        .limit(50);
-      
-      enhancedUsers = allUsers.map(user => ({
-        username: user.username,
-        avatar: user.avatar,
-        score: 0,
-        totalQuizzes: 0,
-        averageScore: 0,
-        currentStreak: 0,
-        bestScore: 0,
-        badges: user.badges || []
-      }));
-    }
+    // Sort by average score, then by total quizzes
+    enhancedUsers.sort((a, b) => {
+      if (b.averageScore !== a.averageScore) {
+        return b.averageScore - a.averageScore;
+      }
+      return b.totalQuizzes - a.totalQuizzes;
+    });
     
     res.json(enhancedUsers);
   } catch (err) {
