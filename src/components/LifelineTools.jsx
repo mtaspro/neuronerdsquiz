@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaSkipForward, FaLightbulb, FaEye, FaClock } from 'react-icons/fa';
+import { FaForward, FaLightbulb, FaEye, FaClock } from 'react-icons/fa';
 
 const LifelineTools = ({ 
   config, 
@@ -11,7 +11,7 @@ const LifelineTools = ({
   const tools = [
     {
       key: 'skip',
-      icon: FaSkipForward,
+      icon: FaForward,
       label: 'Skip',
       color: 'bg-blue-500 hover:bg-blue-600',
       description: 'Skip question without penalty'
