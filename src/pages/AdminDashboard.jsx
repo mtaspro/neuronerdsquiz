@@ -5,6 +5,8 @@ import AILatexGenerator from '../components/AILatexGenerator';
 import axios from 'axios';
 import { authHeader } from '../utils/auth';
 import { secureStorage } from '../utils/secureStorage.js';
+import { useCRUD } from '../hooks/useCRUD';
+import { sanitizeInput, sanitizeObject } from '../utils/sanitizer';
 
 const TABS = ['Users', 'Subjects', 'Chapters', 'Questions', 'Quiz Config', 'Leaderboard Reset', 'WhatsApp'];
 
@@ -20,6 +22,48 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  
+  // CRUD hooks for different entities
+  const usersCRUD = useCRUD('users', {
+    onSuccess: (operation, result) => {
+      if (operation === 'read') setUsers(result.users || result);
+      setError('');
+    },
+    onError: (operation, errorMsg) => setError(errorMsg)
+  });
+  
+  const subjectsCRUD = useCRUD('subjects', {
+    onSuccess: (operation, result) => {
+      if (operation === 'read') setSubjects(result);
+      else if (operation === 'create') setSubjects(prev => [...prev, result]);
+      else if (operation === 'update') setSubjects(prev => prev.map(s => s._id === result._id ? result : s));
+      else if (operation === 'delete') setSubjects(prev => prev.filter(s => s._id !== result));
+      setError('');
+    },
+    onError: (operation, errorMsg) => setError(errorMsg)
+  });
+  
+  const chaptersCRUD = useCRUD('chapters', {
+    onSuccess: (operation, result) => {
+      if (operation === 'read') setChapters(result);
+      else if (operation === 'create') setChapters(prev => [...prev, result]);
+      else if (operation === 'update') setChapters(result); // Reload all chapters
+      else if (operation === 'delete') setChapters(prev => prev.filter(c => c._id !== result));
+      setError('');
+    },
+    onError: (operation, errorMsg) => setError(errorMsg)
+  });
+  
+  const questionsCRUD = useCRUD('questions', {
+    onSuccess: (operation, result) => {
+      if (operation === 'read') setQuestions(result);
+      else if (operation === 'create') setQuestions(prev => [...prev, result]);
+      else if (operation === 'update') setQuestions(prev => prev.map(q => q._id === result._id ? result : q));
+      else if (operation === 'delete') setQuestions(prev => prev.filter(q => q._id !== result));
+      setError('');
+    },
+    onError: (operation, errorMsg) => setError(errorMsg)
+  });
 
   // Check admin access on mount
   useEffect(() => {
@@ -78,51 +122,23 @@ export default function AdminDashboard() {
     return questions.filter(q => q.chapter === chapterName).length;
   };
 
-  // Load users
+  // Load subjects
   useEffect(() => {
-    if (tab !== 'Users') return;
-    
-    const loadUsers = async () => {
-      setLoading(true);
-      setError('');
-      
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || '';
-        
-        // First validate the token
-        const validationResponse = await axios.get(`${apiUrl}/api/auth/validate`, { 
-          headers: authHeader() 
-        });
-        
-        if (!validationResponse.data.valid) {
-          throw new Error('Invalid token');
-        }
-        
-        if (!validationResponse.data.user?.isAdmin) {
-          throw new Error('Not authorized as admin');
-        }
-        
-        const response = await axios.get(`${apiUrl}/api/admin/users`, { 
-          headers: authHeader() 
-        });
-        setUsers(response.data.users || response.data);
-      } catch (err) {
-        const errorMessage = err.response?.data?.error || err.message || 'Failed to load users';
-        setError(errorMessage);
-        
-        // If token is invalid or user deleted, clear auth data
-        if (err.response?.status === 401) {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userData');
-          navigate('/login');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (tab !== 'Subjects') return;
+    subjectsCRUD.read().catch(() => {});
+  }, [tab, subjectsCRUD]);
 
-    loadUsers();
-  }, [tab]);
+  // Load chapters
+  useEffect(() => {
+    if (tab !== 'Chapters') return;
+    chaptersCRUD.read().catch(() => {});
+  }, [tab, chaptersCRUD]);
+
+  // Load questions
+  useEffect(() => {
+    if (tab !== 'Questions') return;
+    questionsCRUD.read().catch(() => {});
+  }, [tab, questionsCRUD]);
 
   // Load subjects
   useEffect(() => {
@@ -334,136 +350,113 @@ export default function AdminDashboard() {
   }
 
   // Add new subject
-  function handleAddSubject(e) {
+  async function handleAddSubject(e) {
     e.preventDefault();
-    setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.post(`${apiUrl}/api/admin/subjects`, newSubject, { headers: authHeader() })
-      .then(res => {
-        setSubjects(subs => [...subs, res.data]);
-        setNewSubject({ name: '', description: '', order: 0, visible: true });
-      })
-      .catch(err => setError(err.response?.data?.error || 'Failed to add subject'))
-      .finally(() => setLoading(false));
+    try {
+      await subjectsCRUD.create(sanitizeObject(newSubject));
+      setNewSubject({ name: '', description: '', order: 0, visible: true });
+    } catch (err) {
+      // Error handled by CRUD hook
+    }
   }
 
   // Add new chapter
-  function handleAddChapter(e) {
+  async function handleAddChapter(e) {
     e.preventDefault();
-    setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.post(`${apiUrl}/api/admin/chapters`, newChapter, { headers: authHeader() })
-      .then(res => {
-        setChapters(chs => [...chs, res.data]);
-        setNewChapter({ name: '', description: '', order: 0, visible: true, practiceMode: false, subject: '' });
-      })
-      .catch(err => setError(err.response?.data?.error || 'Failed to add chapter'))
-      .finally(() => setLoading(false));
+    try {
+      await chaptersCRUD.create(sanitizeObject(newChapter));
+      setNewChapter({ name: '', description: '', order: 0, visible: true, practiceMode: false, subject: '' });
+    } catch (err) {
+      // Error handled by CRUD hook
+    }
   }
 
   // Edit subject
-  function handleEditSubject(e) {
+  async function handleEditSubject(e) {
     e.preventDefault();
-    setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.put(`${apiUrl}/api/admin/subjects/${editingId}`, editSubject, { headers: authHeader() })
-      .then(res => {
-        setSubjects(subs => subs.map(sub => sub._id === editingId ? res.data : sub));
-        setEditingId(null);
-        setEditSubject(null);
-      })
-      .catch(err => setError(err.response?.data?.error || 'Failed to edit subject'))
-      .finally(() => setLoading(false));
+    try {
+      await subjectsCRUD.update(editingId, sanitizeObject(editSubject));
+      setEditingId(null);
+      setEditSubject(null);
+    } catch (err) {
+      // Error handled by CRUD hook
+    }
   }
 
   // Edit chapter
-  function handleEditChapter(e) {
+  async function handleEditChapter(e) {
     e.preventDefault();
-    setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.put(`${apiUrl}/api/admin/chapters/${editingId}`, editChapter, { headers: authHeader() })
-      .then(res => {
-        // Reload chapters from server to get fresh data
-        return axios.get(`${apiUrl}/api/admin/chapters`, { headers: authHeader() });
-      })
-      .then(res => {
-        setChapters(res.data);
-        setEditingId(null);
-        setEditChapter(null);
-      })
-      .catch(err => setError(err.response?.data?.error || 'Failed to edit chapter'))
-      .finally(() => setLoading(false));
+    try {
+      await chaptersCRUD.update(editingId, sanitizeObject(editChapter));
+      // Reload all chapters to get fresh data
+      await chaptersCRUD.read();
+      setEditingId(null);
+      setEditChapter(null);
+    } catch (err) {
+      // Error handled by CRUD hook
+    }
   }
 
   // Delete subject
-  function handleDeleteSubject(id) {
+  async function handleDeleteSubject(id) {
     if (!window.confirm('Delete this subject? All chapters and questions in this subject will also be deleted.')) return;
-    setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.delete(`${apiUrl}/api/admin/subjects/${id}`, { headers: authHeader() })
-      .then(() => setSubjects(subs => subs.filter(sub => sub._id !== id)))
-      .catch(() => setError('Failed to delete subject'))
-      .finally(() => setLoading(false));
+    try {
+      await subjectsCRUD.remove(id);
+    } catch (err) {
+      // Error handled by CRUD hook
+    }
   }
 
   // Delete chapter
-  function handleDeleteChapter(id) {
+  async function handleDeleteChapter(id) {
     if (!window.confirm('Delete this chapter? All questions in this chapter will also be deleted.')) return;
-    setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.delete(`${apiUrl}/api/admin/chapters/${id}`, { headers: authHeader() })
-      .then(() => setChapters(chs => chs.filter(ch => ch._id !== id)))
-      .catch(() => setError('Failed to delete chapter'))
-      .finally(() => setLoading(false));
+    try {
+      await chaptersCRUD.remove(id);
+    } catch (err) {
+      // Error handled by CRUD hook
+    }
   }
 
   // Add new question
-  function handleAddQuestion(e) {
+  async function handleAddQuestion(e) {
     e.preventDefault();
-    setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    const questionData = {
-      ...newQuestion,
-      correctAnswer: newQuestion.options[newQuestion.correctAnswer],
-      adminVisible: adminVisibleForChapter
-    };
-    axios.post(`${apiUrl}/api/admin/questions`, questionData, { headers: authHeader() })
-      .then(res => {
-        setQuestions(qs => [...qs, res.data]);
-        setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: selectedChapter, duration: 60, explanation: '' });
-      })
-      .catch(() => setError('Failed to add question'))
-      .finally(() => setLoading(false));
+    try {
+      const questionData = {
+        ...newQuestion,
+        correctAnswer: newQuestion.options[newQuestion.correctAnswer],
+        adminVisible: adminVisibleForChapter
+      };
+      await questionsCRUD.create(sanitizeObject(questionData));
+      setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: selectedChapter, duration: 60, explanation: '' });
+    } catch (err) {
+      // Error handled by CRUD hook
+    }
   }
 
   // Edit question
-  function handleEditQuestion(e) {
+  async function handleEditQuestion(e) {
     e.preventDefault();
-    setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    const questionData = {
-      ...editQuestion,
-      correctAnswer: editQuestion.options[editQuestion.correctAnswer]
-    };
-    axios.put(`${apiUrl}/api/admin/questions/${editingId}`, questionData, { headers: authHeader() })
-      .then(res => {
-        setQuestions(qs => qs.map(q => q._id === editingId ? res.data : q));
-        setEditingId(null);
-        setEditQuestion(null);
-      })
-      .catch(() => setError('Failed to edit question'))
-      .finally(() => setLoading(false));
+    try {
+      const questionData = {
+        ...editQuestion,
+        correctAnswer: editQuestion.options[editQuestion.correctAnswer]
+      };
+      await questionsCRUD.update(editingId, sanitizeObject(questionData));
+      setEditingId(null);
+      setEditQuestion(null);
+    } catch (err) {
+      // Error handled by CRUD hook
+    }
   }
 
   // Delete question
-  function handleDeleteQuestion(id) {
+  async function handleDeleteQuestion(id) {
     if (!window.confirm('Delete this question?')) return;
-    setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    axios.delete(`${apiUrl}/api/admin/questions/${id}`, { headers: authHeader() })
-      .then(() => setQuestions(qs => qs.filter(q => q._id !== id)))
-      .catch(() => setError('Failed to delete question'))
-      .finally(() => setLoading(false));
+    try {
+      await questionsCRUD.remove(id);
+    } catch (err) {
+      // Error handled by CRUD hook
+    }
   }
 
   // Handle bulk question parsing
@@ -474,10 +467,12 @@ export default function AdminDashboard() {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const response = await axios.post(`${apiUrl}/api/admin/parse-bulk-questions`, {
-        bulkText: bulkText
+        bulkText: sanitizeInput(bulkText)
       }, { headers: authHeader() });
       
-      setParsedQuestions(response.data.questions);
+      // Sanitize parsed questions
+      const sanitizedQuestions = response.data.questions.map(q => sanitizeObject(q));
+      setParsedQuestions(sanitizedQuestions);
       setBulkText('');
       setShowBulkParser(false);
     } catch (err) {
@@ -553,9 +548,6 @@ export default function AdminDashboard() {
     
     if (!window.confirm(`Add ${validQuestions.length} valid questions to "${selectedChapter}"? ${invalidQuestions.length} invalid questions will remain for manual fixing.`)) return;
     
-    setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    
     try {
       const questionsToAdd = validQuestions.map(({ pq }) => {
         const options = Array.isArray(pq.options) ? pq.options : [
@@ -568,7 +560,7 @@ export default function AdminDashboard() {
         const validOptions = options.filter(opt => opt && opt.trim());
         const correctAnswerIndex = validOptions.findIndex(opt => opt === pq.correctAnswer);
         
-        return {
+        return sanitizeObject({
           question: pq.question,
           options: validOptions,
           correctAnswer: validOptions[correctAnswerIndex],
@@ -576,14 +568,10 @@ export default function AdminDashboard() {
           duration: 60,
           explanation: pq.explanation || '',
           adminVisible: adminVisibleForChapter
-        };
+        });
       });
       
-      const response = await axios.post(`${apiUrl}/api/admin/questions/bulk`, {
-        questions: questionsToAdd
-      }, { headers: authHeader() });
-      
-      setQuestions(qs => [...qs, ...response.data]);
+      await questionsCRUD.bulkCreate(questionsToAdd);
       
       // Remove only valid questions, keep invalid ones
       const validIndices = new Set(validQuestions.map(({ index }) => index));
@@ -592,8 +580,6 @@ export default function AdminDashboard() {
       setError('');
     } catch (err) {
       setError('Failed to add questions in bulk');
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -865,8 +851,8 @@ export default function AdminDashboard() {
                     <span>Visible to users</span>
                   </label>
                 </div>
-                <button type="submit" disabled={loading} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
-                  {loading ? 'Adding...' : 'Add Subject'}
+                <button type="submit" disabled={subjectsCRUD.loading} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
+                  {subjectsCRUD.loading ? 'Adding...' : 'Add Subject'}
                 </button>
               </form>
             </div>
@@ -1027,8 +1013,8 @@ export default function AdminDashboard() {
                     <span>Practice Mode (stats won't be calculated)</span>
                   </label>
                 </div>
-                <button type="submit" disabled={loading} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
-                  {loading ? 'Adding...' : 'Add Chapter'}
+                <button type="submit" disabled={chaptersCRUD.loading} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
+                  {chaptersCRUD.loading ? 'Adding...' : 'Add Chapter'}
                 </button>
               </form>
             </div>
@@ -1445,8 +1431,8 @@ export default function AdminDashboard() {
                     </div>
                   )}
                 </div>
-                <button type="submit" disabled={loading} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
-                  {loading ? 'Adding...' : 'Add Question'}
+                <button type="submit" disabled={questionsCRUD.loading} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
+                  {questionsCRUD.loading ? 'Adding...' : 'Add Question'}
                 </button>
               </form>
             </div>

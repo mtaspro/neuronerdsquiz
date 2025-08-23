@@ -16,6 +16,7 @@
     "@whiskeysockets/baileys": "^6.7.18",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
+    "dompurify": "^3.0.8",
     "better-react-mathjax": "^2.3.0",
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",

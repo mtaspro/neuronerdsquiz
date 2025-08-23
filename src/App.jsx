@@ -251,7 +251,9 @@ function AnimatedRoutes() {
             path="/battle/:roomId"
             element={
               <ProtectedRoute>
-                <QuizBattleRoom />
+                <ErrorBoundary fallbackMessage="Battle room encountered an error. Please refresh or rejoin the battle.">
+                  <QuizBattleRoom />
+                </ErrorBoundary>
               </ProtectedRoute>
             }
           />
@@ -275,7 +277,9 @@ function AnimatedRoutes() {
             path="/admin"
             element={
               <AdminRoute>
-                <AdminDashboard />
+                <ErrorBoundary fallbackMessage="Admin dashboard encountered an error. Please refresh or contact support.">
+                  <AdminDashboard />
+                </ErrorBoundary>
               </AdminRoute>
             }
           />
@@ -292,7 +296,9 @@ function AnimatedRoutes() {
             path="/superadmin"
             element={
               <ProtectedRoute>
-                <SuperAdminDashboard />
+                <ErrorBoundary fallbackMessage="SuperAdmin dashboard encountered an error. Please refresh or contact support.">
+                  <SuperAdminDashboard />
+                </ErrorBoundary>
               </ProtectedRoute>
             }
           />
