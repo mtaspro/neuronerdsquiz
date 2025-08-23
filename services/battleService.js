@@ -125,7 +125,7 @@ class BattleService {
   }
 
   // Submit answer
-  submitAnswer(roomId, userId, questionIndex, answer, isCorrect, timeSpent) {
+  submitAnswer(roomId, userId, questionIndex, answer, isCorrect, timeSpent, chapterConfig = null, lifelineUsed = null) {
     const room = this.getRoom(roomId);
     if (!room || room.status !== 'active') {
       throw new Error('Battle not active');
@@ -141,15 +141,27 @@ class BattleService {
       answer,
       isCorrect,
       timeSpent,
+      lifelineUsed,
       timestamp: new Date()
     };
 
-    // Update score
+    // Update score with lifeline and negative scoring support
     if (isCorrect) {
-      // Optimized scoring: 2 points base + small time bonus
-      const baseScore = 2;
+      // Base scoring: 2 points + time bonus
+      let baseScore = 2;
       const timeBonus = Math.max(0, 1 - Math.floor(timeSpent / 10000)); // Max 1 point for very fast answers
+      
+      // Apply lifeline penalty for help tool
+      if (lifelineUsed === 'help') {
+        baseScore = Math.floor(baseScore * 0.5); // 50% penalty by default
+      }
+      
       user.score += baseScore + timeBonus;
+    } else if (chapterConfig?.negativeScoring) {
+      // Apply negative score for wrong answers if enabled
+      user.score += chapterConfig.negativeScore || -1;
+      // Ensure score doesn't go below 0
+      user.score = Math.max(0, user.score);
     }
 
     // Move to next question

@@ -7,8 +7,9 @@ import { authHeader } from '../utils/auth';
 import { secureStorage } from '../utils/secureStorage.js';
 import { useCRUD } from '../hooks/useCRUD';
 import { sanitizeInput, sanitizeObject } from '../utils/sanitizer';
+import LifelineConfigPanel from '../components/LifelineConfigPanel';
 
-const TABS = ['Users', 'Subjects', 'Chapters', 'Questions', 'Quiz Config', 'Leaderboard Reset', 'WhatsApp'];
+const TABS = ['Users', 'Subjects', 'Chapters', 'Questions', 'Quiz Config', 'Lifeline Config', 'Leaderboard Reset', 'WhatsApp'];
 
 
 
@@ -645,7 +646,7 @@ export default function AdminDashboard() {
   };
 
   // Update quiz config with validation
-  function handleUpdateQuizConfig(chapterId, examQuestions, battleQuestions) {
+  function handleUpdateQuizConfig(chapterId, examQuestions, battleQuestions, negativeScoring = false, negativeScore = -1) {
     // Find the chapter to get its name and question count
     const chapter = chapters.find(ch => ch._id === chapterId);
     if (!chapter) {
@@ -656,6 +657,7 @@ export default function AdminDashboard() {
     const availableQuestions = getQuestionCount(chapter.name);
     const examQuestionsNum = parseInt(examQuestions) || 50;
     const battleQuestionsNum = parseInt(battleQuestions) || 0;
+    const negativeScoreNum = parseFloat(negativeScore) || -1;
     
     // Validate question counts
     if (examQuestionsNum > availableQuestions) {
@@ -672,7 +674,9 @@ export default function AdminDashboard() {
     const apiUrl = import.meta.env.VITE_API_URL || '';
     axios.put(`${apiUrl}/api/admin/quiz-configs/${chapterId}`, {
       examQuestions: examQuestionsNum,
-      battleQuestions: battleQuestionsNum
+      battleQuestions: battleQuestionsNum,
+      negativeScoring: negativeScoring === true || negativeScoring === 'true',
+      negativeScore: Math.min(0, negativeScoreNum)
     }, { headers: authHeader() })
       .then(res => {
         setQuizConfigs(configs => 
@@ -1680,6 +1684,10 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {tab === 'Lifeline Config' && (
+          <LifelineConfigPanel />
+        )}
+
         {tab === 'Quiz Config' && (
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
             <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Quiz Configuration</h3>
@@ -1703,7 +1711,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Exam Questions</label>
                           <input
@@ -1712,7 +1720,7 @@ export default function AdminDashboard() {
                             min="0"
                             max={questionCount}
                             className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
-                            onBlur={(e) => handleUpdateQuizConfig(chapter._id, e.target.value, config.battleQuestions || 0)}
+                            onBlur={(e) => handleUpdateQuizConfig(chapter._id, e.target.value, config.battleQuestions || 0, config.negativeScoring, config.negativeScore)}
                             placeholder="Number of questions for exams"
                           />
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Max: {questionCount}</p>
@@ -1725,10 +1733,37 @@ export default function AdminDashboard() {
                             min="0"
                             max={questionCount}
                             className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
-                            onBlur={(e) => handleUpdateQuizConfig(chapter._id, config.examQuestions || 50, e.target.value)}
+                            onBlur={(e) => handleUpdateQuizConfig(chapter._id, config.examQuestions || 50, e.target.value, config.negativeScoring, config.negativeScore)}
                             placeholder="Number of questions for battles"
                           />
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Max: {questionCount}</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Negative Scoring</label>
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              defaultChecked={config.negativeScoring || false}
+                              onChange={(e) => handleUpdateQuizConfig(chapter._id, config.examQuestions || 50, config.battleQuestions || 0, e.target.checked, config.negativeScore)}
+                              className="rounded border-gray-300 dark:border-gray-500 text-red-600 focus:ring-red-500"
+                            />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">Enable for battles</span>
+                          </label>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Deduct points for wrong answers</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Negative Score</label>
+                          <input
+                            type="number"
+                            defaultValue={config.negativeScore || -1}
+                            max="0"
+                            step="0.1"
+                            disabled={!config.negativeScoring}
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors disabled:opacity-50"
+                            onBlur={(e) => handleUpdateQuizConfig(chapter._id, config.examQuestions || 50, config.battleQuestions || 0, config.negativeScoring, e.target.value)}
+                            placeholder="Points to deduct"
+                          />
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Points deducted per wrong answer</p>
                         </div>
                       </div>
                       

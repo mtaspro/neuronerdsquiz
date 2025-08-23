@@ -10,7 +10,10 @@ import SecurityWarning from '../components/SecurityWarning';
 import SecurityInitModal from '../components/SecurityInitModal';
 import MathText from '../components/MathText';
 import soundManager from '../utils/soundUtils';
+import LifelineTools from '../components/LifelineTools';
+import { useLifelines } from '../hooks/useLifelines';
 import { secureStorage } from '../utils/secureStorage.js';
+import axios from 'axios';
 
 const QuizBattleRoom = () => {
   const { roomId } = useParams();
@@ -50,6 +53,20 @@ const QuizBattleRoom = () => {
   const [securityActive, setSecurityActive] = useState(false);
   const [currentViolation, setCurrentViolation] = useState(null);
   const [securityInitialized, setSecurityInitialized] = useState(false);
+  
+  // Lifeline states
+  const [lifelineConfig, setLifelineConfig] = useState(null);
+  const [hiddenOptions, setHiddenOptions] = useState(new Set());
+  const [helpUsed, setHelpUsed] = useState(false);
+  
+  // Initialize lifelines
+  const {
+    usedCounts,
+    lifelineEffects,
+    canUseLifeline,
+    useLifeline,
+    resetLifelines
+  } = useLifelines(lifelineConfig);
 
   // Security system hook
   const {
@@ -162,11 +179,21 @@ const QuizBattleRoom = () => {
           ));
         });
 
-        socket.addListener('battleStarted', (data) => {
+        socket.addListener('battleStarted', async (data) => {
           setBattleStarted(true);
           setQuestions(data.questions);
           setCurrentQuestion(0);
           setQuestionStartTime(Date.now());
+          
+          // Load lifeline configuration for battle
+          try {
+            const apiUrl = import.meta.env.VITE_API_URL || '';
+            const lifelineResponse = await axios.get(`${apiUrl}/api/quizzes/lifeline-config?isBattle=true`);
+            setLifelineConfig(lifelineResponse.data);
+          } catch (err) {
+            console.error('Failed to load lifeline config for battle:', err);
+          }
+          
           addNotification('battle-started', 'Battle Started!', 'The quiz battle has begun!');
           success('Battle has started! Good luck!');
         });
@@ -379,6 +406,7 @@ const QuizBattleRoom = () => {
 
     const isCorrect = selectedAnswer === questions?.[currentQuestion]?.correctAnswer;
     const finalTimeSpent = Date.now() - questionStartTime;
+    const lifelineUsed = helpUsed ? 'help' : null;
 
     // Play sound based on answer
     soundManager.play(isCorrect ? 'correctAnswer' : 'wrongAnswer');
@@ -390,7 +418,9 @@ const QuizBattleRoom = () => {
         currentQuestion,
         selectedAnswer,
         isCorrect,
-        finalTimeSpent
+        finalTimeSpent,
+        selectedChapter,
+        lifelineUsed
       );
     }
 
@@ -398,6 +428,58 @@ const QuizBattleRoom = () => {
     setTimeSpent(finalTimeSpent);
   };
 
+  // Handle lifeline usage in battle
+  const handleUseLifeline = (type) => {
+    const currentQuestionId = questions?.[currentQuestion]?._id || `battle-q-${currentQuestion}`;
+    
+    if (!useLifeline(type, currentQuestionId)) {
+      showError('Cannot use this lifeline anymore');
+      return;
+    }
+    
+    switch (type) {
+      case 'skip':
+        // Skip to next question without penalty
+        if (currentQuestion < questions.length - 1) {
+          setCurrentQuestion(prev => prev + 1);
+          setSelectedAnswer(null);
+          setAnswered(false);
+          setQuestionStartTime(Date.now());
+          setTimeSpent(0);
+          setHelpUsed(false);
+          setHiddenOptions(new Set());
+        }
+        break;
+        
+      case 'help':
+        // Show correct answer
+        const correctIndex = questions?.[currentQuestion]?.correctAnswer;
+        setSelectedAnswer(correctIndex);
+        setHelpUsed(true);
+        success('Correct answer revealed! Score will be reduced by 50%');
+        break;
+        
+      case 'fiftyFifty':
+        // Hide 2 wrong options
+        const correctIdx = questions?.[currentQuestion]?.correctAnswer;
+        const wrongIndices = questions?.[currentQuestion]?.options
+          ?.map((_, idx) => idx)
+          .filter(idx => idx !== correctIdx) || [];
+        
+        // Randomly select 2 wrong options to hide
+        const shuffled = wrongIndices.sort(() => 0.5 - Math.random());
+        const toHide = shuffled.slice(0, 2);
+        setHiddenOptions(new Set(toHide));
+        success('2 wrong options removed!');
+        break;
+        
+      case 'extraTime':
+        // Extra time not available in battles
+        showError('Extra time is not available in battle mode');
+        break;
+    }
+  };
+  
   const handleNextQuestion = () => {
     if (currentQuestion < questions.length - 1) {
       soundManager.play('questionNext');
@@ -406,6 +488,8 @@ const QuizBattleRoom = () => {
       setAnswered(false);
       setQuestionStartTime(Date.now());
       setTimeSpent(0);
+      setHelpUsed(false);
+      setHiddenOptions(new Set());
     }
   };
 
@@ -912,32 +996,72 @@ const QuizBattleRoom = () => {
                     </div>
                   </div>
 
+                  {/* Lifeline Tools */}
+                  {lifelineConfig && Object.keys(lifelineConfig).length > 0 && (
+                    <LifelineTools
+                      config={lifelineConfig}
+                      usedCounts={usedCounts}
+                      onUseLifeline={handleUseLifeline}
+                      disabled={answered}
+                      currentQuestion={questions?.[currentQuestion]}
+                    />
+                  )}
+                  
                   <h3 className="text-xl font-semibold mb-6">
                     <MathText>{questions?.[currentQuestion]?.question || 'Loading question...'}</MathText>
                   </h3>
+                  
+                  {helpUsed && (
+                    <div className="bg-yellow-500 bg-opacity-20 border border-yellow-400 rounded-lg p-3 mb-4">
+                      <p className="text-yellow-300 text-sm">
+                        💡 Correct answer revealed! Your score for this question will be reduced by 50%.
+                      </p>
+                    </div>
+                  )}
 
                   <div className="space-y-3">
-                    {questions?.[currentQuestion]?.options?.map((option, index) => (
-                      <motion.button
-                        key={index}
-                        onClick={() => handleAnswerSelect(index)}
-                        disabled={answered}
-                        className={`w-full p-4 rounded-lg text-left transition-all duration-200 ${
-                          selectedAnswer === index
-                            ? 'bg-blue-500 text-white shadow-lg'
-                            : answered && index === questions?.[currentQuestion]?.correctAnswer
-                            ? 'bg-green-500 text-white'
-                            : answered && selectedAnswer === index && index !== questions?.[currentQuestion]?.correctAnswer
-                            ? 'bg-red-500 text-white'
-                            : 'bg-white bg-opacity-10 hover:bg-opacity-20 text-white'
-                        }`}
-                        whileHover={{ scale: answered ? 1 : 1.02 }}
-                        whileTap={{ scale: answered ? 1 : 0.98 }}
-                      >
-                        <span className="font-semibold mr-3">{String.fromCharCode(65 + index)}.</span>
-                        <MathText>{option}</MathText>
-                      </motion.button>
-                    ))}
+                    {questions?.[currentQuestion]?.options?.map((option, index) => {
+                      const isHidden = hiddenOptions.has(index);
+                      const isCorrect = helpUsed && index === questions?.[currentQuestion]?.correctAnswer;
+                      
+                      if (isHidden) {
+                        return (
+                          <div key={index} className="w-full p-4 rounded-lg bg-gray-600 bg-opacity-50 opacity-50">
+                            <div className="flex items-center text-gray-400">
+                              <span className="font-semibold mr-3">{String.fromCharCode(65 + index)}.</span>
+                              <span>Option removed by 50-50</span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <motion.button
+                          key={index}
+                          onClick={() => handleAnswerSelect(index)}
+                          disabled={answered}
+                          className={`w-full p-4 rounded-lg text-left transition-all duration-200 ${
+                            selectedAnswer === index
+                              ? isCorrect
+                                ? 'bg-green-500 text-white shadow-lg'
+                                : 'bg-blue-500 text-white shadow-lg'
+                              : answered && index === questions?.[currentQuestion]?.correctAnswer
+                              ? 'bg-green-500 text-white'
+                              : answered && selectedAnswer === index && index !== questions?.[currentQuestion]?.correctAnswer
+                              ? 'bg-red-500 text-white'
+                              : isCorrect
+                              ? 'bg-green-400 bg-opacity-30 border border-green-400 text-white'
+                              : 'bg-white bg-opacity-10 hover:bg-opacity-20 text-white'
+                          }`}
+                          whileHover={{ scale: answered ? 1 : 1.02 }}
+                          whileTap={{ scale: answered ? 1 : 0.98 }}
+                        >
+                          <span className="font-semibold mr-3">{String.fromCharCode(65 + index)}.</span>
+                          {isCorrect && <span className="text-green-300 mr-2">✓</span>}
+                          <MathText>{option}</MathText>
+                        </motion.button>
+                      );
+                    })}
                   </div>
 
                   {!answered && selectedAnswer !== null && (

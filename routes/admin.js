@@ -486,7 +486,7 @@ router.get('/quiz-configs', sessionMiddleware, requireAdmin, async (req, res) =>
 router.put('/quiz-configs/:chapterId', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const { chapterId } = req.params;
-    const { examQuestions, battleQuestions } = req.body;
+    const { examQuestions, battleQuestions, negativeScoring, negativeScore } = req.body;
     
     // Find the chapter to get its name
     const chapter = await Chapter.findById(chapterId);
@@ -494,13 +494,16 @@ router.put('/quiz-configs/:chapterId', sessionMiddleware, requireAdmin, async (r
       return res.status(404).json({ error: 'Chapter not found' });
     }
     
-    // Properly parse numbers, keeping the original value if it's already a valid number
+    // Properly parse numbers
     const examQuestionsNum = examQuestions !== undefined && examQuestions !== null && examQuestions !== '' 
       ? Math.max(0, parseInt(examQuestions)) 
       : 0;
     const battleQuestionsNum = battleQuestions !== undefined && battleQuestions !== null && battleQuestions !== '' 
       ? Math.max(0, parseInt(battleQuestions)) 
       : 0;
+    const negativeScoreNum = negativeScore !== undefined && negativeScore !== null && negativeScore !== ''
+      ? Math.min(0, parseFloat(negativeScore))
+      : -1;
     
     const config = await QuizConfig.findOneAndUpdate(
       { chapterId },
@@ -508,7 +511,9 @@ router.put('/quiz-configs/:chapterId', sessionMiddleware, requireAdmin, async (r
         chapterId,
         chapterName: chapter.name,
         examQuestions: examQuestionsNum,
-        battleQuestions: battleQuestionsNum
+        battleQuestions: battleQuestionsNum,
+        negativeScoring: negativeScoring === true || negativeScoring === 'true',
+        negativeScore: negativeScoreNum
       },
       { upsert: true, new: true }
     );

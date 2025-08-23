@@ -9,6 +9,7 @@ import UserQuizRecord from '../models/UserQuizRecord.js';
 import UserQuestionRecord from '../models/UserQuestionRecord.js';
 import BadgeService from '../services/badgeService.js';
 import GlobalSettings from '../models/GlobalSettings.js';
+import LifelineConfig from '../models/LifelineConfig.js';
 
 const router = express.Router();
 
@@ -459,6 +460,35 @@ router.post('/end-showdown-event', sessionMiddleware, requireSuperAdmin, async (
   } catch (error) {
     console.error('Error ending event:', error);
     res.status(500).json({ error: 'Failed to end event' });
+  }
+});
+
+// Get lifeline configuration
+router.get('/lifeline-config', sessionMiddleware, requireSuperAdmin, async (req, res) => {
+  try {
+    let config = await LifelineConfig.findOne();
+    if (!config) {
+      config = new LifelineConfig();
+      await config.save();
+    }
+    res.json(config);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update lifeline configuration
+router.put('/lifeline-config', sessionMiddleware, requireSuperAdmin, async (req, res) => {
+  try {
+    let config = await LifelineConfig.findOne();
+    if (!config) {
+      config = new LifelineConfig();
+    }
+    Object.assign(config, req.body);
+    await config.save();
+    res.json(config);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

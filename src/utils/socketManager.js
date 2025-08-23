@@ -322,14 +322,16 @@ export const battleSocketHelpers = {
   },
   
   // Submit answer
-  submitAnswer: async (roomId, userId, questionIndex, answer, isCorrect, timeSpent) => {
+  submitAnswer: async (roomId, userId, questionIndex, answer, isCorrect, timeSpent, chapterName = null, lifelineUsed = null) => {
     await socketManager.emit('answerQuestion', {
       roomId,
       userId,
       questionIndex,
       answer,
       isCorrect,
-      timeSpent
+      timeSpent,
+      chapterName,
+      lifelineUsed
     });
   }
 };

@@ -348,9 +348,16 @@ io.on('connection', (socket) => {
   });
 
   // Submit answer
-  socket.on('answerQuestion', ({ roomId, userId, questionIndex, answer, isCorrect, timeSpent }) => {
+  socket.on('answerQuestion', async ({ roomId, userId, questionIndex, answer, isCorrect, timeSpent, chapterName, lifelineUsed }) => {
     try {
-      const result = battleService.submitAnswer(roomId, userId, questionIndex, answer, isCorrect, timeSpent);
+      // Get chapter config for negative scoring
+      let chapterConfig = null;
+      if (chapterName) {
+        const QuizConfig = (await import('./models/QuizConfig.js')).default;
+        chapterConfig = await QuizConfig.findOne({ chapterName });
+      }
+      
+      const result = battleService.submitAnswer(roomId, userId, questionIndex, answer, isCorrect, timeSpent, chapterConfig, lifelineUsed);
       
       // Broadcast progress update to all users in the room
       io.to(roomId).emit('updateProgress', {
@@ -384,7 +391,7 @@ io.on('connection', (socket) => {
         io.to(roomId).emit('battleEnded', battleResults);
       }
 
-      console.log(`User ${result.user.username} answered question ${questionIndex + 1} in room ${roomId}`);
+      console.log(`User ${result.user.username} answered question ${questionIndex + 1} in room ${roomId}${lifelineUsed ? ` (used ${lifelineUsed})` : ''}`);
     } catch (error) {
       socket.emit('error', { message: error.message });
     }

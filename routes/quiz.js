@@ -9,6 +9,7 @@ import UserStats from '../models/UserStats.js';
 import BadgeService from '../services/badgeService.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
+import LifelineConfig from '../models/LifelineConfig.js';
 import crypto from 'crypto';
 
 const router = express.Router();
@@ -390,6 +391,35 @@ router.get('/my-history', sessionMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error fetching quiz history:', error);
     res.status(500).json({ error: 'Failed to fetch quiz history' });
+  }
+});
+
+// Get lifeline configuration for quiz
+router.get('/lifeline-config', async (req, res) => {
+  try {
+    const { isBattle } = req.query;
+    let config = await LifelineConfig.findOne();
+    if (!config) {
+      config = new LifelineConfig();
+      await config.save();
+    }
+    
+    // Filter tools based on battle mode
+    const filteredConfig = {};
+    Object.keys(config.toObject()).forEach(key => {
+      if (key !== '_id' && key !== '__v' && key !== 'createdAt' && key !== 'updatedAt') {
+        const tool = config[key];
+        if (tool && typeof tool === 'object') {
+          if (!isBattle || tool.availableInBattle) {
+            filteredConfig[key] = tool;
+          }
+        }
+      }
+    });
+    
+    res.json(filteredConfig);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

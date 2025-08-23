@@ -11,6 +11,8 @@ import MathText from "../components/MathText";
 import soundManager from "../utils/soundUtils";
 import DivisionPromotion from "../components/DivisionPromotion";
 import { calculateDivision } from "../utils/divisionUtils";
+import LifelineTools from "../components/LifelineTools";
+import { useLifelines } from "../hooks/useLifelines";
 import axios from "axios";
 
 export default function QuizPage() {
@@ -40,12 +42,27 @@ export default function QuizPage() {
   // Division promotion states
   const [showPromotion, setShowPromotion] = useState(false);
   const [promotionData, setPromotionData] = useState(null);
+  
+  // Lifeline states
+  const [lifelineConfig, setLifelineConfig] = useState(null);
+  const [hiddenOptions, setHiddenOptions] = useState(new Set());
+  const [helpUsed, setHelpUsed] = useState(false);
+  const [extraTimeUsed, setExtraTimeUsed] = useState(false);
 
   // Security system state
   const [showSecurityModal, setShowSecurityModal] = useState(false);
   const [securityActive, setSecurityActive] = useState(false);
   const [currentViolation, setCurrentViolation] = useState(null);
   const [quizStarted, setQuizStarted] = useState(false);
+  
+  // Initialize lifelines
+  const {
+    usedCounts,
+    lifelineEffects,
+    canUseLifeline,
+    useLifeline,
+    resetLifelines
+  } = useLifelines(lifelineConfig);
 
   // Define handleSubmit first to avoid circular dependency
   const handleSubmit = useCallback(async (finalAnswers = answers) => {
@@ -250,6 +267,15 @@ export default function QuizPage() {
           return;
         }
         
+        // Load lifeline configuration
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        try {
+          const lifelineResponse = await axios.get(`${apiUrl}/api/quizzes/lifeline-config?isBattle=false`);
+          setLifelineConfig(lifelineResponse.data);
+        } catch (err) {
+          console.error('Failed to load lifeline config:', err);
+        }
+        
         const response = await apiHelpers.getQuizByChapter(chapter);
         const quizzes = Array.isArray(response.data) ? response.data : [];
         
@@ -375,12 +401,79 @@ export default function QuizPage() {
     setSelectedOption(idx);
   }, []);
 
+  // Handle lifeline usage
+  const handleUseLifeline = useCallback((type) => {
+    const currentQuestionId = currentQuestion._id;
+    
+    if (!useLifeline(type, currentQuestionId)) {
+      showError('Cannot use this lifeline anymore');
+      return;
+    }
+    
+    switch (type) {
+      case 'skip':
+        // Skip to next question without penalty
+        const updatedAnswers = [...answers];
+        updatedAnswers[currentQuestionIndex] = -1; // Mark as skipped
+        setAnswers(updatedAnswers);
+        setSelectedOption(null);
+        setWarning(false);
+        setHelpUsed(false);
+        setHiddenOptions(new Set());
+        
+        if (currentQuestionIndex === questions.length - 1) {
+          handleSubmit(updatedAnswers);
+        } else {
+          setCurrentQuestionIndex(i => i + 1);
+          setTimer(duration);
+        }
+        break;
+        
+      case 'help':
+        // Show correct answer
+        const correctIndex = typeof currentQuestion.correctAnswerIndex === 'number' 
+          ? currentQuestion.correctAnswerIndex 
+          : currentQuestion.options.findIndex(opt => opt === currentQuestion.correctAnswer);
+        setSelectedOption(correctIndex);
+        setHelpUsed(true);
+        showSuccess('Correct answer revealed! Score will be reduced by 50%');
+        break;
+        
+      case 'fiftyFifty':
+        // Hide 2 wrong options
+        const correctIdx = typeof currentQuestion.correctAnswerIndex === 'number' 
+          ? currentQuestion.correctAnswerIndex 
+          : currentQuestion.options.findIndex(opt => opt === currentQuestion.correctAnswer);
+        
+        const wrongIndices = currentQuestion.options
+          .map((_, idx) => idx)
+          .filter(idx => idx !== correctIdx);
+        
+        // Randomly select 2 wrong options to hide
+        const shuffled = wrongIndices.sort(() => 0.5 - Math.random());
+        const toHide = shuffled.slice(0, 2);
+        setHiddenOptions(new Set(toHide));
+        showSuccess('2 wrong options removed!');
+        break;
+        
+      case 'extraTime':
+        // Add extra time
+        const extraSeconds = lifelineConfig?.extraTime?.extraSeconds || 10;
+        setTimer(prev => prev + extraSeconds);
+        setExtraTimeUsed(true);
+        showSuccess(`+${extraSeconds} seconds added!`);
+        break;
+    }
+  }, [currentQuestion, useLifeline, answers, currentQuestionIndex, questions.length, duration, handleSubmit, lifelineConfig, showError, showSuccess]);
+  
   const handleNext = useCallback(() => {
     const updatedAnswers = [...answers];
     updatedAnswers[currentQuestionIndex] = selectedOption;
     setAnswers(updatedAnswers);
     setSelectedOption(null);
     setWarning(false);
+    setHelpUsed(false);
+    setHiddenOptions(new Set());
     
     if (currentQuestionIndex === questions.length - 1) {
       // Submit quiz when on last question
@@ -580,39 +673,82 @@ export default function QuizPage() {
             transition={{ duration: 0.3 }}
             className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 md:p-8 border border-gray-200 dark:border-gray-700"
           >
+            {/* Lifeline Tools */}
+            {lifelineConfig && Object.keys(lifelineConfig).length > 0 && (
+              <LifelineTools
+                config={lifelineConfig}
+                usedCounts={usedCounts}
+                onUseLifeline={handleUseLifeline}
+                disabled={false}
+                currentQuestion={currentQuestion}
+              />
+            )}
+            
             {/* Question */}
             <div className="mb-6">
               <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 dark:text-white mb-4 leading-tight">
                 <MathText>{currentQuestion.question}</MathText>
               </h2>
+              {helpUsed && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 mb-4">
+                  <p className="text-yellow-800 dark:text-yellow-300 text-sm">
+                    💡 Correct answer revealed! Your score for this question will be reduced by 50%.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Options */}
             <div className="space-y-3 mb-6">
-              {currentQuestion.options.map((option, index) => (
-                <motion.button
-                  key={index}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleOptionSelect(index)}
-                  className={`w-full text-left p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 ${
-                    selectedOption === index
-                      ? practiceMode
-                        ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200'
-                        : 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-800 dark:text-cyan-200'
-                      : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500 text-gray-800 dark:text-white'
-                  }`}
-                >
-                  <div className="flex items-center">
+              {currentQuestion.options.map((option, index) => {
+                const isHidden = hiddenOptions.has(index);
+                const isCorrect = helpUsed && (
+                  (typeof currentQuestion.correctAnswerIndex === 'number' && index === currentQuestion.correctAnswerIndex) ||
+                  (typeof currentQuestion.correctAnswer === 'string' && option === currentQuestion.correctAnswer)
+                );
+                
+                if (isHidden) {
+                  return (
+                    <div key={index} className="w-full p-3 sm:p-4 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-600 opacity-50">
+                      <div className="flex items-center text-gray-500 dark:text-gray-400">
+                        <span className="font-medium">Option removed by 50-50</span>
+                      </div>
+                    </div>
+                  );
+                }
+                
+                return (
+                  <motion.button
+                    key={index}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleOptionSelect(index)}
+                    className={`w-full text-left p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 ${
+                      selectedOption === index
+                        ? isCorrect
+                          ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200'
+                          : practiceMode
+                            ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200'
+                            : 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-800 dark:text-cyan-200'
+                        : isCorrect
+                          ? 'border-green-300 bg-green-50 dark:bg-green-900/10 text-green-700 dark:text-green-300'
+                          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500 text-gray-800 dark:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center">
                       {selectedOption === index && (
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                        <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
+                      )}
+                      {isCorrect && (
+                        <span className="text-green-600 dark:text-green-400 mr-2">✓</span>
                       )}
                       <span className="font-medium">
                         <MathText>{option}</MathText>
                       </span>
-                  </div>
-                </motion.button>
-              ))}
+                    </div>
+                  </motion.button>
+                );
+              })}
             </div>
 
             {/* Navigation */}

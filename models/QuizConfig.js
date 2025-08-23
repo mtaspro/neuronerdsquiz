@@ -20,6 +20,15 @@ const quizConfigSchema = new mongoose.Schema({
     type: Number,
     default: 0,
     min: 0
+  },
+  negativeScoring: {
+    type: Boolean,
+    default: false
+  },
+  negativeScore: {
+    type: Number,
+    default: -1,
+    max: 0
   }
 }, {
   timestamps: true
