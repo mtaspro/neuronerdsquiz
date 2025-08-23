@@ -650,13 +650,35 @@ export default function AdminDashboard() {
     setCurrentPage(1);
   };
 
-  // Update battle config
+  // Update quiz config with validation
   function handleUpdateQuizConfig(chapterId, examQuestions, battleQuestions) {
+    // Find the chapter to get its name and question count
+    const chapter = chapters.find(ch => ch._id === chapterId);
+    if (!chapter) {
+      setError('Chapter not found');
+      return;
+    }
+    
+    const availableQuestions = getQuestionCount(chapter.name);
+    const examQuestionsNum = parseInt(examQuestions) || 50;
+    const battleQuestionsNum = parseInt(battleQuestions) || 0;
+    
+    // Validate question counts
+    if (examQuestionsNum > availableQuestions) {
+      setError(`Not enough questions in chapter '${chapter.name}'. Requested ${examQuestionsNum} exam questions, but only ${availableQuestions} available.`);
+      return;
+    }
+    
+    if (battleQuestionsNum > availableQuestions) {
+      setError(`Not enough questions in chapter '${chapter.name}'. Requested ${battleQuestionsNum} battle questions, but only ${availableQuestions} available.`);
+      return;
+    }
+    
     setLoading(true);
     const apiUrl = import.meta.env.VITE_API_URL || '';
     axios.put(`${apiUrl}/api/admin/quiz-configs/${chapterId}`, {
-      examQuestions: 0, // Not used anymore
-      battleQuestions: parseInt(battleQuestions) || 0
+      examQuestions: examQuestionsNum,
+      battleQuestions: battleQuestionsNum
     }, { headers: authHeader() })
       .then(res => {
         setQuizConfigs(configs => 
@@ -664,8 +686,9 @@ export default function AdminDashboard() {
             config.chapterId === chapterId ? res.data : config
           )
         );
+        setError(''); // Clear any previous errors
       })
-      .catch(err => setError(err.response?.data?.error || 'Failed to update battle config'))
+      .catch(err => setError(err.response?.data?.error || 'Failed to update quiz config'))
       .finally(() => setLoading(false));
   }
 
@@ -1665,8 +1688,8 @@ export default function AdminDashboard() {
 
         {tab === 'Quiz Config' && (
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-            <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Battle Configuration</h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">Set how many questions will be randomly selected from each chapter for battles only. General quiz solving shows all unsolved questions.</p>
+            <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Quiz Configuration</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">Configure exam and battle question counts for each chapter. Values cannot exceed available questions in the chapter.</p>
             
             {loading ? (
               <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading quiz configurations...</div>
@@ -1686,7 +1709,20 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       
-                      <div className="max-w-md">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Exam Questions</label>
+                          <input
+                            type="number"
+                            defaultValue={config.examQuestions || 50}
+                            min="0"
+                            max={questionCount}
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                            onBlur={(e) => handleUpdateQuizConfig(chapter._id, e.target.value, config.battleQuestions || 0)}
+                            placeholder="Number of questions for exams"
+                          />
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Max: {questionCount}</p>
+                        </div>
                         <div>
                           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Battle Questions</label>
                           <input
@@ -1695,7 +1731,7 @@ export default function AdminDashboard() {
                             min="0"
                             max={questionCount}
                             className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
-                            onBlur={(e) => handleUpdateQuizConfig(chapter._id, 0, e.target.value)}
+                            onBlur={(e) => handleUpdateQuizConfig(chapter._id, config.examQuestions || 50, e.target.value)}
                             placeholder="Number of questions for battles"
                           />
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Max: {questionCount}</p>
@@ -1704,11 +1740,10 @@ export default function AdminDashboard() {
                       
                       <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
                         <p className="text-sm text-blue-700 dark:text-blue-300">
-                          <strong>Battle Questions:</strong> {config.battleQuestions || 0} questions will be randomly selected from all {questionCount} questions in this chapter for each battle. 
-                          General quiz solving shows all unsolved questions progressively.
+                          <strong>Exam:</strong> {config.examQuestions || 50} questions | <strong>Battle:</strong> {config.battleQuestions || 0} questions will be randomly selected from {questionCount} available questions.
                         </p>
                         <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                          💡 Questions are selected randomly each time a battle starts, ensuring variety.
+                          💡 Questions are randomly selected each time, ensuring variety. General quiz shows all unsolved questions progressively.
                         </p>
                       </div>
                     </div>
