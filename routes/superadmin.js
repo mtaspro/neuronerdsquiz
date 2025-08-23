@@ -212,12 +212,11 @@ async function executeLeaderboardReset() {
 async function executeQuizLeaderboardReset() {
   console.log('🔄 Starting quiz leaderboard reset...');
   
-  // Delete only general (quiz) scores
-  await UserScore.deleteMany({ type: 'general' });
-  await UserScore.deleteMany({ type: { $ne: 'battle' } }); // Also delete scores without type
+  // Delete ALL non-battle scores (general and legacy scores)
+  await UserScore.deleteMany({ $or: [{ type: 'general' }, { type: { $exists: false } }, { type: null }] });
   console.log('✅ Deleted quiz leaderboard scores');
   
-  // Reset quiz-related user fields only
+  // Reset ALL quiz-related user fields
   await User.updateMany(
     {},
     {
@@ -230,25 +229,48 @@ async function executeQuizLeaderboardReset() {
         bestScore: 0,
         totalQuizzes: 0,
         streak: 0,
+        currentStreak: 0,
         lastQuizDate: null
       }
     }
   );
   console.log('✅ Reset quiz-related user stats');
   
+  // Delete ALL quiz records
+  const UserQuizRecord = (await import('../models/UserQuizRecord.js')).default;
+  await UserQuizRecord.deleteMany({});
+  console.log('✅ Deleted all quiz records');
+  
   // Reset quiz stats in UserStats but keep battle stats
   await UserStats.updateMany(
     {},
     {
-      $set: {
-        totalQuizzes: 0,
-        averageScore: 0,
-        bestScore: 0,
-        currentStreak: 0
+      $unset: {
+        totalQuizzes: 1,
+        averageScore: 1,
+        bestScore: 1,
+        currentStreak: 1
       }
     }
   );
   console.log('✅ Reset quiz UserStats');
+  
+  // Reset quiz-related badges
+  await Badge.updateMany(
+    { category: { $in: ['quiz', 'streak', 'score'] } },
+    {
+      $unset: {
+        currentHolderId: 1,
+        currentHolderUsername: 1,
+        currentValue: 1
+      },
+      $set: {
+        previousHolders: [],
+        lastUpdated: new Date()
+      }
+    }
+  );
+  console.log('✅ Reset quiz-related badges');
   
   console.log('🎉 Quiz leaderboard reset completed!');
 }
@@ -257,11 +279,11 @@ async function executeQuizLeaderboardReset() {
 async function executeBattleLeaderboardReset() {
   console.log('🔄 Starting battle leaderboard reset...');
   
-  // Delete only battle scores
+  // Delete ALL battle scores
   await UserScore.deleteMany({ type: 'battle' });
   console.log('✅ Deleted battle leaderboard scores');
   
-  // Reset battle-related user fields only
+  // Reset ALL battle-related user fields
   await User.updateMany(
     {},
     {
@@ -280,14 +302,31 @@ async function executeBattleLeaderboardReset() {
   await UserStats.updateMany(
     {},
     {
-      $set: {
-        totalBattles: 0,
-        battlesWon: 0,
-        battleWinRate: 0
+      $unset: {
+        totalBattles: 1,
+        battlesWon: 1,
+        battleWinRate: 1
       }
     }
   );
   console.log('✅ Reset battle UserStats');
+  
+  // Reset battle-related badges
+  await Badge.updateMany(
+    { category: { $in: ['battle', 'pvp'] } },
+    {
+      $unset: {
+        currentHolderId: 1,
+        currentHolderUsername: 1,
+        currentValue: 1
+      },
+      $set: {
+        previousHolders: [],
+        lastUpdated: new Date()
+      }
+    }
+  );
+  console.log('✅ Reset battle-related badges');
   
   console.log('🎉 Battle leaderboard reset completed!');
 }
