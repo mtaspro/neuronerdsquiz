@@ -476,10 +476,7 @@ const QuizBattleRoom = () => {
     
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      // Also handle cleanup on component unmount
-      if (userData?._id && isRoomCreator && !battleStarted) {
-        handleLeaveRoom();
-      }
+      // Don't call handleLeaveRoom on unmount to prevent interfering with battle start
     };
   }, [userData?._id, isRoomCreator, battleStarted, roomId]);
 
