@@ -184,7 +184,12 @@ export default function Leaderboard() {
         setLoading(false);
       }
     };
+    
     fetchLeaderboards();
+    
+    // Auto-refresh every 30 seconds to show updated battle scores
+    const interval = setInterval(fetchLeaderboards, 30000);
+    return () => clearInterval(interval);
   }, [API_URL]);
 
   // Get current leaderboard data

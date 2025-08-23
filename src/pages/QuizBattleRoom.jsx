@@ -507,7 +507,7 @@ const QuizBattleRoom = () => {
   const submitBattleScore = async (score, won) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('sessionToken');
+      const token = secureStorage.getToken();
       
       const response = await fetch(`${apiUrl}/api/leaderboard/battle-score`, {
         method: 'POST',
@@ -520,11 +520,14 @@ const QuizBattleRoom = () => {
       
       if (response.ok) {
         console.log('✅ Battle score submitted successfully');
+        success('Battle score updated on leaderboard!');
       } else {
         console.error('❌ Failed to submit battle score:', response.statusText);
+        showError('Failed to update battle leaderboard');
       }
     } catch (error) {
       console.error('❌ Error submitting battle score:', error);
+      showError('Error updating battle leaderboard');
     }
   };
 

@@ -47,7 +47,9 @@ export default function AdminDashboard() {
     onSuccess: (operation, result) => {
       if (operation === 'read') setChapters(result);
       else if (operation === 'create') setChapters(prev => [...prev, result]);
-      else if (operation === 'update') setChapters(result); // Reload all chapters
+      else if (operation === 'update') {
+        setChapters(prev => prev.map(c => c._id === result._id ? result : c));
+      }
       else if (operation === 'delete') setChapters(prev => prev.filter(c => c._id !== result));
       setError('');
     },
