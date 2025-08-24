@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { FaCheck, FaTimes, FaUser, FaTrash, FaHistory, FaPalette } from 'react-icons/fa';
+import { FaCheck, FaTimes, FaUser, FaTrash, FaHistory, FaPalette, FaGraduationCap, FaPlus } from 'react-icons/fa';
 import { useNotification } from '../components/NotificationSystem';
 import { secureStorage } from '../utils/secureStorage.js';
 
@@ -13,6 +13,9 @@ const SuperAdminDashboard = () => {
   const [globalTheme, setGlobalTheme] = useState('tech-bg');
   const [eventEndDate, setEventEndDate] = useState('');
   const [eventEndTime, setEventEndTime] = useState('');
+  const [showExamManager, setShowExamManager] = useState(false);
+  const [exams, setExams] = useState([]);
+  const [newExam, setNewExam] = useState({ examName: '', examDate: '' });
   const { success, error: showError } = useNotification();
 
   const themes = [
@@ -28,6 +31,7 @@ const SuperAdminDashboard = () => {
   useEffect(() => {
     fetchRequests();
     fetchGlobalSettings();
+    loadExams();
   }, []);
 
   const fetchRequests = async () => {
@@ -69,6 +73,52 @@ const SuperAdminDashboard = () => {
       }
     } catch (error) {
       console.error('Error fetching global settings:', error);
+    }
+  };
+
+  const loadExams = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await axios.get(`${apiUrl}/api/exams`);
+      setExams(response.data);
+    } catch (error) {
+      console.error('Error loading exams:', error);
+    }
+  };
+
+  const addExam = async () => {
+    if (!newExam.examName || !newExam.examDate) {
+      showError('Please fill in all fields');
+      return;
+    }
+    
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      await axios.post(`${apiUrl}/api/exams`, {
+        ...newExam,
+        createdBy: 'SuperAdmin'
+      });
+      
+      setNewExam({ examName: '', examDate: '' });
+      loadExams();
+      success('Exam added successfully');
+    } catch (error) {
+      console.error('Error adding exam:', error);
+      showError('Failed to add exam');
+    }
+  };
+
+  const deleteExam = async (examId) => {
+    if (!confirm('Are you sure you want to delete this exam?')) return;
+    
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      await axios.delete(`${apiUrl}/api/exams/${examId}`);
+      loadExams();
+      success('Exam deleted successfully');
+    } catch (error) {
+      console.error('Error deleting exam:', error);
+      showError('Failed to delete exam');
     }
   };
 
@@ -267,6 +317,78 @@ const SuperAdminDashboard = () => {
               ✅ Disable Maintenance Mode
             </button>
           </div>
+        </div>
+
+        {/* Exam Manager */}
+        <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <FaGraduationCap className="text-indigo-600 text-xl" />
+              <h2 className="text-xl font-semibold">Exam Manager</h2>
+            </div>
+            <button
+              onClick={() => setShowExamManager(!showExamManager)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              {showExamManager ? 'Hide' : 'Show'} Exams
+            </button>
+          </div>
+          
+          {showExamManager && (
+            <div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <input
+                  type="text"
+                  placeholder="Exam Name (e.g., HSC Chemistry)"
+                  value={newExam.examName}
+                  onChange={(e) => setNewExam({...newExam, examName: e.target.value})}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+                <input
+                  type="date"
+                  value={newExam.examDate}
+                  onChange={(e) => setNewExam({...newExam, examDate: e.target.value})}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+                <button
+                  onClick={addExam}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2"
+                >
+                  <FaPlus />
+                  <span>Add Exam</span>
+                </button>
+              </div>
+              
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {exams.map((exam) => {
+                  const examDate = new Date(exam.examDate);
+                  const today = new Date();
+                  const daysLeft = Math.ceil((examDate - today) / (1000 * 60 * 60 * 24));
+                  
+                  return (
+                    <div key={exam._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div>
+                        <h4 className="font-medium">{exam.examName}</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {examDate.toLocaleDateString()} 
+                          {daysLeft >= 0 ? ` (${daysLeft} days left)` : ' (Past)'}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => deleteExam(exam._id)}
+                        className="text-red-600 hover:text-red-800 p-2"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  );
+                })}
+                {exams.length === 0 && (
+                  <p className="text-gray-500 text-center py-4">No exams added yet</p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Event Management */}

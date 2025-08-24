@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import CalendarService from './calendarService.js';
 import whatsappService from './whatsappService.js';
 import WhatsAppSettings from '../models/WhatsAppSettings.js';
+import Exam from '../models/Exam.js';
 
 class DailyCalendarScheduler {
   constructor() {
@@ -60,6 +61,9 @@ class DailyCalendarScheduler {
       // Generate calendar data
       const calendarData = await this.calendarService.generateCalendarData();
       
+      // Get upcoming exams
+      const examData = await this.getUpcomingExams();
+      
       // Create prompt for NeuraX
       const prompt = `Generate a beautiful daily calendar update message with the following data:
 
@@ -68,16 +72,25 @@ English Date: ${calendarData.englishDate}
 Bangla Date: ${calendarData.banglaDate}
 Hijri Date: ${calendarData.hijriDate}
 Holidays: ${calendarData.hasHolidays ? calendarData.holidays.join(', ') : 'None'}
+Upcoming Exams: ${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `${e.examName} - TODAY` : `${e.examName} in ${e.daysLeft} days`).join(', ') : 'None'}
 
-Format it exactly like this:
+Generate a creative and engaging message following this structure:
+
 📅 **Today:** [Day, Date]
 🗓️ **English Date:** [Date]
 🗓️ **বাংলা তারিখ:** [Bangla Date]
 🕌 **Hijri Date:** [Hijri Date]
 
-${calendarData.hasHolidays ? '🎉 **Special:** [Holidays]' : '💡 *No special events today. Let\'s make it productive!*'}
+[If holidays exist: 🎉 **Special:** [Creative holiday message]]
+[If no holidays: 💡 [Creative motivational message for regular day]]
 
-Add appropriate wishes and motivational message at the end based on the holidays or general positivity.`;
+[For each exam:]
+- If exam is TODAY: ✨ **Best of Luck!** [Creative exam day message with exam name]
+- If exam is upcoming: 📚 **Exam Countdown** [Creative countdown message with exam name and days]
+
+[End with personalized motivational message based on context]
+
+Make each message unique, creative, and motivational. Vary the language, emojis, and tone while maintaining the format structure.`;
 
       // Send to NeuraX AI
       const axios = (await import('axios')).default;
@@ -102,7 +115,10 @@ Add appropriate wishes and motivational message at the end based on the holidays
       // Fallback to direct message if NeuraX fails
       try {
         const calendarData = await this.calendarService.generateCalendarData();
-        const fallbackMessage = `📅 **Today:** ${calendarData.dayName}, ${calendarData.englishDate}\n🗓️ **English Date:** ${calendarData.englishDate}\n🗓️ **বাংলা তারিখ:** ${calendarData.banglaDate}\n🕌 **Hijri Date:** ${calendarData.hijriDate}\n\n${calendarData.hasHolidays ? `🎉 **Special:** ${calendarData.holidays.join(', ')}` : '💡 *No special events today. Let\'s make it productive!*'}`;
+        const examData = await this.getUpcomingExams();
+        const examMessages = examData.map(e => e.daysLeft === 0 ? `✨ **Best of Luck!**\nToday is your ${e.examName}. You've prepared well, now show your brilliance! 🌟` : `📚 **Exam Alert**\n${e.examName} approaches in ${e.daysLeft} days. Stay focused and confident! 💪`).join('\n\n');
+        
+        const fallbackMessage = `📅 **Today:** ${calendarData.dayName}, ${calendarData.englishDate}\n🗓️ **English Date:** ${calendarData.englishDate}\n🗓️ **বাংলা তারিখ:** ${calendarData.banglaDate}\n🕌 **Hijri Date:** ${calendarData.hijriDate}\n\n${calendarData.hasHolidays ? `🎉 **Special:** ${calendarData.holidays.join(', ')}` : '💡 *No special events today. Let\'s make it productive!*'}${examMessages ? '\n\n' + examMessages : ''}`;
         
         const calendarGroupSetting = await WhatsAppSettings.findOne({ settingKey: 'dailyCalendarGroup' });
         if (calendarGroupSetting?.settingValue) {
@@ -119,6 +135,34 @@ Add appropriate wishes and motivational message at the end based on the holidays
   async triggerManually() {
     console.log('🔧 Manually triggering daily calendar update...');
     await this.sendDailyCalendarUpdate();
+  }
+
+  // Get upcoming exams with countdown
+  async getUpcomingExams() {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const exams = await Exam.find({ 
+        isActive: true,
+        examDate: { $gte: today }
+      }).sort({ examDate: 1 });
+      
+      return exams.map(exam => {
+        const examDate = new Date(exam.examDate);
+        examDate.setHours(0, 0, 0, 0);
+        const daysLeft = Math.ceil((examDate - today) / (1000 * 60 * 60 * 24));
+        
+        return {
+          examName: exam.examName,
+          examDate: exam.examDate,
+          daysLeft
+        };
+      }).filter(exam => exam.daysLeft >= 0);
+    } catch (error) {
+      console.error('Error getting upcoming exams:', error);
+      return [];
+    }
   }
 
   // Get scheduler status

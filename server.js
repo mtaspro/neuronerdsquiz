@@ -12,6 +12,7 @@ import authRouter from './routes/auth.js';
 import quizRouter from './routes/quiz.js';
 import adminRouter from './routes/admin.js';
 import superAdminRouter from './routes/superadmin.js';
+import Exam from './models/Exam.js';
 import badgeRouter from './routes/badges.js';
 import battleRouter from './routes/battle.js';
 import { router as latexRouter } from './routes/latex.js';
@@ -600,6 +601,36 @@ app.get('/api/battle-rooms/:roomId', (req, res) => {
     res.json(roomStatus);
   } else {
     res.status(404).json({ message: 'Room not found' });
+  }
+});
+
+// Exam management endpoints
+app.get('/api/exams', async (req, res) => {
+  try {
+    const exams = await Exam.find({ isActive: true }).sort({ examDate: 1 });
+    res.json(exams);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/exams', async (req, res) => {
+  try {
+    const { examName, examDate, createdBy } = req.body;
+    const exam = new Exam({ examName, examDate, createdBy });
+    await exam.save();
+    res.json(exam);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/exams/:id', async (req, res) => {
+  try {
+    await Exam.findByIdAndUpdate(req.params.id, { isActive: false });
+    res.json({ message: 'Exam deleted' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
