@@ -96,8 +96,8 @@ class CalendarService {
     return holidays;
   }
 
-  // Generate daily calendar message
-  async generateDailyMessage() {
+  // Generate calendar data for NeuraX
+  async generateCalendarData() {
     const now = new Date();
     const bangladeshTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Dhaka"}));
     
@@ -119,30 +119,14 @@ class CalendarService {
     // Fetch holidays
     const holidays = await this.fetchHolidays(bangladeshTime);
 
-    let message = `📅 **Today:** ${dayName}, ${englishDate}\n`;
-    message += `🗓️ **English Date:** ${englishDate}\n`;
-    message += `🗓️ **বাংলা তারিখ:** ${banglaDate}\n`;
-    message += `🕌 **Hijri Date:** ${hijriDate}\n\n`;
-
-    if (holidays.length > 0) {
-      const holidayTitles = holidays.map(h => h.title).join(', ');
-      message += `🎉 **Special:** ${holidayTitles}\n`;
-      
-      // Add appropriate wishes based on holiday type
-      if (holidays.some(h => h.title.toLowerCase().includes('eid'))) {
-        message += `✨ *Eid Mubarak! May this blessed day bring joy and peace ❤️*`;
-      } else if (holidays.some(h => h.title.toLowerCase().includes('independence') || h.title.toLowerCase().includes('victory'))) {
-        message += `✨ *Let's honor our nation and heroes today 🇧🇩❤️*`;
-      } else if (holidays.some(h => h.title.toLowerCase().includes('mourning'))) {
-        message += `✨ *Let's honor our heroes today ❤️*`;
-      } else {
-        message += `✨ *Wishing everyone a blessed and joyful day! 🌟*`;
-      }
-    } else {
-      message += `💡 *No special events today. Let's make it productive!*`;
-    }
-
-    return message;
+    return {
+      dayName,
+      englishDate,
+      banglaDate,
+      hijriDate,
+      holidays: holidays.map(h => h.title),
+      hasHolidays: holidays.length > 0
+    };
   }
 }
 

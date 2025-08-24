@@ -42,10 +42,10 @@ class DailyCalendarScheduler {
     }
   }
 
-  // Send daily calendar update
+  // Send daily calendar update via NeuraX
   async sendDailyCalendarUpdate() {
     try {
-      console.log('📅 Generating daily calendar update...');
+      console.log('📅 Generating daily calendar update via NeuraX...');
       
       // Get the calendar group setting
       const calendarGroupSetting = await WhatsAppSettings.findOne({ 
@@ -57,17 +57,61 @@ class DailyCalendarScheduler {
         return;
       }
 
-      // Generate the daily message
-      const message = await this.calendarService.generateDailyMessage();
+      // Generate calendar data
+      const calendarData = await this.calendarService.generateCalendarData();
       
-      // Send to WhatsApp group
-      await whatsappService.sendGroupMessage(calendarGroupSetting.settingValue, message);
+      // Create prompt for NeuraX
+      const prompt = `Generate a beautiful daily calendar update message with the following data:
+
+Day: ${calendarData.dayName}
+English Date: ${calendarData.englishDate}
+Bangla Date: ${calendarData.banglaDate}
+Hijri Date: ${calendarData.hijriDate}
+Holidays: ${calendarData.hasHolidays ? calendarData.holidays.join(', ') : 'None'}
+
+Format it exactly like this:
+📅 **Today:** [Day, Date]
+🗓️ **English Date:** [Date]
+🗓️ **বাংলা তারিখ:** [Bangla Date]
+🕌 **Hijri Date:** [Hijri Date]
+
+${calendarData.hasHolidays ? '🎉 **Special:** [Holidays]' : '💡 *No special events today. Let's make it productive!*'}
+
+Add appropriate wishes and motivational message at the end based on the holidays or general positivity.`;
+
+      // Send to NeuraX AI
+      const axios = (await import('axios')).default;
+      const apiUrl = process.env.API_URL || 'http://localhost:5000';
       
-      console.log('✅ Daily calendar update sent successfully');
-      console.log('📝 Message:', message);
+      const aiResponse = await axios.post(`${apiUrl}/api/ai-chat`, {
+        message: prompt,
+        conversationId: 'daily-calendar-' + new Date().toISOString().split('T')[0]
+      });
+
+      const neuraXMessage = aiResponse.data.response;
+      
+      // Send NeuraX response to WhatsApp group
+      await whatsappService.sendGroupMessage(calendarGroupSetting.settingValue, neuraXMessage);
+      
+      console.log('✅ Daily calendar update sent via NeuraX successfully');
+      console.log('📝 NeuraX Message:', neuraXMessage);
       
     } catch (error) {
-      console.error('❌ Error sending daily calendar update:', error);
+      console.error('❌ Error sending daily calendar update via NeuraX:', error);
+      
+      // Fallback to direct message if NeuraX fails
+      try {
+        const calendarData = await this.calendarService.generateCalendarData();
+        const fallbackMessage = `📅 **Today:** ${calendarData.dayName}, ${calendarData.englishDate}\n🗓️ **English Date:** ${calendarData.englishDate}\n🗓️ **বাংলা তারিখ:** ${calendarData.banglaDate}\n🕌 **Hijri Date:** ${calendarData.hijriDate}\n\n${calendarData.hasHolidays ? `🎉 **Special:** ${calendarData.holidays.join(', ')}` : '💡 *No special events today. Let\'s make it productive!*'}`;
+        
+        const calendarGroupSetting = await WhatsAppSettings.findOne({ settingKey: 'dailyCalendarGroup' });
+        if (calendarGroupSetting?.settingValue) {
+          await whatsappService.sendGroupMessage(calendarGroupSetting.settingValue, fallbackMessage);
+          console.log('✅ Fallback calendar message sent');
+        }
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError);
+      }
     }
   }
 
