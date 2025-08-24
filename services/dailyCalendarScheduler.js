@@ -94,11 +94,13 @@ Make each message unique, creative, and motivational. Vary the language, emojis,
 
       // Send to NeuraX AI
       const axios = (await import('axios')).default;
-      const apiUrl = process.env.API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
       
       const aiResponse = await axios.post(`${apiUrl}/api/ai-chat`, {
         message: prompt,
-        conversationId: 'daily-calendar-' + new Date().toISOString().split('T')[0]
+        model: 'qwen/qwen3-32b',
+        systemPrompt: 'You are NeuraX, generate creative and engaging daily calendar messages following the exact format provided.',
+        conversationHistory: []
       });
 
       const neuraXMessage = aiResponse.data.response;
