@@ -228,12 +228,9 @@ async function executeLeaderboardReset() {
   await badgeService.initializeBadges();
   console.log('✅ Re-initialized badge system');
   
-  // Recalculate badges for all users
-  const allUsers = await User.find({});
-  for (const user of allUsers) {
-    await badgeService.recalculateUserBadges(user._id);
-  }
-  console.log('✅ Recalculated badges for all users');
+  // Recalculate all badges
+  await badgeService.recalculateAllBadges();
+  console.log('✅ Recalculated all badges');
   
   console.log('🎉 Complete reset: Both leaderboards cleared, all stats reset, badges reset!');
 }
@@ -310,13 +307,10 @@ async function executeQuizLeaderboardReset() {
   );
   console.log('✅ Reset quiz-related badges');
   
-  // Recalculate badges for all users
+  // Recalculate all badges
   const badgeService = new BadgeService();
-  const allUsers = await User.find({});
-  for (const user of allUsers) {
-    await badgeService.recalculateUserBadges(user._id);
-  }
-  console.log('✅ Recalculated badges for all users');
+  await badgeService.recalculateAllBadges();
+  console.log('✅ Recalculated all badges');
   
   console.log('🎉 Quiz leaderboard reset completed!');
 }
@@ -379,13 +373,10 @@ async function executeBattleLeaderboardReset() {
   );
   console.log('✅ Reset battle-related badges');
   
-  // Recalculate badges for all users
+  // Recalculate all badges
   const badgeService = new BadgeService();
-  const allUsers = await User.find({});
-  for (const user of allUsers) {
-    await badgeService.recalculateUserBadges(user._id);
-  }
-  console.log('✅ Recalculated badges for all users');
+  await badgeService.recalculateAllBadges();
+  console.log('✅ Recalculated all badges');
   
   console.log('🎉 Battle leaderboard reset completed!');
 }
@@ -445,9 +436,9 @@ async function executeUserScoreReset(userId) {
     }
   });
   
-  // Recalculate badges for the user
+  // Recalculate all badges
   const badgeService = new BadgeService();
-  await badgeService.recalculateUserBadges(userId);
+  await badgeService.recalculateAllBadges();
   
   console.log(`✅ Reset all data for user: ${user.username}`);
 }
