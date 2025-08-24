@@ -25,4 +25,4 @@ const lifelineConfigSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('LifelineConfig', lifelineConfigSchema);
+export default mongoose.model('LifelineConfig', lifelineConfigSchema);
