@@ -1,17 +1,21 @@
 import express from 'express';
 import axios from 'axios';
+import multer from 'multer';
 import authMiddleware from '../middleware/authMiddleware.js';
 import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 import ChatHistory from '../models/ChatHistory.js';
 const router = express.Router();
 
+const upload = multer({ storage: multer.memoryStorage() });
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
 
-// AI Chat endpoint
-router.post('/', async (req, res) => {
+// AI Chat endpoint with vision support
+router.post('/', upload.single('image'), async (req, res) => {
   try {
     const { message, model, systemPrompt, conversationHistory = [], enableWebSearch = false } = req.body;
+    const imageFile = req.file;
     
     if (!message || !message.trim()) {
       return res.status(400).json({ error: 'Message is required' });
@@ -19,6 +23,57 @@ router.post('/', async (req, res) => {
 
     if (!OPENROUTER_API_KEY && !GROQ_API_KEY) {
       return res.status(500).json({ error: 'AI API keys not configured' });
+    }
+
+    // Handle vision requests with Llama-Vision-Free
+    if (imageFile && TOGETHER_API_KEY) {
+      try {
+        const base64Image = imageFile.buffer.toString('base64');
+        const mimeType = imageFile.mimetype;
+        
+        const visionResponse = await axios.post(
+          'https://api.together.xyz/v1/chat/completions',
+          {
+            model: 'meta-llama/Llama-Vision-Free',
+            messages: [
+              {
+                role: 'system',
+                content: systemPrompt || 'You are NeuraX, a helpful AI assistant. Analyze images thoroughly and provide detailed, educational responses.'
+              },
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'text',
+                    text: message || 'Analyze this image and explain what you see in detail. If there is text, transcribe it accurately. If there are mathematical equations, explain them step by step.'
+                  },
+                  {
+                    type: 'image_url',
+                    image_url: {
+                      url: `data:${mimeType};base64,${base64Image}`
+                    }
+                  }
+                ]
+              }
+            ],
+            max_tokens: 1500,
+            temperature: 0.7
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${TOGETHER_API_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        const visionAnalysis = visionResponse.data.choices[0].message.content;
+        return res.json({ response: visionAnalysis });
+        
+      } catch (visionError) {
+        console.error('Vision analysis error:', visionError?.response?.data || visionError.message);
+        // Fall back to text-only processing if vision fails
+      }
     }
 
     // Determine API endpoint and headers based on model

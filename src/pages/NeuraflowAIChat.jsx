@@ -4,7 +4,7 @@ import { FaPaperPlane, FaCog, FaUser, FaRobot, FaStar, FaImage, FaTimes, FaMicro
 import ReactMarkdown from 'react-markdown';
 import MathText from '../components/MathText';
 import axios from 'axios';
-import Tesseract from 'tesseract.js';
+
 import neuraXAvatar from '../assets/NeuraXavatar.png';
 
 const NeuraflowAIChat = () => {
@@ -16,7 +16,7 @@ const NeuraflowAIChat = () => {
   const [selectedModel, setSelectedModel] = useState('qwen/qwen3-32b');
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isProcessingOCR, setIsProcessingOCR] = useState(false);
+  const [isProcessingVision, setIsProcessingVision] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [enableWebSearch, setEnableWebSearch] = useState(false);
@@ -30,7 +30,7 @@ const NeuraflowAIChat = () => {
   const [isSending, setIsSending] = useState(false);
   const [showChatOptions, setShowChatOptions] = useState(null);
 
-  const [ocrProgress, setOcrProgress] = useState(0);
+  const [visionProgress, setVisionProgress] = useState(0);
   const [searchStatus, setSearchStatus] = useState('');
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -40,6 +40,7 @@ const NeuraflowAIChat = () => {
 
   const models = [
     { id: 'qwen/qwen3-32b', name: 'Qwen 32B', description: 'Fast responses & multilingual support' },
+    { id: 'meta-llama/Llama-Vision-Free', name: 'Llama Vision', description: 'Full multimodal vision capabilities' },
     { id: 'qwen/qwen3-235b-a22b:free', name: 'Bengali Expert', description: 'Perfect for Bengali language support' },
     { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Code Expert', description: 'Best for coding & complex reasoning' },
     { id: 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free', name: 'Dolphin Mistral', description: 'Unfiltered and Full Controll' }
@@ -96,7 +97,7 @@ const NeuraflowAIChat = () => {
   // Spacebar voice toggle
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.code === 'Space' && !e.repeat && !isTyping && !isStreaming && !isProcessingOCR) {
+      if (e.code === 'Space' && !e.repeat && !isTyping && !isStreaming && !isProcessingVision) {
         // Only if input is not focused
         if (document.activeElement !== inputRef.current) {
           e.preventDefault();
@@ -114,7 +115,7 @@ const NeuraflowAIChat = () => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isListening, isTyping, isStreaming, isProcessingOCR]);
+  }, [isListening, isTyping, isStreaming, isProcessingVision]);
 
   // Load chat history list on component mount
   useEffect(() => {
@@ -282,81 +283,34 @@ You help with academics, platform features, and general questions. Keep it natur
     }
   };
 
-  const extractTextFromImage = async (imageFile) => {
-    setIsProcessingOCR(true);
-    setOcrProgress(0);
+  const analyzeImageWithVision = async (imageFile, prompt) => {
+    setIsProcessingVision(true);
+    setVisionProgress(30);
     try {
-      const { data: { text } } = await Tesseract.recognize(imageFile, 'eng+ben', {
-        logger: (m) => {
-          if (m.status === 'recognizing text') {
-            setOcrProgress(Math.round(m.progress * 100));
-          }
-        },
-        langPath: './tesseract-lang',
-        cachePath: './tesseract-cache',
-        gzip: true
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      formData.append('prompt', prompt);
+      
+      setVisionProgress(60);
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await axios.post(`${apiUrl}/api/vision/analyze`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
-      return text.trim();
+      
+      setVisionProgress(100);
+      return response.data.analysis;
     } catch (error) {
-      console.error('OCR Error:', error);
-      return '';
+      console.error('Vision Analysis Error:', error);
+      return 'Failed to analyze image. Please try again.';
     } finally {
-      setIsProcessingOCR(false);
-      setOcrProgress(0);
+      setIsProcessingVision(false);
+      setVisionProgress(0);
     }
   };
 
-  const generateImageCaption = async (imageFile) => {
-    return await generateLocalCaption(imageFile);
-  };
 
-  const generateLocalCaption = async (imageFile) => {
-    // Create a more detailed image analysis
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        
-        // Basic image analysis
-        const aspectRatio = (img.width / img.height).toFixed(2);
-        const fileSize = (imageFile.size / 1024).toFixed(1);
-        const fileType = imageFile.type.split('/')[1].toUpperCase();
-        
-        // Analyze dominant colors (simplified)
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-        let r = 0, g = 0, b = 0;
-        const pixelCount = data.length / 4;
-        
-        for (let i = 0; i < data.length; i += 4) {
-          r += data[i];
-          g += data[i + 1];
-          b += data[i + 2];
-        }
-        
-        r = Math.round(r / pixelCount);
-        g = Math.round(g / pixelCount);
-        b = Math.round(b / pixelCount);
-        
-        const brightness = (r + g + b) / 3;
-        const colorTone = brightness > 128 ? 'bright' : 'dark';
-        
-        resolve(`${fileType} image (${fileSize} KB, ${img.width}x${img.height}, ${aspectRatio} aspect ratio) - Shows a ${colorTone} colored image with visual content that can be analyzed`);
-      };
-      
-      img.onerror = () => {
-        const fileSize = (imageFile.size / 1024).toFixed(1);
-        const fileType = imageFile.type.split('/')[1].toUpperCase();
-        resolve(`${fileType} image (${fileSize} KB) - Visual content available for analysis`);
-      };
-      
-      img.src = URL.createObjectURL(imageFile);
-    });
-  };
 
   const uploadImageToCloud = async (imageFile) => {
     try {
@@ -639,30 +593,9 @@ You help with academics, platform features, and general questions. Keep it natur
     let messageContent = inputText;
     let uploadedImageUrl = null;
     
-    if (selectedImage && isValidPrompt(inputText)) {
-      setIsProcessingOCR(true);
-      
+    if (selectedImage) {
       const imageUrl = await uploadImageToCloud(selectedImage);
-      
-      const [ocrText, caption] = await Promise.all([
-        extractTextFromImage(selectedImage),
-        generateImageCaption(selectedImage)
-      ]);
-      
-      let imageAnalysis = '';
-      if (ocrText && ocrText.length > 10) {
-        imageAnalysis = `[Text in Image]: ${ocrText}`;
-        if (caption) imageAnalysis += `\n[Image Context]: ${caption}`;
-      } else if (caption) {
-        imageAnalysis = `[Image Description]: ${caption}`;
-      }
-      
-      if (imageAnalysis) {
-        messageContent = inputText ? `${inputText}\n\n${imageAnalysis}` : imageAnalysis;
-      }
-      
       uploadedImageUrl = imageUrl;
-      setIsProcessingOCR(false);
     }
 
     const userMessage = {
@@ -687,9 +620,14 @@ You help with academics, platform features, and general questions. Keep it natur
     setIsTyping(true);
 
     try {
-      const aiResult = await getAIResponse(currentInput);
+      let aiResult;
       
-      // Image generation removed
+      if (selectedImage) {
+        const visionAnalysis = await analyzeImageWithVision(selectedImage, currentInput || 'Analyze this image in detail. If there is text, transcribe it. If there are mathematical equations, explain them. Provide comprehensive analysis.');
+        aiResult = { response: visionAnalysis };
+      } else {
+        aiResult = await getAIResponse(currentInput);
+      }
       
       const response = aiResult.response || aiResult;
       
@@ -1153,18 +1091,18 @@ You help with academics, platform features, and general questions. Keep it natur
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-200 truncate">{selectedImage.name}</p>
-                  {isProcessingOCR ? (
+                  {isProcessingVision ? (
                     <div className="flex items-center space-x-2 mt-1">
                       <div className="w-24 md:w-32 bg-gray-700 rounded-full h-1.5">
                         <div 
                           className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full transition-all duration-300"
-                          style={{ width: `${ocrProgress}%` }}
+                          style={{ width: `${visionProgress}%` }}
                         ></div>
                       </div>
-                      <span className="text-xs text-blue-400">{ocrProgress}%</span>
+                      <span className="text-xs text-blue-400">Analyzing...</span>
                     </div>
                   ) : (
-                    <p className="text-xs text-gray-400">Ready for analysis</p>
+                    <p className="text-xs text-gray-400">Ready for AI analysis</p>
                   )}
                 </div>
                 <button
@@ -1199,7 +1137,7 @@ You help with academics, platform features, and general questions. Keep it natur
                   }}
                   placeholder={isListening ? "🎤 Listening..." : enableWebSearch ? "Ask anything with web search 🌐" : selectedImage ? "What would you like to know about this image?" : "Message NeuraX..."}
                   className="w-full px-3 md:px-4 py-3 bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 focus:border-blue-500/50 rounded-2xl focus:outline-none text-gray-100 placeholder-gray-400 transition-all duration-200 resize-none scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 text-sm md:text-base"
-                  disabled={isTyping || isStreaming || isProcessingOCR || isListening || isSending}
+                  disabled={isTyping || isStreaming || isProcessingVision || isListening || isSending}
                   rows={1}
                   style={{ minHeight: '48px', maxHeight: '120px' }}
                   onInput={(e) => {
@@ -1222,7 +1160,7 @@ You help with academics, platform features, and general questions. Keep it natur
                       ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
                       : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
                   }`}
-                  disabled={isTyping || isStreaming || isProcessingOCR}
+                  disabled={isTyping || isStreaming || isProcessingVision}
                   title={enableWebSearch ? 'Web search ON' : 'Enable web search'}
                 >
                   <FaSearch className="text-xs md:text-sm" />
@@ -1236,7 +1174,7 @@ You help with academics, platform features, and general questions. Keep it natur
                       ? 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse'
                       : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
                   }`}
-                  disabled={isTyping || isStreaming || isProcessingOCR}
+                  disabled={isTyping || isStreaming || isProcessingVision}
                   title={isListening ? 'Stop recording' : 'Voice input'}
                 >
                   {isListening ? <FaMicrophoneSlash className="text-xs md:text-sm" /> : <FaMicrophone className="text-xs md:text-sm" />}
@@ -1253,7 +1191,7 @@ You help with academics, platform features, and general questions. Keep it natur
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="flex items-center space-x-1 px-2 md:px-3 py-2 md:py-2.5 bg-gray-800/50 text-gray-400 border border-gray-700/50 rounded-xl hover:bg-gray-700/50 transition-all duration-200"
-                  disabled={isTyping || isStreaming || isProcessingOCR}
+                  disabled={isTyping || isStreaming || isProcessingVision}
                   title="Upload image"
                 >
                   <FaImage className="text-xs md:text-sm" />
@@ -1317,14 +1255,14 @@ You help with academics, platform features, and general questions. Keep it natur
               ) : (
                 <motion.button
                   onClick={handleSendMessage}
-                  disabled={(!inputText.trim() && !selectedImage) || isProcessingOCR || isSending}
+                  disabled={(!inputText.trim() && !selectedImage) || isProcessingVision || isSending}
                   className={`p-2.5 md:p-3 rounded-xl transition-all duration-200 flex-shrink-0 ${
-                    (!inputText.trim() && !selectedImage) || isProcessingOCR || isSending
+                    (!inputText.trim() && !selectedImage) || isProcessingVision || isSending
                       ? 'bg-gray-800/50 text-gray-500 border border-gray-700/50 cursor-not-allowed'
                       : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border border-blue-500/30 shadow-lg hover:shadow-xl'
                   }`}
-                  whileHover={(!inputText.trim() && !selectedImage) || isProcessingOCR || isSending ? {} : { scale: 1.05 }}
-                  whileTap={(!inputText.trim() && !selectedImage) || isProcessingOCR || isSending ? {} : { scale: 0.95 }}
+                  whileHover={(!inputText.trim() && !selectedImage) || isProcessingVision || isSending ? {} : { scale: 1.05 }}
+                  whileTap={(!inputText.trim() && !selectedImage) || isProcessingVision || isSending ? {} : { scale: 0.95 }}
                 >
                   <FaPaperPlane className="text-xs md:text-sm" />
                 </motion.button>

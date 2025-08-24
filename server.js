@@ -19,6 +19,7 @@ import { router as aiChatRouter } from './routes/ai-chat.js';
 import { router as webSearchRouter } from './routes/web-search.js';
 
 import { router as uploadImageRouter } from './routes/upload-image.js';
+import { router as visionRouter } from './routes/vision.js';
 import themeRouter from './routes/theme.js';
 import whatsappRouter from './routes/whatsapp.js';
 import userRouter from './routes/user.js';
@@ -534,6 +535,8 @@ app.use('/api/web-search', webSearchRouter);
 
 console.log('Mounting image upload router...');
 app.use('/api/upload-image', uploadImageRouter);
+console.log('Mounting vision router...');
+app.use('/api/vision', visionRouter);
 console.log('Mounting theme router...');
 app.use('/api/theme', themeRouter);
 console.log('Mounting WhatsApp router...');
