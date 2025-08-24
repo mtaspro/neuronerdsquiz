@@ -202,12 +202,10 @@ async function executeLeaderboardReset() {
   await Badge.updateMany(
     {},
     {
-      $unset: {
-        currentHolderId: 1,
-        currentHolderUsername: 1,
-        currentValue: 1
-      },
       $set: {
+        currentHolderId: null,
+        currentHolderUsername: null,
+        currentValue: 0,
         previousHolders: [],
         lastUpdated: new Date()
       }
@@ -290,16 +288,14 @@ async function executeQuizLeaderboardReset() {
   );
   console.log('✅ Reset quiz UserStats');
   
-  // Reset quiz-related badges
+  // Reset quiz-related badges (sharpest_mind, quiz_king, speed_demon, leader_of_leaders)
   await Badge.updateMany(
-    { category: { $in: ['quiz', 'streak', 'score'] } },
+    { badgeName: { $in: ['sharpest_mind', 'quiz_king', 'speed_demon', 'leader_of_leaders'] } },
     {
-      $unset: {
-        currentHolderId: 1,
-        currentHolderUsername: 1,
-        currentValue: 1
-      },
       $set: {
+        currentHolderId: null,
+        currentHolderUsername: null,
+        currentValue: 0,
         previousHolders: [],
         lastUpdated: new Date()
       }
@@ -356,16 +352,14 @@ async function executeBattleLeaderboardReset() {
   );
   console.log('✅ Reset battle UserStats');
   
-  // Reset battle-related badges
+  // Reset battle-related badges (battle_champion)
   await Badge.updateMany(
-    { category: { $in: ['battle', 'pvp'] } },
+    { badgeName: { $in: ['battle_champion'] } },
     {
-      $unset: {
-        currentHolderId: 1,
-        currentHolderUsername: 1,
-        currentValue: 1
-      },
       $set: {
+        currentHolderId: null,
+        currentHolderUsername: null,
+        currentValue: 0,
         previousHolders: [],
         lastUpdated: new Date()
       }
