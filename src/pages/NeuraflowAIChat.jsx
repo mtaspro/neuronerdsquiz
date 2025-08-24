@@ -40,7 +40,6 @@ const NeuraflowAIChat = () => {
 
   const models = [
     { id: 'qwen/qwen3-32b', name: 'Qwen 32B', description: 'Fast responses & multilingual support' },
-    { id: 'meta-llama/Llama-Vision-Free', name: 'Llama Vision', description: 'Full multimodal vision capabilities' },
     { id: 'qwen/qwen3-235b-a22b:free', name: 'Bengali Expert', description: 'Perfect for Bengali language support' },
     { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Code Expert', description: 'Best for coding & complex reasoning' },
     { id: 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free', name: 'Dolphin Mistral', description: 'Unfiltered and Full Controll' }
@@ -623,9 +622,11 @@ You help with academics, platform features, and general questions. Keep it natur
       let aiResult;
       
       if (selectedImage) {
+        // Use vision model automatically for image analysis
         const visionAnalysis = await analyzeImageWithVision(selectedImage, currentInput || 'Analyze this image in detail. If there is text, transcribe it. If there are mathematical equations, explain them. Provide comprehensive analysis.');
         aiResult = { response: visionAnalysis };
       } else {
+        // Use user's selected model for text-only messages
         aiResult = await getAIResponse(currentInput);
       }
       
