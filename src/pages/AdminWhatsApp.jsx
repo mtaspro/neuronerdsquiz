@@ -139,6 +139,8 @@ const AdminWhatsApp = () => {
   };
 
   const triggerCalendarUpdate = async () => {
+    if (isLoading) return;
+    
     setIsLoading(true);
     setErrorMessage('');
     setSuccessMessage('');
@@ -150,7 +152,7 @@ const AdminWhatsApp = () => {
     } catch (error) {
       setErrorMessage(error.response?.data?.error || 'Failed to trigger calendar update');
     } finally {
-      setIsLoading(false);
+      setTimeout(() => setIsLoading(false), 2000); // 2 second delay
     }
   };
 
