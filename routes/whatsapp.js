@@ -181,4 +181,45 @@ router.get('/battle-group', sessionMiddleware, async (req, res) => {
   }
 });
 
+// Set daily calendar group
+router.post('/set-calendar-group', sessionMiddleware, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { groupId } = req.body;
+    const WhatsAppSettings = (await import('../models/WhatsAppSettings.js')).default;
+    
+    await WhatsAppSettings.findOneAndUpdate(
+      { settingKey: 'dailyCalendarGroup' },
+      { 
+        settingValue: groupId,
+        updatedBy: req.user.userId
+      },
+      { upsert: true }
+    );
+    
+    res.json({ success: true, message: 'Daily calendar group set successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get daily calendar group
+router.get('/calendar-group', sessionMiddleware, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const WhatsAppSettings = (await import('../models/WhatsAppSettings.js')).default;
+    const setting = await WhatsAppSettings.findOne({ settingKey: 'dailyCalendarGroup' });
+    
+    res.json({ groupId: setting?.settingValue || null });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

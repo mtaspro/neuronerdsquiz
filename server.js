@@ -26,6 +26,7 @@ import maintenanceRouter from './routes/maintenance.js';
 import BattleService from './services/battleService.js';
 import BadgeService from './services/badgeService.js';
 import whatsappService from './services/whatsappService.js';
+import DailyCalendarScheduler from './services/dailyCalendarScheduler.js';
 import WhatsAppSettings from './models/WhatsAppSettings.js';
 import UserScore from './models/UserScore.js';
 
@@ -182,6 +183,8 @@ mongoose.connect(process.env.MONGO_URI, {
     initializeBadges();
     // Initialize WhatsApp service
     whatsappService.initialize();
+    // Start daily calendar scheduler
+    dailyCalendarScheduler.start();
   })
   .catch((err) => {
     console.error('❌ MongoDB connection error:', err);
@@ -193,6 +196,9 @@ const battleService = new BattleService();
 
 // Badge service instance
 const badgeService = new BadgeService();
+
+// Daily calendar scheduler instance
+const dailyCalendarScheduler = new DailyCalendarScheduler();
 
 // Initialize badges
 async function initializeBadges() {
@@ -591,6 +597,21 @@ app.get('/api/battle-rooms/:roomId', (req, res) => {
     res.json(roomStatus);
   } else {
     res.status(404).json({ message: 'Room not found' });
+  }
+});
+
+// Daily calendar scheduler endpoints
+app.get('/api/calendar/status', (req, res) => {
+  const status = dailyCalendarScheduler.getStatus();
+  res.json(status);
+});
+
+app.post('/api/calendar/trigger', async (req, res) => {
+  try {
+    await dailyCalendarScheduler.triggerManually();
+    res.json({ message: 'Daily calendar update triggered successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

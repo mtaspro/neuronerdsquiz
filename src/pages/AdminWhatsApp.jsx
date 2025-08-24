@@ -12,6 +12,7 @@ const AdminWhatsApp = () => {
   const [groups, setGroups] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [battleGroupId, setBattleGroupId] = useState('');
+  const [calendarGroupId, setCalendarGroupId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -20,6 +21,7 @@ const AdminWhatsApp = () => {
     fetchUsers();
     fetchGroups();
     fetchBattleGroup();
+    fetchCalendarGroup();
   }, []);
 
   const fetchUsers = async () => {
@@ -63,6 +65,19 @@ const AdminWhatsApp = () => {
     }
   };
 
+  const fetchCalendarGroup = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      const response = await axios.get(`${apiUrl}/api/whatsapp/calendar-group`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCalendarGroupId(response.data.groupId || '');
+    } catch (error) {
+      console.error('Failed to fetch calendar group:', error);
+    }
+  };
+
   const setBattleGroup = async () => {
     if (!battleGroupId.trim()) {
       setErrorMessage('Please select a group for battle notifications');
@@ -88,6 +103,52 @@ const AdminWhatsApp = () => {
       }
     } catch (error) {
       setErrorMessage(error.response?.data?.error || 'Failed to set battle group');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const setCalendarGroup = async () => {
+    if (!calendarGroupId.trim()) {
+      setErrorMessage('Please select a group for daily calendar updates');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      const response = await axios.post(`${apiUrl}/api/whatsapp/set-calendar-group`, 
+        { groupId: calendarGroupId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        setSuccessMessage('Daily calendar group set successfully!');
+      } else {
+        setErrorMessage(response.data.error || 'Failed to set calendar group');
+      }
+    } catch (error) {
+      setErrorMessage(error.response?.data?.error || 'Failed to set calendar group');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const triggerCalendarUpdate = async () => {
+    setIsLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await axios.post(`${apiUrl}/api/calendar/trigger`);
+      setSuccessMessage('Daily calendar update sent successfully!');
+    } catch (error) {
+      setErrorMessage(error.response?.data?.error || 'Failed to trigger calendar update');
     } finally {
       setIsLoading(false);
     }
@@ -305,6 +366,42 @@ const AdminWhatsApp = () => {
                   Set
                 </button>
               </div>
+            </div>
+
+            {/* Daily Calendar Updates */}
+            <div className="mb-6">
+              <h3 className="font-semibold mb-2">📅 Daily Calendar Updates</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                Set which group receives daily calendar updates at 12:00 AM Bangladesh time
+              </p>
+              <div className="flex gap-2 mb-2">
+                <select
+                  value={calendarGroupId}
+                  onChange={(e) => setCalendarGroupId(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700"
+                >
+                  <option value="">Select Group for Daily Calendar</option>
+                  {groups.map(group => (
+                    <option key={group.id} value={group.id}>
+                      {group.name} ({group.participants} members)
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={setCalendarGroup}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Set
+                </button>
+              </div>
+              <button
+                onClick={triggerCalendarUpdate}
+                disabled={isLoading}
+                className="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
+              >
+                📅 Send Today's Calendar Update (Test)
+              </button>
             </div>
 
             {/* Broadcast */}
