@@ -124,7 +124,7 @@ async function executeUserDeletion(userId) {
   // Delete user's scores from leaderboard
   await UserScore.deleteMany({ username: user.username });
   
-  // Delete user's stats
+  // Delete user's stats (for deletion, we actually delete)
   await UserStats.deleteMany({ userId: userId });
   await UserStats.deleteMany({ username: user.username });
   
@@ -148,9 +148,30 @@ async function executeLeaderboardReset() {
   await UserScore.deleteMany({});
   console.log('✅ Deleted all user scores (general + battle)');
   
-  // Delete all user stats
-  await UserStats.deleteMany({});
-  console.log('✅ Deleted all user stats');
+  // Reset all user stats instead of deleting
+  await UserStats.updateMany(
+    {},
+    {
+      $set: {
+        totalQuizzes: 0,
+        totalCorrectAnswers: 0,
+        totalQuestions: 0,
+        totalScore: 0,
+        averageScore: 0,
+        totalTimeSpent: 0,
+        averageTimePerQuiz: 0,
+        fastestQuizTime: null,
+        totalBattles: 0,
+        battlesWon: 0,
+        battlesLost: 0,
+        battleWinRate: 0,
+        currentBadges: [],
+        badgeHistory: [],
+        lastUpdated: new Date()
+      }
+    }
+  );
+  console.log('✅ Reset all user stats to zero');
   
   // Reset ALL user fields to zero and clear badges
   await User.updateMany(
@@ -207,6 +228,13 @@ async function executeLeaderboardReset() {
   await badgeService.initializeBadges();
   console.log('✅ Re-initialized badge system');
   
+  // Recalculate badges for all users
+  const allUsers = await User.find({});
+  for (const user of allUsers) {
+    await badgeService.recalculateUserBadges(user._id);
+  }
+  console.log('✅ Recalculated badges for all users');
+  
   console.log('🎉 Complete reset: Both leaderboards cleared, all stats reset, badges reset!');
 }
 
@@ -248,11 +276,18 @@ async function executeQuizLeaderboardReset() {
   await UserStats.updateMany(
     {},
     {
-      $unset: {
-        totalQuizzes: 1,
-        averageScore: 1,
-        bestScore: 1,
-        currentStreak: 1
+      $set: {
+        totalQuizzes: 0,
+        totalCorrectAnswers: 0,
+        totalQuestions: 0,
+        totalScore: 0,
+        averageScore: 0,
+        totalTimeSpent: 0,
+        averageTimePerQuiz: 0,
+        fastestQuizTime: null,
+        currentBadges: [],
+        badgeHistory: [],
+        lastUpdated: new Date()
       }
     }
   );
@@ -274,6 +309,14 @@ async function executeQuizLeaderboardReset() {
     }
   );
   console.log('✅ Reset quiz-related badges');
+  
+  // Recalculate badges for all users
+  const badgeService = new BadgeService();
+  const allUsers = await User.find({});
+  for (const user of allUsers) {
+    await badgeService.recalculateUserBadges(user._id);
+  }
+  console.log('✅ Recalculated badges for all users');
   
   console.log('🎉 Quiz leaderboard reset completed!');
 }
@@ -306,10 +349,14 @@ async function executeBattleLeaderboardReset() {
   await UserStats.updateMany(
     {},
     {
-      $unset: {
-        totalBattles: 1,
-        battlesWon: 1,
-        battleWinRate: 1
+      $set: {
+        totalBattles: 0,
+        battlesWon: 0,
+        battlesLost: 0,
+        battleWinRate: 0,
+        currentBadges: [],
+        badgeHistory: [],
+        lastUpdated: new Date()
       }
     }
   );
@@ -332,6 +379,14 @@ async function executeBattleLeaderboardReset() {
   );
   console.log('✅ Reset battle-related badges');
   
+  // Recalculate badges for all users
+  const badgeService = new BadgeService();
+  const allUsers = await User.find({});
+  for (const user of allUsers) {
+    await badgeService.recalculateUserBadges(user._id);
+  }
+  console.log('✅ Recalculated badges for all users');
+  
   console.log('🎉 Battle leaderboard reset completed!');
 }
 
@@ -344,11 +399,31 @@ async function executeUserScoreReset(userId) {
   await UserScore.deleteMany({ userId: userId });
   await UserScore.deleteMany({ username: user.username });
   
-  // Delete user's stats
-  await UserStats.deleteMany({ userId: userId });
-  await UserStats.deleteMany({ username: user.username });
+  // Reset user's stats instead of deleting
+  await UserStats.updateMany(
+    { $or: [{ userId: userId }, { username: user.username }] },
+    {
+      $set: {
+        totalQuizzes: 0,
+        totalCorrectAnswers: 0,
+        totalQuestions: 0,
+        totalScore: 0,
+        averageScore: 0,
+        totalTimeSpent: 0,
+        averageTimePerQuiz: 0,
+        fastestQuizTime: null,
+        totalBattles: 0,
+        battlesWon: 0,
+        battlesLost: 0,
+        battleWinRate: 0,
+        currentBadges: [],
+        badgeHistory: [],
+        lastUpdated: new Date()
+      }
+    }
+  );
   
-  // Reset user fields
+  // Reset user fields and clear badges
   await User.findByIdAndUpdate(userId, {
     $set: {
       totalScore: 0,
@@ -359,14 +434,20 @@ async function executeUserScoreReset(userId) {
       bestScore: 0,
       totalQuizzes: 0,
       streak: 0,
+      currentStreak: 0,
       lastQuizDate: null,
       battleWins: 0,
       battleLosses: 0,
       battleDraws: 0,
       totalBattles: 0,
-      battleScore: 0
+      battleScore: 0,
+      badges: []
     }
   });
+  
+  // Recalculate badges for the user
+  const badgeService = new BadgeService();
+  await badgeService.recalculateUserBadges(userId);
   
   console.log(`✅ Reset all data for user: ${user.username}`);
 }

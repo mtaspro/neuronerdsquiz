@@ -94,7 +94,7 @@ export default function QuizPage() {
 
       // Submit to backend
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('sessionToken');
       
       const submitData = {
         score,
@@ -224,7 +224,7 @@ export default function QuizPage() {
     try {
       setCheckingAttempt(true);
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('sessionToken');
       
       const response = await axios.post(`${apiUrl}/api/quizzes/check-attempt`, {
         chapter,
