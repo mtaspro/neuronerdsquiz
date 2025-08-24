@@ -65,32 +65,29 @@ class DailyCalendarScheduler {
       const examData = await this.getUpcomingExams();
       
       // Create prompt for NeuraX
-      const prompt = `Generate a beautiful daily calendar update message with the following data:
+      const examInfo = examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `${e.examName} - TODAY` : `${e.examName} in ${e.daysLeft} days`).join(', ') : 'None';
+      
+      const prompt = `Generate a SHORT student-friendly daily calendar message. Keep it simple and motivational for Intermediate students.
 
+Data:
 Day: ${calendarData.dayName}
 English Date: ${calendarData.englishDate}
 Bangla Date: ${calendarData.banglaDate}
 Hijri Date: ${calendarData.hijriDate}
 Holidays: ${calendarData.hasHolidays ? calendarData.holidays.join(', ') : 'None'}
-Upcoming Exams: ${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `${e.examName} - TODAY` : `${e.examName} in ${e.daysLeft} days`).join(', ') : 'None'}
+Exams: ${examInfo}
 
-Generate a creative and engaging message following this structure:
+Format (MUST include exam section if exams exist):
+📅 **Today:** ${calendarData.dayName}, ${calendarData.englishDate}
+🗓️ **English Date:** ${calendarData.englishDate}
+🗓️ **বাংলা তারিখ:** ${calendarData.banglaDate}
+🕌 **Hijri Date:** ${calendarData.hijriDate}
 
-📅 **Today:** [Day, Date]
-🗓️ **English Date:** [Date]
-🗓️ **বাংলা তারিখ:** [Bangla Date]
-🕌 **Hijri Date:** [Hijri Date]
+${calendarData.hasHolidays ? '🎉 **Special:** ' + calendarData.holidays.join(', ') + ' - Enjoy responsibly!' : '💡 **Daily Motivation:** [Write 1 short motivational line for students]'}
 
-[If holidays exist: 🎉 **Special:** [Creative holiday message]]
-[If no holidays: 💡 [Creative motivational message for regular day]]
+${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `✨ **EXAM TODAY!**\n${e.examName} - You've got this! 💪` : `📚 **Exam Alert**\n${e.examName} in ${e.daysLeft} days - Stay focused! 📖`).join('\n\n') : ''}
 
-[For each exam:]
-- If exam is TODAY: ✨ **Best of Luck!** [Creative exam day message with exam name]
-- If exam is upcoming: 📚 **Exam Countdown** [Creative countdown message with exam name and days]
-
-[End with personalized motivational message based on context]
-
-Make each message unique, creative, and motivational. Vary the language, emojis, and tone while maintaining the format structure.`;
+Keep it SHORT, student-friendly, and motivational. Use simple language, not fancy words.`;
 
       // Send to NeuraX AI
       const axios = (await import('axios')).default;
@@ -118,9 +115,9 @@ Make each message unique, creative, and motivational. Vary the language, emojis,
       try {
         const calendarData = await this.calendarService.generateCalendarData();
         const examData = await this.getUpcomingExams();
-        const examMessages = examData.map(e => e.daysLeft === 0 ? `✨ **Best of Luck!**\nToday is your ${e.examName}. You've prepared well, now show your brilliance! 🌟` : `📚 **Exam Alert**\n${e.examName} approaches in ${e.daysLeft} days. Stay focused and confident! 💪`).join('\n\n');
+        const examMessages = examData.map(e => e.daysLeft === 0 ? `✨ **EXAM TODAY!**\n${e.examName} - You've got this! 💪` : `📚 **Exam Alert**\n${e.examName} in ${e.daysLeft} days - Stay focused! 📖`).join('\n\n');
         
-        const fallbackMessage = `📅 **Today:** ${calendarData.dayName}, ${calendarData.englishDate}\n🗓️ **English Date:** ${calendarData.englishDate}\n🗓️ **বাংলা তারিখ:** ${calendarData.banglaDate}\n🕌 **Hijri Date:** ${calendarData.hijriDate}\n\n${calendarData.hasHolidays ? `🎉 **Special:** ${calendarData.holidays.join(', ')}` : '💡 *No special events today. Let\'s make it productive!*'}${examMessages ? '\n\n' + examMessages : ''}`;
+        const fallbackMessage = `📅 **Today:** ${calendarData.dayName}, ${calendarData.englishDate}\n🗓️ **English Date:** ${calendarData.englishDate}\n🗓️ **বাংলা তারিখ:** ${calendarData.banglaDate}\n🕌 **Hijri Date:** ${calendarData.hijriDate}\n\n${calendarData.hasHolidays ? `🎉 **Special:** ${calendarData.holidays.join(', ')} - Enjoy responsibly!` : '💡 **Daily Motivation:** Make today count! 📚'}${examMessages ? '\n\n' + examMessages : ''}`;
         
         const calendarGroupSetting = await WhatsAppSettings.findOne({ settingKey: 'dailyCalendarGroup' });
         if (calendarGroupSetting?.settingValue) {
