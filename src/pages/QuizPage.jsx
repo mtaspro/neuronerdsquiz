@@ -403,7 +403,7 @@ export default function QuizPage() {
 
   // Handle lifeline usage
   const handleUseLifeline = useCallback((type) => {
-    const currentQuestionId = currentQuestion._id;
+    const currentQuestionId = questions[currentQuestionIndex]?._id || `q-${currentQuestionIndex}`;
     
     if (!useLifeline(type, currentQuestionId)) {
       showError('Cannot use this lifeline anymore');
@@ -431,9 +431,10 @@ export default function QuizPage() {
         
       case 'help':
         // Show correct answer
-        const correctIndex = typeof currentQuestion.correctAnswerIndex === 'number' 
-          ? currentQuestion.correctAnswerIndex 
-          : currentQuestion.options.findIndex(opt => opt === currentQuestion.correctAnswer);
+        const currentQ = questions[currentQuestionIndex];
+        const correctIndex = typeof currentQ.correctAnswerIndex === 'number' 
+          ? currentQ.correctAnswerIndex 
+          : currentQ.options.findIndex(opt => opt === currentQ.correctAnswer);
         setSelectedOption(correctIndex);
         setHelpUsed(true);
         showSuccess('Correct answer revealed! Score will be reduced by 50%');
@@ -441,11 +442,12 @@ export default function QuizPage() {
         
       case 'fiftyFifty':
         // Hide 2 wrong options
-        const correctIdx = typeof currentQuestion.correctAnswerIndex === 'number' 
-          ? currentQuestion.correctAnswerIndex 
-          : currentQuestion.options.findIndex(opt => opt === currentQuestion.correctAnswer);
+        const currentQ2 = questions[currentQuestionIndex];
+        const correctIdx = typeof currentQ2.correctAnswerIndex === 'number' 
+          ? currentQ2.correctAnswerIndex 
+          : currentQ2.options.findIndex(opt => opt === currentQ2.correctAnswer);
         
-        const wrongIndices = currentQuestion.options
+        const wrongIndices = currentQ2.options
           .map((_, idx) => idx)
           .filter(idx => idx !== correctIdx);
         
@@ -464,7 +466,7 @@ export default function QuizPage() {
         showSuccess(`+${extraSeconds} seconds added!`);
         break;
     }
-  }, [currentQuestion, useLifeline, answers, currentQuestionIndex, questions.length, duration, handleSubmit, lifelineConfig, showError, showSuccess]);
+  }, [questions, currentQuestionIndex, useLifeline, answers, duration, handleSubmit, lifelineConfig, showError, showSuccess]);
   
   const handleNext = useCallback(() => {
     const updatedAnswers = [...answers];
