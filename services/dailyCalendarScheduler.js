@@ -75,7 +75,7 @@ Format it exactly like this:
 🗓️ **বাংলা তারিখ:** [Bangla Date]
 🕌 **Hijri Date:** [Hijri Date]
 
-${calendarData.hasHolidays ? '🎉 **Special:** [Holidays]' : '💡 *No special events today. Let's make it productive!*'}
+${calendarData.hasHolidays ? '🎉 **Special:** [Holidays]' : '💡 *No special events today. Let\'s make it productive!*'}
 
 Add appropriate wishes and motivational message at the end based on the holidays or general positivity.`;
 
