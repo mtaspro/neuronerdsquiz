@@ -415,7 +415,7 @@ const Dashboard = () => {
         ref={contentRef}
         className="max-w-6xl mx-auto p-8 relative z-10"
         initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: isContentInView ? 1 : 0, y: isContentInView ? 0 : 50 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.3 }}
       >
         <div className="grid lg:grid-cols-3 gap-8">
