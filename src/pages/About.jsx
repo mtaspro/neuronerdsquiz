@@ -305,45 +305,105 @@ const TechStackSection = ({ setCursorVariant }) => {
         {techStack.map((tech, index) => (
           <motion.div
             key={tech.name}
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 100, rotateX: -30 }}
             animate={{ 
               opacity: isInView ? 1 : 0, 
-              y: isInView ? 0 : 50
+              y: isInView ? 0 : 100,
+              rotateX: isInView ? 0 : -30
             }}
             transition={{ 
-              duration: 0.8, 
-              delay: index * 0.1,
+              duration: 1.2, 
+              delay: index * 0.15,
               ease: [0.23, 1, 0.32, 1]
             }}
-            className="group"
+            className="group perspective-1000"
           >
             <motion.div
-              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-gray-200/50 dark:border-gray-700/50 text-center relative overflow-hidden"
+              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-gray-200/50 dark:border-gray-700/50 text-center relative overflow-hidden transform-gpu"
               whileHover={{ 
-                scale: 1.05,
-                transition: { duration: 0.3 }
+                scale: 1.1,
+                rotateY: 15,
+                rotateX: 10,
+                transition: { duration: 0.4 }
+              }}
+              animate={{
+                y: [0, -10, 0],
+                rotateZ: [0, 2, -2, 0]
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                delay: index * 0.5
               }}
               onMouseEnter={() => setCursorVariant('hover')}
               onMouseLeave={() => setCursorVariant('default')}
             >
+              {/* Animated background */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100"
+                animate={{
+                  background: [
+                    'linear-gradient(45deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))',
+                    'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1))',
+                    'linear-gradient(225deg, rgba(16, 185, 129, 0.1), rgba(139, 92, 246, 0.1))'
+                  ]
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+              />
+              
               <motion.div 
                 className="text-5xl mb-4 relative z-10"
                 whileHover={{ 
-                  scale: 1.3, 
-                  rotate: [0, -10, 10, 0],
-                  transition: { duration: 0.5 }
+                  scale: 1.5, 
+                  rotate: [0, -15, 15, 0],
+                  y: [-5, 5, -5],
+                  transition: { duration: 0.6 }
+                }}
+                animate={{
+                  rotate: [0, 5, -5, 0],
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  delay: index * 0.3
                 }}
               >
                 {tech.icon}
               </motion.div>
               
-              <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-3 relative z-10">
+              <motion.h3 
+                className="font-bold text-lg text-gray-800 dark:text-white mb-3 relative z-10"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+                transition={{ delay: index * 0.15 + 0.3, duration: 0.8 }}
+              >
                 {tech.name}
-              </h3>
+              </motion.h3>
               
-              <p className="text-sm text-gray-600 dark:text-gray-300 relative z-10 leading-relaxed">
+              <motion.p 
+                className="text-sm text-gray-600 dark:text-gray-300 relative z-10 leading-relaxed"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+                transition={{ delay: index * 0.15 + 0.5, duration: 0.8 }}
+              >
                 {tech.description}
-              </p>
+              </motion.p>
+              
+              {/* Floating particles inside card */}
+              <motion.div
+                className="absolute top-2 right-2 w-2 h-2 bg-cyan-400 rounded-full opacity-60"
+                animate={{
+                  y: [0, -20, 0],
+                  x: [0, 10, 0],
+                  scale: [1, 1.5, 1]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  delay: index * 0.2
+                }}
+              />
             </motion.div>
           </motion.div>
         ))}
@@ -393,50 +453,135 @@ const JourneySection = ({ setCursorVariant }) => {
         </motion.div>
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {milestones.map((milestone, index) => (
-          <motion.div
-            key={milestone.title}
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ 
-              opacity: isInView ? 1 : 0, 
-              y: isInView ? 0 : 50
-            }}
-            transition={{ 
-              duration: 1, 
-              delay: index * 0.2,
-              ease: [0.23, 1, 0.32, 1]
-            }}
-            className="group"
-          >
+      {/* Animated Timeline */}
+      <div className="relative">
+        <motion.div
+          className="absolute left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-orange-500 via-red-500 to-pink-500 rounded-full"
+          initial={{ height: 0 }}
+          animate={{ height: isInView ? '100%' : 0 }}
+          transition={{ duration: 2, ease: [0.23, 1, 0.32, 1] }}
+        />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+          {milestones.map((milestone, index) => (
             <motion.div
-              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-gray-200/50 dark:border-gray-700/50 relative overflow-hidden"
-              whileHover={{ 
-                scale: 1.05,
-                transition: { duration: 0.3 }
+              key={milestone.title}
+              initial={{ opacity: 0, y: 100, scale: 0.8 }}
+              animate={{ 
+                opacity: isInView ? 1 : 0, 
+                y: isInView ? 0 : 100,
+                scale: isInView ? 1 : 0.8
               }}
-              onMouseEnter={() => setCursorVariant('hover')}
-              onMouseLeave={() => setCursorVariant('default')}
+              transition={{ 
+                duration: 1.5, 
+                delay: index * 0.3,
+                ease: [0.23, 1, 0.32, 1]
+              }}
+              className="group relative"
             >
-              <motion.div 
-                className="text-5xl mb-4"
-                whileHover={{ 
-                  scale: 1.2, 
-                  rotate: [0, -10, 10, 0],
-                  transition: { duration: 0.5 }
-                }}
+              {/* Timeline connector */}
+              <motion.div
+                className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full border-4 border-white dark:border-gray-900 shadow-lg"
+                initial={{ scale: 0 }}
+                animate={{ scale: isInView ? 1 : 0 }}
+                transition={{ delay: index * 0.3 + 0.5, duration: 0.5 }}
+                whileHover={{ scale: 1.5 }}
               >
-                {milestone.icon}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full"
+                  animate={{ scale: [1, 1.5, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: index * 0.5 }}
+                />
               </motion.div>
-              <h3 className="font-bold text-xl text-gray-800 dark:text-white mb-3">
-                {milestone.title}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                {milestone.description}
-              </p>
+              
+              <motion.div
+                className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-gray-200/50 dark:border-gray-700/50 relative overflow-hidden mt-8"
+                whileHover={{ 
+                  scale: 1.1,
+                  rotateY: 10,
+                  transition: { duration: 0.4 }
+                }}
+                animate={{
+                  y: [0, -5, 0],
+                  rotateX: [0, 2, 0]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  delay: index * 0.7
+                }}
+                onMouseEnter={() => setCursorVariant('hover')}
+                onMouseLeave={() => setCursorVariant('default')}
+              >
+                {/* Animated background glow */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100"
+                  animate={{
+                    background: [
+                      'linear-gradient(45deg, rgba(249, 115, 22, 0.1), rgba(236, 72, 153, 0.1))',
+                      'linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(239, 68, 68, 0.1))',
+                      'linear-gradient(225deg, rgba(239, 68, 68, 0.1), rgba(249, 115, 22, 0.1))'
+                    ]
+                  }}
+                  transition={{ duration: 4, repeat: Infinity }}
+                />
+                
+                <motion.div 
+                  className="text-5xl mb-4 relative z-10"
+                  whileHover={{ 
+                    scale: 1.3, 
+                    rotate: [0, -20, 20, 0],
+                    y: [-10, 10, -10],
+                    transition: { duration: 0.8 }
+                  }}
+                  animate={{
+                    rotate: [0, 10, -10, 0],
+                    scale: [1, 1.1, 1]
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    delay: index * 0.4
+                  }}
+                >
+                  {milestone.icon}
+                </motion.div>
+                
+                <motion.h3 
+                  className="font-bold text-xl text-gray-800 dark:text-white mb-3 relative z-10"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: isInView ? 1 : 0, x: isInView ? 0 : -20 }}
+                  transition={{ delay: index * 0.3 + 0.7, duration: 0.8 }}
+                >
+                  {milestone.title}
+                </motion.h3>
+                
+                <motion.p 
+                  className="text-gray-600 dark:text-gray-300 leading-relaxed relative z-10"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: isInView ? 1 : 0, x: isInView ? 0 : 20 }}
+                  transition={{ delay: index * 0.3 + 0.9, duration: 0.8 }}
+                >
+                  {milestone.description}
+                </motion.p>
+                
+                {/* Corner decorations */}
+                <motion.div
+                  className="absolute top-2 right-2 w-3 h-3 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full opacity-70"
+                  animate={{
+                    scale: [1, 1.5, 1],
+                    rotate: [0, 180, 360]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    delay: index * 0.3
+                  }}
+                />
+              </motion.div>
             </motion.div>
-          </motion.div>
-        ))}
+          ))}
+        </div>
       </div>
     </motion.section>
   );
@@ -637,13 +782,27 @@ const About = () => {
     return () => window.removeEventListener('mousemove', updateMousePosition);
   }, []);
   
-  // Smooth scroll behavior
+  // Smooth scroll behavior with Lenis
   useEffect(() => {
-    document.documentElement.style.scrollBehavior = 'smooth';
-    return () => {
-      document.documentElement.style.scrollBehavior = 'auto';
-    };
+    const lenis = new (window.Lenis || class{})({ 
+      duration: 1.2, 
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smooth: true
+    });
+    
+    function raf(time) {
+      lenis?.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+    
+    return () => lenis?.destroy();
   }, []);
+  
+  // Scroll-triggered animations
+  const scrollY = useTransform(scrollYProgress, [0, 1], [0, -300]);
+  const rotate = useTransform(scrollYProgress, [0, 1], [0, 360]);
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.2, 0.8]);
 
   const teamMembers = [
     {
@@ -735,7 +894,7 @@ const About = () => {
         </div>
       </motion.div>
       
-      {/* Floating Particles Background */}
+      {/* Dynamic Floating Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {particles.map((particle) => (
           <motion.div
@@ -746,21 +905,36 @@ const About = () => {
               top: `${particle.y}%`,
               width: `${particle.size}px`,
               height: `${particle.size}px`,
-              opacity: particle.opacity * 0.3,
+              opacity: particle.opacity * 0.4,
+              y: scrollY
             }}
             animate={{
-              y: [0, -50, 0],
-              x: [0, 20, -20, 0],
-              scale: [1, 1.5, 1],
-              rotate: [0, 180, 360]
+              y: [0, -100, 0],
+              x: [0, 30, -30, 0],
+              scale: [1, 2, 1],
+              rotate: [0, 360, 720]
             }}
             transition={{
-              duration: particle.speed * 3,
+              duration: particle.speed * 4,
               repeat: Infinity,
               ease: "easeInOut",
             }}
           />
         ))}
+        
+        {/* Scroll-reactive geometric shapes */}
+        <motion.div
+          className="absolute top-1/4 right-10 w-20 h-20 border-4 border-cyan-400/30"
+          style={{ rotate, scale }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 left-10 w-16 h-16 bg-purple-500/20 rounded-full"
+          style={{ y: scrollY, rotate: rotate }}
+        />
+        <motion.div
+          className="absolute top-1/2 left-1/2 w-24 h-24 border-2 border-pink-400/20 rotate-45"
+          style={{ scale, rotate: useTransform(scrollYProgress, [0, 1], [0, -360]) }}
+        />
       </div>
       
       {/* Parallax Header */}
@@ -886,25 +1060,87 @@ const About = () => {
         </div>
       </motion.div>
 
-      <div className="max-w-6xl mx-auto p-8 space-y-32 relative z-10">
-        {/* Team Section */}
-        <TeamSection 
-          teamMembers={teamMembers} 
-          setCursorVariant={setCursorVariant}
-        />
+      {/* Scroll Progress Indicator */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 z-50 origin-left"
+        style={{ scaleX: scrollYProgress }}
+      />
+      
+      {/* Floating Navigation Dots */}
+      <motion.div 
+        className="fixed right-8 top-1/2 transform -translate-y-1/2 z-40 space-y-4"
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 3 }}
+      >
+        {['Team', 'Tech', 'Journey', 'Future'].map((section, index) => (
+          <motion.div
+            key={section}
+            className="w-3 h-3 rounded-full bg-white/50 cursor-pointer hover:bg-white transition-colors"
+            whileHover={{ scale: 1.5 }}
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.5, 1, 0.5]
+            }}
+            transition={{ 
+              duration: 2, 
+              repeat: Infinity, 
+              delay: index * 0.5 
+            }}
+          />
+        ))}
+      </motion.div>
+      
+      <motion.div 
+        className="max-w-6xl mx-auto p-8 space-y-32 relative z-10"
+        style={{ y: useTransform(scrollYProgress, [0, 1], [0, -100]) }}
+      >
+        {/* Team Section with Parallax */}
+        <motion.div style={{ y: useTransform(scrollYProgress, [0, 0.3], [0, -50]) }}>
+          <TeamSection 
+            teamMembers={teamMembers} 
+            setCursorVariant={setCursorVariant}
+          />
+        </motion.div>
 
-        {/* Tech Stack Section */}
-        <TechStackSection setCursorVariant={setCursorVariant} />
+        {/* Tech Stack Section with Parallax */}
+        <motion.div style={{ y: useTransform(scrollYProgress, [0.2, 0.5], [50, -50]) }}>
+          <TechStackSection setCursorVariant={setCursorVariant} />
+        </motion.div>
         
-        {/* Journey Section */}
-        <JourneySection setCursorVariant={setCursorVariant} />
+        {/* Journey Section with Parallax */}
+        <motion.div style={{ y: useTransform(scrollYProgress, [0.4, 0.7], [100, -100]) }}>
+          <JourneySection setCursorVariant={setCursorVariant} />
+        </motion.div>
         
-        {/* Future Plans Section */}
-        <FuturePlansSection setCursorVariant={setCursorVariant} />
+        {/* Future Plans Section with Parallax */}
+        <motion.div style={{ y: useTransform(scrollYProgress, [0.6, 0.9], [150, -150]) }}>
+          <FuturePlansSection setCursorVariant={setCursorVariant} />
+        </motion.div>
         
-        {/* Final Message Section */}
-        <FinalMessageSection navigate={navigate} setCursorVariant={setCursorVariant} />
-      </div>
+        {/* Final Message Section with Parallax */}
+        <motion.div style={{ y: useTransform(scrollYProgress, [0.8, 1], [200, -200]) }}>
+          <FinalMessageSection navigate={navigate} setCursorVariant={setCursorVariant} />
+        </motion.div>
+      </motion.div>
+      
+      {/* Dynamic Background Gradient */}
+      <motion.div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          background: useTransform(
+            scrollYProgress,
+            [0, 0.25, 0.5, 0.75, 1],
+            [
+              'radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1), transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1), transparent 50%)',
+              'radial-gradient(circle at 40% 40%, rgba(120, 200, 255, 0.1), transparent 50%), radial-gradient(circle at 60% 60%, rgba(255, 200, 120, 0.1), transparent 50%)',
+              'radial-gradient(circle at 60% 20%, rgba(200, 120, 255, 0.1), transparent 50%), radial-gradient(circle at 40% 80%, rgba(120, 255, 200, 0.1), transparent 50%)',
+              'radial-gradient(circle at 80% 60%, rgba(255, 200, 200, 0.1), transparent 50%), radial-gradient(circle at 20% 40%, rgba(200, 255, 120, 0.1), transparent 50%)',
+              'radial-gradient(circle at 50% 50%, rgba(180, 180, 255, 0.1), transparent 50%), radial-gradient(circle at 50% 50%, rgba(255, 180, 255, 0.1), transparent 50%)'
+            ]
+          )
+        }}
+      />
     </div>
   );
 };
