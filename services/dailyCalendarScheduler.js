@@ -78,7 +78,7 @@ Holidays: ${calendarData.hasHolidays ? calendarData.holidays.join(', ') : 'None'
 Exams: ${examInfo}
 
 Format:
-📅 Today: ${calendarData.dayName}
+📅 Today: ${calendarData.dayName}, ${calendarData.englishDate}
 🗓️ বাংলা তারিখ: ${calendarData.banglaDate}
 🕌 Hijri Date: ${calendarData.hijriDate}
 
@@ -116,7 +116,7 @@ Make it engaging with humor, light teasing, or clever motivation. Be relatable t
         const examData = await this.getUpcomingExams();
         const examMessages = examData.map(e => e.daysLeft === 0 ? `✨ **EXAM TODAY!**\n${e.examName} - You've got this! 💪` : `📚 **Exam Alert**\n${e.examName} in ${e.daysLeft} days - Stay focused! 📖`).join('\n\n');
         
-        const fallbackMessage = `📅 Today: ${calendarData.dayName}\n🗓️ বাংলা তারিখ: ${calendarData.banglaDate}\n🕌 Hijri Date: ${calendarData.hijriDate}\n\n${calendarData.hasHolidays ? `🎉 Special: ${calendarData.holidays.join(', ')} - Enjoy responsibly!` : '💡 Daily Motivation: Another day, another chance to procrastinate... or actually study! 😏'}${examMessages ? '\n\n' + examMessages : ''}`;
+        const fallbackMessage = `📅 Today: ${calendarData.dayName}, ${calendarData.englishDate}\n🗓️ বাংলা তারিখ: ${calendarData.banglaDate}\n🕌 Hijri Date: ${calendarData.hijriDate}\n\n${calendarData.hasHolidays ? `🎉 Special: ${calendarData.holidays.join(', ')} - Enjoy responsibly!` : '💡 Daily Motivation: Another day, another chance to procrastinate... or actually study! 😏'}${examMessages ? '\n\n' + examMessages : ''}`;
         
         const calendarGroupSetting = await WhatsAppSettings.findOne({ settingKey: 'dailyCalendarGroup' });
         if (calendarGroupSetting?.settingValue) {
