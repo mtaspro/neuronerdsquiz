@@ -140,7 +140,7 @@ function Navbar() {
               <Link to={isAuthenticated ? "/dashboard" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Dashboard</Link>
               <Link to={isAuthenticated ? "/leaderboard" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Leaderboard</Link>
               <Link to={isAuthenticated ? "/badges" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-yellow-600 dark:hover:text-yellow-400 transition">Badges</Link>
-              <Link to={isAuthenticated ? "/about" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-purple-600 dark:hover:text-purple-400 transition">About</Link>
+              <Link to="/about" className="text-gray-800 dark:text-white font-semibold hover:text-purple-600 dark:hover:text-purple-400 transition">About</Link>
               <Link to={isAuthenticated ? "/ai-chat" : "/login"} className="relative text-gray-800 dark:text-white font-bold hover:text-green-600 dark:hover:text-green-400 transition-all duration-300 transform hover:scale-105 px-3 py-1 rounded-lg bg-gradient-to-r from-green-400/10 to-blue-500/10 hover:from-green-400/20 hover:to-blue-500/20 border border-green-400/20 hover:border-green-400/40 shadow-sm hover:shadow-md animate-pulse">
                 <span className="relative z-10">NeuraX</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-green-400/5 to-blue-500/5 rounded-lg blur-sm"></div>
@@ -174,7 +174,7 @@ function Navbar() {
                 <Link to={isAuthenticated ? "/dashboard" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Dashboard</Link>
                 <Link to={isAuthenticated ? "/leaderboard" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Leaderboard</Link>
                 <Link to={isAuthenticated ? "/badges" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Badges</Link>
-                <Link to={isAuthenticated ? "/about" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">About</Link>
+                <Link to="/about" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">About</Link>
                 <Link to={isAuthenticated ? "/ai-chat" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-bold text-gray-800 dark:text-white hover:bg-gradient-to-r hover:from-green-400/20 hover:to-blue-500/20 transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-green-400/10 to-blue-500/10 border border-green-400/20 animate-pulse">
                   <span className="relative z-10">NeuraX</span>
                 </Link>
