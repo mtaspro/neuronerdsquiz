@@ -45,7 +45,7 @@ const TeamSection = ({ teamMembers, setCursorVariant }) => {
         className="text-center mb-16 relative z-10"
       >
         <motion.h2 
-          className="text-5xl md:text-6xl font-bold mb-6"
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
           style={{ 
             background: 'linear-gradient(45deg, #8B5CF6, #3B82F6, #06B6D4)',
             backgroundSize: '200% 200%',
@@ -277,7 +277,7 @@ const TechStackSection = ({ setCursorVariant }) => {
         className="text-center mb-16"
       >
         <motion.h2 
-          className="text-5xl md:text-6xl font-bold mb-6"
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
           style={{ 
             background: 'linear-gradient(45deg, #10B981, #3B82F6, #8B5CF6)',
             backgroundSize: '200% 200%',
@@ -433,7 +433,7 @@ const JourneySection = ({ setCursorVariant }) => {
         className="text-center mb-16"
       >
         <motion.h2 
-          className="text-5xl md:text-6xl font-bold mb-6"
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
           style={{ 
             background: 'linear-gradient(45deg, #F97316, #EF4444, #EC4899)',
             backgroundSize: '200% 200%',
@@ -601,7 +601,7 @@ const FuturePlansSection = ({ setCursorVariant }) => {
         className="text-center mb-16"
       >
         <motion.h2 
-          className="text-5xl md:text-6xl font-bold mb-6"
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
           style={{ 
             background: 'linear-gradient(45deg, #06B6D4, #8B5CF6, #EC4899)',
             backgroundSize: '200% 200%',
@@ -694,11 +694,11 @@ const FinalMessageSection = ({ navigate, setCursorVariant }) => {
         >
           <FaHeart className="text-6xl text-red-500 mx-auto mb-8" />
           
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 dark:text-white mb-8">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 dark:text-white mb-8">
             A Message to Our Amazing Community 💝
           </h2>
           
-          <div className="max-w-4xl mx-auto space-y-6 text-lg text-gray-700 dark:text-gray-300 mb-12">
+          <div className="max-w-4xl mx-auto space-y-6 text-base sm:text-lg text-gray-700 dark:text-gray-300 mb-12 px-4">
             <p>
               To every friend who has taken a quiz, every competitor who has battled with friends, 
               and every learner who has earned a badge - thank you! Your enthusiasm 
@@ -717,7 +717,7 @@ const FinalMessageSection = ({ navigate, setCursorVariant }) => {
             }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/dashboard')}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-4 px-12 rounded-full shadow-2xl transition-all duration-500 text-lg"
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-8 sm:py-4 sm:px-12 rounded-full shadow-2xl transition-all duration-500 text-base sm:text-lg w-full sm:w-auto"
             onMouseEnter={() => setCursorVariant('hover')}
             onMouseLeave={() => setCursorVariant('default')}
           >
@@ -857,9 +857,9 @@ const About = () => {
 
   return (
     <div ref={containerRef} className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200 overflow-hidden">
-      {/* Advanced Custom Cursor */}
+      {/* Advanced Custom Cursor - Hidden on Mobile */}
       <motion.div
-        className="fixed pointer-events-none z-[9999] mix-blend-difference"
+        className="fixed pointer-events-none z-[9999] mix-blend-difference hidden md:block"
         style={{ 
           left: mousePosition.x - 25, 
           top: mousePosition.y - 25,
@@ -983,7 +983,7 @@ const About = () => {
           
           {/* Hero Title with Character Animation */}
           <motion.div className="text-center">
-            <motion.h1 className="text-6xl md:text-8xl font-bold text-white mb-8">
+            <motion.h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold text-white mb-8">
               {Array.from("Behind The Scenes").map((char, index) => (
                 <motion.span
                   key={index}
@@ -1014,12 +1014,12 @@ const About = () => {
               </motion.span>
             </motion.h1>
             
-            <motion.div className="overflow-hidden">
+            <motion.div className="overflow-hidden px-4">
               <motion.p
                 initial={{ clipPath: "inset(100% 0% 0% 0%)" }}
                 animate={{ clipPath: "inset(0% 0% 0% 0%)" }}
                 transition={{ duration: 2, delay: 1.5, ease: [0.23, 1, 0.32, 1] }}
-                className="text-xl md:text-2xl text-purple-200 max-w-4xl mx-auto leading-relaxed"
+                className="text-lg sm:text-xl md:text-2xl text-purple-200 max-w-4xl mx-auto leading-relaxed"
               >
                 Meet the passionate team behind Neuronerds Quiz and discover NeuraX - 
                 our advanced AI assistant that's revolutionizing how students learn and compete.

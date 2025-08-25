@@ -247,9 +247,9 @@ export default function IntroScreen() {
 
   return (
     <div ref={containerRef} className="relative min-h-screen w-full flex flex-col items-center justify-center bg-gray-900 overflow-hidden">
-      {/* Advanced Custom Cursor */}
+      {/* Advanced Custom Cursor - Hidden on Mobile */}
       <motion.div
-        className="fixed pointer-events-none z-[9999] mix-blend-difference"
+        className="fixed pointer-events-none z-[9999] mix-blend-difference hidden md:block"
         style={{ 
           left: mousePosition.x - 20, 
           top: mousePosition.y - 20,
@@ -297,7 +297,7 @@ export default function IntroScreen() {
             </motion.div>
             
             {/* Text with Character Animation */}
-            <motion.div className="text-5xl md:text-7xl font-bold text-white mb-8">
+            <motion.div className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-8">
               {textSplits.map((item, index) => (
                 <motion.span
                   key={index}
@@ -322,7 +322,7 @@ export default function IntroScreen() {
             </motion.div>
             
             {/* Progress Bar */}
-            <div className="w-64 h-1 bg-gray-800 rounded-full overflow-hidden">
+            <div className="w-48 sm:w-64 h-1 bg-gray-800 rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full"
                 initial={{ width: "0%" }}
@@ -429,7 +429,7 @@ export default function IntroScreen() {
             opacity: isContentInView ? 1 : 0,
           }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-5xl md:text-8xl font-extrabold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent tracking-tight"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-extrabold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent tracking-tight"
         >
           NeuroNerds Quiz
         </motion.h1>
@@ -441,7 +441,7 @@ export default function IntroScreen() {
             opacity: isContentInView ? 1 : 0,
           }}
           transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-          className="text-xl md:text-3xl text-gray-200 font-light mt-4"
+          className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-200 font-light mt-4"
         >
           Unleash Your Inner Genius
         </motion.p>
@@ -453,7 +453,7 @@ export default function IntroScreen() {
             opacity: isContentInView ? 1 : 0,
           }}
           transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-          className="text-lg text-gray-400 mt-6 max-w-3xl mx-auto leading-relaxed"
+          className="text-base sm:text-lg text-gray-400 mt-6 max-w-3xl mx-auto leading-relaxed px-4"
         >
           Dive into a thrilling universe of interactive quizzes that challenge your mind and spark curiosity. Join a global community of knowledge seekers.
         </motion.p>
@@ -465,7 +465,7 @@ export default function IntroScreen() {
             opacity: isContentInView ? 1 : 0,
           }}
           transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8"
+          className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8 px-4"
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
         >
@@ -477,7 +477,7 @@ export default function IntroScreen() {
               }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/dashboard')}
-              className="relative bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-4 px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-cyan-300 text-lg overflow-hidden group"
+              className="relative bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-cyan-300 text-base sm:text-lg overflow-hidden group w-full sm:w-auto"
               onMouseEnter={() => setCursorVariant('hover')}
               onMouseLeave={() => setCursorVariant('default')}
             >
@@ -498,7 +498,7 @@ export default function IntroScreen() {
                 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/login')}
-                className="relative bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-4 px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-cyan-300 text-lg overflow-hidden group"
+                className="relative bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-cyan-300 text-base sm:text-lg overflow-hidden group w-full sm:w-auto"
                 onMouseEnter={() => setCursorVariant('hover')}
                 onMouseLeave={() => setCursorVariant('default')}
               >
@@ -517,7 +517,7 @@ export default function IntroScreen() {
                 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/register')}
-                className="relative bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold py-4 px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-purple-300 text-lg overflow-hidden group"
+                className="relative bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-purple-300 text-base sm:text-lg overflow-hidden group w-full sm:w-auto"
                 onMouseEnter={() => setCursorVariant('hover')}
                 onMouseLeave={() => setCursorVariant('default')}
               >
