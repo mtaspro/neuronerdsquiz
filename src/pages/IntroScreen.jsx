@@ -267,7 +267,8 @@ export default function IntroScreen() {
             <motion.span 
               className="text-black text-xs font-bold"
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              animate={{ opacity: 1, rotate: cursorVariant === 'hover' ? -180 : 0 }}
+              transition={{ duration: 0.3 }}
             >
               CLICK
             </motion.span>
