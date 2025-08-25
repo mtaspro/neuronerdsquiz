@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { motion, AnimatePresence, useInView, useScroll, useTransform } from "framer-motion";
 import { FaPalette } from "react-icons/fa";
 import ThemeSelector from "../components/ThemeSelector";
 import EventShowdown from "../components/EventShowdown";
@@ -22,6 +22,9 @@ export default function IntroScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
+  const [cursorVariant, setCursorVariant] = useState('default');
+  const [textSplits, setTextSplits] = useState([]);
+  const [preloaderProgress, setPreloaderProgress] = useState(0);
 
   const [currentTheme, setCurrentTheme] = useState('tech-bg');
   const [showThemeSelector, setShowThemeSelector] = useState(false);
@@ -29,7 +32,11 @@ export default function IntroScreen() {
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const contentRef = useRef(null);
+  const containerRef = useRef(null);
   const isContentInView = useInView(contentRef, { once: true, margin: "-100px" });
+  const { scrollYProgress } = useScroll({ target: containerRef });
+  const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   // Theme video mapping
   const themeVideos = {
@@ -134,22 +141,55 @@ export default function IntroScreen() {
     setParticles(particleArray);
   }, []);
 
-  // Handle loading animation
+  // Handle loading animation with progress
   useEffect(() => {
-    const loadingTimer = setTimeout(() => {
-      setIsLoading(false);
-      setShowVideo(true);
-      setTimeout(() => setShowContent(true), 300);
-    }, 3000); // 3-second preloader
-    return () => clearTimeout(loadingTimer);
+    const progressInterval = setInterval(() => {
+      setPreloaderProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          setTimeout(() => {
+            setIsLoading(false);
+            setShowVideo(true);
+            setTimeout(() => setShowContent(true), 300);
+          }, 500);
+          return 100;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 100);
+    return () => clearInterval(progressInterval);
   }, []);
 
-  // Custom cursor
+  // Text splitting effect
   useEffect(() => {
+    const text = "NeuroNerds Quiz";
+    const splits = text.split('').map((char, index) => ({
+      char: char === ' ' ? '\u00A0' : char,
+      index
+    }));
+    setTextSplits(splits);
+  }, []);
+
+  // Advanced cursor tracking
+  useEffect(() => {
+    let mouseX = 0, mouseY = 0;
+    let cursorX = 0, cursorY = 0;
+    
     const updateMousePosition = (e) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      mouseX = e.clientX;
+      mouseY = e.clientY;
     };
+    
+    const animateCursor = () => {
+      cursorX += (mouseX - cursorX) * 0.1;
+      cursorY += (mouseY - cursorY) * 0.1;
+      setMousePosition({ x: cursorX, y: cursorY });
+      requestAnimationFrame(animateCursor);
+    };
+    
     window.addEventListener("mousemove", updateMousePosition);
+    animateCursor();
+    
     return () => window.removeEventListener("mousemove", updateMousePosition);
   }, []);
 
@@ -206,71 +246,100 @@ export default function IntroScreen() {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-gray-900 overflow-hidden">
-      {/* Custom Cursor */}
+    <div ref={containerRef} className="relative min-h-screen w-full flex flex-col items-center justify-center bg-gray-900 overflow-hidden">
+      {/* Advanced Custom Cursor */}
       <motion.div
-        className={`fixed w-4 h-4 rounded-full pointer-events-none z-[9999] ${isHovering ? 'bg-purple-500 scale-150' : 'bg-cyan-500'}`}
-        style={{ left: mousePosition.x - 8, top: mousePosition.y - 8 }}
-        animate={{ scale: isHovering ? [1, 1.5, 1] : 1 }}
-        transition={{ duration: 0.3, repeat: Infinity }}
-      />
+        className="fixed pointer-events-none z-[9999] mix-blend-difference"
+        style={{ 
+          left: mousePosition.x - 20, 
+          top: mousePosition.y - 20,
+          width: cursorVariant === 'hover' ? '60px' : '40px',
+          height: cursorVariant === 'hover' ? '60px' : '40px'
+        }}
+        animate={{
+          scale: cursorVariant === 'hover' ? 1.5 : 1,
+          rotate: cursorVariant === 'hover' ? 180 : 0
+        }}
+        transition={{ type: "spring", stiffness: 500, damping: 28 }}
+      >
+        <div className="w-full h-full rounded-full bg-white opacity-80 flex items-center justify-center">
+          {cursorVariant === 'hover' && (
+            <motion.span 
+              className="text-black text-xs font-bold"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              CLICK
+            </motion.span>
+          )}
+        </div>
+      </motion.div>
 
-      {/* Loading Animation */}
+      {/* BASEBORN-Style Preloader */}
       <AnimatePresence>
         {isLoading && (
           <motion.div
-            className="absolute inset-0 flex flex-col items-center justify-center bg-gray-950 z-[1000]"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.2 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="fixed inset-0 flex flex-col items-center justify-center bg-gray-950 z-[1000]"
+            initial={{ clipPath: "inset(0% 0% 0% 0%)" }}
+            exit={{ 
+              clipPath: "inset(0% 0% 100% 0%)",
+              transition: { duration: 2, ease: [0.23, 1, 0.32, 1] }
+            }}
           >
+            {/* Rotating Logo */}
             <motion.div
-              className="text-5xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-purple-600"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                transition: { duration: 1, staggerChildren: 0.05 },
-              }}
-              exit={{ opacity: 0, scale: 1.2 }}
+              className="mb-8"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
             >
-              {Array.from("NeuroNerds").map((letter, index) => (
+              <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full" />
+            </motion.div>
+            
+            {/* Text with Character Animation */}
+            <motion.div className="text-5xl md:text-7xl font-bold text-white mb-8">
+              {textSplits.map((item, index) => (
                 <motion.span
                   key={index}
-                  initial={{ opacity: 0, x: Math.random() * 50 - 25 }}
+                  className="inline-block"
+                  initial={{
+                    clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)",
+                    transform: "translate(0%, 20%)"
+                  }}
                   animate={{
-                    opacity: 1,
-                    x: 0,
-                    transition: { duration: 0.5, delay: index * 0.05 },
+                    clipPath: "polygon(0 0%, 100% 0%, 100% 100%, 0% 100%)",
+                    transform: "translate(0%, 0%)"
+                  }}
+                  transition={{
+                    duration: 2,
+                    delay: index * 0.05,
+                    ease: [0.23, 1, 0.32, 1]
                   }}
                 >
-                  {letter}
+                  {item.char}
                 </motion.span>
               ))}
             </motion.div>
+            
+            {/* Progress Bar */}
+            <div className="w-64 h-1 bg-gray-800 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full"
+                initial={{ width: "0%" }}
+                animate={{ width: `${preloaderProgress}%` }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              />
+            </div>
+            
+            {/* Progress Number */}
             <motion.div
-              className="mt-4 flex gap-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: { delay: 1.5, duration: 0.5 } }}
-              exit={{ opacity: 0 }}
+              className="mt-4 text-2xl font-mono text-cyan-400"
+              key={Math.floor(preloaderProgress)}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
             >
-              {[...Array(5)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="w-2 h-2 bg-cyan-400 rounded-full"
-                  animate={{
-                    scale: [1, 1.5, 1],
-                    opacity: [0.5, 1, 0.5],
-                  }}
-                  transition={{
-                    duration: 0.8,
-                    delay: i * 0.2,
-                    repeat: Infinity,
-                    repeatDelay: 0.5,
-                  }}
-                />
-              ))}
+              {Math.floor(preloaderProgress)}%
             </motion.div>
+            
             <button
               onClick={() => setIsLoading(false)}
               className="absolute top-4 right-4 text-cyan-300 text-sm underline hover:text-cyan-100 transition-colors"
@@ -316,12 +385,13 @@ export default function IntroScreen() {
         ))}
       </div>
 
-      {/* Background Video */}
+      {/* Background Video with Parallax */}
       <motion.div
         className="absolute inset-0 w-full h-full pointer-events-none z-0"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: showVideo ? 0.3 : 0 }}
-        transition={{ duration: 1.2, ease: "easeOut" }}
+        style={{ y, opacity }}
+        initial={{ opacity: 0, scale: 1.1 }}
+        animate={{ opacity: showVideo ? 0.4 : 0, scale: 1 }}
+        transition={{ duration: 2, ease: [0.23, 1, 0.32, 1] }}
         key={currentTheme}
       >
         <video
@@ -339,6 +409,8 @@ export default function IntroScreen() {
             }
           }}
         />
+        {/* Video Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/20 to-gray-900/60" />
       </motion.div>
 
       {/* Event Showdown */}
@@ -398,60 +470,80 @@ export default function IntroScreen() {
         >
           {isAuthenticated ? (
             <motion.button
-              whileHover={{ scale: 1.1, boxShadow: "0 0 20px rgba(0, 255, 255, 0.5)" }}
+              whileHover={{ 
+                scale: 1.05,
+                boxShadow: "0 20px 40px rgba(6, 182, 212, 0.4)"
+              }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/dashboard')}
-              className="relative bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-cyan-300 text-lg overflow-hidden"
+              className="relative bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-4 px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-cyan-300 text-lg overflow-hidden group"
+              onMouseEnter={() => setCursorVariant('hover')}
+              onMouseLeave={() => setCursorVariant('default')}
             >
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent to-cyan-300 opacity-0"
-                whileHover={{ opacity: 0.5 }}
-                transition={{ duration: 0.3 }}
+                className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                initial={{ x: '-100%' }}
+                whileHover={{ x: '100%' }}
+                transition={{ duration: 0.6 }}
               />
-              🚀 Launch Dashboard
+              <span className="relative z-10">🚀 Launch Dashboard</span>
             </motion.button>
           ) : (
             <>
               <motion.button
-                whileHover={{ scale: 1.1, boxShadow: "0 0 20px rgba(0, 255, 255, 0.5)" }}
+                whileHover={{ 
+                  scale: 1.05,
+                  boxShadow: "0 20px 40px rgba(6, 182, 212, 0.4)"
+                }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/login')}
-                className="relative bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-cyan-300 text-lg overflow-hidden"
+                className="relative bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-4 px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-cyan-300 text-lg overflow-hidden group"
+                onMouseEnter={() => setCursorVariant('hover')}
+                onMouseLeave={() => setCursorVariant('default')}
               >
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent to-cyan-300 opacity-0"
-                  whileHover={{ opacity: 0.5 }}
-                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  initial={{ x: '-100%' }}
+                  whileHover={{ x: '100%' }}
+                  transition={{ duration: 0.6 }}
                 />
-                🔐 Sign In
+                <span className="relative z-10">🔐 Sign In</span>
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.1, boxShadow: "0 0 20px rgba(255, 0, 255, 0.5)" }}
+                whileHover={{ 
+                  scale: 1.05,
+                  boxShadow: "0 20px 40px rgba(168, 85, 247, 0.4)"
+                }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/register')}
-                className="relative bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-300 text-lg overflow-hidden"
+                className="relative bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold py-4 px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-purple-300 text-lg overflow-hidden group"
+                onMouseEnter={() => setCursorVariant('hover')}
+                onMouseLeave={() => setCursorVariant('default')}
               >
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent to-purple-300 opacity-0"
-                  whileHover={{ opacity: 0.5 }}
-                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  initial={{ x: '-100%' }}
+                  whileHover={{ x: '100%' }}
+                  transition={{ duration: 0.6 }}
                 />
-                ✨ Join Now
+                <span className="relative z-10">✨ Join Now</span>
               </motion.button>
             </>
           )}
         </motion.div>
 
+        {/* Theme Selector with Clip Animation */}
         <motion.div
-          initial={{ y: 40, opacity: 0 }}
-          animate={{
-            y: isContentInView ? 0 : 40,
-            opacity: isContentInView ? 1 : 0,
-          }}
-          transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
+          initial={{ clipPath: "inset(100% 0% 0% 0%)" }}
+          animate={{ clipPath: isContentInView ? "inset(0% 0% 0% 0%)" : "inset(100% 0% 0% 0%)" }}
+          transition={{ duration: 2, delay: 1.8, ease: [0.23, 1, 0.32, 1] }}
           className="mt-10"
         >
-          <div className="inline-flex items-center space-x-3 bg-gray-800/50 backdrop-blur-md rounded-full px-5 py-2 border border-gray-700/50 hover:border-gray-600 transition-colors">
+          <div 
+            className="inline-flex items-center space-x-3 bg-gray-800/50 backdrop-blur-md rounded-full px-5 py-2 border border-gray-700/50 hover:border-gray-600 transition-colors cursor-pointer"
+            onMouseEnter={() => setCursorVariant('hover')}
+            onMouseLeave={() => setCursorVariant('default')}
+          >
             <FaPalette className="text-lg text-cyan-400" />
             <span className="text-sm text-gray-300 font-medium">
               Theme: {getThemeName()}
@@ -466,13 +558,11 @@ export default function IntroScreen() {
           </div>
         </motion.div>
 
+        {/* Feature Cards with Staggered Clip Animation */}
         <motion.div
-          initial={{ y: 40, opacity: 0 }}
-          animate={{
-            y: isContentInView ? 0 : 40,
-            opacity: isContentInView ? 1 : 0,
-          }}
-          transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
+          initial={{ clipPath: "inset(100% 0% 0% 0%)" }}
+          animate={{ clipPath: isContentInView ? "inset(0% 0% 0% 0%)" : "inset(100% 0% 0% 0%)" }}
+          transition={{ duration: 2, delay: 2, ease: [0.23, 1, 0.32, 1] }}
           className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 px-4"
         >
           {[
@@ -494,20 +584,34 @@ export default function IntroScreen() {
           ].map((feature, index) => (
             <motion.div
               key={index}
-              className="relative bg-gray-800/30 backdrop-blur-md rounded-xl p-6 border border-gray-700/50 hover:border-cyan-500/50 transition-all duration-300"
-              initial={{ y: 50, opacity: 0 }}
-              animate={{
-                y: isContentInView ? 0 : 50,
-                opacity: isContentInView ? 1 : 0,
+              className="relative bg-gray-800/30 backdrop-blur-md rounded-xl p-6 border border-gray-700/50 hover:border-cyan-500/50 transition-all duration-500 cursor-pointer"
+              initial={{ clipPath: "inset(100% 0% 0% 0%)" }}
+              animate={{ clipPath: isContentInView ? "inset(0% 0% 0% 0%)" : "inset(100% 0% 0% 0%)" }}
+              transition={{ duration: 2, delay: 2.2 + (index * 0.2), ease: [0.23, 1, 0.32, 1] }}
+              whileHover={{ 
+                scale: 1.05, 
+                boxShadow: "0 20px 40px rgba(6, 182, 212, 0.3)",
+                transition: { duration: 0.3 }
               }}
-              transition={{ duration: 0.6, delay: index * 0.2 }}
-              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(0, 255, 255, 0.3)" }}
-              onMouseEnter={() => setIsHovering(true)}
-              onMouseLeave={() => setIsHovering(false)}
+              onMouseEnter={() => setCursorVariant('hover')}
+              onMouseLeave={() => setCursorVariant('default')}
             >
-              <div className="text-4xl mb-4">{feature.icon}</div>
+              <motion.div 
+                className="text-4xl mb-4"
+                whileHover={{ scale: 1.2, rotate: 10 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                {feature.icon}
+              </motion.div>
               <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
               <p className="text-gray-400">{feature.desc}</p>
+              
+              {/* Hover Effect Overlay */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-xl opacity-0"
+                whileHover={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              />
             </motion.div>
           ))}
         </motion.div>
