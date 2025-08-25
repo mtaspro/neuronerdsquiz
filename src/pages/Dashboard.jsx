@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import axios from 'axios';
-import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog, FaQuestionCircle, FaCopy, FaEye } from 'react-icons/fa';
+import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog, FaQuestionCircle, FaCopy, FaEye, FaRocket, FaTrophy, FaBolt } from 'react-icons/fa';
 import { getAvatarUrl, getFallbackAvatar } from '../utils/avatarUtils';
 import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
@@ -26,9 +26,37 @@ const Dashboard = () => {
   const [activeBattleRoom, setActiveBattleRoom] = useState(null);
   const [showSpectatorModal, setShowSpectatorModal] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [particles, setParticles] = useState([]);
+  const contentRef = useRef(null);
+  const isContentInView = useInView(contentRef, { once: true, margin: "-100px" });
   
   // Notification hook
   const { success, info } = useNotification();
+  
+  // Generate floating particles
+  useEffect(() => {
+    const particleArray = [];
+    for (let i = 0; i < 15; i++) {
+      particleArray.push({
+        id: i,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: Math.random() * 2 + 1,
+        opacity: Math.random() * 0.3 + 0.2,
+      });
+    }
+    setParticles(particleArray);
+  }, []);
+  
+  // Mouse tracking
+  useEffect(() => {
+    const updateMousePosition = (e) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener("mousemove", updateMousePosition);
+    return () => window.removeEventListener("mousemove", updateMousePosition);
+  }, []);
   
   // Check for existing battle room
   useEffect(() => {
@@ -271,15 +299,84 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-blue-950 dark:to-purple-950 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
+      {/* Animated Background Particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {particles.map((particle) => (
+          <motion.div
+            key={particle.id}
+            className="absolute bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full"
+            style={{
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+              width: `${particle.size}px`,
+              height: `${particle.size}px`,
+              opacity: particle.opacity,
+            }}
+            animate={{
+              y: [0, -20, 0],
+              x: [0, 10, -10, 0],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+      </div>
+      
+      {/* Interactive Cursor Effect */}
+      <motion.div
+        className="fixed w-6 h-6 rounded-full pointer-events-none z-[9999] bg-gradient-to-r from-cyan-500 to-purple-500 opacity-60 mix-blend-difference"
+        style={{
+          left: mousePosition.x - 12,
+          top: mousePosition.y - 12,
+        }}
+        animate={{ 
+          scale: [1, 1.2, 1],
+        }}
+        transition={{ duration: 1, repeat: Infinity }}
+      />
       {/* Header */}
-      <div className="bg-gradient-to-r from-cyan-900 to-blue-900 dark:from-gray-800 dark:to-gray-900 p-8">
-        <div className="max-w-4xl mx-auto">
+      <motion.div 
+        className="bg-gradient-to-r from-cyan-900 via-blue-900 to-purple-900 dark:from-gray-800 dark:via-gray-900 dark:to-purple-900 p-8 relative overflow-hidden"
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent transform -skew-y-1"></div>
+        </div>
+        <div className="max-w-4xl mx-auto relative z-10">
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8 space-y-4 lg:space-y-0">
-            <div className="welcome-section">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 text-white">Welcome back, {user?.username || 'Student'}! 🎓</h1>
-              <p className="text-cyan-200 text-base lg:text-lg">Ready to test your knowledge?</p>
-            </div>
+            <motion.div 
+              className="welcome-section"
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <motion.h1 
+                className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-purple-200"
+              >
+                Welcome back, {user?.username || 'Student'}! 🎓
+              </motion.h1>
+              <motion.p 
+                className="text-cyan-200 text-base lg:text-lg flex items-center gap-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <motion.span
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  🚀
+                </motion.span>
+                Ready to test your knowledge?
+              </motion.p>
+            </motion.div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
               <div className="flex items-center space-x-3">
                 <img
@@ -311,14 +408,37 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto p-8">
+      <motion.div 
+        ref={contentRef}
+        className="max-w-6xl mx-auto p-8 relative z-10"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: isContentInView ? 1 : 0, y: isContentInView ? 0 : 50 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+      >
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
-            <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Quick Actions</h4>
+          <motion.div 
+            className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-2xl hover:shadow-3xl transition-all duration-500 relative overflow-hidden group"
+            whileHover={{ scale: 1.02, rotateY: 2 }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <motion.h4 
+              className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center gap-2 relative z-10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <motion.span
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              >
+                ⚡
+              </motion.span>
+              Quick Actions
+            </motion.h4>
             
             {/* Chapter Dropdown */}
             <div className="mb-4 chapter-selection">
@@ -342,15 +462,35 @@ const Dashboard = () => {
 
             {/* Start Quiz Button */}
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ 
+                scale: 1.05, 
+                boxShadow: "0 20px 40px rgba(6, 182, 212, 0.4)"
+              }}
               whileTap={{ scale: 0.95 }}
               onClick={handleStartQuiz}
               onMouseEnter={() => soundManager.play('click')}
-              className="start-quiz-btn bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 w-full"
+              className="start-quiz-btn bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 w-full relative overflow-hidden group"
             >
-              <div className="flex items-center justify-center space-x-2">
-                <span className="text-2xl">🚀</span>
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                initial={{ x: '-100%' }}
+                whileHover={{ x: '100%' }}
+                transition={{ duration: 0.6 }}
+              />
+              <div className="flex items-center justify-center space-x-2 relative z-10">
+                <motion.span 
+                  className="text-2xl"
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  🚀
+                </motion.span>
                 <span>Start Quiz</span>
+                <motion.div
+                  className="absolute -right-1 -top-1 w-2 h-2 bg-yellow-400 rounded-full"
+                  animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                />
               </div>
             </motion.button>
 
@@ -442,7 +582,7 @@ const Dashboard = () => {
                 <span>Behind The Scenes</span>
               </div>
             </motion.button>
-          </div>
+          </motion.div>
 
           {/* Quiz Battle Section */}
           <div className="battle-section bg-gradient-to-br from-orange-500/10 to-red-500/10 dark:from-orange-500/20 dark:to-red-500/20 backdrop-blur-sm rounded-xl p-6 border border-orange-200/50 dark:border-orange-700/50 shadow-lg">
@@ -635,7 +775,7 @@ const Dashboard = () => {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Floating Help Button */}
       <motion.button

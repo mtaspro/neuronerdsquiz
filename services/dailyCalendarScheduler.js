@@ -67,7 +67,7 @@ class DailyCalendarScheduler {
       // Create prompt for NeuraX
       const examInfo = examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `${e.examName} - TODAY` : `${e.examName} in ${e.daysLeft} days`).join(', ') : 'None';
       
-      const prompt = `Generate a SHORT student-friendly daily calendar message. Keep it simple and motivational for Intermediate students.
+      const prompt = `Generate a SHORT, fun daily calendar message for students. Add some humor, light roasting, or witty motivation!
 
 Data:
 Day: ${calendarData.dayName}
@@ -77,17 +77,16 @@ Hijri Date: ${calendarData.hijriDate}
 Holidays: ${calendarData.hasHolidays ? calendarData.holidays.join(', ') : 'None'}
 Exams: ${examInfo}
 
-Format (MUST include exam section if exams exist):
-📅 **Today:** ${calendarData.dayName}, ${calendarData.englishDate}
-🗓️ **English Date:** ${calendarData.englishDate}
-🗓️ **বাংলা তারিখ:** ${calendarData.banglaDate}
-🕌 **Hijri Date:** ${calendarData.hijriDate}
+Format:
+📅 Today: ${calendarData.dayName}
+🗓️ বাংলা তারিখ: ${calendarData.banglaDate}
+🕌 Hijri Date: ${calendarData.hijriDate}
 
-${calendarData.hasHolidays ? '🎉 **Special:** ' + calendarData.holidays.join(', ') + ' - Enjoy responsibly!' : '💡 **Daily Motivation:** [Write 1 short motivational line for students]'}
+${calendarData.hasHolidays ? '🎉 Special: ' + calendarData.holidays.join(', ') + ' - Enjoy responsibly!' : '💡 Daily Motivation: [Write something funny/witty/slightly roasting but motivational]'}
 
-${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `✨ **EXAM TODAY!**\n${e.examName} - You've got this! 💪` : `📚 **Exam Alert**\n${e.examName} in ${e.daysLeft} days - Stay focused! 📖`).join('\n\n') : ''}
+${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `📚 Exam Alert\n${e.examName} - TODAY! Time to show what you've got! 💪` : `📚 Exam Alert\n${e.examName} in ${e.daysLeft} days - Stop scrolling and start studying! 📖`).join('\n\n') : ''}
 
-Keep it SHORT, student-friendly, and motivational. Use simple language, not fancy words.`;
+Make it engaging with humor, light teasing, or clever motivation. Be relatable to students!`;
 
       // Send to NeuraX AI
       const axios = (await import('axios')).default;
@@ -117,7 +116,7 @@ Keep it SHORT, student-friendly, and motivational. Use simple language, not fanc
         const examData = await this.getUpcomingExams();
         const examMessages = examData.map(e => e.daysLeft === 0 ? `✨ **EXAM TODAY!**\n${e.examName} - You've got this! 💪` : `📚 **Exam Alert**\n${e.examName} in ${e.daysLeft} days - Stay focused! 📖`).join('\n\n');
         
-        const fallbackMessage = `📅 **Today:** ${calendarData.dayName}, ${calendarData.englishDate}\n🗓️ **English Date:** ${calendarData.englishDate}\n🗓️ **বাংলা তারিখ:** ${calendarData.banglaDate}\n🕌 **Hijri Date:** ${calendarData.hijriDate}\n\n${calendarData.hasHolidays ? `🎉 **Special:** ${calendarData.holidays.join(', ')} - Enjoy responsibly!` : '💡 **Daily Motivation:** Make today count! 📚'}${examMessages ? '\n\n' + examMessages : ''}`;
+        const fallbackMessage = `📅 Today: ${calendarData.dayName}\n🗓️ বাংলা তারিখ: ${calendarData.banglaDate}\n🕌 Hijri Date: ${calendarData.hijriDate}\n\n${calendarData.hasHolidays ? `🎉 Special: ${calendarData.holidays.join(', ')} - Enjoy responsibly!` : '💡 Daily Motivation: Another day, another chance to procrastinate... or actually study! 😏'}${examMessages ? '\n\n' + examMessages : ''}`;
         
         const calendarGroupSetting = await WhatsAppSettings.findOne({ settingKey: 'dailyCalendarGroup' });
         if (calendarGroupSetting?.settingValue) {

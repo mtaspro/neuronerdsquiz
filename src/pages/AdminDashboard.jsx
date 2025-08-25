@@ -1691,7 +1691,7 @@ export default function AdminDashboard() {
         {tab === 'Quiz Config' && (
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
             <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Quiz Configuration</h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">Configure exam and battle question counts for each chapter. Values cannot exceed available questions in the chapter.</p>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">Configure battle question counts and negative scoring for each chapter. Values cannot exceed available questions in the chapter.</p>
             
             {loading ? (
               <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading quiz configurations...</div>
@@ -1711,20 +1711,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Exam Questions</label>
-                          <input
-                            type="number"
-                            defaultValue={config.examQuestions || 50}
-                            min="0"
-                            max={questionCount}
-                            className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
-                            onBlur={(e) => handleUpdateQuizConfig(chapter._id, e.target.value, config.battleQuestions || 0, config.negativeScoring, config.negativeScore)}
-                            placeholder="Number of questions for exams"
-                          />
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Max: {questionCount}</p>
-                        </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
                           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Battle Questions</label>
                           <input
@@ -1769,10 +1756,10 @@ export default function AdminDashboard() {
                       
                       <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
                         <p className="text-sm text-blue-700 dark:text-blue-300">
-                          <strong>Exam:</strong> {config.examQuestions || 50} questions | <strong>Battle:</strong> {config.battleQuestions || 0} questions will be randomly selected from {questionCount} available questions.
+                          <strong>Battle:</strong> {config.battleQuestions || 0} questions will be randomly selected from {questionCount} available questions for battles.
                         </p>
                         <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                          💡 Questions are randomly selected each time, ensuring variety. General quiz shows all unsolved questions progressively.
+                          💡 Battle questions are randomly selected each time. Regular quizzes show all unsolved questions progressively.
                         </p>
                       </div>
                     </div>

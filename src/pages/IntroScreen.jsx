@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import { FaPalette } from "react-icons/fa";
 import ThemeSelector from "../components/ThemeSelector";
 import EventShowdown from "../components/EventShowdown";
 
-// Import all theme videos
+// Import theme videos
 import techVideo from "../assets/tech-bg.mp4";
 import techVideo1 from "../assets/tech-bg1.mp4";
 import techVideo2 from "../assets/tech-bg2.mp4";
@@ -19,12 +19,17 @@ export default function IntroScreen() {
   const [showContent, setShowContent] = useState(false);
   const [particles, setParticles] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
 
   const [currentTheme, setCurrentTheme] = useState('tech-bg');
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [eventData, setEventData] = useState(null);
   const navigate = useNavigate();
   const videoRef = useRef(null);
+  const contentRef = useRef(null);
+  const isContentInView = useInView(contentRef, { once: true, margin: "-100px" });
 
   // Theme video mapping
   const themeVideos = {
@@ -37,17 +42,14 @@ export default function IntroScreen() {
     'tech-bg6': techVideo6,
   };
 
-  // Load user's effective theme (personal or global default)
+  // Load theme
   useEffect(() => {
     const loadTheme = async () => {
-      // First check localStorage for user's personal choice
       const savedTheme = localStorage.getItem('selectedTheme');
       if (savedTheme && themeVideos[savedTheme]) {
         setCurrentTheme(savedTheme);
         return;
       }
-      
-      // If no personal choice, get from API
       const token = localStorage.getItem('authToken');
       if (token) {
         try {
@@ -64,21 +66,17 @@ export default function IntroScreen() {
         }
       }
     };
-
     loadTheme();
-
-    // Listen for theme changes
     const handleThemeChange = () => loadTheme();
     window.addEventListener('storage', handleThemeChange);
     window.addEventListener('themeChanged', handleThemeChange);
-    
     return () => {
       window.removeEventListener('storage', handleThemeChange);
       window.removeEventListener('themeChanged', handleThemeChange);
     };
   }, []);
 
-  // Check auth state on mount & storage changes
+  // Check auth
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -91,14 +89,10 @@ export default function IntroScreen() {
         setIsAuthenticated(false);
       }
     };
-
     checkAuth();
-    
-    // Listen to auth changes
     const handleAuthChange = () => checkAuth();
     window.addEventListener('storage', handleAuthChange);
     window.addEventListener('userAuthChange', handleAuthChange);
-    
     return () => {
       window.removeEventListener('storage', handleAuthChange);
       window.removeEventListener('userAuthChange', handleAuthChange);
@@ -119,47 +113,50 @@ export default function IntroScreen() {
         console.error('Error loading event data:', error);
       }
     };
-
     loadEventData();
-    // Poll for event updates every 30 seconds
     const interval = setInterval(loadEventData, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Generate floating particles
+  // Generate particles
   useEffect(() => {
     const particleArray = [];
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 30; i++) {
       particleArray.push({
         id: i,
         x: Math.random() * 100,
         y: Math.random() * 100,
-        size: Math.random() * 4 + 1,
-        speed: Math.random() * 2 + 1,
-        opacity: Math.random() * 0.5 + 0.2,
+        size: Math.random() * 3 + 2,
+        speed: Math.random() * 1.5 + 1,
+        opacity: Math.random() * 0.4 + 0.3,
       });
     }
     setParticles(particleArray);
   }, []);
 
+  // Handle loading animation
   useEffect(() => {
-    // Faster video appearance - reduced from 2000ms to 500ms
-    const videoTimer = setTimeout(() => setShowVideo(true), 500);
-    // Content appears shortly after video
-    const contentTimer = setTimeout(() => setShowContent(true), 800);
-    
-    return () => {
-      clearTimeout(videoTimer);
-      clearTimeout(contentTimer);
+    const loadingTimer = setTimeout(() => {
+      setIsLoading(false);
+      setShowVideo(true);
+      setTimeout(() => setShowContent(true), 300);
+    }, 3000); // 3-second preloader
+    return () => clearTimeout(loadingTimer);
+  }, []);
+
+  // Custom cursor
+  useEffect(() => {
+    const updateMousePosition = (e) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
     };
+    window.addEventListener("mousemove", updateMousePosition);
+    return () => window.removeEventListener("mousemove", updateMousePosition);
   }, []);
 
   // Handle theme change
   const handleThemeChange = async (themeId) => {
     setCurrentTheme(themeId);
     localStorage.setItem('selectedTheme', themeId);
-    
-    // Save to database if logged in
     const token = localStorage.getItem('authToken');
     if (token) {
       try {
@@ -176,25 +173,24 @@ export default function IntroScreen() {
         console.error('Error saving theme:', error);
       }
     }
-    
-    // Restart video with new theme
     if (videoRef.current) {
       videoRef.current.load();
     }
   };
 
-  // Get theme-specific gradient colors
+  // Theme gradient
   const getThemeGradient = () => {
     const gradients = {
-      'tech-bg': 'from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900',
-      'tech-bg1': 'from-green-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-green-900 dark:to-teal-900',
-      'tech-bg2': 'from-purple-50 via-pink-50 to-rose-50 dark:from-gray-900 dark:via-purple-900 dark:to-pink-900',
-      'tech-bg3': 'from-orange-50 via-red-50 to-pink-50 dark:from-gray-900 dark:via-orange-900 dark:to-red-900',
-      'tech-bg4': 'from-slate-50 via-gray-50 to-zinc-50 dark:from-gray-900 dark:via-slate-900 dark:to-zinc-900',
-      'tech-bg5': 'from-blue-50 via-cyan-50 to-teal-50 dark:from-gray-900 dark:via-blue-900 dark:to-cyan-900',
-      'tech-bg6': 'from-amber-100 via-yellow-100 to-orange-100 dark:from-gray-900 dark:via-amber-900 dark:to-yellow-900', 
+      'tech-bg': 'from-cyan-600 via-blue-600 to-purple-600',
+      'tech-bg1': 'from-green-600 via-teal-600 to-cyan-600',
+      'tech-bg2': 'from-purple-600 via-pink-600 to-rose-600',
+      'tech-bg3': 'from-orange-600 via-red-600 to-pink-600',
+      'tech-bg4': 'from-slate-600 via-gray-600 to-zinc-600',
+      'tech-bg5': 'from-blue-600 via-cyan-600 to-teal-600',
+      'tech-bg6': 'from-amber-600 via-yellow-600 to-orange-600',
     };
-       };
+    return gradients[currentTheme] || gradients['tech-bg'];
+  };
 
   const getThemeName = () => {
     const names = {
@@ -210,8 +206,80 @@ export default function IntroScreen() {
   };
 
   return (
-    <div className={`relative min-h-screen min-w-full flex flex-col items-center justify-center bg-gradient-to-br ${getThemeGradient()} overflow-hidden transition-all duration-1000`}>
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-gray-900 overflow-hidden">
+      {/* Custom Cursor */}
+      <motion.div
+        className={`fixed w-4 h-4 rounded-full pointer-events-none z-[9999] ${isHovering ? 'bg-purple-500 scale-150' : 'bg-cyan-500'}`}
+        style={{ left: mousePosition.x - 8, top: mousePosition.y - 8 }}
+        animate={{ scale: isHovering ? [1, 1.5, 1] : 1 }}
+        transition={{ duration: 0.3, repeat: Infinity }}
+      />
 
+      {/* Loading Animation */}
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            className="absolute inset-0 flex flex-col items-center justify-center bg-gray-950 z-[1000]"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.2 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <motion.div
+              className="text-5xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-purple-600"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                transition: { duration: 1, staggerChildren: 0.05 },
+              }}
+              exit={{ opacity: 0, scale: 1.2 }}
+            >
+              {Array.from("NeuroNerds").map((letter, index) => (
+                <motion.span
+                  key={index}
+                  initial={{ opacity: 0, x: Math.random() * 50 - 25 }}
+                  animate={{
+                    opacity: 1,
+                    x: 0,
+                    transition: { duration: 0.5, delay: index * 0.05 },
+                  }}
+                >
+                  {letter}
+                </motion.span>
+              ))}
+            </motion.div>
+            <motion.div
+              className="mt-4 flex gap-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, transition: { delay: 1.5, duration: 0.5 } }}
+              exit={{ opacity: 0 }}
+            >
+              {[...Array(5)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="w-2 h-2 bg-cyan-400 rounded-full"
+                  animate={{
+                    scale: [1, 1.5, 1],
+                    opacity: [0.5, 1, 0.5],
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    delay: i * 0.2,
+                    repeat: Infinity,
+                    repeatDelay: 0.5,
+                  }}
+                />
+              ))}
+            </motion.div>
+            <button
+              onClick={() => setIsLoading(false)}
+              className="absolute top-4 right-4 text-cyan-300 text-sm underline hover:text-cyan-100 transition-colors"
+            >
+              Skip
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Theme Selector Modal */}
       <ThemeSelector
@@ -226,19 +294,21 @@ export default function IntroScreen() {
         {particles.map((particle) => (
           <motion.div
             key={particle.id}
-            className="absolute w-1 h-1 bg-cyan-400 dark:bg-cyan-300 rounded-full"
+            className="absolute bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full"
             style={{
               left: `${particle.x}%`,
               top: `${particle.y}%`,
+              width: `${particle.size}px`,
+              height: `${particle.size}px`,
               opacity: particle.opacity,
             }}
             animate={{
-              y: [0, -20, 0],
-              x: [0, 10, -10, 0],
-              scale: [1, 1.5, 1],
+              y: [0, -30, 0],
+              x: [0, 15, -15, 0],
+              scale: [1, 1.3, 1],
             }}
             transition={{
-              duration: particle.speed * 2,
+              duration: particle.speed * 1.5,
               repeat: Infinity,
               ease: "easeInOut",
             }}
@@ -246,13 +316,13 @@ export default function IntroScreen() {
         ))}
       </div>
 
-      {/* Background Video with theme switching */}
+      {/* Background Video */}
       <motion.div
         className="absolute inset-0 w-full h-full pointer-events-none z-0"
         initial={{ opacity: 0 }}
-        animate={{ opacity: showVideo ? 0.4 : 0 }}
-        transition={{ duration: 1, ease: "easeOut" }}
-        key={currentTheme} // Force re-render when theme changes
+        animate={{ opacity: showVideo ? 0.3 : 0 }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
+        key={currentTheme}
       >
         <video
           ref={videoRef}
@@ -264,7 +334,6 @@ export default function IntroScreen() {
           playsInline
           onError={(e) => {
             console.log(`Video ${themeVideos[currentTheme]} failed to load`);
-            // Fallback to default theme
             if (currentTheme !== 'tech-bg') {
               setCurrentTheme('tech-bg');
             }
@@ -276,113 +345,171 @@ export default function IntroScreen() {
       {eventData && <EventShowdown eventData={eventData} />}
 
       {/* Content Container */}
-      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-        {/* Main Title */}
+      <div
+        ref={contentRef}
+        className="relative z-10 text-center px-6 max-w-5xl mx-auto py-12"
+      >
         <motion.h1
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: showContent ? 0 : 50, opacity: showContent ? 1 : 0 }}
+          initial={{ y: 60, opacity: 0 }}
+          animate={{
+            y: isContentInView ? 0 : 60,
+            opacity: isContentInView ? 1 : 0,
+          }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 dark:from-cyan-400 dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent"
+          className="text-5xl md:text-8xl font-extrabold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent tracking-tight"
         >
           NeuroNerds Quiz
         </motion.h1>
 
-        {/* Subtitle */}
         <motion.p
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: showContent ? 0 : 30, opacity: showContent ? 1 : 0 }}
+          initial={{ y: 40, opacity: 0 }}
+          animate={{
+            y: isContentInView ? 0 : 40,
+            opacity: isContentInView ? 1 : 0,
+          }}
           transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-          className="text-xl md:text-2xl text-gray-700 dark:text-gray-200 mb-8 font-medium"
+          className="text-xl md:text-3xl text-gray-200 font-light mt-4"
         >
-          Challenge Your Mind, Expand Your Knowledge
+          Unleash Your Inner Genius
         </motion.p>
 
-        {/* Description */}
         <motion.p
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: showContent ? 0 : 30, opacity: showContent ? 1 : 0 }}
+          initial={{ y: 40, opacity: 0 }}
+          animate={{
+            y: isContentInView ? 0 : 40,
+            opacity: isContentInView ? 1 : 0,
+          }}
           transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-          className="text-lg text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed"
+          className="text-lg text-gray-400 mt-6 max-w-3xl mx-auto leading-relaxed"
         >
-          Embark on an exciting journey through interactive quizzes designed to test your knowledge 
-          and push your cognitive boundaries. Join thousands of learners in this engaging educational experience.
+          Dive into a thrilling universe of interactive quizzes that challenge your mind and spark curiosity. Join a global community of knowledge seekers.
         </motion.p>
 
-        {/* Action Buttons */}
         <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: showContent ? 0 : 30, opacity: showContent ? 1 : 0 }}
+          initial={{ y: 40, opacity: 0 }}
+          animate={{
+            y: isContentInView ? 0 : 40,
+            opacity: isContentInView ? 1 : 0,
+          }}
           transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8"
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
         >
           {isAuthenticated ? (
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.1, boxShadow: "0 0 20px rgba(0, 255, 255, 0.5)" }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/dashboard')}
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 text-lg"
+              className="relative bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-cyan-300 text-lg overflow-hidden"
             >
-              🚀 Go to Dashboard
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent to-cyan-300 opacity-0"
+                whileHover={{ opacity: 0.5 }}
+                transition={{ duration: 0.3 }}
+              />
+              🚀 Launch Dashboard
             </motion.button>
           ) : (
             <>
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.1, boxShadow: "0 0 20px rgba(0, 255, 255, 0.5)" }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/login')}
-                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 text-lg"
+                className="relative bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-cyan-300 text-lg overflow-hidden"
               >
-                🔐 Get Started
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent to-cyan-300 opacity-0"
+                  whileHover={{ opacity: 0.5 }}
+                  transition={{ duration: 0.3 }}
+                />
+                🔐 Sign In
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.1, boxShadow: "0 0 20px rgba(255, 0, 255, 0.5)" }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/register')}
-                className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 text-lg"
+                className="relative bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-300 text-lg overflow-hidden"
               >
-                ✨ Create Account
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent to-purple-300 opacity-0"
+                  whileHover={{ opacity: 0.5 }}
+                  transition={{ duration: 0.3 }}
+                />
+                ✨ Join Now
               </motion.button>
             </>
           )}
         </motion.div>
 
-        {/* Theme Indicator */}
         <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: showContent ? 0 : 30, opacity: showContent ? 1 : 0 }}
+          initial={{ y: 40, opacity: 0 }}
+          animate={{
+            y: isContentInView ? 0 : 40,
+            opacity: isContentInView ? 1 : 0,
+          }}
           transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
-          className="mt-8"
+          className="mt-10"
         >
-          <div className="inline-flex items-center space-x-2 bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 dark:border-gray-700/20">
-            <FaPalette className="text-sm text-gray-600 dark:text-gray-400" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Current theme: {getThemeName()}
+          <div className="inline-flex items-center space-x-3 bg-gray-800/50 backdrop-blur-md rounded-full px-5 py-2 border border-gray-700/50 hover:border-gray-600 transition-colors">
+            <FaPalette className="text-lg text-cyan-400" />
+            <span className="text-sm text-gray-300 font-medium">
+              Theme: {getThemeName()}
             </span>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              onClick={() => setShowThemeSelector(true)}
+              className="text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
+              Change
+            </motion.button>
           </div>
         </motion.div>
 
-        {/* Features */}
         <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: showContent ? 0 : 30, opacity: showContent ? 1 : 0 }}
+          initial={{ y: 40, opacity: 0 }}
+          animate={{
+            y: isContentInView ? 0 : 40,
+            opacity: isContentInView ? 1 : 0,
+          }}
           transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
-          className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 px-4"
         >
-          <div className="bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm rounded-lg p-6 border border-white/30 dark:border-gray-700/30">
-            <div className="text-3xl mb-3">🧠</div>
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">Smart Learning</h3>
-            <p className="text-gray-600 dark:text-gray-300">Adaptive quizzes that challenge your knowledge and help you grow.</p>
-          </div>
-          <div className="bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm rounded-lg p-6 border border-white/30 dark:border-gray-700/30">
-            <div className="text-3xl mb-3">🏆</div>
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">Track Progress</h3>
-            <p className="text-gray-600 dark:text-gray-300">Monitor your performance and compete with others on the leaderboard.</p>
-          </div>
-          <div className="bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm rounded-lg p-6 border border-white/30 dark:border-gray-700/30">
-            <div className="text-3xl mb-3">⚡</div>
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">Instant Feedback</h3>
-            <p className="text-gray-600 dark:text-gray-300">Get immediate results and detailed explanations for every question.</p>
-          </div>
+          {[
+            {
+              icon: "🧠",
+              title: "Smart Quizzes",
+              desc: "AI-driven challenges that adapt to your skill level.",
+            },
+            {
+              icon: "🏆",
+              title: "Leaderboard Glory",
+              desc: "Compete globally and track your progress.",
+            },
+            {
+              icon: "⚡",
+              title: "Instant Insights",
+              desc: "Real-time feedback with detailed explanations.",
+            },
+          ].map((feature, index) => (
+            <motion.div
+              key={index}
+              className="relative bg-gray-800/30 backdrop-blur-md rounded-xl p-6 border border-gray-700/50 hover:border-cyan-500/50 transition-all duration-300"
+              initial={{ y: 50, opacity: 0 }}
+              animate={{
+                y: isContentInView ? 0 : 50,
+                opacity: isContentInView ? 1 : 0,
+              }}
+              transition={{ duration: 0.6, delay: index * 0.2 }}
+              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(0, 255, 255, 0.3)" }}
+              onMouseEnter={() => setIsHovering(true)}
+              onMouseLeave={() => setIsHovering(false)}
+            >
+              <div className="text-4xl mb-4">{feature.icon}</div>
+              <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
+              <p className="text-gray-400">{feature.desc}</p>
+            </motion.div>
+          ))}
         </motion.div>
       </div>
     </div>

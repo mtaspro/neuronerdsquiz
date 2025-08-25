@@ -224,10 +224,6 @@ const QuizBattleRoom = () => {
           
           addNotification('battle-ended', 'Battle Complete!', 'The quiz battle has ended!');
           success('Battle completed! Check your results!');
-          
-          setTimeout(() => {
-            navigate('/leaderboard');
-          }, 3000);
         });
 
         socket.addListener('error', (data) => {
@@ -938,13 +934,21 @@ const QuizBattleRoom = () => {
               ))}
             </div>
 
-            <div className="text-center mt-8">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="bg-blue-500 hover:bg-blue-600 px-8 py-3 rounded-lg font-semibold transition-colors"
-              >
-                Back to Dashboard
-              </button>
+            <div className="text-center mt-8 space-y-4">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => navigate('/leaderboard')}
+                  className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 px-8 py-3 rounded-lg font-semibold transition-colors text-white shadow-lg"
+                >
+                  🏆 View Global Battle Leaderboard
+                </button>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="bg-blue-500 hover:bg-blue-600 px-8 py-3 rounded-lg font-semibold transition-colors text-white"
+                >
+                  Back to Dashboard
+                </button>
+              </div>
             </div>
           </motion.div>
         ) : (
