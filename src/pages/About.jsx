@@ -252,6 +252,338 @@ const TeamSection = ({ teamMembers, setCursorVariant }) => {
   );
 };
 
+// Tech Stack Section
+const TechStackSection = ({ setCursorVariant }) => {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  
+  const techStack = [
+    { name: 'React.js', icon: '⚛️', description: 'Frontend framework with hooks & context' },
+    { name: 'Node.js', icon: '🟢', description: 'Backend runtime with ES6+ modules' },
+    { name: 'Express.js', icon: '🚀', description: 'RESTful API with middleware architecture' },
+    { name: 'MongoDB', icon: '🍃', description: 'NoSQL database with Mongoose ODM' },
+    { name: 'Socket.io', icon: '🔌', description: 'Real-time battles & notifications' },
+    { name: 'Tailwind CSS', icon: '🎨', description: 'Responsive design with dark mode' },
+    { name: 'Framer Motion', icon: '✨', description: 'Smooth animations & transitions' },
+    { name: 'JWT', icon: '🔐', description: 'Secure auth with role-based access' }
+  ];
+  
+  return (
+    <motion.section ref={sectionRef} className="relative">
+      <motion.div
+        initial={{ clipPath: "inset(100% 0% 0% 0%)" }}
+        animate={{ clipPath: isInView ? "inset(0% 0% 0% 0%)" : "inset(100% 0% 0% 0%)" }}
+        transition={{ duration: 2, ease: [0.23, 1, 0.32, 1] }}
+        className="text-center mb-16"
+      >
+        <motion.h2 
+          className="text-5xl md:text-6xl font-bold mb-6"
+          style={{ 
+            background: 'linear-gradient(45deg, #10B981, #3B82F6, #8B5CF6)',
+            backgroundSize: '200% 200%',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}
+          animate={{
+            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+          }}
+          transition={{ duration: 4, repeat: Infinity }}
+        >
+          Tech Stack
+        </motion.h2>
+        <motion.div
+          className="flex justify-center items-center space-x-4 text-4xl mb-4"
+          animate={{ rotate: [0, 360] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+        >
+          <span>🛠️</span>
+        </motion.div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {techStack.map((tech, index) => (
+          <motion.div
+            key={tech.name}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ 
+              opacity: isInView ? 1 : 0, 
+              y: isInView ? 0 : 50
+            }}
+            transition={{ 
+              duration: 0.8, 
+              delay: index * 0.1,
+              ease: [0.23, 1, 0.32, 1]
+            }}
+            className="group"
+          >
+            <motion.div
+              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-gray-200/50 dark:border-gray-700/50 text-center relative overflow-hidden"
+              whileHover={{ 
+                scale: 1.05,
+                transition: { duration: 0.3 }
+              }}
+              onMouseEnter={() => setCursorVariant('hover')}
+              onMouseLeave={() => setCursorVariant('default')}
+            >
+              <motion.div 
+                className="text-5xl mb-4 relative z-10"
+                whileHover={{ 
+                  scale: 1.3, 
+                  rotate: [0, -10, 10, 0],
+                  transition: { duration: 0.5 }
+                }}
+              >
+                {tech.icon}
+              </motion.div>
+              
+              <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-3 relative z-10">
+                {tech.name}
+              </h3>
+              
+              <p className="text-sm text-gray-600 dark:text-gray-300 relative z-10 leading-relaxed">
+                {tech.description}
+              </p>
+            </motion.div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.section>
+  );
+};
+
+// Journey Section
+const JourneySection = ({ setCursorVariant }) => {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  
+  const milestones = [
+    { icon: '💡', title: 'The Vision', description: 'Making competitive learning accessible to everyone' },
+    { icon: '🏆', title: 'Badge System', description: 'Achievement system with 15+ unique badges' },
+    { icon: '🤖', title: 'AI Integration', description: 'NeuraX - Advanced AI assistant with multimodal capabilities' },
+    { icon: '🚀', title: 'Future Ready', description: 'Continuous innovation and feature development' }
+  ];
+  
+  return (
+    <motion.section ref={sectionRef} className="relative">
+      <motion.div
+        initial={{ clipPath: "inset(100% 0% 0% 0%)" }}
+        animate={{ clipPath: isInView ? "inset(0% 0% 0% 0%)" : "inset(100% 0% 0% 0%)" }}
+        transition={{ duration: 2, ease: [0.23, 1, 0.32, 1] }}
+        className="text-center mb-16"
+      >
+        <motion.h2 
+          className="text-5xl md:text-6xl font-bold mb-6"
+          style={{ 
+            background: 'linear-gradient(45deg, #F97316, #EF4444, #EC4899)',
+            backgroundSize: '200% 200%',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}
+        >
+          Our Journey
+        </motion.h2>
+        <motion.div
+          className="flex justify-center items-center space-x-4 text-4xl mb-4"
+          animate={{ y: [0, -10, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <span>🚀</span>
+        </motion.div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {milestones.map((milestone, index) => (
+          <motion.div
+            key={milestone.title}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ 
+              opacity: isInView ? 1 : 0, 
+              y: isInView ? 0 : 50
+            }}
+            transition={{ 
+              duration: 1, 
+              delay: index * 0.2,
+              ease: [0.23, 1, 0.32, 1]
+            }}
+            className="group"
+          >
+            <motion.div
+              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-gray-200/50 dark:border-gray-700/50 relative overflow-hidden"
+              whileHover={{ 
+                scale: 1.05,
+                transition: { duration: 0.3 }
+              }}
+              onMouseEnter={() => setCursorVariant('hover')}
+              onMouseLeave={() => setCursorVariant('default')}
+            >
+              <motion.div 
+                className="text-5xl mb-4"
+                whileHover={{ 
+                  scale: 1.2, 
+                  rotate: [0, -10, 10, 0],
+                  transition: { duration: 0.5 }
+                }}
+              >
+                {milestone.icon}
+              </motion.div>
+              <h3 className="font-bold text-xl text-gray-800 dark:text-white mb-3">
+                {milestone.title}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                {milestone.description}
+              </p>
+            </motion.div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.section>
+  );
+};
+
+// Future Plans Section
+const FuturePlansSection = ({ setCursorVariant }) => {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  
+  return (
+    <motion.section ref={sectionRef} className="relative">
+      <motion.div
+        initial={{ clipPath: "inset(100% 0% 0% 0%)" }}
+        animate={{ clipPath: isInView ? "inset(0% 0% 0% 0%)" : "inset(100% 0% 0% 0%)" }}
+        transition={{ duration: 2, ease: [0.23, 1, 0.32, 1] }}
+        className="text-center mb-16"
+      >
+        <motion.h2 
+          className="text-5xl md:text-6xl font-bold mb-6"
+          style={{ 
+            background: 'linear-gradient(45deg, #06B6D4, #8B5CF6, #EC4899)',
+            backgroundSize: '200% 200%',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}
+        >
+          What's Next?
+        </motion.h2>
+        <motion.div
+          className="flex justify-center items-center space-x-4 text-4xl mb-4"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            rotate: [0, 180, 360]
+          }}
+          transition={{ duration: 4, repeat: Infinity }}
+        >
+          <span>🔮</span>
+        </motion.div>
+      </motion.div>
+
+      <motion.div 
+        className="bg-gradient-to-br from-cyan-50 to-purple-50 dark:from-cyan-900/20 dark:to-purple-900/20 rounded-3xl p-8 border border-cyan-200/50 dark:border-cyan-700/50"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: isInView ? 1 : 0, scale: isInView ? 1 : 0.9 }}
+        transition={{ duration: 1, ease: [0.23, 1, 0.32, 1] }}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <motion.div 
+            className="text-center"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: isInView ? 1 : 0, x: isInView ? 0 : -50 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            onMouseEnter={() => setCursorVariant('hover')}
+            onMouseLeave={() => setCursorVariant('default')}
+          >
+            <FaBrain className="text-6xl text-purple-500 mx-auto mb-6" />
+            <h3 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">
+              NeuraX - Advanced AI Assistant
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              Our cutting-edge AI assistant with voice interaction, web search, OCR capabilities, and bilingual support.
+            </p>
+          </motion.div>
+
+          <motion.div 
+            className="text-center"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: isInView ? 1 : 0, x: isInView ? 0 : 50 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            onMouseEnter={() => setCursorVariant('hover')}
+            onMouseLeave={() => setCursorVariant('default')}
+          >
+            <FaRocket className="text-6xl text-blue-500 mx-auto mb-6" />
+            <h3 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">
+              Upcoming Features
+            </h3>
+            <div className="text-left space-y-2">
+              <p className="text-gray-600 dark:text-gray-300">• Mobile app for iOS and Android</p>
+              <p className="text-gray-600 dark:text-gray-300">• Advanced analytics dashboard</p>
+              <p className="text-gray-600 dark:text-gray-300">• Team-based study groups</p>
+              <p className="text-gray-600 dark:text-gray-300">• Custom quiz creation tools</p>
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
+    </motion.section>
+  );
+};
+
+// Final Message Section
+const FinalMessageSection = ({ navigate, setCursorVariant }) => {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  
+  return (
+    <motion.section ref={sectionRef} className="relative">
+      <motion.div 
+        className="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-3xl p-12 text-center border border-pink-200/50 dark:border-pink-700/50 relative overflow-hidden"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: isInView ? 1 : 0, scale: isInView ? 1 : 0.9 }}
+        transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1] }}
+      >
+        <motion.div
+          className="relative z-10"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+        >
+          <FaHeart className="text-6xl text-red-500 mx-auto mb-8" />
+          
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 dark:text-white mb-8">
+            A Message to Our Amazing Community 💝
+          </h2>
+          
+          <div className="max-w-4xl mx-auto space-y-6 text-lg text-gray-700 dark:text-gray-300 mb-12">
+            <p>
+              To every friend who has taken a quiz, every competitor who has battled with friends, 
+              and every learner who has earned a badge - thank you! Your enthusiasm 
+              and engagement drive us to keep improving and innovating.
+            </p>
+            <p className="font-semibold text-purple-600 dark:text-purple-400">
+              Keep learning, keep competing, and most importantly - keep having fun! 
+              The future of education is bright, and we're part of making it happen. 🌟
+            </p>
+          </div>
+          
+          <motion.button
+            whileHover={{ 
+              scale: 1.05,
+              boxShadow: "0 20px 40px rgba(139, 92, 246, 0.4)"
+            }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate('/dashboard')}
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-4 px-12 rounded-full shadow-2xl transition-all duration-500 text-lg"
+            onMouseEnter={() => setCursorVariant('hover')}
+            onMouseLeave={() => setCursorVariant('default')}
+          >
+            enough reading 😴
+          </motion.button>
+        </motion.div>
+      </motion.div>
+    </motion.section>
+  );
+};
+
 const About = () => {
   const navigate = useNavigate();
   const containerRef = useRef(null);
@@ -561,15 +893,17 @@ const About = () => {
           setCursorVariant={setCursorVariant}
         />
 
-        {/* Simple placeholder sections for now */}
-        <motion.section className="text-center py-20">
-          <h2 className="text-4xl font-bold mb-8 bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-            Tech Stack 🛠️
-          </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            More sections coming soon...
-          </p>
-        </motion.section>
+        {/* Tech Stack Section */}
+        <TechStackSection setCursorVariant={setCursorVariant} />
+        
+        {/* Journey Section */}
+        <JourneySection setCursorVariant={setCursorVariant} />
+        
+        {/* Future Plans Section */}
+        <FuturePlansSection setCursorVariant={setCursorVariant} />
+        
+        {/* Final Message Section */}
+        <FinalMessageSection navigate={navigate} setCursorVariant={setCursorVariant} />
       </div>
     </div>
   );
