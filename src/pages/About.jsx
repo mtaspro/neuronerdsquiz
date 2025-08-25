@@ -215,6 +215,8 @@ const About = () => {
                         <a
                           key={social.platform}
                           href={social.url}
+                          target={social.platform === 'Email' ? '_self' : '_blank'}
+                          rel={social.platform === 'Email' ? '' : 'noopener noreferrer'}
                           className={`${social.color} hover:scale-110 transition-transform duration-200`}
                           title={social.platform}
                         >
