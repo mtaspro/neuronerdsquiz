@@ -6,8 +6,7 @@ import {
   FaGithub, 
   FaTwitter, 
   FaFacebook, 
-  FaInstagram,
-  FaDiscord,
+  FaDiscord,  
   FaLinkedin,
   FaWikipediaW,
   FaCode,
@@ -20,7 +19,9 @@ import {
   FaHeart,
   FaLightbulb,
   FaCoffee,
-  FaGamepad
+  FaGamepad,
+  FaEnvelope,
+  FaLaptopCode
 } from 'react-icons/fa';
 
 const About = () => {
@@ -57,7 +58,9 @@ const About = () => {
       ],
       socials: [
         { platform: 'X', icon: FaTwitter, url: 'https://x.com/AAMahtab', color: 'text-gray-800 dark:text-gray-200' },
-        { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/mtaspro', color: 'text-gray-800 dark:text-gray-200' }
+        { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/mtaspro', color: 'text-gray-800 dark:text-gray-200' },
+        { platform: 'Devpost', icon: FaLaptopCode, url: 'https://devpost.com/mtaspro', color: 'text-gray-800 dark:text-gray-200' },
+        { platform: 'Email', icon: FaEnvelope, url: 'mailto:mowama36@gmail.com', color: 'text-gray-800 dark:text-gray-200' }
       ]
     },
     {
@@ -75,7 +78,8 @@ const About = () => {
       ],
       socials: [
         { platform: 'X', icon: FaTwitter, url: 'https://x.com/AkhyarFardin', color: 'text-gray-800 dark:text-gray-200' },
-        { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/fardinatwork', color: 'text-gray-800 dark:text-gray-200' }
+        { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/fardinatwork', color: 'text-gray-800 dark:text-gray-200' },
+        { platform: 'Wikipedia', icon: FaWikipediaW, url: 'https://en.wikipedia.org/wiki/Special:CentralAuth?target=Fardin+work', color: 'text-gray-800 dark:text-gray-200' }
       ]
     },
     {
