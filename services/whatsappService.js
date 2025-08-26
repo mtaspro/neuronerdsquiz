@@ -219,11 +219,15 @@ class WhatsAppService {
       let senderPhone;
       if (isGroup) {
         // In groups, use participant field
-        senderPhone = message.key.participant?.replace('@s.whatsapp.net', '') || '';
+        const participant = message.key.participant || '';
+        senderPhone = participant.replace('@s.whatsapp.net', '').replace('@lid', '').replace('@c.us', '');
       } else {
         // In personal chats, use remoteJid
-        senderPhone = chatId.replace('@s.whatsapp.net', '');
+        senderPhone = chatId.replace('@s.whatsapp.net', '').replace('@lid', '').replace('@c.us', '');
       }
+      
+      console.log(`📱 Raw participant: ${message.key.participant}`);
+      console.log(`📱 Extracted phone: ${senderPhone}`);
       
       const senderName = message.pushName || senderPhone;
       
@@ -749,8 +753,14 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
       
       console.log(`🔍 Checking registration for phone: ${senderPhone}`);
       
-      // Clean phone number (remove @ and domain if present)
-      const cleanPhone = senderPhone.replace('@s.whatsapp.net', '');
+      // Clean phone number (remove all WhatsApp suffixes)
+      const cleanPhone = senderPhone.replace('@s.whatsapp.net', '').replace('@lid', '').replace('@c.us', '').replace('@g.us', '');
+      
+      // Skip if phone is invalid
+      if (!cleanPhone || cleanPhone.length < 10) {
+        console.log(`❌ Invalid phone number: ${cleanPhone}`);
+        return false;
+      }
       
       // Try multiple phone number formats
       const phoneVariants = [
