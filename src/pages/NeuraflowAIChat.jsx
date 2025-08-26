@@ -862,6 +862,17 @@ You help with academics, platform features, and general questions. Keep it natur
             </div>
             
             <div className="flex items-center space-x-2">
+              <a
+                href="https://wa.me/8801306489861"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 md:px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 rounded-lg transition-colors text-xs md:text-sm flex items-center space-x-1 md:space-x-2"
+                title="Chat with NeuraX on WhatsApp"
+              >
+                <span className="text-sm">📱</span>
+                <span className="hidden sm:inline">WhatsApp Bot</span>
+                <span className="sm:hidden">WhatsApp</span>
+              </a>
               <button
                 onClick={startNewChat}
                 className="px-3 md:px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors text-xs md:text-sm border border-gray-700/50"

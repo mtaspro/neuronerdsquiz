@@ -220,10 +220,10 @@ class WhatsAppService {
       if (isGroup) {
         // In groups, use participant field
         const participant = message.key.participant || '';
-        senderPhone = participant.replace('@s.whatsapp.net', '').replace('@lid', '').replace('@c.us', '');
+        senderPhone = this.extractPhoneNumber(participant);
       } else {
         // In personal chats, use remoteJid
-        senderPhone = chatId.replace('@s.whatsapp.net', '').replace('@lid', '').replace('@c.us', '');
+        senderPhone = this.extractPhoneNumber(chatId);
       }
       
       console.log(`📱 Raw participant: ${message.key.participant}`);
@@ -747,28 +747,50 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
     }
   }
 
+  extractPhoneNumber(jid) {
+    if (!jid) return '';
+    
+    // Remove all WhatsApp suffixes
+    let phone = jid.replace('@s.whatsapp.net', '').replace('@lid', '').replace('@c.us', '').replace('@g.us', '');
+    
+    // Handle @lid format which might have extra characters
+    if (jid.includes('@lid')) {
+      // For @lid, take only the first part before any colon or additional characters
+      phone = phone.split(':')[0];
+    }
+    
+    // Remove any non-digit characters except +
+    phone = phone.replace(/[^+\d]/g, '');
+    
+    // Validate phone number length (should be 10-15 digits)
+    const digitsOnly = phone.replace(/\D/g, '');
+    if (digitsOnly.length < 10 || digitsOnly.length > 15) {
+      console.log(`⚠️ Invalid phone length: ${digitsOnly.length} digits - ${phone}`);
+      return '';
+    }
+    
+    return phone;
+  }
+
   async checkUserRegistration(senderPhone) {
     try {
       const User = (await import('../models/User.js')).default;
       
       console.log(`🔍 Checking registration for phone: ${senderPhone}`);
       
-      // Clean phone number (remove all WhatsApp suffixes)
-      const cleanPhone = senderPhone.replace('@s.whatsapp.net', '').replace('@lid', '').replace('@c.us', '').replace('@g.us', '');
-      
-      // Skip if phone is invalid
-      if (!cleanPhone || cleanPhone.length < 10) {
-        console.log(`❌ Invalid phone number: ${cleanPhone}`);
+      // Skip if phone is invalid or empty
+      if (!senderPhone || senderPhone.length < 10) {
+        console.log(`❌ Invalid phone number: ${senderPhone}`);
         return false;
       }
       
       // Try multiple phone number formats
       const phoneVariants = [
-        cleanPhone,                    // Original: 8801234567890
-        `+${cleanPhone}`,             // With +: +8801234567890
-        cleanPhone.startsWith('+') ? cleanPhone.substring(1) : cleanPhone, // Without +
-        cleanPhone.startsWith('880') ? cleanPhone.substring(3) : cleanPhone, // Without country code: 1234567890
-        cleanPhone.startsWith('880') ? `+${cleanPhone}` : `+880${cleanPhone}` // Ensure +880 prefix
+        senderPhone,                    // Original
+        `+${senderPhone}`,             // With +
+        senderPhone.startsWith('+') ? senderPhone.substring(1) : senderPhone, // Without +
+        senderPhone.startsWith('880') ? senderPhone.substring(3) : senderPhone, // Without country code
+        senderPhone.startsWith('880') ? `+${senderPhone}` : `+880${senderPhone}` // Ensure +880 prefix
       ];
       
       console.log(`🔍 Trying phone variants:`, phoneVariants);
