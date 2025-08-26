@@ -217,17 +217,40 @@ class WhatsAppService {
       const senderName = message.pushName || senderPhone;
       const isGroup = chatId.includes('@g.us');
       
-      // Check for image with vision command
+      // Check for different message types
       const hasImage = message.message?.imageMessage;
+      const hasVideo = message.message?.videoMessage;
+      const hasAudio = message.message?.audioMessage;
+      const hasDocument = message.message?.documentMessage;
+      const hasSticker = message.message?.stickerMessage;
       const imageCaption = message.message?.imageMessage?.caption || '';
       
-      // Store message in memory (last 10 messages)
-      this.addToMemory(chatId, {
-        sender: senderName,
-        message: hasImage ? `[Image: ${imageCaption}]` : messageText,
-        timestamp: new Date(),
-        isBot: false
-      });
+      // Store message in memory (last 10 messages) - only text and images with captions
+      let memoryMessage = null;
+      
+      if (messageText && messageText.trim()) {
+        // Regular text message
+        memoryMessage = messageText;
+      } else if (hasImage && imageCaption) {
+        // Image with caption
+        memoryMessage = `[Image: ${imageCaption}]`;
+      } else if (hasImage) {
+        // Image without caption - skip from memory
+        console.log(`📷 Skipping image without caption from ${senderName}`);
+      } else if (hasVideo || hasAudio || hasDocument || hasSticker) {
+        // Other media types - skip from memory
+        console.log(`📎 Skipping ${hasVideo ? 'video' : hasAudio ? 'audio' : hasDocument ? 'document' : 'sticker'} from ${senderName}`);
+      }
+      
+      // Only add to memory if we have a valid message
+      if (memoryMessage) {
+        this.addToMemory(chatId, {
+          sender: senderName,
+          message: memoryMessage,
+          timestamp: new Date(),
+          isBot: false
+        });
+      }
       
       // React to certain messages automatically
       await this.autoReactToMessage(message, messageText);
