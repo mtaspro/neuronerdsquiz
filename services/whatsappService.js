@@ -213,9 +213,19 @@ class WhatsAppService {
                          message.message?.extendedTextMessage?.text || '';
       
       const chatId = message.key.remoteJid;
-      const senderPhone = message.key.participant || chatId.replace('@s.whatsapp.net', '');
-      const senderName = message.pushName || senderPhone;
       const isGroup = chatId.includes('@g.us');
+      
+      // Extract phone number properly
+      let senderPhone;
+      if (isGroup) {
+        // In groups, use participant field
+        senderPhone = message.key.participant?.replace('@s.whatsapp.net', '') || '';
+      } else {
+        // In personal chats, use remoteJid
+        senderPhone = chatId.replace('@s.whatsapp.net', '');
+      }
+      
+      const senderName = message.pushName || senderPhone;
       
       // Check for different message types
       const hasImage = message.message?.imageMessage;
@@ -737,23 +747,32 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
     try {
       const User = (await import('../models/User.js')).default;
       
+      console.log(`🔍 Checking registration for phone: ${senderPhone}`);
+      
       // Clean phone number (remove @ and domain if present)
-      const cleanPhone = senderPhone.replace('@s.whatsapp.net', '').replace('+', '');
+      const cleanPhone = senderPhone.replace('@s.whatsapp.net', '');
       
-      // Try to find user by phone number (handle both +880 and 880 formats)
-      let user = await User.findOne({ phoneNumber: cleanPhone });
+      // Try multiple phone number formats
+      const phoneVariants = [
+        cleanPhone,                    // Original: 8801234567890
+        `+${cleanPhone}`,             // With +: +8801234567890
+        cleanPhone.startsWith('+') ? cleanPhone.substring(1) : cleanPhone, // Without +
+        cleanPhone.startsWith('880') ? cleanPhone.substring(3) : cleanPhone, // Without country code: 1234567890
+        cleanPhone.startsWith('880') ? `+${cleanPhone}` : `+880${cleanPhone}` // Ensure +880 prefix
+      ];
       
-      // If not found, try with +880 prefix
-      if (!user && !cleanPhone.startsWith('+')) {
-        user = await User.findOne({ phoneNumber: `+${cleanPhone}` });
+      console.log(`🔍 Trying phone variants:`, phoneVariants);
+      
+      for (const phoneVariant of phoneVariants) {
+        const user = await User.findOne({ phoneNumber: phoneVariant });
+        if (user) {
+          console.log(`✅ User found with phone: ${phoneVariant} - Username: ${user.username}`);
+          return true;
+        }
       }
       
-      // If still not found, try without +880 prefix
-      if (!user && cleanPhone.startsWith('+')) {
-        user = await User.findOne({ phoneNumber: cleanPhone.substring(1) });
-      }
-      
-      return !!user;
+      console.log(`❌ No user found for any phone variant`);
+      return false;
     } catch (error) {
       console.error('❌ Error checking user registration:', error);
       return false;
