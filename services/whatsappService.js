@@ -690,35 +690,55 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
 
   async autoReactToMessage(message, messageText) {
     try {
-      const lowerText = messageText.toLowerCase();
-      let reaction = null;
+      if (!messageText || messageText.trim().length < 3) return;
       
-      // Define reaction patterns
-      if (lowerText.includes('good') || lowerText.includes('great') || lowerText.includes('awesome') || lowerText.includes('excellent')) {
-        reaction = '👍';
-      } else if (lowerText.includes('love') || lowerText.includes('❤️') || lowerText.includes('💕')) {
-        reaction = '❤️';
-      } else if (lowerText.includes('funny') || lowerText.includes('haha') || lowerText.includes('😂') || lowerText.includes('lol')) {
-        reaction = '😂';
-      } else if (lowerText.includes('sad') || lowerText.includes('😢') || lowerText.includes('cry')) {
-        reaction = '😢';
-      } else if (lowerText.includes('wow') || lowerText.includes('amazing') || lowerText.includes('incredible')) {
-        reaction = '😮';
-      } else if (lowerText.includes('thanks') || lowerText.includes('thank you') || lowerText.includes('grateful')) {
-        reaction = '🙏';
-      } else if (lowerText.includes('fire') || lowerText.includes('🔥') || lowerText.includes('lit')) {
-        reaction = '🔥';
-      } else if (lowerText.includes('party') || lowerText.includes('celebrate') || lowerText.includes('🎉')) {
-        reaction = '🎉';
-      }
+      // React with 25% probability to avoid spam
+      if (Math.random() > 0.25) return;
       
-      // React with 30% probability to avoid spam
-      if (reaction && Math.random() < 0.3) {
+      const reaction = await this.getSmartReaction(messageText);
+      
+      if (reaction) {
         await this.reactToMessage(message.key, reaction);
-        console.log(`🤖 NeuraX reacted with ${reaction}`);
+        console.log(`🤖 NeuraX smartly reacted with ${reaction}`);
       }
     } catch (error) {
       console.error('❌ Auto reaction error:', error);
+    }
+  }
+
+  async getSmartReaction(messageText) {
+    try {
+      const axios = (await import('axios')).default;
+      const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
+      
+      const response = await axios.post(`${apiUrl}/api/ai-chat`, {
+        message: `Analyze this message and suggest ONE appropriate emoji reaction. Only respond with the emoji, nothing else: "${messageText}"`,
+        model: 'qwen/qwen3-32b',
+        systemPrompt: `You are an emoji reaction expert. Analyze the message sentiment and context to suggest the most appropriate single emoji reaction. Choose from these categories:
+
+Positive: 👍 ❤️ 🔥 ✨ 💯 🎉 😍 🥰 💪 🙌 👏 🎊 🌟 💖 😊 😄 🤩 🥳
+Funny: 😂 🤣 😆 😹 🤪 😜 🙃 😋 🤭 😏
+Surprise: 😮 🤯 😱 🙀 😲 🤔 🧐 👀 😯
+Support: 🙏 🤝 💙 🫂 👊 💚 🤗 💜 🧡 💛
+Sad: 😢 😭 💔 😔 😞 🥺 😿 😪 😓
+Angry: 😠 😡 🤬 😤 👿 💢
+Neutral: 🤷 😐 🙂 😌 😇 🤨
+
+Respond with ONLY the emoji, no text.`,
+        conversationHistory: []
+      });
+      
+      const aiReaction = response.data.response?.trim();
+      
+      // Validate it's actually an emoji
+      if (aiReaction && /^[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]+$/u.test(aiReaction)) {
+        return aiReaction;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ Smart reaction error:', error);
+      return null;
     }
   }
 
