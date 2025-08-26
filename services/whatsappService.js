@@ -217,17 +217,32 @@ class WhatsAppService {
       
       // Extract phone number properly
       let senderPhone;
+      let isWebUser = false;
+      
       if (isGroup) {
-        // In groups, use participant field
         const participant = message.key.participant || '';
-        senderPhone = this.extractPhoneNumber(participant);
+        
+        if (participant.includes('@lid')) {
+          // WhatsApp Web/Desktop user - allow without registration check
+          senderPhone = participant;
+          isWebUser = true;
+          console.log(`🌐 WhatsApp Web user detected: ${participant}`);
+        } else {
+          senderPhone = this.extractPhoneNumber(participant);
+        }
       } else {
-        // In personal chats, use remoteJid
-        senderPhone = this.extractPhoneNumber(chatId);
+        if (chatId.includes('@lid')) {
+          senderPhone = chatId;
+          isWebUser = true;
+          console.log(`🌐 WhatsApp Web user detected: ${chatId}`);
+        } else {
+          senderPhone = this.extractPhoneNumber(chatId);
+        }
       }
       
       console.log(`📱 Raw participant: ${message.key.participant}`);
       console.log(`📱 Extracted phone: ${senderPhone}`);
+      console.log(`🌐 Is Web User: ${isWebUser}`);
       
       const senderName = message.pushName || senderPhone;
       
@@ -275,12 +290,16 @@ class WhatsAppService {
       const isMentioned = mentionedJids.includes(botJid);
       
       if (messageText.startsWith('@n ') || imageCaption.startsWith('@n ') || isMentioned) {
-        // Check if user is registered first
-        const isRegistered = await this.checkUserRegistration(senderPhone);
-        
-        if (!isRegistered) {
-          await this.handleUnregisteredUser(chatId, senderName, isGroup);
-          return;
+        // Check if user is registered (skip check for WhatsApp Web users)
+        if (!isWebUser) {
+          const isRegistered = await this.checkUserRegistration(senderPhone);
+          
+          if (!isRegistered) {
+            await this.handleUnregisteredUser(chatId, senderName, isGroup);
+            return;
+          }
+        } else {
+          console.log(`🌐 Allowing WhatsApp Web user ${senderName} without registration check`);
         }
         
         let actualMessage;
@@ -312,7 +331,10 @@ class WhatsAppService {
             await this.handleNeuraXMention(chatId, senderName, actualMessage, true);
           } else {
             await this.handleNeuraXMention(chatId, senderName, actualMessage, false);
-            await this.saveToUserInbox(senderPhone, senderName, actualMessage);
+            // Only save to inbox for registered users (not web users)
+            if (!isWebUser) {
+              await this.saveToUserInbox(senderPhone, senderName, actualMessage);
+            }
           }
         }
       }
