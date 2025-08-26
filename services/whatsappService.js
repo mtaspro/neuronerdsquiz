@@ -261,6 +261,14 @@ class WhatsAppService {
       const isMentioned = mentionedJids.includes(botJid);
       
       if (messageText.startsWith('@n ') || imageCaption.startsWith('@n ') || isMentioned) {
+        // Check if user is registered first
+        const isRegistered = await this.checkUserRegistration(senderPhone);
+        
+        if (!isRegistered) {
+          await this.handleUnregisteredUser(chatId, senderName, isGroup);
+          return;
+        }
+        
         let actualMessage;
         if (messageText.startsWith('@n ')) {
           actualMessage = messageText.substring(3);
@@ -722,6 +730,63 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
       await this.sock.sendPresenceUpdate('paused', chatId);
     } catch (error) {
       console.error('❌ Stop typing error:', error);
+    }
+  }
+
+  async checkUserRegistration(senderPhone) {
+    try {
+      const User = (await import('../models/User.js')).default;
+      
+      // Clean phone number (remove @ and domain if present)
+      const cleanPhone = senderPhone.replace('@s.whatsapp.net', '').replace('+', '');
+      
+      // Try to find user by phone number (handle both +880 and 880 formats)
+      let user = await User.findOne({ phoneNumber: cleanPhone });
+      
+      // If not found, try with +880 prefix
+      if (!user && !cleanPhone.startsWith('+')) {
+        user = await User.findOne({ phoneNumber: `+${cleanPhone}` });
+      }
+      
+      // If still not found, try without +880 prefix
+      if (!user && cleanPhone.startsWith('+')) {
+        user = await User.findOne({ phoneNumber: cleanPhone.substring(1) });
+      }
+      
+      return !!user;
+    } catch (error) {
+      console.error('❌ Error checking user registration:', error);
+      return false;
+    }
+  }
+
+  async handleUnregisteredUser(chatId, senderName, isGroup) {
+    try {
+      const registrationMessage = `🤖 Hi ${senderName}! I'm NeuraX, your AI assistant from Neuronerds Quiz.
+
+🚫 You need to register on our platform to chat with me.
+
+🎆 **Neuronerds Quiz** - Interactive learning platform with:
+• Quiz battles with friends 🏆
+• Achievement badges 🏅
+• Global leaderboards 🌍
+• AI-powered learning 🤖
+
+🔗 **Register here:** https://neuronerdsquiz.vercel.app
+
+Once registered, come back and chat with me! 🚀`;
+      
+      const responseText = isGroup ? `@${senderName}\n${registrationMessage}` : registrationMessage;
+      
+      if (isGroup) {
+        await this.sendGroupMessage(chatId, responseText);
+      } else {
+        await this.sendMessage(chatId, responseText);
+      }
+      
+      console.log(`🚫 Unregistered user ${senderName} prompted to register`);
+    } catch (error) {
+      console.error('❌ Error handling unregistered user:', error);
     }
   }
 
