@@ -967,20 +967,32 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
         return { success: false, error: 'WhatsApp not connected' };
       }
       
+      console.log(`📷 Downloading image from: ${imageUrl}`);
+      
       // Download image from URL
       const axios = (await import('axios')).default;
-      const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-      const imageBuffer = Buffer.from(imageResponse.data);
+      const imageResponse = await axios.get(imageUrl, { 
+        responseType: 'arraybuffer',
+        timeout: 15000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
       
+      const imageBuffer = Buffer.from(imageResponse.data);
+      console.log(`📷 Image downloaded, size: ${imageBuffer.length} bytes`);
+      
+      // Send as proper image now that sharp is installed
       await this.sock.sendMessage(chatId, {
         image: imageBuffer,
         caption: caption
       });
       
-      console.log('✅ Image message sent successfully');
+      console.log('✅ Image sent successfully');
       return { success: true };
     } catch (error) {
       console.error('❌ Image message failed:', error.message);
+      
       return { success: false, error: error.message };
     }
   }
