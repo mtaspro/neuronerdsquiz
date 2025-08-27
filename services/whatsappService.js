@@ -857,9 +857,18 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
       const axios = (await import('axios')).default;
       const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
       
-      const response = await axios.post(`${apiUrl}/api/vision/analyze`, {
-        image: base64Image,
-        prompt: prompt || 'Analyze this image and describe what you see in detail.'
+      // Convert base64 to buffer for FormData
+      const imageBuffer = Buffer.from(base64Image, 'base64');
+      const FormData = (await import('form-data')).default;
+      const formData = new FormData();
+      
+      formData.append('image', imageBuffer, { filename: 'image.jpg', contentType: 'image/jpeg' });
+      formData.append('prompt', prompt || 'Analyze this image and describe what you see in detail.');
+      
+      const response = await axios.post(`${apiUrl}/api/vision/analyze`, formData, {
+        headers: {
+          ...formData.getHeaders()
+        }
       });
       
       return response.data.analysis || 'I can see the image but couldn\'t analyze it properly.';
