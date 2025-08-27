@@ -982,7 +982,16 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
       const imageBuffer = Buffer.from(imageResponse.data);
       console.log(`📷 Image downloaded, size: ${imageBuffer.length} bytes`);
       
-      // Send as proper image now that sharp is installed
+      if (imageBuffer.length < 1000) {
+        throw new Error('Downloaded image is too small or corrupted');
+      }
+      
+      // Validate image format with sharp
+      const sharp = (await import('sharp')).default;
+      const metadata = await sharp(imageBuffer).metadata();
+      console.log(`📷 Image metadata:`, { format: metadata.format, width: metadata.width, height: metadata.height });
+      
+      // Send as proper image
       await this.sock.sendMessage(chatId, {
         image: imageBuffer,
         caption: caption

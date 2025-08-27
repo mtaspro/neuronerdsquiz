@@ -24,18 +24,33 @@ router.post('/generate-image', async (req, res) => {
       return res.status(500).json({ error: 'Image generation service not configured' });
     }
 
-    // For now, use Pollinations.ai (free image generation)
+    // Use Pollinations.ai with better validation
     const encodedPrompt = encodeURIComponent(trimmedPrompt);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&seed=${Date.now()}`;
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&seed=${Date.now()}&nologo=true`;
     
-    // Test if the URL is accessible
+    // Actually download and validate the image
     try {
-      await axios.head(imageUrl, { timeout: 10000 });
-      console.log('✅ Generated image URL:', imageUrl);
+      const imageResponse = await axios.get(imageUrl, { 
+        responseType: 'arraybuffer',
+        timeout: 20000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+      
+      const imageBuffer = Buffer.from(imageResponse.data);
+      
+      if (imageBuffer.length < 1000) {
+        throw new Error('Generated image is too small or invalid');
+      }
+      
+      console.log('✅ Generated and validated image URL:', imageUrl);
+      console.log('✅ Image size:', imageBuffer.length, 'bytes');
+      
       res.json({ imageUrl, prompt: trimmedPrompt });
     } catch (testError) {
-      console.error('❌ Generated image URL not accessible:', testError.message);
-      return res.status(500).json({ error: 'Image generation service temporarily unavailable.' });
+      console.error('❌ Image generation failed:', testError.message);
+      return res.status(500).json({ error: 'Failed to generate valid image. Please try again.' });
     }
   } catch (error) {
     console.error('Image generation error:', error.response?.data || error.message);
