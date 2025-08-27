@@ -22,7 +22,7 @@ export default function IntroScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
-  const [cursorVariant, setCursorVariant] = useState('default');
+
   const [textSplits, setTextSplits] = useState([]);
   const [preloaderProgress, setPreloaderProgress] = useState(0);
 
@@ -170,26 +170,12 @@ export default function IntroScreen() {
     setTextSplits(splits);
   }, []);
 
-  // Advanced cursor tracking
+  // Mouse tracking - Same as Dashboard
   useEffect(() => {
-    let mouseX = 0, mouseY = 0;
-    let cursorX = 0, cursorY = 0;
-    
     const updateMousePosition = (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
+      setMousePosition({ x: e.clientX, y: e.clientY });
     };
-    
-    const animateCursor = () => {
-      cursorX += (mouseX - cursorX) * 0.1;
-      cursorY += (mouseY - cursorY) * 0.1;
-      setMousePosition({ x: cursorX, y: cursorY });
-      requestAnimationFrame(animateCursor);
-    };
-    
     window.addEventListener("mousemove", updateMousePosition);
-    animateCursor();
-    
     return () => window.removeEventListener("mousemove", updateMousePosition);
   }, []);
 
@@ -247,34 +233,18 @@ export default function IntroScreen() {
 
   return (
     <div ref={containerRef} className="relative min-h-screen w-full flex flex-col items-center justify-center bg-gray-900 overflow-hidden">
-      {/* Advanced Custom Cursor - Hidden on Mobile */}
+      {/* Interactive Cursor Effect - Same as Dashboard */}
       <motion.div
-        className="fixed pointer-events-none z-[9999] mix-blend-difference hidden md:block"
-        style={{ 
-          left: mousePosition.x - 20, 
-          top: mousePosition.y - 20,
-          width: cursorVariant === 'hover' ? '60px' : '40px',
-          height: cursorVariant === 'hover' ? '60px' : '40px'
+        className="fixed w-6 h-6 rounded-full pointer-events-none z-[9999] bg-gradient-to-r from-cyan-500 to-purple-500 opacity-60 mix-blend-difference hidden md:block"
+        style={{
+          left: mousePosition.x - 12,
+          top: mousePosition.y - 12,
         }}
-        animate={{
-          scale: cursorVariant === 'hover' ? 1.5 : 1,
-          rotate: cursorVariant === 'hover' ? 180 : 0
+        animate={{ 
+          scale: [1, 1.2, 1],
         }}
-        transition={{ type: "spring", stiffness: 500, damping: 28 }}
-      >
-        <div className="w-full h-full rounded-full bg-white opacity-80 flex items-center justify-center">
-          {cursorVariant === 'hover' && (
-            <motion.span 
-              className="text-black text-xs font-bold"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1, rotate: cursorVariant === 'hover' ? -180 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              CLICK
-            </motion.span>
-          )}
-        </div>
-      </motion.div>
+        transition={{ duration: 1, repeat: Infinity }}
+      />
 
       {/* BASEBORN-Style Preloader */}
       <AnimatePresence>
@@ -478,8 +448,6 @@ export default function IntroScreen() {
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/dashboard')}
               className="relative bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-cyan-300 text-base sm:text-lg overflow-hidden group w-full sm:w-auto"
-              onMouseEnter={() => setCursorVariant('hover')}
-              onMouseLeave={() => setCursorVariant('default')}
             >
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -499,8 +467,6 @@ export default function IntroScreen() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/login')}
                 className="relative bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-cyan-300 text-base sm:text-lg overflow-hidden group w-full sm:w-auto"
-                onMouseEnter={() => setCursorVariant('hover')}
-                onMouseLeave={() => setCursorVariant('default')}
               >
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -518,8 +484,6 @@ export default function IntroScreen() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/register')}
                 className="relative bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-purple-300 text-base sm:text-lg overflow-hidden group w-full sm:w-auto"
-                onMouseEnter={() => setCursorVariant('hover')}
-                onMouseLeave={() => setCursorVariant('default')}
               >
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -542,8 +506,6 @@ export default function IntroScreen() {
         >
           <div 
             className="inline-flex items-center space-x-3 bg-gray-800/50 backdrop-blur-md rounded-full px-5 py-2 border border-gray-700/50 hover:border-gray-600 transition-colors cursor-pointer"
-            onMouseEnter={() => setCursorVariant('hover')}
-            onMouseLeave={() => setCursorVariant('default')}
           >
             <FaPalette className="text-lg text-cyan-400" />
             <span className="text-sm text-gray-300 font-medium">
@@ -594,8 +556,6 @@ export default function IntroScreen() {
                 boxShadow: "0 20px 40px rgba(6, 182, 212, 0.3)",
                 transition: { duration: 0.3 }
               }}
-              onMouseEnter={() => setCursorVariant('hover')}
-              onMouseLeave={() => setCursorVariant('default')}
             >
               <motion.div 
                 className="text-4xl mb-4"

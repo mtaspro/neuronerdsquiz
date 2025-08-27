@@ -27,13 +27,13 @@ router.post('/analyze', upload.single('image'), async (req, res) => {
 
     let response;
     
-    // Use OpenRouter with best Bengali-supporting vision models
+    // Use best Bengali-supporting vision models with fallback
     console.log('Using OpenRouter for vision analysis...');
     
     const models = [
       'qwen/qwen2.5-vl-72b-instruct:free',  // Best for Bengali + vision
-      'google/gemini-2.0-flash-exp:free',   // Fallback
-      'qwen/qwen2.5-vl-32b-instruct:free'   // Second fallback
+      'google/gemini-2.0-flash-exp:free',   // Strong multilingual
+      'meta-llama/llama-3.2-11b-vision-instruct:free' // Reliable fallback
     ];
     
     let lastError;
@@ -76,30 +76,25 @@ router.post('/analyze', upload.single('image'), async (req, res) => {
           }
         );
         
-        console.log(`✅ Vision analysis successful with ${model}`);
-        break; // Success, exit loop
+        console.log(`✅ Vision successful with ${model}`);
+        break;
         
       } catch (modelError) {
-        console.log(`❌ Model ${model} failed:`, modelError.response?.status, modelError.response?.data?.error?.message);
+        console.log(`❌ ${model} failed: ${modelError.response?.status}`);
         lastError = modelError;
-        continue; // Try next model
+        continue;
       }
     }
     
     if (!response) {
-      throw lastError || new Error('All vision models failed');
+      throw lastError;
     }
 
     const analysis = response.data.choices[0].message.content;
     res.json({ analysis });
 
   } catch (error) {
-    console.error('Vision analysis error:', {
-      message: error.message,
-      response: error?.response?.data,
-      status: error?.response?.status,
-      apiKey: TOGETHER_API_KEY ? 'Present' : 'Missing'
-    });
+    console.error('Vision error:', error.response?.status, error.response?.data?.error?.message || error.message);
     res.status(500).json({ 
       error: error?.response?.data?.error?.message || error.message || 'Failed to analyze image'
     });

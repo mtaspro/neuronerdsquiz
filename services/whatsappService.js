@@ -857,7 +857,7 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
       const axios = (await import('axios')).default;
       const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
       
-      const response = await axios.post(`${apiUrl}/api/vision-analyze`, {
+      const response = await axios.post(`${apiUrl}/api/vision/analyze`, {
         image: base64Image,
         prompt: prompt || 'Analyze this image and describe what you see in detail.'
       });
