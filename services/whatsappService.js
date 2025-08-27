@@ -516,6 +516,7 @@ class WhatsAppService {
             }
             
             await this.handleImageGeneration(chatId, senderName, prompt, isGroup);
+            return; // Important: Return here to prevent falling through to regular chat
           } else {
             // Handle regular NeuraX mention
             if (isGroup) {
@@ -895,10 +896,16 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
       await this.sendTypingIndicator(chatId);
       
       const imageUrl = await this.generateImage(prompt);
-      const responseText = isGroup ? `@${senderName} 🎨 Generated image for: "${prompt}"` : `🎨 Generated image for: "${prompt}"`;
+      const responseText = isGroup ? `@${senderName} 🎨 Generated image: "${prompt}"` : `🎨 Generated image: "${prompt}"`;
       
       // Send image with caption
-      await this.sendImageMessage(chatId, imageUrl, responseText);
+      const result = await this.sendImageMessage(chatId, imageUrl, responseText);
+      
+      if (!result.success) {
+        throw new Error('Failed to send image message');
+      }
+      
+      console.log('✅ Image generated and sent successfully');
       
     } catch (error) {
       console.error('❌ Image generation error:', error);
@@ -911,7 +918,7 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
       } else if (error.response?.status === 401) {
         errorMsg = isGroup ? `@${senderName} Image generation service unavailable. Please try again later! 🔧` : 'Image generation service unavailable. Please try again later! 🔧';
       } else {
-        errorMsg = isGroup ? `@${senderName} Sorry, I couldn't generate that image! Try a different description. 🎨💔` : 'Sorry, I couldn\'t generate that image! Try a different description. 🎨💔';
+        errorMsg = isGroup ? `@${senderName} Sorry, I couldn't generate that image! The service might be unavailable. 🎨💔` : 'Sorry, I couldn\'t generate that image! The service might be unavailable. 🎨💔';
       }
       
       if (isGroup) {
@@ -931,6 +938,8 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
         throw new Error('Prompt too short');
       }
       
+      console.log(`📞 Calling image generation API with prompt: ${prompt}`);
+      
       const axios = (await import('axios')).default;
       const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
       
@@ -938,13 +947,16 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
         prompt: prompt.trim()
       });
       
+      console.log(`📞 API Response:`, response.data);
+      
       if (!response.data.imageUrl) {
-        throw new Error('No image URL returned');
+        throw new Error('No image URL returned from API');
       }
       
+      console.log(`✅ Image URL received: ${response.data.imageUrl}`);
       return response.data.imageUrl;
     } catch (error) {
-      console.error('❌ Image generation API error:', error);
+      console.error('❌ Image generation API error:', error.response?.data || error.message);
       throw error;
     }
   }
