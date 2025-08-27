@@ -18,6 +18,10 @@ class WhatsAppService {
     this.currentQR = null;
     this.groupMemories = new Map(); // Store last 10 messages per group/chat
     
+    // Rate limiting
+    this.messageRequests = new Map(); // userId -> [timestamps]
+    this.imageRequests = new Map(); // userId -> [timestamps]
+    
     WhatsAppService.instance = this;
   }
 
@@ -421,6 +425,21 @@ class WhatsAppService {
       const shouldRespond = messageText.startsWith('@n ') || imageCaption.startsWith('@n ') || isMentioned || !isGroup;
       
       if (shouldRespond) {
+        // Check rate limits first
+        const userId = senderPhone || chatId;
+        const rateLimitResult = this.checkRateLimit(userId, 'message');
+        
+        if (!rateLimitResult.allowed) {
+          const errorMsg = isGroup ? `@${senderName} Please wait ${rateLimitResult.waitTime} seconds before sending another message! ⏰` : `Please wait ${rateLimitResult.waitTime} seconds before sending another message! ⏰`;
+          
+          if (isGroup) {
+            await this.sendGroupMessage(chatId, errorMsg);
+          } else {
+            await this.sendMessage(chatId, errorMsg);
+          }
+          return;
+        }
+        
         // React to messages only when bot is mentioned or in personal chat
         await this.autoReactToMessage(message, messageText);
         // Check if user is registered (skip check for WhatsApp Web users)
@@ -462,6 +481,41 @@ class WhatsAppService {
             // Handle web search
             const query = actualMessage.substring(8); // Remove '/search '
             await this.handleWebSearch(chatId, senderName, query, isGroup);
+          } else if (actualMessage.startsWith('/generate ') || actualMessage.startsWith('/image ')) {
+            // Handle image generation
+            const prompt = actualMessage.startsWith('/generate ') ? 
+              actualMessage.substring(10).trim() : actualMessage.substring(7).trim();
+            
+            if (!prompt) {
+              const errorMsg = isGroup ? `@${senderName} Please provide a description after /generate. Example: @n /generate sunset over mountains` : 'Please provide a description after /generate. Example: /generate sunset over mountains';
+              
+              if (isGroup) {
+                await this.sendGroupMessage(chatId, errorMsg);
+              } else {
+                await this.sendMessage(chatId, errorMsg);
+              }
+              return;
+            }
+            
+            // Check image generation rate limit
+            const userId = senderPhone || chatId;
+            const imageRateLimit = this.checkRateLimit(userId, 'image');
+            
+            if (!imageRateLimit.allowed) {
+              const minutes = Math.floor(imageRateLimit.waitTime / 60);
+              const seconds = imageRateLimit.waitTime % 60;
+              const timeStr = minutes > 0 ? `${minutes} minutes ${seconds} seconds` : `${seconds} seconds`;
+              const errorMsg = isGroup ? `@${senderName} Image generation limit reached! Please wait ${timeStr} before generating another image! 🎨⏰` : `Image generation limit reached! Please wait ${timeStr} before generating another image! 🎨⏰`;
+              
+              if (isGroup) {
+                await this.sendGroupMessage(chatId, errorMsg);
+              } else {
+                await this.sendMessage(chatId, errorMsg);
+              }
+              return;
+            }
+            
+            await this.handleImageGeneration(chatId, senderName, prompt, isGroup);
           } else {
             // Handle regular NeuraX mention
             if (isGroup) {
@@ -561,6 +615,7 @@ class WhatsAppService {
 Quick commands:
 • @n /help - Full manual
 • @n /search [query] - Web search
+• @n /generate [prompt] - Create images
 • @n /vision + image - Analyze images
 • @n [message] - Chat with me`;
       
@@ -592,6 +647,11 @@ Quick commands:
 *🔍 Web Search:*
 • @n /search [query] - Search the web
 • Example: @n /search latest AI news
+
+*🎨 Image Generation:*
+• @n /generate [description] - Create images
+• @n /image [description] - Alternative command
+• Example: @n /generate sunset over mountains
 
 *👁️ Vision Analysis:*
 • Send image + @n /vision - Analyze images
@@ -827,6 +887,92 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
     }
   }
 
+  async handleImageGeneration(chatId, senderName, prompt, isGroup) {
+    try {
+      console.log(`🎨 Image generation from ${senderName}: ${prompt}`);
+      
+      // Show typing indicator
+      await this.sendTypingIndicator(chatId);
+      
+      const imageUrl = await this.generateImage(prompt);
+      const responseText = isGroup ? `@${senderName} 🎨 Generated image for: "${prompt}"` : `🎨 Generated image for: "${prompt}"`;
+      
+      // Send image with caption
+      await this.sendImageMessage(chatId, imageUrl, responseText);
+      
+    } catch (error) {
+      console.error('❌ Image generation error:', error);
+      
+      let errorMsg;
+      if (error.message === 'Prompt too short') {
+        errorMsg = isGroup ? `@${senderName} Please provide a more detailed description (at least 3 characters)` : 'Please provide a more detailed description (at least 3 characters)';
+      } else if (error.response?.status === 429) {
+        errorMsg = isGroup ? `@${senderName} Image generation limit reached. Please try again later! ⏰` : 'Image generation limit reached. Please try again later! ⏰';
+      } else if (error.response?.status === 401) {
+        errorMsg = isGroup ? `@${senderName} Image generation service unavailable. Please try again later! 🔧` : 'Image generation service unavailable. Please try again later! 🔧';
+      } else {
+        errorMsg = isGroup ? `@${senderName} Sorry, I couldn't generate that image! Try a different description. 🎨💔` : 'Sorry, I couldn\'t generate that image! Try a different description. 🎨💔';
+      }
+      
+      if (isGroup) {
+        await this.sendGroupMessage(chatId, errorMsg);
+      } else {
+        await this.sendMessage(chatId, errorMsg);
+      }
+    } finally {
+      // Stop typing indicator
+      await this.stopTypingIndicator(chatId);
+    }
+  }
+
+  async generateImage(prompt) {
+    try {
+      if (!prompt || prompt.trim().length < 3) {
+        throw new Error('Prompt too short');
+      }
+      
+      const axios = (await import('axios')).default;
+      const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
+      
+      const response = await axios.post(`${apiUrl}/api/generate-image`, {
+        prompt: prompt.trim()
+      });
+      
+      if (!response.data.imageUrl) {
+        throw new Error('No image URL returned');
+      }
+      
+      return response.data.imageUrl;
+    } catch (error) {
+      console.error('❌ Image generation API error:', error);
+      throw error;
+    }
+  }
+
+  async sendImageMessage(chatId, imageUrl, caption) {
+    try {
+      if (!this.isConnected || !this.sock) {
+        return { success: false, error: 'WhatsApp not connected' };
+      }
+      
+      // Download image from URL
+      const axios = (await import('axios')).default;
+      const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+      const imageBuffer = Buffer.from(imageResponse.data);
+      
+      await this.sock.sendMessage(chatId, {
+        image: imageBuffer,
+        caption: caption
+      });
+      
+      console.log('✅ Image message sent successfully');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Image message failed:', error.message);
+      return { success: false, error: error.message };
+    }
+  }
+
   async autoReactToMessage(message, messageText) {
     try {
       if (!messageText || messageText.trim().length < 3) return;
@@ -1042,6 +1188,56 @@ Once registered, come back and chat with me! 🚀`;
     } catch (error) {
       console.error('❌ Poll update error:', error);
     }
+  }
+
+  checkRateLimit(userId, type) {
+    const now = Date.now();
+    
+    if (type === 'message') {
+      // 15 messages per minute
+      if (!this.messageRequests.has(userId)) {
+        this.messageRequests.set(userId, []);
+      }
+      
+      const userRequests = this.messageRequests.get(userId);
+      // Remove requests older than 1 minute
+      const oneMinuteAgo = now - 60000;
+      const recentRequests = userRequests.filter(timestamp => timestamp > oneMinuteAgo);
+      
+      if (recentRequests.length >= 7) {
+        const oldestRequest = Math.min(...recentRequests);
+        const waitTime = Math.ceil((oldestRequest + 60000 - now) / 1000);
+        return { allowed: false, waitTime };
+      }
+      
+      // Add current request
+      recentRequests.push(now);
+      this.messageRequests.set(userId, recentRequests);
+      return { allowed: true };
+    } else if (type === 'image') {
+      // 2 images per 5 minutes
+      if (!this.imageRequests.has(userId)) {
+        this.imageRequests.set(userId, []);
+      }
+      
+      const userRequests = this.imageRequests.get(userId);
+      // Remove requests older than 5 minutes
+      const fiveMinutesAgo = now - 300000;
+      const recentRequests = userRequests.filter(timestamp => timestamp > fiveMinutesAgo);
+      
+      if (recentRequests.length >= 2) {
+        const oldestRequest = Math.min(...recentRequests);
+        const waitTime = Math.ceil((oldestRequest + 300000 - now) / 1000);
+        return { allowed: false, waitTime };
+      }
+      
+      // Add current request
+      recentRequests.push(now);
+      this.imageRequests.set(userId, recentRequests);
+      return { allowed: true };
+    }
+    
+    return { allowed: true };
   }
 
   async saveToUserInbox(senderPhone, senderName, message) {

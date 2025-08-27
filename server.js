@@ -21,6 +21,7 @@ import { router as webSearchRouter } from './routes/web-search.js';
 
 import { router as uploadImageRouter } from './routes/upload-image.js';
 import { router as visionRouter } from './routes/vision.js';
+import imageGenerationRouter from './routes/image-generation.js';
 import themeRouter from './routes/theme.js';
 import whatsappRouter from './routes/whatsapp.js';
 import userRouter from './routes/user.js';
@@ -538,6 +539,8 @@ console.log('Mounting image upload router...');
 app.use('/api/upload-image', uploadImageRouter);
 console.log('Mounting vision router...');
 app.use('/api/vision', visionRouter);
+console.log('Mounting image generation router...');
+app.use('/api', imageGenerationRouter);
 console.log('Mounting theme router...');
 app.use('/api/theme', themeRouter);
 console.log('Mounting WhatsApp router...');

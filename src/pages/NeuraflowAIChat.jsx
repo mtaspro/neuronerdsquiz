@@ -411,42 +411,62 @@ You help with academics, platform features, and general questions. Keep it natur
   const generateImage = async (prompt) => {
     setIsGeneratingImage(true);
     try {
+      if (!prompt || prompt.trim().length < 3) {
+        throw new Error('Please provide a more detailed description (at least 3 characters)');
+      }
+      
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const response = await axios.post(`${apiUrl}/api/generate-image`, {
         prompt: prompt.trim()
       });
       
+      if (!response.data.imageUrl) {
+        throw new Error('Failed to generate image');
+      }
+      
       return response.data.imageUrl;
     } catch (error) {
       console.error('Image generation error:', error);
-      return null;
+      throw error;
     } finally {
       setIsGeneratingImage(false);
     }
   };
 
   const handleImageGeneration = async (prompt) => {
-    const generatedImageUrl = await generateImage(prompt);
-    
-    if (generatedImageUrl) {
+    try {
+      const generatedImageUrl = await generateImage(prompt);
+      
       const imageMessage = {
         id: Date.now(),
         type: 'bot',
-        content: '',
+        content: `🎨 Generated image for: "${prompt}"`,
         image: generatedImageUrl,
         timestamp: new Date()
       };
       
       setMessages(prev => [...prev, imageMessage]);
-    } else {
-      const errorMessage = {
+    } catch (error) {
+      let errorMessage = '❌ Sorry, image generation failed. Please try again later.';
+      
+      if (error.response?.status === 400) {
+        errorMessage = error.response.data.error || 'Invalid prompt. Please provide a clear description.';
+      } else if (error.response?.status === 429) {
+        errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Image generation service is temporarily unavailable.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      const errorResponse = {
         id: Date.now(),
         type: 'bot',
-        content: '❌ Sorry, image generation is temporarily unavailable. Please check the API credentials or try again later.',
+        content: errorMessage,
         timestamp: new Date()
       };
       
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, errorResponse]);
     }
   };
 
@@ -527,7 +547,7 @@ You help with academics, platform features, and general questions. Keep it natur
     { icon: '📚', text: 'Help with homework', prompt: 'Help me with my homework' },
     { icon: '🧮', text: 'Solve math problem', prompt: 'Help me solve this math problem' },
     { icon: '🔍', text: 'Search latest news', prompt: 'What are the latest news today?', enableSearch: true },
-    { icon: '📖', text: 'Explain concept', prompt: 'Explain this concept to me' },
+    { icon: '🎨', text: 'Generate image', prompt: 'Generate an image of ' },
     { icon: '🌐', text: 'Translate text', prompt: 'Translate this text' },
     { icon: '📷', text: 'Analyze image', prompt: 'Upload an image to analyze' }
   ];
@@ -535,6 +555,9 @@ You help with academics, platform features, and general questions. Keep it natur
   const handleQuickAction = (action) => {
     if (action.enableSearch) {
       setEnableWebSearch(true);
+    }
+    if (action.text === 'Generate image') {
+      setIsGeneratingImage(true);
     }
     setInputText(action.prompt);
     setShowQuickActions(false);
@@ -626,8 +649,43 @@ You help with academics, platform features, and general questions. Keep it natur
         const visionAnalysis = await analyzeImageWithVision(selectedImage, currentInput || 'Analyze this image in detail. If there is text, transcribe it. If there are mathematical equations, explain them. Provide comprehensive analysis.');
         aiResult = { response: visionAnalysis };
       } else {
-        // Use user's selected model for text-only messages
-        aiResult = await getAIResponse(currentInput);
+        // Check if it's an image generation request
+      if (currentInput.toLowerCase().includes('generate') && (currentInput.toLowerCase().includes('image') || currentInput.toLowerCase().includes('picture') || currentInput.toLowerCase().includes('photo') || currentInput.toLowerCase().includes('draw'))) {
+        // Extract the actual prompt after "generate image of" or similar
+        let imagePrompt = currentInput;
+        const patterns = [
+          /generate\s+(?:an?\s+)?image\s+of\s+(.+)/i,
+          /generate\s+(?:a\s+)?picture\s+of\s+(.+)/i,
+          /generate\s+(?:a\s+)?photo\s+of\s+(.+)/i,
+          /draw\s+(?:an?\s+)?(.+)/i,
+          /create\s+(?:an?\s+)?image\s+of\s+(.+)/i
+        ];
+        
+        for (const pattern of patterns) {
+          const match = currentInput.match(pattern);
+          if (match && match[1]) {
+            imagePrompt = match[1].trim();
+            break;
+          }
+        }
+        
+        if (imagePrompt.length < 3) {
+          const errorMessage = {
+            id: Date.now(),
+            type: 'bot',
+            content: '⚠️ Please provide a more detailed description for the image you want to generate.',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, errorMessage]);
+          return;
+        }
+        
+        await handleImageGeneration(imagePrompt);
+        return;
+      }
+      
+      // Use user's selected model for text-only messages
+      aiResult = await getAIResponse(currentInput);
       }
       
       const response = aiResult.response || aiResult;
@@ -921,8 +979,8 @@ You help with academics, platform features, and general questions. Keep it natur
                 {[
                   { icon: '🎤', title: 'Voice Chat', desc: 'Speak naturally' },
                   { icon: '🔍', title: 'Web Search', desc: 'Real-time info' },
-                  { icon: '📷', title: 'Image Analysis', desc: 'OCR & captioning' },
                   { icon: '📷', title: 'Image Analysis', desc: 'OCR & understanding' },
+                  { icon: '🎨', title: 'Image Generation', desc: 'AI-powered creation' },
                   { icon: '📐', title: 'Math Support', desc: 'LaTeX rendering' },
                   { icon: '🌐', title: 'Bilingual', desc: 'Bengali & English' }
                 ].map((capability, index) => (
@@ -1208,6 +1266,23 @@ You help with academics, platform features, and general questions. Keep it natur
                 >
                   <FaImage className="text-xs md:text-sm" />
                   <span className="text-xs hidden sm:inline">Image</span>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setInputText('Generate an image of ');
+                    inputRef.current?.focus();
+                  }}
+                  className={`flex items-center space-x-1 px-2 md:px-3 py-2 md:py-2.5 rounded-xl transition-all duration-200 ${
+                    isGeneratingImage 
+                      ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30 animate-pulse'
+                      : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
+                  }`}
+                  disabled={isTyping || isStreaming || isProcessingVision}
+                  title="Generate image with AI"
+                >
+                  <FaPalette className="text-xs md:text-sm" />
+                  <span className="text-xs hidden sm:inline">{isGeneratingImage ? 'Gen...' : 'Generate'}</span>
                 </button>
                 
                 <div className="relative">
