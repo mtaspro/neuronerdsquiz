@@ -22,8 +22,14 @@ const SpectatorMode = ({ roomId, onClose }) => {
     // Set up socket event listeners for spectator mode
     const initializeSpectator = async () => {
       try {
+        console.log('🔌 Initializing spectator mode for room:', roomId);
+        
         // Connect as spectator
         await socket.connect();
+        setConnected(true);
+        
+        // Join as spectator immediately after connection
+        socket.emit('joinSpectator', { roomId });
 
         socket.addListener('connect', () => {
           console.log('🔌 Spectator connected to room:', roomId);
@@ -114,6 +120,10 @@ const SpectatorMode = ({ roomId, onClose }) => {
           console.log('❌ Spectator disconnected');
           setConnected(false);
         });
+        
+        // Add connection info logging
+        const connectionInfo = socket.getConnectionInfo();
+        console.log('🔍 Socket connection info:', connectionInfo);
 
       } catch (error) {
         console.error('💥 Failed to initialize spectator mode:', error);
