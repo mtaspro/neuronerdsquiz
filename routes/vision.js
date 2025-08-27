@@ -17,8 +17,8 @@ router.post('/analyze', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'No image provided' });
     }
 
-    if (!TOGETHER_API_KEY && !OPENROUTER_API_KEY) {
-      return res.status(500).json({ error: 'Vision API keys not configured' });
+    if (!OPENROUTER_API_KEY) {
+      return res.status(500).json({ error: 'OpenRouter API key not configured' });
     }
 
     // Convert image to base64
@@ -27,51 +27,25 @@ router.post('/analyze', upload.single('image'), async (req, res) => {
 
     let response;
     
-    // Try Together API first
-    if (TOGETHER_API_KEY) {
+    // Use OpenRouter with best Bengali-supporting vision models
+    console.log('Using OpenRouter for vision analysis...');
+    
+    const models = [
+      'qwen/qwen2.5-vl-72b-instruct:free',  // Best for Bengali + vision
+      'google/gemini-2.0-flash-exp:free',   // Fallback
+      'qwen/qwen2.5-vl-32b-instruct:free'   // Second fallback
+    ];
+    
+    let lastError;
+    
+    for (const model of models) {
       try {
-        console.log('Sending vision request to Together API...');
+        console.log(`Trying vision model: ${model}`);
         
-        response = await axios.post(
-          'https://api.together.xyz/v1/chat/completions',
-          {
-            model: 'meta-llama/Llama-Vision-Free',
-            messages: [
-              {
-                role: 'user',
-                content: [
-                  {
-                    type: 'text',
-                    text: prompt
-                  },
-                  {
-                    type: 'image_url',
-                    image_url: {
-                      url: `data:${mimeType};base64,${base64Image}`
-                    }
-                  }
-                ]
-              }
-            ],
-            max_tokens: 1500,
-            temperature: 0.7
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${TOGETHER_API_KEY}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-      } catch (togetherError) {
-        console.log('Together API failed, trying OpenRouter...');
-        if (!OPENROUTER_API_KEY) throw togetherError;
-        
-        // Fallback to OpenRouter
         response = await axios.post(
           'https://openrouter.ai/api/v1/chat/completions',
           {
-            model: 'meta-llama/llama-3.2-90b-vision-instruct:free',
+            model: model,
             messages: [
               {
                 role: 'user',
@@ -96,48 +70,24 @@ router.post('/analyze', upload.single('image'), async (req, res) => {
             headers: {
               'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
               'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://github.com/mtaspro/neuronerds-quiz',
+              'HTTP-Referer': 'https://neuronerdsquiz.vercel.app',
               'X-Title': 'NeuraX Vision Analysis'
             }
           }
         );
+        
+        console.log(`✅ Vision analysis successful with ${model}`);
+        break; // Success, exit loop
+        
+      } catch (modelError) {
+        console.log(`❌ Model ${model} failed:`, modelError.response?.status, modelError.response?.data?.error?.message);
+        lastError = modelError;
+        continue; // Try next model
       }
-    } else {
-      // Use OpenRouter directly
-      console.log('Using OpenRouter for vision analysis...');
-      response = await axios.post(
-        'https://openrouter.ai/api/v1/chat/completions',
-        {
-          model: 'meta-llama/llama-3.2-90b-vision-instruct:free',
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'text',
-                  text: prompt
-                },
-                {
-                  type: 'image_url',
-                  image_url: {
-                    url: `data:${mimeType};base64,${base64Image}`
-                  }
-                }
-              ]
-            }
-          ],
-          max_tokens: 1500,
-          temperature: 0.7
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://github.com/mtaspro/neuronerds-quiz',
-            'X-Title': 'NeuraX Vision Analysis'
-          }
-        }
-      );
+    }
+    
+    if (!response) {
+      throw lastError || new Error('All vision models failed');
     }
 
     const analysis = response.data.choices[0].message.content;
