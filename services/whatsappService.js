@@ -64,6 +64,9 @@ class WhatsAppService {
       // Listen for incoming messages
       this.sock.ev.on('messages.upsert', this.handleIncomingMessage.bind(this));
       
+      // Listen for poll responses
+      this.sock.ev.on('messages.update', this.handlePollUpdate.bind(this));
+      
       console.log('WhatsApp service initialized');
     } catch (error) {
       console.error('WhatsApp initialization error:', error);
@@ -178,7 +181,8 @@ class WhatsAppService {
       const groups = Object.values(chats).map(group => ({
         id: group.id,
         name: group.subject,
-        participants: group.participants?.length || 0
+        participants: group.participants?.length || 0,
+        participantList: group.participants || []
       }));
       
       return { success: true, groups };
@@ -187,7 +191,44 @@ class WhatsAppService {
     }
   }
 
-  async sendGroupMessage(groupId, message) {
+  async getGroupInfo(groupId) {
+    if (!this.isConnected || !this.sock) {
+      return { success: false, error: 'WhatsApp not connected' };
+    }
+
+    try {
+      const groupMetadata = await this.sock.groupMetadata(groupId);
+      return {
+        success: true,
+        info: {
+          id: groupMetadata.id,
+          name: groupMetadata.subject,
+          description: groupMetadata.desc,
+          participants: groupMetadata.participants,
+          admins: groupMetadata.participants.filter(p => p.admin),
+          createdAt: new Date(groupMetadata.creation * 1000)
+        }
+      };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  findGroupByName(groupName) {
+    try {
+      const chats = this.sock?.groupFetchAllParticipating ? 
+        Object.values(this.sock.groupFetchAllParticipating()) : [];
+      
+      return chats.find(group => 
+        group.subject?.toLowerCase().includes(groupName.toLowerCase())
+      );
+    } catch (error) {
+      console.error('❌ Error finding group:', error);
+      return null;
+    }
+  }
+
+  async sendGroupMessage(groupId, message, options = {}) {
     if (!this.isConnected || !this.sock) {
       return { success: false, error: 'WhatsApp not connected' };
     }
@@ -195,11 +236,102 @@ class WhatsAppService {
     try {
       console.log(`📤 Sending group message to ${groupId}: ${message}`);
       
-      await this.sock.sendMessage(groupId, { text: message });
+      const messageContent = { text: message };
+      
+      // Add mentions if provided
+      if (options.mentions && options.mentions.length > 0) {
+        messageContent.mentions = options.mentions;
+      }
+      
+      await this.sock.sendMessage(groupId, messageContent);
       console.log('✅ Group message sent successfully');
       return { success: true };
     } catch (error) {
       console.error('❌ Group message failed:', error.message);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async sendFormattedMessage(chatId, text, formatting = {}) {
+    if (!this.isConnected || !this.sock) {
+      return { success: false, error: 'WhatsApp not connected' };
+    }
+
+    try {
+      let formattedText = text;
+      
+      // Apply formatting
+      if (formatting.bold) formattedText = `*${formattedText}*`;
+      if (formatting.italic) formattedText = `_${formattedText}_`;
+      if (formatting.monospace) formattedText = `\`\`\`${formattedText}\`\`\``;
+      if (formatting.strikethrough) formattedText = `~${formattedText}~`;
+      
+      await this.sock.sendMessage(chatId, { text: formattedText });
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  async sendPoll(chatId, question, options) {
+    if (!this.isConnected || !this.sock) {
+      return { success: false, error: 'WhatsApp not connected' };
+    }
+
+    try {
+      const poll = {
+        name: question,
+        values: options,
+        selectableCount: 1
+      };
+      
+      await this.sock.sendMessage(chatId, { poll });
+      console.log(`📊 Poll sent: ${question}`);
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Poll failed:', error.message);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async sendMessageToGroup(groupNameOrId, message, options = {}) {
+    try {
+      let targetGroupId;
+      
+      // Check if it's already a group ID
+      if (groupNameOrId.includes('@g.us')) {
+        targetGroupId = groupNameOrId;
+      } else {
+        // Find group by name
+        const group = this.findGroupByName(groupNameOrId);
+        if (!group) {
+          return { success: false, error: `Group '${groupNameOrId}' not found` };
+        }
+        targetGroupId = group.id;
+      }
+      
+      return await this.sendGroupMessage(targetGroupId, message, options);
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  async sendPollToGroup(groupNameOrId, question, options) {
+    try {
+      let targetGroupId;
+      
+      if (groupNameOrId.includes('@g.us')) {
+        targetGroupId = groupNameOrId;
+      } else {
+        const group = this.findGroupByName(groupNameOrId);
+        if (!group) {
+          return { success: false, error: `Group '${groupNameOrId}' not found` };
+        }
+        targetGroupId = group.id;
+      }
+      
+      return await this.sendPoll(targetGroupId, question, options);
+    } catch (error) {
       return { success: false, error: error.message };
     }
   }
@@ -513,7 +645,7 @@ Quick commands:
       const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
       
       const systemPrompt = isGroup 
-        ? `You are NeuraX, an advanced AI assistant and active member of this WhatsApp group. You're part of the Neuronerds Quiz platform - an interactive learning platform with quiz battles, badges, leaderboards, and AI-powered education.
+        ? `You are NeuraX, an advanced AI assistant and active member of this WhatsApp group. You're developed for WhatsApp student community (*The NeuroNERDS*)
 
 About Neuronerds Quiz:
 - Interactive quiz platform where students compete with friends
@@ -534,20 +666,21 @@ Your capabilities:
 
 Be helpful, friendly, engaging, and knowledgeable about education and technology. Keep responses concise (max 2-3 sentences) and use emojis appropriately. Respond naturally as a group member would.`
         : `You are NeuraX, an advanced AI assistant chatting personally with ${senderName} on WhatsApp. You're part of the Neuronerds Quiz platform - an innovative learning platform that revolutionizes education through interactive quizzes, real-time battles, and AI-powered features.
+Community Info:
+- Community name: *The NeuroNERDS*
+  - Akhyar Fardin – CEO & Admin  
+  - Ahmed Azmain Mahtab – Developer & Management Lead  
+  - Md. Tanvir Mahtab – Co-founder & Managing Director 
+  - And some boys and girls
+  - We all are reading in Intermediate(11-12)  class in Chattogram College, Bangladesh
 
-About Neuronerds Quiz:
-- Students compete in quiz battles with friends
-- Comprehensive achievement system with unique badges
-- Global leaderboards and progress tracking
-- AI-powered personalized learning experiences
-- Advanced features: vision analysis, web search, conversational AI
-
-Your capabilities:
-- Engaging conversations and educational support
-- Web search with /search command
-- Image analysis with /vision command
-- Context awareness (remember last 10 messages)
-- Automatic reactions to messages
+Key guidelines:
+- Be concise and direct - match the user's energy level
+- For simple greetings, respond simply (e.g., "Hi! How can I help you today?")
+- Only provide detailed explanations when specifically asked
+- Share study strategies and gentle motivation.
+- Reply in Bengali if user wants, other wise always in formal English.
+- Stay helpful and student-focused
 
 Be helpful, friendly, conversational, and educational. Keep responses concise and engaging while being knowledgeable about learning and technology.`;
       
@@ -886,6 +1019,28 @@ Once registered, come back and chat with me! 🚀`;
       console.log(`🚫 Unregistered user ${senderName} prompted to register`);
     } catch (error) {
       console.error('❌ Error handling unregistered user:', error);
+    }
+  }
+
+  async handlePollUpdate(updates) {
+    try {
+      for (const update of updates) {
+        if (update.update.pollUpdate) {
+          const pollUpdate = update.update.pollUpdate;
+          const messageKey = update.key;
+          
+          console.log(`📊 Poll response received:`, {
+            messageId: messageKey.id,
+            voter: pollUpdate.vote?.selectedOptions || 'Unknown',
+            pollName: pollUpdate.pollCreationMessage?.name
+          });
+          
+          // You can process poll responses here
+          // For example, store in database or send notifications
+        }
+      }
+    } catch (error) {
+      console.error('❌ Poll update error:', error);
     }
   }
 
