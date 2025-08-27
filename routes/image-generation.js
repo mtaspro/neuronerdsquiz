@@ -24,31 +24,21 @@ router.post('/generate-image', async (req, res) => {
       return res.status(500).json({ error: 'Image generation service not configured' });
     }
 
-    const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-      model: 'google/gemini-2.5-flash-image-preview:free',
-      messages: [
-        {
-          role: 'user',
-          content: `Generate an image: ${trimmedPrompt}`
-        }
-      ]
-    }, {
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      timeout: 30000
-    });
-
-    const imageUrl = response.data.choices[0]?.message?.content;
+    // For now, use Pollinations.ai (free image generation)
+    const encodedPrompt = encodeURIComponent(trimmedPrompt);
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&seed=${Date.now()}`;
     
-    if (!imageUrl || typeof imageUrl !== 'string') {
-      return res.status(500).json({ error: 'Invalid response from image generation service' });
+    // Test if the URL is accessible
+    try {
+      await axios.head(imageUrl, { timeout: 10000 });
+      console.log('✅ Generated image URL:', imageUrl);
+      res.json({ imageUrl, prompt: trimmedPrompt });
+    } catch (testError) {
+      console.error('❌ Generated image URL not accessible:', testError.message);
+      return res.status(500).json({ error: 'Image generation service temporarily unavailable.' });
     }
-
-    res.json({ imageUrl, prompt: trimmedPrompt });
   } catch (error) {
-    console.error('Image generation error:', error);
+    console.error('Image generation error:', error.response?.data || error.message);
     
     if (error.response?.status === 429) {
       return res.status(429).json({ error: 'Rate limit exceeded. Please try again later.' });
@@ -58,11 +48,15 @@ router.post('/generate-image', async (req, res) => {
       return res.status(401).json({ error: 'Authentication failed. Service temporarily unavailable.' });
     }
     
+    if (error.response?.status === 400) {
+      return res.status(400).json({ error: 'The selected model does not support image generation. Please contact support.' });
+    }
+    
     if (error.code === 'ECONNABORTED') {
       return res.status(408).json({ error: 'Request timeout. Please try again.' });
     }
     
-    res.status(500).json({ error: 'Image generation failed. Please try again later.' });
+    res.status(500).json({ error: 'Image generation service is currently unavailable. The model may not support image generation.' });
   }
 });
 
