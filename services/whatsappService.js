@@ -281,15 +281,16 @@ class WhatsAppService {
         });
       }
       
-      // React to certain messages automatically
-      await this.autoReactToMessage(message, messageText);
-      
       // Check for NeuraX mentions - both @n and native WhatsApp mentions
       const mentionedJids = message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
       const botJid = this.sock?.user?.id?.replace(':0', '@s.whatsapp.net');
       const isMentioned = mentionedJids.includes(botJid);
       
-      if (messageText.startsWith('@n ') || imageCaption.startsWith('@n ') || isMentioned) {
+      const shouldRespond = messageText.startsWith('@n ') || imageCaption.startsWith('@n ') || isMentioned || !isGroup;
+      
+      if (shouldRespond) {
+        // React to messages only when bot is mentioned or in personal chat
+        await this.autoReactToMessage(message, messageText);
         // Check if user is registered (skip check for WhatsApp Web users)
         if (!isWebUser) {
           const isRegistered = await this.checkUserRegistration(senderPhone);
@@ -308,32 +309,37 @@ class WhatsAppService {
         } else if (imageCaption.startsWith('@n ')) {
           actualMessage = imageCaption.substring(3);
         } else if (isMentioned) {
-          // Remove the mention from the message
-          actualMessage = messageText.replace(/@\d+/g, '').trim();
+          // For native mentions, use the full message text
+          actualMessage = messageText.trim();
+        } else if (!isGroup) {
+          // In personal chat, respond to any message
+          actualMessage = messageText || imageCaption;
         }
         
-        if (actualMessage.startsWith('/help')) {
-          // Handle help command
-          await this.handleHelpRequest(chatId, senderName, isGroup);
-        } else if (actualMessage.toLowerCase().includes('help') || actualMessage.toLowerCase().includes('manual') || actualMessage.toLowerCase().includes('how to use') || actualMessage === '') {
-          // Tell user about help command
-          await this.handleHelpInfo(chatId, senderName, isGroup);
-        } else if (hasImage && (actualMessage.startsWith('/vision') || actualMessage.includes('analyze') || actualMessage.includes('describe'))) {
-          // Handle vision request
-          await this.handleVisionRequest(message, chatId, senderName, actualMessage, isGroup);
-        } else if (actualMessage.startsWith('/search ')) {
-          // Handle web search
-          const query = actualMessage.substring(8); // Remove '/search '
-          await this.handleWebSearch(chatId, senderName, query, isGroup);
-        } else {
-          // Handle regular NeuraX mention
-          if (isGroup) {
-            await this.handleNeuraXMention(chatId, senderName, actualMessage, true);
+        if (actualMessage) {
+          if (actualMessage.startsWith('/help')) {
+            // Handle help command
+            await this.handleHelpRequest(chatId, senderName, isGroup);
+          } else if (actualMessage.toLowerCase().includes('help') || actualMessage.toLowerCase().includes('manual') || actualMessage.toLowerCase().includes('how to use') || actualMessage === '') {
+            // Tell user about help command
+            await this.handleHelpInfo(chatId, senderName, isGroup);
+          } else if (hasImage && (actualMessage.startsWith('/vision') || actualMessage.includes('analyze') || actualMessage.includes('describe'))) {
+            // Handle vision request
+            await this.handleVisionRequest(message, chatId, senderName, actualMessage, isGroup);
+          } else if (actualMessage.startsWith('/search ')) {
+            // Handle web search
+            const query = actualMessage.substring(8); // Remove '/search '
+            await this.handleWebSearch(chatId, senderName, query, isGroup);
           } else {
-            await this.handleNeuraXMention(chatId, senderName, actualMessage, false);
-            // Only save to inbox for registered users (not web users)
-            if (!isWebUser) {
-              await this.saveToUserInbox(senderPhone, senderName, actualMessage);
+            // Handle regular NeuraX mention
+            if (isGroup) {
+              await this.handleNeuraXMention(chatId, senderName, actualMessage, true);
+            } else {
+              await this.handleNeuraXMention(chatId, senderName, actualMessage, false);
+              // Only save to inbox for registered users (not web users)
+              if (!isWebUser) {
+                await this.saveToUserInbox(senderPhone, senderName, actualMessage);
+              }
             }
           }
         }
