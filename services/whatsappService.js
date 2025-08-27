@@ -766,8 +766,9 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
       // Show typing indicator
       await this.sendTypingIndicator(chatId);
       
-      // Download image
-      const imageBuffer = await this.sock.downloadMediaMessage(message);
+      // Download image using correct Baileys method
+      const { downloadMediaMessage } = await import('@whiskeysockets/baileys');
+      const imageBuffer = await downloadMediaMessage(message, 'buffer', {});
       const base64Image = imageBuffer.toString('base64');
       
       // Get vision analysis
@@ -794,7 +795,13 @@ Be helpful, friendly, conversational, and educational. Keep responses concise an
       
     } catch (error) {
       console.error('❌ Vision error:', error);
-      const errorMsg = isGroup ? `@${senderName} Sorry, I couldn't analyze the image! 👁️💔` : 'Sorry, I couldn\'t analyze the image! 👁️💔';
+      let errorMsg;
+      
+      if (error.message?.includes('downloadMediaMessage')) {
+        errorMsg = isGroup ? `@${senderName} Please send the image again - I had trouble downloading it! 📷` : 'Please send the image again - I had trouble downloading it! 📷';
+      } else {
+        errorMsg = isGroup ? `@${senderName} Sorry, I couldn't analyze the image! 👁️💔` : 'Sorry, I couldn\'t analyze the image! 👁️💔';
+      }
       
       if (isGroup) {
         await this.sendGroupMessage(chatId, errorMsg);
