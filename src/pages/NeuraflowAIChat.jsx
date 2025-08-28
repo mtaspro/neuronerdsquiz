@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPaperPlane, FaCog, FaUser, FaRobot, FaStar, FaImage, FaTimes, FaMicrophone, FaMicrophoneSlash, FaVolumeUp, FaSearch, FaPalette, FaEllipsisV, FaTrash, FaArchive, FaCode, FaTable, FaBold } from 'react-icons/fa';
+import { FaPaperPlane, FaCog, FaUser, FaRobot, FaStar, FaImage, FaTimes, FaMicrophone, FaMicrophoneSlash, FaVolumeUp, FaSearch, FaPalette, FaEllipsisV, FaTrash, FaArchive, FaCode, FaTable, FaBold, FaShare } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import MathText from '../components/MathText';
 import RichMessageRenderer from '../components/RichMessageRenderer';
+import ShareConversationModal from '../components/ShareConversationModal';
 import axios from 'axios';
 
 import neuraXAvatar from '../assets/NeuraXavatar.png';
@@ -30,6 +31,7 @@ const NeuraflowAIChat = () => {
   const [isNewChat, setIsNewChat] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [showChatOptions, setShowChatOptions] = useState(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const [visionProgress, setVisionProgress] = useState(0);
   const [searchStatus, setSearchStatus] = useState('');
@@ -893,6 +895,14 @@ You help with academics, platform features, and general questions. Keep it natur
         />
       )}
       
+      {/* Share Conversation Modal */}
+      <ShareConversationModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        messages={messages}
+        title={messages.length > 0 ? messages[0]?.content?.slice(0, 50) + '...' : 'NeuraX Conversation'}
+      />
+      
       {/* Main Content */}
       <div className="flex-1 flex flex-col relative z-10 w-full">
         {/* Header */}
@@ -932,13 +942,25 @@ You help with academics, platform features, and general questions. Keep it natur
                 <span className="hidden sm:inline">WhatsApp Bot</span>
                 <span className="sm:hidden">WhatsApp</span>
               </a>
-              <button
-                onClick={startNewChat}
-                className="px-3 md:px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors text-xs md:text-sm border border-gray-700/50"
-              >
-                <span className="hidden sm:inline">New Chat</span>
-                <span className="sm:hidden">New</span>
-              </button>
+              <div className="flex items-center space-x-2">
+                {messages.length > 0 && (
+                  <button
+                    onClick={() => setShowShareModal(true)}
+                    className="px-3 md:px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-lg transition-colors text-xs md:text-sm flex items-center space-x-1"
+                    title="Share this conversation"
+                  >
+                    <FaShare className="text-xs" />
+                    <span className="hidden sm:inline">Share</span>
+                  </button>
+                )}
+                <button
+                  onClick={startNewChat}
+                  className="px-3 md:px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors text-xs md:text-sm border border-gray-700/50"
+                >
+                  <span className="hidden sm:inline">New Chat</span>
+                  <span className="sm:hidden">New</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

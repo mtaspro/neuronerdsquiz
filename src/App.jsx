@@ -22,6 +22,7 @@ import NotFound from './pages/NotFound';
 import Badges from './pages/Badges';
 import About from './pages/About';
 import NeuraflowAIChat from './pages/NeuraflowAIChat';
+import SharedConversation from './pages/SharedConversation';
 import DarkModeToggle from './components/DarkModeToggle';
 import ThemeSelector from './components/ThemeSelector';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -239,6 +240,7 @@ function AnimatedRoutes() {
           <Route path="/register" element={<Register />} />
           <Route path="/about" element={<About />} />
           <Route path="/ai-chat" element={<NeuraflowAIChat />} />
+          <Route path="/share/:shareId" element={<SharedConversation />} />
           <Route 
             path="/dashboard" 
             element={

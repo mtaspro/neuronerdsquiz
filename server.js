@@ -26,6 +26,7 @@ import themeRouter from './routes/theme.js';
 import whatsappRouter from './routes/whatsapp.js';
 import userRouter from './routes/user.js';
 import maintenanceRouter from './routes/maintenance.js';
+import shareRouter from './routes/share.js';
 import BattleService from './services/battleService.js';
 import BadgeService from './services/badgeService.js';
 import whatsappService from './services/whatsappService.js';
@@ -551,6 +552,8 @@ console.log('Mounting user router...');
 app.use('/api/user', userRouter);
 console.log('Mounting maintenance router...');
 app.use('/api/superadmin/maintenance', maintenanceRouter);
+console.log('Mounting share router...');
+app.use('/api/share', shareRouter);
 console.log('All routers mounted successfully');
 
 // Test route for API connectivity
