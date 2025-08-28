@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPaperPlane, FaCog, FaUser, FaRobot, FaStar, FaImage, FaTimes, FaMicrophone, FaMicrophoneSlash, FaVolumeUp, FaSearch, FaPalette, FaEllipsisV, FaTrash, FaArchive } from 'react-icons/fa';
+import { FaPaperPlane, FaCog, FaUser, FaRobot, FaStar, FaImage, FaTimes, FaMicrophone, FaMicrophoneSlash, FaVolumeUp, FaSearch, FaPalette, FaEllipsisV, FaTrash, FaArchive, FaCode, FaTable, FaBold } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import MathText from '../components/MathText';
+import RichMessageRenderer from '../components/RichMessageRenderer';
 import axios from 'axios';
 
 import neuraXAvatar from '../assets/NeuraXavatar.png';
@@ -1060,9 +1061,10 @@ You help with academics, platform features, and general questions. Keep it natur
                             />
                           </div>
                         )}
-                        <div className="prose prose-sm max-w-none prose-invert prose-headings:text-gray-100 prose-headings:font-semibold prose-p:text-gray-200 prose-p:leading-relaxed prose-strong:text-white prose-strong:font-semibold prose-ul:text-gray-200 prose-ol:text-gray-200 prose-li:mb-1 prose-code:text-blue-300 prose-code:bg-gray-800/50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-blockquote:border-l-blue-400 prose-blockquote:bg-gray-800/30 prose-blockquote:text-gray-300">
-                          <MathText>{message.content}</MathText>
-                        </div>
+                        <RichMessageRenderer 
+                          content={message.content}
+                          className="text-gray-200"
+                        />
                         
                         <div className="flex items-center justify-between mt-2 md:mt-3 pt-2 border-t border-gray-700/20">
                           <span className="text-xs text-gray-400">
@@ -1095,9 +1097,12 @@ You help with academics, platform features, and general questions. Keep it natur
                       <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
                     </div>
                     <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 text-gray-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-3xl">
-                      <div className="prose prose-sm max-w-none prose-invert prose-headings:text-gray-100 prose-headings:font-semibold prose-p:text-gray-200 prose-p:leading-relaxed prose-strong:text-white prose-strong:font-semibold prose-ul:text-gray-200 prose-ol:text-gray-200 prose-li:mb-1 prose-code:text-blue-300 prose-code:bg-gray-800/50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-blockquote:border-l-blue-400 prose-blockquote:bg-gray-800/30 prose-blockquote:text-gray-300">
-                        <MathText>{streamingMessage}</MathText>
-                        <span className="inline-block w-0.5 h-4 bg-blue-400 ml-1 animate-pulse"></span>
+                      <div className="flex items-start">
+                        <RichMessageRenderer 
+                          content={streamingMessage}
+                          className="text-gray-200 flex-1"
+                        />
+                        <span className="inline-block w-0.5 h-4 bg-blue-400 ml-1 animate-pulse flex-shrink-0"></span>
                       </div>
                     </div>
                   </div>
@@ -1193,6 +1198,35 @@ You help with academics, platform features, and general questions. Keep it natur
             
 
             
+            {/* Live Markdown Preview */}
+            {inputText && (inputText.includes('```') || inputText.includes('**') || inputText.includes('|') || inputText.includes('#')) && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mb-3 p-3 bg-gray-900/30 backdrop-blur-sm rounded-xl border border-gray-700/20"
+              >
+                <div className="text-xs text-gray-400 mb-2 flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span>👁️ Live Preview:</span>
+                    <div className="flex space-x-1">
+                      {inputText.includes('```') && <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded text-xs">Code</span>}
+                      {inputText.includes('**') && <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded text-xs">Bold</span>}
+                      {inputText.includes('|') && <span className="px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">Table</span>}
+                      {inputText.includes('#') && <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded text-xs">Header</span>}
+                    </div>
+                  </div>
+                  <span className="text-xs text-gray-500">Real-time render</span>
+                </div>
+                <div className="max-h-32 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 bg-gray-800/20 rounded-lg p-2">
+                  <RichMessageRenderer 
+                    content={inputText}
+                    className="text-gray-300 text-sm"
+                  />
+                </div>
+              </motion.div>
+            )}
+            
             <div className="flex items-end space-x-2 md:space-x-3">
               <div className="flex-1 relative">
                 <motion.textarea
@@ -1205,7 +1239,7 @@ You help with academics, platform features, and general questions. Keep it natur
                       handleSendMessage();
                     }
                   }}
-                  placeholder={isListening ? "🎤 Listening..." : enableWebSearch ? "Ask anything with web search 🌐" : selectedImage ? "What would you like to know about this image?" : "Message NeuraX..."}
+                  placeholder={isListening ? "🎤 Listening..." : enableWebSearch ? "Ask anything with web search 🌐" : selectedImage ? "What would you like to know about this image?" : "Message NeuraX... (Supports **bold**, `code`, tables, math)"}
                   className="w-full px-3 md:px-4 py-3 bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 focus:border-blue-500/50 rounded-2xl focus:outline-none text-gray-100 placeholder-gray-400 transition-all duration-200 resize-none scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 text-sm md:text-base"
                   disabled={isTyping || isStreaming || isProcessingVision || isListening || isSending}
                   rows={1}
@@ -1216,26 +1250,55 @@ You help with academics, platform features, and general questions. Keep it natur
                   }}
                 />
                 {inputText && (
-                  <div className="absolute right-3 bottom-2 text-xs text-gray-500">
-                    {inputText.length}
+                  <div className="absolute right-3 bottom-2 flex items-center space-x-2">
+                    <div className="text-xs text-gray-500">
+                      {inputText.length}
+                    </div>
+                    {inputText.includes('```') && (
+                      <div className="text-xs text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
+                        Code
+                      </div>
+                    )}
+                    {inputText.includes('|') && inputText.includes('-') && (
+                      <div className="text-xs text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded">
+                        Table
+                      </div>
+                    )}
+                    {(inputText.includes('**') || inputText.includes('*')) && (
+                      <div className="text-xs text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">
+                        MD
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
               
               <div className="flex items-center space-x-1 md:space-x-2">
-                <button
-                  onClick={() => setEnableWebSearch(!enableWebSearch)}
-                  className={`flex items-center space-x-1 px-2 md:px-3 py-2 md:py-2.5 rounded-xl transition-all duration-200 ${
-                    enableWebSearch 
-                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
-                      : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
-                  }`}
-                  disabled={isTyping || isStreaming || isProcessingVision}
-                  title={enableWebSearch ? 'Web search ON' : 'Enable web search'}
-                >
-                  <FaSearch className="text-xs md:text-sm" />
-                  <span className="text-xs hidden sm:inline">{enableWebSearch ? 'ON' : 'Web'}</span>
-                </button>
+                <div className="relative group">
+                  <button
+                    onClick={() => setEnableWebSearch(!enableWebSearch)}
+                    className={`flex items-center space-x-1 px-2 md:px-3 py-2 md:py-2.5 rounded-xl transition-all duration-200 ${
+                      enableWebSearch 
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                        : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
+                    }`}
+                    disabled={isTyping || isStreaming || isProcessingVision}
+                    title={enableWebSearch ? 'Web search ON' : 'Enable web search'}
+                  >
+                    <FaSearch className="text-xs md:text-sm" />
+                    <span className="text-xs hidden sm:inline">{enableWebSearch ? 'ON' : 'Web'}</span>
+                  </button>
+                  
+                  {/* Markdown Help Tooltip */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                    <div className="bg-gray-900/95 backdrop-blur-xl rounded-lg border border-gray-700/50 p-3 text-xs text-gray-300 whitespace-nowrap shadow-2xl">
+                      <div className="font-semibold text-blue-400 mb-1">Markdown Support:</div>
+                      <div>**bold** *italic* `code`</div>
+                      <div>```language for code blocks</div>
+                      <div>| tables | supported |</div>
+                    </div>
+                  </div>
+                </div>
                 
                 <button
                   onClick={isListening ? stopListening : startListening}
@@ -1268,22 +1331,35 @@ You help with academics, platform features, and general questions. Keep it natur
                   <span className="text-xs hidden sm:inline">Image</span>
                 </button>
                 
-                <button
-                  onClick={() => {
-                    setInputText('Generate an image of ');
-                    inputRef.current?.focus();
-                  }}
-                  className={`flex items-center space-x-1 px-2 md:px-3 py-2 md:py-2.5 rounded-xl transition-all duration-200 ${
-                    isGeneratingImage 
-                      ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30 animate-pulse'
-                      : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
-                  }`}
-                  disabled={isTyping || isStreaming || isProcessingVision}
-                  title="Generate image with AI"
-                >
-                  <FaPalette className="text-xs md:text-sm" />
-                  <span className="text-xs hidden sm:inline">{isGeneratingImage ? 'Gen...' : 'Generate'}</span>
-                </button>
+                <div className="relative group">
+                  <button
+                    onClick={() => {
+                      setInputText('Generate an image of ');
+                      inputRef.current?.focus();
+                    }}
+                    className={`flex items-center space-x-1 px-2 md:px-3 py-2 md:py-2.5 rounded-xl transition-all duration-200 ${
+                      isGeneratingImage 
+                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30 animate-pulse'
+                        : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
+                    }`}
+                    disabled={isTyping || isStreaming || isProcessingVision}
+                    title="Generate image with AI"
+                  >
+                    <FaPalette className="text-xs md:text-sm" />
+                    <span className="text-xs hidden sm:inline">{isGeneratingImage ? 'Gen...' : 'Generate'}</span>
+                  </button>
+                  
+                  {/* Quick Actions Tooltip */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                    <div className="bg-gray-900/95 backdrop-blur-xl rounded-lg border border-gray-700/50 p-3 text-xs text-gray-300 whitespace-nowrap shadow-2xl">
+                      <div className="font-semibold text-purple-400 mb-1">Quick Actions:</div>
+                      <div>🎨 Generate images</div>
+                      <div>📷 Analyze images</div>
+                      <div>🔍 Web search</div>
+                      <div>🎤 Voice input</div>
+                    </div>
+                  </div>
+                </div>
                 
                 <div className="relative">
                   <button
