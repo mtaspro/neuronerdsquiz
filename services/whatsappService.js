@@ -507,6 +507,55 @@ class WhatsAppService {
             // Handle web search
             const query = actualMessage.substring(8); // Remove '/search '
             await this.handleWebSearch(chatId, senderName, query, isGroup);
+          } else if (actualMessage.startsWith('/send ')) {
+            // Handle cross-group messaging: /send [group_name] [message]
+            const sendContent = actualMessage.substring(6).trim();
+            const spaceIndex = sendContent.indexOf(' ');
+            
+            if (spaceIndex === -1) {
+              const errorMsg = isGroup ? `@${senderName} Format: /send [group_name] [message]\nExample: /send Study Group Hello everyone!` : 'Format: /send [group_name] [message]\nExample: /send Study Group Hello everyone!';
+              
+              if (isGroup) {
+                await this.sendGroupMessage(chatId, errorMsg);
+              } else {
+                await this.sendMessage(chatId, errorMsg);
+              }
+              return;
+            }
+            
+            const targetGroupName = sendContent.substring(0, spaceIndex).trim();
+            const messageToSend = sendContent.substring(spaceIndex + 1).trim();
+            
+            if (!messageToSend) {
+              const errorMsg = isGroup ? `@${senderName} Please provide a message to send!` : 'Please provide a message to send!';
+              
+              if (isGroup) {
+                await this.sendGroupMessage(chatId, errorMsg);
+              } else {
+                await this.sendMessage(chatId, errorMsg);
+              }
+              return;
+            }
+            
+            const result = await this.sendMessageToGroup(targetGroupName, `📨 From ${senderName}: ${messageToSend}`);
+            
+            if (result.success) {
+              const confirmMsg = isGroup ? `@${senderName} ✅ Message sent to "${targetGroupName}"` : `✅ Message sent to "${targetGroupName}"`;
+              
+              if (isGroup) {
+                await this.sendGroupMessage(chatId, confirmMsg);
+              } else {
+                await this.sendMessage(chatId, confirmMsg);
+              }
+            } else {
+              const errorMsg = isGroup ? `@${senderName} ❌ Failed to send: ${result.error}` : `❌ Failed to send: ${result.error}`;
+              
+              if (isGroup) {
+                await this.sendGroupMessage(chatId, errorMsg);
+              } else {
+                await this.sendMessage(chatId, errorMsg);
+              }
+            }
           } else if (actualMessage.startsWith('/poll ')) {
             // Handle poll creation
             const pollContent = actualMessage.substring(6).trim();
@@ -718,6 +767,10 @@ Quick commands:
 - Math
 - Physics
 - Chemistry
+
+*📨 Send to Group:*
+• @n /send [group_name] [message]
+• Example: @n /send Study Group Hello everyone!
 
 *🎨 Image Generation:*
 • @n /generate [description] - Create images
