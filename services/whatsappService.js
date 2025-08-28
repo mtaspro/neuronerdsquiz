@@ -358,6 +358,22 @@ class WhatsAppService {
                     '[Media message]';
       }
       
+      // Extract mentioned users (native WhatsApp mentions)
+      const mentionedJids = message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+      let mentionContext = '';
+      if (mentionedJids.length > 0 && isGroup) {
+        try {
+          const groupMetadata = await this.sock.groupMetadata(chatId);
+          const mentionedNames = mentionedJids.map(jid => {
+            const participant = groupMetadata.participants.find(p => p.id === jid);
+            return participant?.notify || participant?.name || jid.split('@')[0];
+          }).join(', ');
+          mentionContext = ` (mentioning: ${mentionedNames})`;
+        } catch (error) {
+          console.log('Could not fetch group metadata for mentions');
+        }
+      }
+      
       const chatId = message.key.remoteJid;
       const isGroup = chatId.includes('@g.us');
       
@@ -608,10 +624,12 @@ class WhatsAppService {
         content: `${msg.sender}: ${msg.message}`
       }));
       
-      // Add current message with quoted context if available
-      const userMessage = quotedText ? 
-        `${senderName} (replying to: "${quotedText}"): ${message}` : 
-        `${senderName}: ${message}`;
+      // Add current message with quoted and mention context
+      let userMessage = `${senderName}${mentionContext}`;
+      if (quotedText) {
+        userMessage += ` (replying to: "${quotedText}")`;
+      }
+      userMessage += `: ${message}`;
       
       conversationHistory.push({
         role: 'user',
