@@ -359,12 +359,12 @@ class WhatsAppService {
       }
       
       // Extract mentioned users (native WhatsApp mentions)
-      const mentionedJids = message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+      const userMentionedJids = message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
       let mentionContext = '';
-      if (mentionedJids.length > 0 && isGroup) {
+      if (userMentionedJids.length > 0 && isGroup) {
         try {
           const groupMetadata = await this.sock.groupMetadata(chatId);
-          const mentionedNames = mentionedJids.map(jid => {
+          const mentionedNames = userMentionedJids.map(jid => {
             const participant = groupMetadata.participants.find(p => p.id === jid);
             return participant?.notify || participant?.name || jid.split('@')[0];
           }).join(', ');
@@ -444,9 +444,9 @@ class WhatsAppService {
       }
       
       // Check for NeuraX mentions - both @n and native WhatsApp mentions
-      const mentionedJids = message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+      const botMentionedJids = message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
       const botJid = this.sock?.user?.id?.replace(':0', '@s.whatsapp.net');
-      const isMentioned = mentionedJids.includes(botJid);
+      const isMentioned = botMentionedJids.includes(botJid);
       
       const shouldRespond = messageText.startsWith('@n ') || imageCaption.startsWith('@n ') || isMentioned || !isGroup;
       
