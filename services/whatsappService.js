@@ -348,6 +348,16 @@ class WhatsAppService {
       const messageText = message.message?.conversation || 
                          message.message?.extendedTextMessage?.text || '';
       
+      // Check for quoted/replied message
+      const quotedMessage = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+      let quotedText = '';
+      if (quotedMessage) {
+        quotedText = quotedMessage.conversation || 
+                    quotedMessage.extendedTextMessage?.text || 
+                    quotedMessage.imageMessage?.caption || 
+                    '[Media message]';
+      }
+      
       const chatId = message.key.remoteJid;
       const isGroup = chatId.includes('@g.us');
       
@@ -481,6 +491,36 @@ class WhatsAppService {
             // Handle web search
             const query = actualMessage.substring(8); // Remove '/search '
             await this.handleWebSearch(chatId, senderName, query, isGroup);
+          } else if (actualMessage.startsWith('/poll ')) {
+            // Handle poll creation
+            const pollContent = actualMessage.substring(6).trim();
+            const lines = pollContent.split('\n');
+            const question = lines[0];
+            const options = lines.slice(1)
+              .filter(line => line.trim().startsWith('-'))
+              .map(line => line.trim().substring(1).trim())
+              .slice(0, 12); // WhatsApp limit
+
+            if (options.length < 2) {
+              const errorMsg = isGroup ? `@${senderName} Poll needs at least 2 options. Format:\n/poll Question?\n- Option 1\n- Option 2` : 'Poll needs at least 2 options. Format:\n/poll Question?\n- Option 1\n- Option 2';
+              
+              if (isGroup) {
+                await this.sendGroupMessage(chatId, errorMsg);
+              } else {
+                await this.sendMessage(chatId, errorMsg);
+              }
+              return;
+            }
+
+            const result = await this.sendPoll(chatId, question, options);
+            if (!result.success) {
+              const errorMsg = isGroup ? `@${senderName} Failed to create poll: ${result.error}` : `Failed to create poll: ${result.error}`;
+              if (isGroup) {
+                await this.sendGroupMessage(chatId, errorMsg);
+              } else {
+                await this.sendMessage(chatId, errorMsg);
+              }
+            }
           } else if (actualMessage.startsWith('/generate ') || actualMessage.startsWith('/image ')) {
             // Handle image generation
             const prompt = actualMessage.startsWith('/generate ') ? 
@@ -568,10 +608,14 @@ class WhatsAppService {
         content: `${msg.sender}: ${msg.message}`
       }));
       
-      // Add current message
+      // Add current message with quoted context if available
+      const userMessage = quotedText ? 
+        `${senderName} (replying to: "${quotedText}"): ${message}` : 
+        `${senderName}: ${message}`;
+      
       conversationHistory.push({
         role: 'user',
-        content: `${senderName}: ${message}`
+        content: userMessage
       });
       
       // Get AI response
@@ -648,6 +692,14 @@ Quick commands:
 *🔍 Web Search:*
 • @n /search [query] - Search the web
 • Example: @n /search latest AI news
+
+*📊 Create Polls:*
+• @n /poll [question]
+• Format options with dashes:
+• Example: @n /poll Favorite subject?
+- Math
+- Physics
+- Chemistry
 
 *🎨 Image Generation:*
 • @n /generate [description] - Create images
