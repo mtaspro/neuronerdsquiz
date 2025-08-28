@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPaperPlane, FaCog, FaUser, FaRobot, FaStar, FaImage, FaTimes, FaMicrophone, FaMicrophoneSlash, FaVolumeUp, FaSearch, FaPalette, FaEllipsisV, FaTrash, FaArchive, FaCode, FaTable, FaBold, FaShare } from 'react-icons/fa';
+import { FaPaperPlane, FaCog, FaUser, FaRobot, FaStar, FaImage, FaTimes, FaMicrophone, FaMicrophoneSlash, FaVolumeUp, FaSearch, FaPalette, FaEllipsisV, FaTrash, FaArchive, FaCode, FaTable, FaBold, FaShare, FaDownload } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import MathText from '../components/MathText';
 import RichMessageRenderer from '../components/RichMessageRenderer';
 import ShareConversationModal from '../components/ShareConversationModal';
+import ImportConversationModal from '../components/ImportConversationModal';
 import axios from 'axios';
 
 import neuraXAvatar from '../assets/NeuraXavatar.png';
@@ -32,6 +33,7 @@ const NeuraflowAIChat = () => {
   const [isSending, setIsSending] = useState(false);
   const [showChatOptions, setShowChatOptions] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const [visionProgress, setVisionProgress] = useState(0);
   const [searchStatus, setSearchStatus] = useState('');
@@ -555,6 +557,38 @@ You help with academics, platform features, and general questions. Keep it natur
     { icon: '📷', text: 'Analyze image', prompt: 'Upload an image to analyze' }
   ];
 
+  const handleImportConversation = (importedMessages, importedTitle) => {
+    // Create new chat with imported messages
+    const newChatId = Date.now().toString();
+    const chatTitle = importedTitle || 'Imported Conversation';
+    
+    // Set imported messages with proper formatting
+    const formattedMessages = importedMessages.map(msg => ({
+      ...msg,
+      timestamp: new Date(msg.timestamp)
+    }));
+    
+    setMessages(formattedMessages);
+    setCurrentChatId(newChatId);
+    setIsNewChat(false);
+    
+    // Add to chat history
+    const newChat = {
+      id: newChatId,
+      title: chatTitle,
+      lastMessage: new Date().toISOString(),
+      createdAt: new Date().toISOString()
+    };
+    setChatHistory(prev => [newChat, ...prev]);
+    
+    // Save to localStorage
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const userId = userData.id || 'guest';
+    const existingChats = JSON.parse(localStorage.getItem(`chat_history_${userId}`) || '[]');
+    localStorage.setItem(`chat_history_${userId}`, JSON.stringify([newChat, ...existingChats]));
+    localStorage.setItem(`ai_chat_${userId}_${newChatId}`, JSON.stringify(formattedMessages));
+  };
+
   const handleQuickAction = (action) => {
     if (action.enableSearch) {
       setEnableWebSearch(true);
@@ -903,6 +937,13 @@ You help with academics, platform features, and general questions. Keep it natur
         title={messages.length > 0 ? messages[0]?.content?.slice(0, 50) + '...' : 'NeuraX Conversation'}
       />
       
+      {/* Import Conversation Modal */}
+      <ImportConversationModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImport={handleImportConversation}
+      />
+      
       {/* Main Content */}
       <div className="flex-1 flex flex-col relative z-10 w-full">
         {/* Header */}
@@ -943,6 +984,14 @@ You help with academics, platform features, and general questions. Keep it natur
                 <span className="sm:hidden">WhatsApp</span>
               </a>
               <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="px-3 md:px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 rounded-lg transition-colors text-xs md:text-sm flex items-center space-x-1"
+                  title="Import shared conversation"
+                >
+                  <FaDownload className="text-xs" />
+                  <span className="hidden sm:inline">Import</span>
+                </button>
                 {messages.length > 0 && (
                   <button
                     onClick={() => setShowShareModal(true)}
