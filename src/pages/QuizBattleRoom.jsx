@@ -310,61 +310,54 @@ const QuizBattleRoom = () => {
       if (selectedChapter) {
         try {
           const apiUrl = import.meta.env.VITE_API_URL || '';
-          const response = await fetch(`${apiUrl}/api/quizzes/questions?chapter=${encodeURIComponent(selectedChapter)}`);
+          const token = secureStorage.getToken();
+          
+          // Fetch ALL questions from chapter (not filtered by user progress)
+          const response = await fetch(`${apiUrl}/api/quizzes?chapter=${encodeURIComponent(selectedChapter)}`, {
+            headers: {
+              'Authorization': token ? `Bearer ${token}` : ''
+            }
+          });
           
           if (response.ok) {
             const chapterQuestions = await response.json();
             
             if (chapterQuestions && chapterQuestions.length > 0) {
+              // Shuffle questions and take random 10 for battle
+              const shuffled = chapterQuestions.sort(() => 0.5 - Math.random());
+              
               // Transform questions to match battle format
-              questionsToUse = chapterQuestions.slice(0, 10).map(q => ({
+              questionsToUse = shuffled.slice(0, 10).map(q => ({
+                _id: q._id,
                 question: q.question,
                 options: q.options,
-                correctAnswer: q.options.indexOf(q.correctAnswer)
+                correctAnswer: q.options.indexOf(q.correctAnswer),
+                explanation: q.explanation
               }));
               
-              info(`Loaded ${questionsToUse.length} questions from ${selectedChapter}`);
+              success(`Loaded ${questionsToUse.length} random questions from ${selectedChapter}`);
+            } else {
+              showError(`No questions found in ${selectedChapter}`);
             }
+          } else {
+            throw new Error(`HTTP ${response.status}`);
           }
         } catch (error) {
           console.error('Failed to fetch chapter questions:', error);
-          showError(`Failed to load questions from ${selectedChapter}. Using sample questions.`);
+          showError(`Failed to load questions from ${selectedChapter}: ${error.message}`);
         }
       }
       
-      // Fallback to sample questions if no chapter questions found
+      // Prevent battle start if no questions loaded
       if (questionsToUse.length === 0) {
-        questionsToUse = [
-          {
-            question: "What is the capital of France?",
-            options: ["London", "Berlin", "Paris", "Madrid"],
-            correctAnswer: 2
-          },
-          {
-            question: "Which planet is known as the Red Planet?",
-            options: ["Venus", "Mars", "Jupiter", "Saturn"],
-            correctAnswer: 1
-          },
-          {
-            question: "What is 2 + 2?",
-            options: ["3", "4", "5", "6"],
-            correctAnswer: 1
-          },
-          {
-            question: "Who painted the Mona Lisa?",
-            options: ["Van Gogh", "Da Vinci", "Picasso", "Rembrandt"],
-            correctAnswer: 1
-          },
-          {
-            question: "What is the largest ocean on Earth?",
-            options: ["Atlantic", "Indian", "Arctic", "Pacific"],
-            correctAnswer: 3
-          }
-        ];
-        
-        if (!selectedChapter) {
-          info('Using sample questions for battle');
-        }
+        showError(`Cannot start battle: No questions available${selectedChapter ? ` for chapter "${selectedChapter}"` : ''}. Please select a different chapter or contact admin.`);
+        return;
+      }
+      
+      // Ensure minimum 5 questions for battle
+      if (questionsToUse.length < 5) {
+        showError(`Cannot start battle: Only ${questionsToUse.length} questions available in "${selectedChapter}". Need at least 5 questions.`);
+        return;
       }
 
       // Mark battle as started in backend

@@ -218,14 +218,36 @@ class WhatsAppService {
     }
   }
 
-  findGroupByName(groupName) {
+  async findGroupByName(groupName) {
     try {
-      const chats = this.sock?.groupFetchAllParticipating ? 
-        Object.values(this.sock.groupFetchAllParticipating()) : [];
+      if (!this.sock) return null;
       
-      return chats.find(group => 
-        group.subject?.toLowerCase().includes(groupName.toLowerCase())
-      );
+      const chats = await this.sock.groupFetchAllParticipating();
+      const groups = Object.values(chats);
+      
+      console.log(`🔍 Searching for group: "${groupName}"`);
+      console.log(`📋 Available groups: ${groups.map(g => `"${g.subject}"`).join(', ')}`);
+      
+      // Try exact match first
+      let group = groups.find(g => g.subject === groupName);
+      
+      // Try case-insensitive exact match
+      if (!group) {
+        group = groups.find(g => g.subject?.toLowerCase() === groupName.toLowerCase());
+      }
+      
+      // Try partial match as fallback
+      if (!group) {
+        group = groups.find(g => g.subject?.toLowerCase().includes(groupName.toLowerCase()));
+      }
+      
+      if (group) {
+        console.log(`✅ Found group: "${group.subject}" (${group.id})`);
+      } else {
+        console.log(`❌ Group not found: "${groupName}"`);
+      }
+      
+      return group;
     } catch (error) {
       console.error('❌ Error finding group:', error);
       return null;
@@ -307,7 +329,7 @@ class WhatsAppService {
         targetGroupId = groupNameOrId;
       } else {
         // Find group by name
-        const group = this.findGroupByName(groupNameOrId);
+        const group = await this.findGroupByName(groupNameOrId);
         if (!group) {
           return { success: false, error: `Group '${groupNameOrId}' not found` };
         }
@@ -327,7 +349,7 @@ class WhatsAppService {
       if (groupNameOrId.includes('@g.us')) {
         targetGroupId = groupNameOrId;
       } else {
-        const group = this.findGroupByName(groupNameOrId);
+        const group = await this.findGroupByName(groupNameOrId);
         if (!group) {
           return { success: false, error: `Group '${groupNameOrId}' not found` };
         }
@@ -507,13 +529,39 @@ class WhatsAppService {
             // Handle web search
             const query = actualMessage.substring(8); // Remove '/search '
             await this.handleWebSearch(chatId, senderName, query, isGroup);
+          } else if (actualMessage.startsWith('/groups')) {
+            // List all available groups with numbers
+            const groups = await this.getGroups();
+            if (groups.success && groups.groups.length > 0) {
+              let groupList = '*📋 Available Groups:*\n\n';
+              groups.groups.forEach((group, index) => {
+                groupList += `${index + 1}. ${group.name} (${group.participants} members)\n`;
+              });
+              groupList += '\n💡 Use: @n /send [number] [message]\nExample: @n /send 1 Hello everyone!';
+              
+              const responseMsg = isGroup ? `@${senderName}\n${groupList}` : groupList;
+              
+              if (isGroup) {
+                await this.sendGroupMessage(chatId, responseMsg);
+              } else {
+                await this.sendMessage(chatId, responseMsg);
+              }
+            } else {
+              const errorMsg = isGroup ? `@${senderName} ❌ No groups found or error: ${groups.error}` : `❌ No groups found or error: ${groups.error}`;
+              
+              if (isGroup) {
+                await this.sendGroupMessage(chatId, errorMsg);
+              } else {
+                await this.sendMessage(chatId, errorMsg);
+              }
+            }
           } else if (actualMessage.startsWith('/send ')) {
-            // Handle cross-group messaging: /send [group_name] [message]
+            // Handle cross-group messaging: /send [group_name_or_number] [message]
             const sendContent = actualMessage.substring(6).trim();
             const spaceIndex = sendContent.indexOf(' ');
             
             if (spaceIndex === -1) {
-              const errorMsg = isGroup ? `@${senderName} Format: /send [group_name] [message]\nExample: /send Study Group Hello everyone!` : 'Format: /send [group_name] [message]\nExample: /send Study Group Hello everyone!';
+              const errorMsg = isGroup ? `@${senderName} Format: /send [group_name_or_number] [message]\nExample: /send 1 Hello everyone!\nOr: /send Study Group Hello!\n\nUse @n /groups to see all groups` : 'Format: /send [group_name_or_number] [message]\nExample: /send 1 Hello everyone!\nOr: /send Study Group Hello!\n\nUse @n /groups to see all groups';
               
               if (isGroup) {
                 await this.sendGroupMessage(chatId, errorMsg);
@@ -523,7 +571,7 @@ class WhatsAppService {
               return;
             }
             
-            const targetGroupName = sendContent.substring(0, spaceIndex).trim();
+            const targetGroup = sendContent.substring(0, spaceIndex).trim();
             const messageToSend = sendContent.substring(spaceIndex + 1).trim();
             
             if (!messageToSend) {
@@ -535,6 +583,27 @@ class WhatsAppService {
                 await this.sendMessage(chatId, errorMsg);
               }
               return;
+            }
+            
+            let targetGroupName = targetGroup;
+            
+            // Check if it's a number (group index)
+            if (/^\d+$/.test(targetGroup)) {
+              const groupIndex = parseInt(targetGroup) - 1;
+              const groups = await this.getGroups();
+              
+              if (groups.success && groups.groups[groupIndex]) {
+                targetGroupName = groups.groups[groupIndex].name;
+              } else {
+                const errorMsg = isGroup ? `@${senderName} ❌ Invalid group number. Use @n /groups to see available groups` : '❌ Invalid group number. Use @n /groups to see available groups';
+                
+                if (isGroup) {
+                  await this.sendGroupMessage(chatId, errorMsg);
+                } else {
+                  await this.sendMessage(chatId, errorMsg);
+                }
+                return;
+              }
             }
             
             const result = await this.sendMessageToGroup(targetGroupName, `📨 From ${senderName}: ${messageToSend}`);
@@ -769,8 +838,10 @@ Quick commands:
 - Chemistry
 
 *📨 Send to Group:*
-• @n /send [group_name] [message]
-• Example: @n /send Study Group Hello everyone!
+• @n /groups - List all groups with numbers
+• @n /send [number] [message] - Send by group number
+• @n /send [group_name] [message] - Send by group name
+• Example: @n /send 1 Hello everyone!
 
 *🎨 Image Generation:*
 • @n /generate [description] - Create images
