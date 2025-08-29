@@ -625,9 +625,9 @@ class WhatsAppService {
           } else {
             // Handle regular NeuraX mention
             if (isGroup) {
-              await this.handleNeuraXMention(chatId, senderName, actualMessage, true);
+              await this.handleNeuraXMention(chatId, senderName, actualMessage, true, quotedText, mentionContext);
             } else {
-              await this.handleNeuraXMention(chatId, senderName, actualMessage, false);
+              await this.handleNeuraXMention(chatId, senderName, actualMessage, false, quotedText, mentionContext);
               // Only save to inbox for registered users (not web users)
               if (!isWebUser) {
                 await this.saveToUserInbox(senderPhone, senderName, actualMessage);
@@ -657,7 +657,7 @@ class WhatsAppService {
     this.groupMemories.set(chatId, messages);
   }
 
-  async handleNeuraXMention(chatId, senderName, message, isGroup) {
+  async handleNeuraXMention(chatId, senderName, message, isGroup, quotedText = '', mentionContext = '') {
     try {
       console.log(`🤖 NeuraX mentioned by ${senderName}: ${message}`);
       
