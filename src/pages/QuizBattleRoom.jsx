@@ -312,6 +312,19 @@ const QuizBattleRoom = () => {
           const apiUrl = import.meta.env.VITE_API_URL || '';
           const token = secureStorage.getToken();
           
+          // First, get the quiz config for this chapter to know how many questions to use
+          let battleQuestionCount = 10; // Default
+          try {
+            const configResponse = await fetch(`${apiUrl}/api/admin/quiz-config/${encodeURIComponent(selectedChapter)}`);
+            if (configResponse.ok) {
+              const config = await configResponse.json();
+              battleQuestionCount = config.battleQuestions || 10;
+              console.log(`📊 Using ${battleQuestionCount} questions for battle (from quiz config)`);
+            }
+          } catch (configError) {
+            console.warn('Could not fetch quiz config, using default 10 questions:', configError);
+          }
+          
           // Fetch ALL questions from chapter (not filtered by user progress)
           const response = await fetch(`${apiUrl}/api/quizzes?chapter=${encodeURIComponent(selectedChapter)}`, {
             headers: {
@@ -323,11 +336,12 @@ const QuizBattleRoom = () => {
             const chapterQuestions = await response.json();
             
             if (chapterQuestions && chapterQuestions.length > 0) {
-              // Shuffle questions and take random 10 for battle
+              // Shuffle questions and take the configured number for battle
               const shuffled = chapterQuestions.sort(() => 0.5 - Math.random());
+              const questionsToTake = Math.min(battleQuestionCount, chapterQuestions.length);
               
               // Transform questions to match battle format
-              questionsToUse = shuffled.slice(0, 10).map(q => ({
+              questionsToUse = shuffled.slice(0, questionsToTake).map(q => ({
                 _id: q._id,
                 question: q.question,
                 options: q.options,
@@ -335,7 +349,7 @@ const QuizBattleRoom = () => {
                 explanation: q.explanation
               }));
               
-              success(`Loaded ${questionsToUse.length} random questions from ${selectedChapter}`);
+              success(`Loaded ${questionsToUse.length} random questions from ${selectedChapter} (Config: ${battleQuestionCount})`);
             } else {
               showError(`No questions found in ${selectedChapter}`);
             }

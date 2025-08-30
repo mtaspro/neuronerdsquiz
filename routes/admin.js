@@ -482,6 +482,36 @@ router.get('/quiz-configs', sessionMiddleware, requireAdmin, async (req, res) =>
   }
 });
 
+// Get quiz config by chapter name (public endpoint for battle system)
+router.get('/quiz-config/:chapterName', async (req, res) => {
+  try {
+    const { chapterName } = req.params;
+    const chapter = await Chapter.findOne({ name: chapterName });
+    
+    if (!chapter) {
+      return res.status(404).json({ error: 'Chapter not found' });
+    }
+    
+    const config = await QuizConfig.findOne({ chapterId: chapter._id });
+    
+    if (!config) {
+      // Return default config if none exists
+      return res.json({
+        chapterName,
+        examQuestions: 10,
+        battleQuestions: 10,
+        negativeScoring: false,
+        negativeScore: -1
+      });
+    }
+    
+    res.json(config);
+  } catch (error) {
+    console.error('Error fetching quiz config:', error);
+    res.status(500).json({ error: 'Failed to fetch quiz config' });
+  }
+});
+
 // Update quiz configuration
 router.put('/quiz-configs/:chapterId', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
