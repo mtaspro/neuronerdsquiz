@@ -8,7 +8,7 @@ import ShareConversationModal from '../components/ShareConversationModal';
 import ImportConversationModal from '../components/ImportConversationModal';
 import axios from 'axios';
 
-import neuraXAvatar from '../assets/NeuraXavatar.png';
+import neuraXAvatar from '../assets/NeuraXOmegaavatar.png';
 
 const NeuraflowAIChat = () => {
   const [messages, setMessages] = useState([]);
@@ -211,7 +211,7 @@ const NeuraflowAIChat = () => {
     {
       id: 1,
       type: 'bot',
-      content: "👋 Hi! I'm **NeuraX**, your AI study companion!\n\nI can help with academics, answer questions, analyze images, and search the web. What's on your mind?",
+      content: "👋 Hi! I'm **NeuraX Omega**, your AI study companion!\n\nI can help with academics, answer questions, analyze images, and search the web. What's on your mind?",
       timestamp: new Date()
     }
   ];
@@ -246,8 +246,8 @@ const NeuraflowAIChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // System prompt for NeuraX Web Chat
-const systemPrompt = `You are NeuraX 2.0 (নিউরএক্স 2.0), an advanced AI assistant for the Neuronerds Quiz Platform web interface. You provide comprehensive, well-formatted responses similar to ChatGPT.
+  // System prompt for NeuraX Omega Web Chat
+const systemPrompt = `You are NeuraX Omega (নিউরএক্স ওমেগা), an advanced AI assistant for the Neuronerds Quiz Platform web interface. You provide comprehensive, well-formatted responses similar to ChatGPT.
 
 🌐 **Web Chat Excellence:**
 - Provide detailed, comprehensive responses
@@ -994,7 +994,7 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                   <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h1 className="text-base md:text-lg font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">NeuraX</h1>
+                  <h1 className="text-base md:text-lg font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">NeuraX Omega</h1>
                 </div>
               </div>
             </div>
@@ -1053,7 +1053,7 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                 className="mb-6 md:mb-8"
               >
                 <div className="w-16 h-16 md:w-24 md:h-24 mx-auto rounded-3xl overflow-hidden shadow-2xl bg-white/5 backdrop-blur-sm border border-gray-700/30">
-                  <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
+                  <img src={neuraXAvatar} alt="NeuraX Omega" className="w-full h-full object-cover" />
                 </div>
               </motion.div>
               
@@ -1063,7 +1063,7 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
                 <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4 text-white">
-                  NeuraX
+                  NeuraX Omega
                 </h1>
                 <p className="text-lg md:text-xl text-gray-400 mb-6 md:mb-8">
                   Your AI study companion
@@ -1338,7 +1338,7 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                       handleSendMessage();
                     }
                   }}
-                  placeholder={isListening ? "🎤 Listening..." : enableWebSearch ? "Ask anything with web search 🌐" : selectedImage ? "What would you like to know about this image?" : "Message NeuraX... (Supports **bold**, `code`, tables, math)"}
+                  placeholder={isListening ? "🎤 Listening..." : enableWebSearch ? "Ask anything with web search 🌐" : selectedImage ? "What would you like to know about this image?" : "Message NeuraX Omega... (Supports **bold**, `code`, tables, math)"}
                   className="w-full px-3 md:px-4 py-3 bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 focus:border-blue-500/50 rounded-2xl focus:outline-none text-gray-100 placeholder-gray-400 transition-all duration-200 resize-none scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 text-sm md:text-base"
                   disabled={isTyping || isStreaming || isProcessingVision || isListening || isSending}
                   rows={1}

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaUser, FaEye, FaCalendarAlt, FaShare, FaCopy, FaCheck } from 'react-icons/fa';
 import RichMessageRenderer from '../components/RichMessageRenderer';
-import neuraXAvatar from '../assets/NeuraXavatar.png';
+import neuraXAvatar from '../assets/NeuraXOmegaavatar.png';
 import axios from 'axios';
 
 const SharedConversation = () => {
@@ -72,7 +72,7 @@ const SharedConversation = () => {
             href="/" 
             className="inline-block bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-colors"
           >
-            Go to NeuraX
+            Go to NeuraX Omega
           </a>
         </div>
       </div>
@@ -87,11 +87,11 @@ const SharedConversation = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-600/30">
-                <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
+                <img src={neuraXAvatar} alt="NeuraX Omega" className="w-full h-full object-cover" />
               </div>
               <div>
                 <h1 className="text-lg font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
-                  {conversation?.title || 'Shared NeuraX Conversation'}
+                  {conversation?.title || 'Shared NeuraX Omega Conversation'}
                 </h1>
                 <div className="flex items-center space-x-4 text-xs text-gray-400">
                   <div className="flex items-center space-x-1">
@@ -131,7 +131,7 @@ const SharedConversation = () => {
                 <div className="flex-shrink-0 mt-1">
                   {message.type === 'bot' ? (
                     <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-600/30">
-                      <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
+                      <img src={neuraXAvatar} alt="NeuraX Omega" className="w-full h-full object-cover" />
                     </div>
                   ) : (
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center">
@@ -175,13 +175,13 @@ const SharedConversation = () => {
         <div className="mt-12 pt-8 border-t border-gray-800/50 text-center">
           <div className="flex items-center justify-center space-x-2 text-gray-400 mb-4">
             <FaShare />
-            <span>Shared conversation from NeuraX AI</span>
+            <span>Shared conversation from NeuraX Omega AI</span>
           </div>
           <a 
             href="/"
             className="inline-block bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg transition-all duration-200 font-semibold"
           >
-            Start Your Own Conversation with NeuraX
+            Start Your Own Conversation with NeuraX Omega
           </a>
         </div>
       </div>

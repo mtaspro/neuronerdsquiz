@@ -49,7 +49,7 @@ router.post('/', async (req, res) => {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://github.com/mtaspro/neuronerds-quiz',
-        'X-Title': 'Neuraflow AI Chat'
+        'X-Title': 'NeuraX Omega AI Chat'
       };
     }
 

@@ -791,7 +791,7 @@ class WhatsAppService {
 
   async handleHelpInfo(chatId, senderName, isGroup) {
     try {
-      const helpInfo = `🤖 Hi! I'm NeuraX, your AI assistant. For detailed instructions, use: *@n /help*
+      const helpInfo = `🤖 Hi! I'm NeuraX Omega, your AI assistant. For detailed instructions, use: *@n /help*
 
 Quick commands:
 • @n /help - Full manual
@@ -817,9 +817,9 @@ Quick commands:
     try {
       console.log(`❓ Help request from ${senderName}`);
       
-      const helpText = `🤖 *NeuraX AI Assistant - User Manual*
+      const helpText = `🤖 *NeuraX Omega AI Assistant - User Manual*
 
-👋 Hi! I'm NeuraX, your AI assistant from Neuronerds Quiz platform. Here's how to use me:
+👋 Hi! I'm NeuraX Omega, your AI assistant from Neuronerds Quiz platform. Here's how to use me:
 
 *💬 Basic Chat:*
 • @n [your message] - Chat with me normally
@@ -876,7 +876,7 @@ Quick commands:
       
       // Add to memory
       this.addToMemory(chatId, {
-        sender: 'NeuraX',
+        sender: 'NeuraX Omega',
         message: '[Help Manual Sent]',
         timestamp: new Date(),
         isBot: true
@@ -900,7 +900,7 @@ Quick commands:
       const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
       
       const systemPrompt = isGroup 
-        ? `You are NeuraX 2.0, an AI assistant for WhatsApp group *The NeuroNERDS* - a student community from Chattogram College, Bangladesh.
+        ? `You are NeuraX Omega, an AI assistant for WhatsApp group *The NeuroNERDS* - a student community from Chattogram College, Bangladesh.
 
 🎯 **WhatsApp Group Guidelines:**
 • Keep responses SHORT (1-2 lines max)
@@ -925,7 +925,7 @@ Quick commands:
 • Remember you're chatting in a group
 
 Be helpful, concise, and engaging! 🚀`
-        : `You are NeuraX, an AI assistant for personal WhatsApp chat with ${senderName}. You're part of Neuronerds Quiz platform.
+        : `You are NeuraX Omega, an AI assistant for personal WhatsApp chat with ${senderName}. You're part of Neuronerds Quiz platform.
 
 👥 **Community Info:**
 *The NeuroNERDS* - Student community from Chattogram College
@@ -1239,7 +1239,7 @@ Be friendly, knowledgeable, and supportive! ✨`;
       
       if (reaction) {
         await this.reactToMessage(message.key, reaction);
-        console.log(`🤖 NeuraX smartly reacted with ${reaction}`);
+        console.log(`🤖 NeuraX Omega smartly reacted with ${reaction}`);
       }
     } catch (error) {
       console.error('❌ Auto reaction error:', error);
@@ -1310,7 +1310,7 @@ Respond with ONLY the emoji, no text.`,
       
       // Show native WhatsApp typing indicator
       await this.sock.sendPresenceUpdate('composing', chatId);
-      console.log(`⌨️ NeuraX typing indicator shown`);
+      console.log(`⌨️ NeuraX Omega typing indicator shown`);
       
     } catch (error) {
       console.error('❌ Typing indicator error:', error);
@@ -1395,7 +1395,7 @@ Respond with ONLY the emoji, no text.`,
 
   async handleUnregisteredUser(chatId, senderName, isGroup) {
     try {
-      const registrationMessage = `🤖 Hi ${senderName}! I'm NeuraX, your AI assistant from Neuronerds Quiz.
+      const registrationMessage = `🤖 Hi ${senderName}! I'm NeuraX Omega, your AI assistant from Neuronerds Quiz.
 
 🚫 You need to register on our platform to chat with me.
 

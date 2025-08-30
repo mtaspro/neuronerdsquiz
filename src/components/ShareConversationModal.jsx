@@ -19,7 +19,7 @@ const ShareConversationModal = ({ isOpen, onClose, messages, title }) => {
       
       const response = await axios.post(`${apiUrl}/api/share/conversation`, {
         messages: messages,
-        title: title || 'NeuraX Conversation'
+        title: title || 'NeuraX Omega Conversation'
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
