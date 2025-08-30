@@ -398,6 +398,18 @@ io.on('connection', (socket) => {
         // Send WhatsApp notification for natural battle end
         sendBattleEndNotification(roomId);
         
+        // Clear the active battle room from the API state
+        try {
+          // Import and clear the battle room directly
+          const battleRouterModule = await import('./routes/battle.js');
+          if (battleRouterModule.clearActiveBattleRoom) {
+            battleRouterModule.clearActiveBattleRoom(roomId);
+            console.log(`🗑️ Auto-cleared battle room ${roomId} from API state`);
+          }
+        } catch (apiError) {
+          console.error('Failed to clear battle room from API:', apiError.message);
+        }
+        
         io.to(roomId).emit('battleEnded', battleResults);
       }
 

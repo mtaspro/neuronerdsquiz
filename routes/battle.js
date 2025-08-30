@@ -90,16 +90,15 @@ router.post('/end', sessionMiddleware, async (req, res) => {
         await sendBattleNotification(`🏁 Battle Ended! 🏁\n\nRoom: ${roomId}\nChapter: ${activeBattleRoom.chapter}\n\nAll participants have finished the battle!`);
       }
       
-      // Clear the battle room after 30 seconds
+      // Clear the battle room immediately after ending
       setTimeout(() => {
         activeBattleRoom = null;
+        battleRoomCreator = null;
         if (req.app.get('io')) {
           req.app.get('io').emit('battleRoomClosed');
         }
-      }, 30000);
-      
-      // Clear creator reference
-      battleRoomCreator = null;
+        console.log(`🗑️ Battle room ${roomId} cleared after ending`);
+      }, 5000); // Reduced to 5 seconds
       
       res.json({ success: true, battleRoom: activeBattleRoom });
     } else {
@@ -183,6 +182,17 @@ async function sendBattleNotification(message) {
   } catch (error) {
     console.error('Error sending battle notification:', error);
   }
+}
+
+// Export function to clear active battle room
+export function clearActiveBattleRoom(roomId) {
+  if (activeBattleRoom && activeBattleRoom.id === roomId) {
+    console.log(`🗑️ Clearing active battle room: ${roomId}`);
+    activeBattleRoom = null;
+    battleRoomCreator = null;
+    return true;
+  }
+  return false;
 }
 
 export default router;
