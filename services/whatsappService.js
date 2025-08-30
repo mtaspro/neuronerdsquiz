@@ -606,7 +606,7 @@ class WhatsAppService {
               }
             }
             
-            const result = await this.sendMessageToGroup(targetGroupName, `📨 From ${senderName}: ${messageToSend}`);
+            const result = await this.sendMessageToGroup(targetGroupName, messageToSend);
             
             if (result.success) {
               const confirmMsg = isGroup ? `@${senderName} ✅ Message sent to "${targetGroupName}"` : `✅ Message sent to "${targetGroupName}"`;

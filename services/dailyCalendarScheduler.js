@@ -67,7 +67,7 @@ class DailyCalendarScheduler {
       // Create prompt for NeuraX
       const examInfo = examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `${e.examName} - TODAY` : `${e.examName} in ${e.daysLeft} days`).join(', ') : 'None';
       
-      const prompt = `Generate a SHORT, fun daily calendar message for students. Add some humor, light roasting, or witty motivation!
+      const prompt = `Generate a SHORT, fun daily calendar message for students in bengali. Add some humor, light roasting, or witty motivation!
 
 Data:
 Day: ${calendarData.dayName}
