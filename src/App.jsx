@@ -461,7 +461,7 @@ function AppContent() {
         onComplete={handleNotificationComplete}
       />
       <MaintenanceOverlay isActive={isMaintenanceMode} isSuperAdmin={isSuperAdmin} />
-    </div>
+    </motion.div>
   );
 }
 
