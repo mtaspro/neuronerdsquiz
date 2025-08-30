@@ -900,7 +900,7 @@ Quick commands:
       const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
       
       const systemPrompt = isGroup 
-        ? `You are NeuraX, an AI assistant for WhatsApp group *The NeuroNERDS* - a student community from Chattogram College, Bangladesh.
+        ? `You are NeuraX 2.0, an AI assistant for WhatsApp group *The NeuroNERDS* - a student community from Chattogram College, Bangladesh.
 
 🎯 **WhatsApp Group Guidelines:**
 • Keep responses SHORT (1-2 lines max)

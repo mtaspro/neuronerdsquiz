@@ -247,7 +247,7 @@ const NeuraflowAIChat = () => {
   }, [messages, isTyping]);
 
   // System prompt for NeuraX Web Chat
-const systemPrompt = `You are NeuraX (নিউরএক্স), an advanced AI assistant for the Neuronerds Quiz Platform web interface. You provide comprehensive, well-formatted responses similar to ChatGPT.
+const systemPrompt = `You are NeuraX 2.0 (নিউরএক্স 2.0), an advanced AI assistant for the Neuronerds Quiz Platform web interface. You provide comprehensive, well-formatted responses similar to ChatGPT.
 
 🌐 **Web Chat Excellence:**
 - Provide detailed, comprehensive responses
