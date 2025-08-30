@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
+import './styles/transitions.css';
 import { AnimatePresence, motion } from "framer-motion";
 import IntroScreen from "./pages/IntroScreen";
 import QuizPage from "./pages/QuizPage";
@@ -8,6 +9,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Dashboard from "./pages/Dashboard";
 import QuizBattleRoom from "./pages/QuizBattleRoom";
 import ProfileEdit from "./pages/ProfileEdit";
+import UserProfile from "./pages/UserProfile";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -218,18 +220,66 @@ function Navbar() {
   );
 }
 
-// Animated route transitions
+// Advanced animated route transitions
 function AnimatedRoutes() {
   const location = useLocation();
+  
+  // Different transition variants for different routes
+  const getTransitionVariant = (pathname) => {
+    if (pathname === '/') return 'slideUp';
+    if (pathname.includes('/quiz') || pathname.includes('/battle')) return 'slideLeft';
+    if (pathname.includes('/profile') || pathname.includes('/admin')) return 'slideRight';
+    if (pathname.includes('/ai-chat')) return 'fadeScale';
+    return 'fade';
+  };
+  
+  const transitionVariants = {
+    fade: {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      exit: { opacity: 0 }
+    },
+    slideUp: {
+      initial: { opacity: 0, y: 50, scale: 0.95 },
+      animate: { opacity: 1, y: 0, scale: 1 },
+      exit: { opacity: 0, y: -50, scale: 1.05 }
+    },
+    slideLeft: {
+      initial: { opacity: 0, x: 100, rotateY: -15 },
+      animate: { opacity: 1, x: 0, rotateY: 0 },
+      exit: { opacity: 0, x: -100, rotateY: 15 }
+    },
+    slideRight: {
+      initial: { opacity: 0, x: -100, rotateY: 15 },
+      animate: { opacity: 1, x: 0, rotateY: 0 },
+      exit: { opacity: 0, x: 100, rotateY: -15 }
+    },
+    fadeScale: {
+      initial: { opacity: 0, scale: 0.8, filter: 'blur(10px)' },
+      animate: { opacity: 1, scale: 1, filter: 'blur(0px)' },
+      exit: { opacity: 0, scale: 1.2, filter: 'blur(10px)' }
+    }
+  };
+  
+  const variant = getTransitionVariant(location.pathname);
+  const transition = transitionVariants[variant];
+  
   return (
     <AnimatePresence mode="wait">
       <motion.div
         key={location.pathname}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="flex-1 min-h-0"
+        initial={transition.initial}
+        animate={transition.animate}
+        exit={transition.exit}
+        transition={{ 
+          duration: 0.5, 
+          ease: [0.25, 0.46, 0.45, 0.94],
+          opacity: { duration: 0.3 },
+          scale: { duration: 0.4 },
+          filter: { duration: 0.3 }
+        }}
+        className="flex-1 min-h-0 page-transition"
+        style={{ transformStyle: 'preserve-3d' }}
       >
         <Routes location={location}>
           <Route path="/" element={<IntroScreen />} />
@@ -256,6 +306,14 @@ function AnimatedRoutes() {
                 <ErrorBoundary fallbackMessage="Battle room encountered an error. Please refresh or rejoin the battle.">
                   <QuizBattleRoom />
                 </ErrorBoundary>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <UserProfile />
               </ProtectedRoute>
             }
           />
@@ -356,10 +414,39 @@ function AppContent() {
     };
   }, []);
 
+  // Smooth scroll behavior and page transition enhancements
+  React.useEffect(() => {
+    // Add smooth scroll behavior
+    document.documentElement.style.scrollBehavior = 'smooth';
+    
+    // Preload critical animations
+    const preloadAnimations = () => {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.href = 'https://lottie.host/b39f8f87-3d0d-4751-ba62-9274ac09b80d/5CTRzY4AI4.json';
+      link.as = 'fetch';
+      link.crossOrigin = 'anonymous';
+      document.head.appendChild(link);
+    };
+    
+    preloadAnimations();
+    
+    return () => {
+      document.documentElement.style.scrollBehavior = 'auto';
+    };
+  }, []);
+
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
+    <motion.div 
+      className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       <Navbar />
-      <AnimatedRoutes />
+      <div className="flex-1 overflow-hidden">
+        <AnimatedRoutes />
+      </div>
       
       {/* Onboarding Tour */}
       <OnboardingTour

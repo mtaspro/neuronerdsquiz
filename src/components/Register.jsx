@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { apiHelpers } from '../utils/api';
 import { secureStorage } from '../utils/secureStorage.js';
+import LoadingAnimation from '../components/LoadingAnimation';
 
 const Register = () => {
   // Avatar options from ProfileEdit
@@ -22,6 +23,7 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     username: '',
+    phoneNumber: '',
     avatar: avatarOptions[0],
     profilePicture: null
   });
@@ -43,6 +45,11 @@ const Register = () => {
       newErrors.username = 'Username is required';
     } else if (formData.username.length < 3) {
       newErrors.username = 'Username must be at least 3 characters';
+    }
+    if (!formData.phoneNumber.trim()) {
+      newErrors.phoneNumber = 'WhatsApp number is required';
+    } else if (!/^01[0-9]{9}$/.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = 'Please enter a valid 11-digit number (01XXXXXXXXX)';
     }
     if (!formData.password) {
       newErrors.password = 'Password is required';
@@ -114,6 +121,7 @@ const Register = () => {
       submitData.append('email', formData.email);
       submitData.append('password', formData.password);
       submitData.append('username', formData.username);
+      submitData.append('phoneNumber', `880${formData.phoneNumber.substring(1)}`);
       if (useCustomImage && formData.profilePicture) {
         submitData.append('profilePicture', formData.profilePicture);
       } else {
@@ -223,6 +231,38 @@ const Register = () => {
               {errors.username && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.username}</p>
               )}
+            </div>
+
+            <div>
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                WhatsApp Number
+              </label>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 text-sm">
+                  +880
+                </span>
+                <input
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  type="tel"
+                  required
+                  value={formData.phoneNumber}
+                  onChange={handleInputChange}
+                  className={`appearance-none relative block w-full px-3 py-2 border rounded-r-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 text-sm leading-tight transition-colors ${
+                    errors.phoneNumber 
+                      ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
+                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                  }`}
+                  placeholder="01XXXXXXXXX"
+                  maxLength="11"
+                />
+              </div>
+              {errors.phoneNumber && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phoneNumber}</p>
+              )}
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Enter your 11-digit mobile number (e.g., 01712345678)
+              </p>
             </div>
 
             <div>
@@ -378,9 +418,11 @@ const Register = () => {
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {isLoading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Creating account...
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4">
+                    <LoadingAnimation size="small" />
+                  </div>
+                  <span>Creating account...</span>
                 </div>
               ) : (
                 'Create Account'

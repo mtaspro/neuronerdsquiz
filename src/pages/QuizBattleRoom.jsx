@@ -13,6 +13,7 @@ import soundManager from '../utils/soundUtils';
 import LifelineTools from '../components/LifelineTools';
 import { useLifelines } from '../hooks/useLifelines';
 import { secureStorage } from '../utils/secureStorage.js';
+import LoadingAnimation from '../components/LoadingAnimation';
 import axios from 'axios';
 
 const QuizBattleRoom = () => {
@@ -654,10 +655,9 @@ const QuizBattleRoom = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
+          className="text-center text-white"
         >
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
-          <h2 className="text-white text-xl font-bold">Connecting to Battle Room...</h2>
+          <LoadingAnimation message="Connecting to Battle Room..." size="large" />
         </motion.div>
       </div>
     );

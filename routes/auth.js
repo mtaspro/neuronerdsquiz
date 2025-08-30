@@ -58,7 +58,7 @@ router.post('/test-register', async (req, res) => {
 
 // Registration route
 router.post('/register', memoryUpload.single('profilePicture'), async (req, res) => {
-  const { email, password, username, avatar } = req.body;
+  const { email, password, username, avatar, phoneNumber } = req.body;
   console.log('Registration attempt for email:', email);
   console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
   console.log('MONGO_URI exists:', !!process.env.MONGO_URI);
@@ -89,7 +89,8 @@ router.post('/register', memoryUpload.single('profilePicture'), async (req, res)
       email, 
       password,
       username: username || email.split('@')[0], // Use email prefix if no username
-      avatar: userAvatar
+      avatar: userAvatar,
+      phoneNumber: phoneNumber || ''
     });
     console.log('Creating new user with email:', email);
     console.log('User object before save:', { email: user.email, hasPassword: !!user.password, username: user.username });

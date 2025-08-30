@@ -5,6 +5,7 @@ import { apiHelpers } from '../utils/api';
 import useTypingSound from '../hooks/useTypingSound';
 import soundManager from '../utils/soundUtils';
 import { secureStorage } from '../utils/secureStorage.js';
+import LoadingAnimation from '../components/LoadingAnimation';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -214,9 +215,11 @@ const Login = () => {
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {isLoading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Signing in...
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4">
+                    <LoadingAnimation size="small" />
+                  </div>
+                  <span>Signing in...</span>
                 </div>
               ) : (
                 'Sign in'

@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import axios from 'axios';
-import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog, FaQuestionCircle, FaCopy, FaEye, FaRocket, FaTrophy, FaBolt } from 'react-icons/fa';
+import { FaFire, FaUsers, FaPlay, FaPlus, FaUser, FaCog, FaQuestionCircle, FaCopy, FaEye, FaRocket, FaTrophy, FaBolt, FaEdit } from 'react-icons/fa';
 import { getAvatarUrl, getFallbackAvatar } from '../utils/avatarUtils';
 import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
+import LoadingAnimation from '../components/LoadingAnimation';
 import { useNotification } from '../components/NotificationSystem';
 import SpectatorAccess from '../components/SpectatorAccess';
 import SoundToggle from '../components/SoundToggle';
@@ -292,8 +293,8 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center transition-colors duration-200">
-        <div className="text-gray-800 dark:text-white text-xl">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-blue-950 dark:to-purple-950 flex items-center justify-center transition-colors duration-200">
+        <LoadingAnimation message="Loading dashboard..." size="large" />
       </div>
     );
   }
@@ -522,16 +523,30 @@ const Dashboard = () => {
               </div>
             </motion.button>
 
+            {/* View Profile Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => { soundManager.play('transition'); navigate('/profile'); }}
+              onMouseEnter={() => soundManager.play('click')}
+              className="profile-section bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full mt-4 relative z-20"
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <FaUser className="text-lg" />
+                <span>View Profile</span>
+              </div>
+            </motion.button>
+
             {/* Edit Profile Button */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => { soundManager.play('transition'); navigate('/profile/edit'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="profile-section bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full mt-4 relative z-20"
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full mt-4 relative z-20"
             >
               <div className="flex items-center justify-center space-x-2">
-                <FaUser className="text-lg" />
+                <FaEdit className="text-lg" />
                 <span>Edit Profile</span>
               </div>
             </motion.button>
