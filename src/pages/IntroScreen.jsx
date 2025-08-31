@@ -28,6 +28,7 @@ export default function IntroScreen() {
   const [currentTheme, setCurrentTheme] = useState('tech-bg');
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [eventData, setEventData] = useState(null);
+  const [showAudioPrompt, setShowAudioPrompt] = useState(false);
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const contentRef = useRef(null);
@@ -114,6 +115,10 @@ export default function IntroScreen() {
         const data = await response.json();
         if (data.isActive) {
           setEventData(data);
+          // Show audio prompt when event is active
+          if (!localStorage.getItem('audioPermissionGranted')) {
+            setShowAudioPrompt(true);
+          }
         }
       } catch (error) {
         console.error('Error loading event data:', error);
@@ -221,6 +226,12 @@ export default function IntroScreen() {
       'tech-bg6': 'NEON TUNNEL',
     };
     return names[currentTheme] || 'LOONY CIRCLES';
+  };
+
+  const handleEnableAudio = () => {
+    soundManager.startMusicOnInteraction();
+    localStorage.setItem('audioPermissionGranted', 'true');
+    setShowAudioPrompt(false);
   };
 
   return (
@@ -364,6 +375,47 @@ export default function IntroScreen() {
         {/* Video Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/20 to-gray-900/60" />
       </motion.div>
+
+      {/* Audio Permission Prompt */}
+      <AnimatePresence>
+        {showAudioPrompt && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[1001] flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md mx-auto text-center shadow-2xl border border-gray-200 dark:border-gray-700"
+              initial={{ scale: 0.8, y: 50 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.8, y: 50 }}
+            >
+              <div className="text-6xl mb-4">🎵</div>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+                Battle Event Active!
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                Enable audio to experience the full battle atmosphere with epic background music.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleEnableAudio}
+                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition-all"
+                >
+                  🔊 Enable Audio
+                </button>
+                <button
+                  onClick={() => setShowAudioPrompt(false)}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
+                >
+                  Skip
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Event Showdown */}
       {eventData && <EventShowdown eventData={eventData} />}

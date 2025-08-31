@@ -6,8 +6,8 @@ const mathJaxConfig = {
   loader: { load: ['[tex]/html'] },
   tex: {
     packages: { '[+]': ['html'] },
-    inlineMath: [['$', '$'], ['\\(', '\\)']],
-    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    inlineMath: [['$', '$'], ['\\(', '\\)'], ['( ', ' )']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]'], ['[ ', ' ]']],
     processEscapes: true,
     processEnvironments: true
   },
@@ -30,7 +30,12 @@ export function MathProvider({ children }) {
 export default function MathText({ children, inline = false, className = "" }) {
   if (!children) return null;
   
-  const content = typeof children === 'string' ? children : String(children);
+  let content = typeof children === 'string' ? children : String(children);
+  
+  // Convert NeuraX format to standard LaTeX delimiters
+  content = content
+    .replace(/\( ([^)]+) \)/g, '\\($1\\)')
+    .replace(/\[ ([^\]]+) \]/g, '\\[$1\\]');
   
   return (
     <MathJax 
