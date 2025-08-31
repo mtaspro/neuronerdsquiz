@@ -38,6 +38,7 @@ import { secureStorage } from './utils/secureStorage.js';
 import MaintenanceOverlay from './components/MaintenanceOverlay';
 import MaintenanceNotification from './components/MaintenanceNotification';
 import { useMaintenance } from './hooks/useMaintenance';
+import CursorProvider from './components/CursorProvider';
 
 // Optional Navbar
 import { useState } from "react";
@@ -471,7 +472,9 @@ export default function App() {
       <DarkModeProvider>
         <NotificationProvider>
           <MathProvider>
-            <AppContent />
+            <CursorProvider>
+              <AppContent />
+            </CursorProvider>
           </MathProvider>
         </NotificationProvider>
       </DarkModeProvider>

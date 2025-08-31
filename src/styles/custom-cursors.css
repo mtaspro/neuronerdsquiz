@@ -1,0 +1,52 @@
+/* Custom APNG Cursors with Fallbacks */
+
+/* Default cursor */
+* {
+  cursor: url('../assets/mouse cursor/normal.png'), auto;
+}
+
+/* Link cursor */
+a, button, [role="button"], .cursor-pointer {
+  cursor: url('../assets/mouse cursor/link.png'), pointer;
+}
+
+/* Text cursor */
+input[type="text"], input[type="email"], input[type="password"], 
+textarea, [contenteditable="true"], .cursor-text {
+  cursor: url('../assets/mouse cursor/text.png'), text;
+}
+
+/* Help cursor */
+[title], .cursor-help, .help-icon {
+  cursor: url('../assets/mouse cursor/help.png'), help;
+}
+
+/* Busy/Loading cursor */
+.cursor-wait, .loading {
+  cursor: url('../assets/mouse cursor/busy.png'), wait;
+}
+
+/* Move cursor */
+.cursor-move, .draggable, [draggable="true"] {
+  cursor: url('../assets/mouse cursor/move.png'), move;
+}
+
+/* Unavailable/Not-allowed cursor */
+.cursor-not-allowed, [disabled], .disabled {
+  cursor: url('../assets/mouse cursor/unavailable.png'), not-allowed;
+}
+
+/* Precision/Crosshair cursor */
+.cursor-crosshair, .precision-tool {
+  cursor: url('../assets/mouse cursor/precision.png'), crosshair;
+}
+
+/* Utility classes for manual cursor control */
+.cursor-normal { cursor: url('../assets/mouse cursor/normal.png'), auto; }
+.cursor-link { cursor: url('../assets/mouse cursor/link.png'), pointer; }
+.cursor-text { cursor: url('../assets/mouse cursor/text.png'), text; }
+.cursor-help { cursor: url('../assets/mouse cursor/help.png'), help; }
+.cursor-wait { cursor: url('../assets/mouse cursor/busy.png'), wait; }
+.cursor-move { cursor: url('../assets/mouse cursor/move.png'), move; }
+.cursor-not-allowed { cursor: url('../assets/mouse cursor/unavailable.png'), not-allowed; }
+.cursor-crosshair { cursor: url('../assets/mouse cursor/precision.png'), crosshair; }

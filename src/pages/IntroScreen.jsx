@@ -237,8 +237,9 @@ export default function IntroScreen() {
       <motion.div
         className="fixed w-6 h-6 rounded-full pointer-events-none z-[9999] bg-gradient-to-r from-cyan-500 to-purple-500 opacity-60 mix-blend-difference hidden md:block"
         style={{
-          left: mousePosition.x - 12,
-          top: mousePosition.y - 12,
+          left: mousePosition.x,
+          top: mousePosition.y,
+          transform: 'translate(-50%, -50%)'
         }}
         animate={{ 
           scale: [1, 1.2, 1],

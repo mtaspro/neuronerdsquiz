@@ -863,10 +863,11 @@ const About = () => {
       <motion.div
         className="fixed pointer-events-none z-[9999] mix-blend-difference hidden md:block"
         style={{ 
-          left: mousePosition.x - 25, 
-          top: mousePosition.y - 25,
+          left: mousePosition.x, 
+          top: mousePosition.y,
           width: cursorVariant === 'hover' ? '80px' : '50px',
-          height: cursorVariant === 'hover' ? '80px' : '50px'
+          height: cursorVariant === 'hover' ? '80px' : '50px',
+          transform: 'translate(-50%, -50%)'
         }}
         animate={{
           scale: cursorVariant === 'hover' ? 1.5 : 1,
