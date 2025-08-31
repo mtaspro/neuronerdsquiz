@@ -10,6 +10,7 @@ import {
   FaLinkedin,
   FaWikipediaW,
   FaCode,
+  FaReddit,
   FaDatabase,
   FaServer,
   FaPalette,
@@ -811,6 +812,7 @@ const About = () => {
       ],
       socials: [
         { platform: 'X', icon: FaTwitter, url: 'https://x.com/AAMahtab', color: 'text-gray-800 dark:text-gray-200' },
+        { platform: 'Reddit', icon: FaReddit, url: 'https://www.reddit.com/user/After-Ad9008', color: 'text-gray-800 dark:text-gray-200' },
         { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/mtaspro', color: 'text-gray-800 dark:text-gray-200' },
         { platform: 'Devpost', icon: FaLaptopCode, url: 'https://devpost.com/mtaspro', color: 'text-gray-800 dark:text-gray-200' },
         { platform: 'Email', icon: FaEnvelope, url: 'mailto:mowama36@gmail.com', color: 'text-gray-800 dark:text-gray-200' }
