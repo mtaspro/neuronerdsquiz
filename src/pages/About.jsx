@@ -733,7 +733,6 @@ const FinalMessageSection = ({ navigate, setCursorVariant }) => {
 const About = () => {
   const navigate = useNavigate();
   const containerRef = useRef(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [cursorVariant, setCursorVariant] = useState('default');
   const [particles, setParticles] = useState([]);
   
@@ -760,28 +759,7 @@ const About = () => {
     setParticles(particleArray);
   }, []);
   
-  // Advanced cursor tracking
-  useEffect(() => {
-    let mouseX = 0, mouseY = 0;
-    let cursorX = 0, cursorY = 0;
-    
-    const updateMousePosition = (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-    };
-    
-    const animateCursor = () => {
-      cursorX += (mouseX - cursorX) * 0.1;
-      cursorY += (mouseY - cursorY) * 0.1;
-      setMousePosition({ x: cursorX, y: cursorY });
-      requestAnimationFrame(animateCursor);
-    };
-    
-    window.addEventListener('mousemove', updateMousePosition);
-    animateCursor();
-    
-    return () => window.removeEventListener('mousemove', updateMousePosition);
-  }, []);
+
   
   // Smooth scroll behavior
   useEffect(() => {
@@ -859,35 +837,7 @@ const About = () => {
 
   return (
     <div ref={containerRef} className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200 overflow-hidden">
-      {/* Advanced Custom Cursor - Hidden on Mobile */}
-      <motion.div
-        className="fixed pointer-events-none z-[9999] mix-blend-difference hidden md:block"
-        style={{ 
-          left: mousePosition.x, 
-          top: mousePosition.y,
-          width: cursorVariant === 'hover' ? '80px' : '50px',
-          height: cursorVariant === 'hover' ? '80px' : '50px',
-          transform: 'translate(-50%, -50%)'
-        }}
-        animate={{
-          scale: cursorVariant === 'hover' ? 1.5 : 1,
-          rotate: cursorVariant === 'hover' ? 180 : 0
-        }}
-        transition={{ type: "spring", stiffness: 500, damping: 28 }}
-      >
-        <div className="w-full h-full rounded-full bg-white opacity-90 flex items-center justify-center">
-          {cursorVariant === 'hover' && (
-            <motion.span 
-              className="text-black text-xs font-bold"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1, rotate: cursorVariant === 'hover' ? -180 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              EXPLORE
-            </motion.span>
-          )}
-        </div>
-      </motion.div>
+
       
       {/* Dynamic Floating Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">

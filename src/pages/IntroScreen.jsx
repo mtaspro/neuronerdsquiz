@@ -20,7 +20,6 @@ export default function IntroScreen() {
   const [particles, setParticles] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
 
   const [textSplits, setTextSplits] = useState([]);
@@ -170,14 +169,7 @@ export default function IntroScreen() {
     setTextSplits(splits);
   }, []);
 
-  // Mouse tracking - Same as Dashboard
-  useEffect(() => {
-    const updateMousePosition = (e) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener("mousemove", updateMousePosition);
-    return () => window.removeEventListener("mousemove", updateMousePosition);
-  }, []);
+
 
   // Handle theme change
   const handleThemeChange = async (themeId) => {
@@ -233,19 +225,7 @@ export default function IntroScreen() {
 
   return (
     <div ref={containerRef} className="relative min-h-screen w-full flex flex-col items-center justify-center bg-gray-900 overflow-hidden">
-      {/* Interactive Cursor Effect - Same as Dashboard */}
-      <motion.div
-        className="fixed w-6 h-6 rounded-full pointer-events-none z-[9999] bg-gradient-to-r from-cyan-500 to-purple-500 opacity-60 mix-blend-difference hidden md:block"
-        style={{
-          left: mousePosition.x,
-          top: mousePosition.y,
-          transform: 'translate(-50%, -50%)'
-        }}
-        animate={{ 
-          scale: [1, 1.2, 1],
-        }}
-        transition={{ duration: 1, repeat: Infinity }}
-      />
+
 
       {/* BASEBORN-Style Preloader */}
       <AnimatePresence>

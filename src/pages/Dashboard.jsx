@@ -27,7 +27,6 @@ const Dashboard = () => {
   const [activeBattleRoom, setActiveBattleRoom] = useState(null);
   const [showSpectatorModal, setShowSpectatorModal] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [particles, setParticles] = useState([]);
   const contentRef = useRef(null);
   const isContentInView = useInView(contentRef, { once: true, margin: "-100px" });
@@ -50,14 +49,7 @@ const Dashboard = () => {
     setParticles(particleArray);
   }, []);
   
-  // Mouse tracking
-  useEffect(() => {
-    const updateMousePosition = (e) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener("mousemove", updateMousePosition);
-    return () => window.removeEventListener("mousemove", updateMousePosition);
-  }, []);
+
   
   // Check for existing battle room
   useEffect(() => {
@@ -328,19 +320,7 @@ const Dashboard = () => {
         ))}
       </div>
       
-      {/* Interactive Cursor Effect */}
-      <motion.div
-        className="fixed w-6 h-6 rounded-full pointer-events-none z-[9999] bg-gradient-to-r from-cyan-500 to-purple-500 opacity-60 mix-blend-difference"
-        style={{
-          left: mousePosition.x,
-          top: mousePosition.y,
-          transform: 'translate(-50%, -50%)'
-        }}
-        animate={{ 
-          scale: [1, 1.2, 1],
-        }}
-        transition={{ duration: 1, repeat: Infinity }}
-      />
+
       {/* Header */}
       <motion.div 
         className="bg-gradient-to-r from-cyan-900 via-blue-900 to-purple-900 dark:from-gray-800 dark:via-gray-900 dark:to-purple-900 p-8 relative overflow-hidden"
