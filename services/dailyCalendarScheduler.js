@@ -72,15 +72,11 @@ class DailyCalendarScheduler {
 Data:
 Day: ${calendarData.dayName}
 English Date: ${calendarData.englishDate}
-Bangla Date: ${calendarData.banglaDate}
-Hijri Date: ${calendarData.hijriDate}
 Holidays: ${calendarData.hasHolidays ? calendarData.holidays.join(', ') : 'None'}
 Exams: ${examInfo}
 
 Format:
 📅 Today: ${calendarData.dayName}, ${calendarData.englishDate}
-🗓️ বাংলা তারিখ: ${calendarData.banglaDate}
-🕌 Hijri Date: ${calendarData.hijriDate}
 
 ${calendarData.hasHolidays ? '🎉 Special: ' + calendarData.holidays.join(', ') + ' - Enjoy responsibly!' : '💡 Daily Motivation: [Write something funny/witty/slightly roasting but motivational]'}
 

@@ -416,7 +416,6 @@ export default function IntroScreen() {
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* Event Showdown */}
       {eventData && <EventShowdown eventData={eventData} />}
 
