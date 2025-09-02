@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 import './styles/transitions.css';
+import './styles/smooth-scroll.css';
 import { AnimatePresence, motion } from "framer-motion";
 import IntroScreen from "./pages/IntroScreen";
 import QuizPage from "./pages/QuizPage";
@@ -39,6 +40,7 @@ import MaintenanceOverlay from './components/MaintenanceOverlay';
 import MaintenanceNotification from './components/MaintenanceNotification';
 import { useMaintenance } from './hooks/useMaintenance';
 import CursorProvider from './components/CursorProvider';
+import { SmoothScrollProvider } from './components/SmoothScrollProvider';
 
 // Optional Navbar
 import { useState } from "react";
@@ -415,10 +417,10 @@ function AppContent() {
     };
   }, []);
 
-  // Smooth scroll behavior and page transition enhancements
+  // Page transition enhancements and Lenis setup
   React.useEffect(() => {
-    // Add smooth scroll behavior
-    document.documentElement.style.scrollBehavior = 'smooth';
+    // Add Lenis class for smooth scrolling
+    document.documentElement.classList.add('lenis');
     
     // Preload critical animations
     const preloadAnimations = () => {
@@ -433,7 +435,7 @@ function AppContent() {
     preloadAnimations();
     
     return () => {
-      document.documentElement.style.scrollBehavior = 'auto';
+      document.documentElement.classList.remove('lenis');
     };
   }, []);
 
@@ -473,7 +475,9 @@ export default function App() {
         <NotificationProvider>
           <MathProvider>
             <CursorProvider>
-              <AppContent />
+              <SmoothScrollProvider>
+                <AppContent />
+              </SmoothScrollProvider>
             </CursorProvider>
           </MathProvider>
         </NotificationProvider>

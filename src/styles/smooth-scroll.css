@@ -1,0 +1,55 @@
+/* Smooth Scroll Styles */
+
+/* Ensure smooth scrolling works properly */
+html {
+  scroll-behavior: auto; /* Let Lenis handle smooth scrolling */
+}
+
+/* Optimize scroll performance */
+html.lenis {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+/* Parallax container optimization */
+.parallax-container {
+  will-change: transform;
+  transform: translateZ(0); /* Hardware acceleration */
+}
+
+/* Background parallax elements */
+.parallax-bg {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Text parallax elements */
+.parallax-text {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Smooth scroll indicators */
+.scroll-indicator {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .parallax-container {
+    transform: none; /* Disable parallax on mobile for performance */
+  }
+  
+  .parallax-bg,
+  .parallax-text {
+    transform: none;
+  }
+}

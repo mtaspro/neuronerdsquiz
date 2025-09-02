@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
+    "@studio-freight/lenis": "^1.0.42",
     "@whiskeysockets/baileys": "^6.7.18",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
@@ -26,6 +27,7 @@
     "ical": "^0.8.0",
     "jsonwebtoken": "^9.0.2",
     "katex": "^0.16.22",
+    "lenis": "^1.3.11",
     "lottie-react": "^2.4.1",
     "mongoose": "^7.6.0",
     "multer": "^2.0.2",

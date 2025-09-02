@@ -24,6 +24,7 @@ import {
   FaEnvelope,
   FaLaptopCode
 } from 'react-icons/fa';
+import ParallaxElement from '../components/ParallaxElement';
 
 // Team Section Component
 const TeamSection = ({ teamMembers, setCursorVariant }) => {
@@ -839,19 +840,18 @@ const About = () => {
     <div ref={containerRef} className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200 overflow-hidden">
 
       
-      {/* Dynamic Floating Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      {/* Dynamic Floating Elements with Parallax */}
+      <ParallaxElement speed={0.4} className="fixed inset-0 overflow-hidden pointer-events-none">
         {particles.map((particle) => (
           <motion.div
             key={particle.id}
-            className={`absolute rounded-full bg-${particle.color}-400`}
+            className={`absolute rounded-full bg-${particle.color}-400 parallax-bg`}
             style={{
               left: `${particle.x}%`,
               top: `${particle.y}%`,
               width: `${particle.size}px`,
               height: `${particle.size}px`,
               opacity: particle.opacity * 0.4,
-              y: scrollY
             }}
             animate={{
               y: [0, -100, 0],
@@ -866,21 +866,27 @@ const About = () => {
             }}
           />
         ))}
+      </ParallaxElement>
         
-        {/* Scroll-reactive geometric shapes */}
-        <motion.div
-          className="absolute top-1/4 right-10 w-20 h-20 border-4 border-cyan-400/30"
-          style={{ rotate, scale }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 left-10 w-16 h-16 bg-purple-500/20 rounded-full"
-          style={{ y: scrollY, rotate: rotate }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/2 w-24 h-24 border-2 border-pink-400/20 rotate-45"
-          style={{ scale, rotate: useTransform(scrollYProgress, [0, 1], [0, -360]) }}
-        />
-      </div>
+        {/* Scroll-reactive geometric shapes with Parallax */}
+        <ParallaxElement speed={0.6}>
+          <motion.div
+            className="absolute top-1/4 right-10 w-20 h-20 border-4 border-cyan-400/30 parallax-bg"
+            style={{ rotate, scale }}
+          />
+        </ParallaxElement>
+        <ParallaxElement speed={0.3}>
+          <motion.div
+            className="absolute bottom-1/4 left-10 w-16 h-16 bg-purple-500/20 rounded-full parallax-bg"
+            style={{ rotate: rotate }}
+          />
+        </ParallaxElement>
+        <ParallaxElement speed={0.8}>
+          <motion.div
+            className="absolute top-1/2 left-1/2 w-24 h-24 border-2 border-pink-400/20 rotate-45 parallax-bg"
+            style={{ scale, rotate: useTransform(scrollYProgress, [0, 1], [0, -360]) }}
+          />
+        </ParallaxElement>
       
       {/* Parallax Header */}
       <motion.div 

@@ -13,6 +13,7 @@ import SoundToggle from '../components/SoundToggle';
 import soundManager from '../utils/soundUtils';
 import { secureStorage } from '../utils/secureStorage.js';
 import { authHeader } from '../utils/auth.js';
+import ParallaxElement from '../components/ParallaxElement';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -293,12 +294,12 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-blue-950 dark:to-purple-950 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
-      {/* Animated Background Particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Animated Background Particles with Parallax */}
+      <ParallaxElement speed={0.2} className="absolute inset-0 overflow-hidden pointer-events-none">
         {particles.map((particle) => (
           <motion.div
             key={particle.id}
-            className="absolute bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full"
+            className="absolute bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full parallax-bg"
             style={{
               left: `${particle.x}%`,
               top: `${particle.y}%`,
@@ -318,7 +319,7 @@ const Dashboard = () => {
             }}
           />
         ))}
-      </div>
+      </ParallaxElement>
       
 
       {/* Header */}

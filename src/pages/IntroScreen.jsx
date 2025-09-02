@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useInView, useScroll, useTransform } from "fra
 import { FaPalette } from "react-icons/fa";
 import ThemeSelector from "../components/ThemeSelector";
 import EventShowdown from "../components/EventShowdown";
+import ParallaxElement from "../components/ParallaxElement";
 
 // Import theme videos
 import techVideo from "../assets/tech-bg.mp4";
@@ -348,15 +349,16 @@ export default function IntroScreen() {
         ))}
       </div>
 
-      {/* Background Video with Parallax */}
-      <motion.div
-        className="absolute inset-0 w-full h-full pointer-events-none z-0"
-        style={{ y, opacity }}
-        initial={{ opacity: 0, scale: 1.1 }}
-        animate={{ opacity: showVideo ? 0.4 : 0, scale: 1 }}
-        transition={{ duration: 2, ease: [0.23, 1, 0.32, 1] }}
-        key={currentTheme}
-      >
+      {/* Background Video with Enhanced Parallax */}
+      <ParallaxElement speed={0.3} className="absolute inset-0 w-full h-full pointer-events-none z-0">
+        <motion.div
+          className="w-full h-full parallax-bg"
+          style={{ opacity }}
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{ opacity: showVideo ? 0.4 : 0, scale: 1 }}
+          transition={{ duration: 2, ease: [0.23, 1, 0.32, 1] }}
+          key={currentTheme}
+        >
         <video
           ref={videoRef}
           className="w-full h-full object-cover"
@@ -374,7 +376,8 @@ export default function IntroScreen() {
         />
         {/* Video Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/20 to-gray-900/60" />
-      </motion.div>
+        </motion.div>
+      </ParallaxElement>
 
       {/* Audio Permission Prompt */}
       <AnimatePresence>
@@ -424,17 +427,19 @@ export default function IntroScreen() {
         ref={contentRef}
         className="relative z-10 text-center px-6 max-w-5xl mx-auto py-12"
       >
-        <motion.h1
-          initial={{ y: 60, opacity: 0 }}
-          animate={{
-            y: isContentInView ? 0 : 60,
-            opacity: isContentInView ? 1 : 0,
-          }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-extrabold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent tracking-tight"
-        >
-          NeuroNerds Quiz
-        </motion.h1>
+        <ParallaxElement speed={0.1}>
+          <motion.h1
+            initial={{ y: 60, opacity: 0 }}
+            animate={{
+              y: isContentInView ? 0 : 60,
+              opacity: isContentInView ? 1 : 0,
+            }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-extrabold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent tracking-tight parallax-text"
+          >
+            NeuroNerds Quiz
+          </motion.h1>
+        </ParallaxElement>
 
         <motion.p
           initial={{ y: 40, opacity: 0 }}
