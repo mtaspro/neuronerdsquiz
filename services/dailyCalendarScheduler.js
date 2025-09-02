@@ -76,11 +76,11 @@ Holidays: ${calendarData.hasHolidays ? calendarData.holidays.join(', ') : 'None'
 Exams: ${examInfo}
 
 Format:
-📅 Today: ${calendarData.dayName}, ${calendarData.englishDate}
+Today: *${calendarData.dayName}, ${calendarData.englishDate}*
 
 ${calendarData.hasHolidays ? '🎉 Special: ' + calendarData.holidays.join(', ') + ' - Enjoy responsibly!' : '💡 Daily Motivation: [Write something funny/witty/slightly roasting but motivational]'}
 
-${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `📚 Exam Alert\n${e.examName} - TODAY! Time to show what you've got! 💪` : `📚 Exam Alert\n${e.examName} in ${e.daysLeft} days - Stop wasting time and start studying! 📖`).join('\n\n') : ''}
+${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `📚 Exam Alert\n*${e.examName}* - *TODAY*! Time to show what you've got! 💪` : `📚 Exam Alert\n*${e.examName}* in *${e.daysLeft}* days - Stop wasting time and start studying! 📖`).join('\n\n') : ''}
 
 Make it engaging with humor, light teasing, or clever motivation. Be relatable to students!`;
 
