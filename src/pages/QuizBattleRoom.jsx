@@ -794,23 +794,34 @@ const QuizBattleRoom = () => {
                         user.isReady ? 'border-green-400 bg-green-400 bg-opacity-20' : 'border-gray-600'
                       }`}
                     >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center font-bold text-lg">
-                          {user.username.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold">{user.username}</h3>
-                          <div className="flex items-center space-x-2 text-sm">
-                            {user.isReady ? (
-                              <>
-                                <FaCheck className="text-green-400" />
-                                <span className="text-green-400">Ready</span>
-                              </>
-                            ) : (
-                              <span className="text-gray-400">Waiting...</span>
-                            )}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center font-bold text-lg">
+                            {user.username.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold">{user.username}</h3>
+                            <div className="flex items-center space-x-2 text-sm">
+                              {user.isReady ? (
+                                <>
+                                  <FaCheck className="text-green-400" />
+                                  <span className="text-green-400">Ready</span>
+                                </>
+                              ) : (
+                                <span className="text-gray-400">Waiting...</span>
+                              )}
+                            </div>
                           </div>
                         </div>
+                        {isRoomCreator && user.id !== userData?._id && !battleStarted && (
+                          <button
+                            onClick={() => handleKickUser(user.id, user.username)}
+                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                            title="Kick user"
+                          >
+                            Kick
+                          </button>
+                        )}
                       </div>
                     </motion.div>
                   ))}
@@ -877,7 +888,7 @@ const QuizBattleRoom = () => {
             </div>
 
             {/* Start Battle Button (Room Creator Only) */}
-            {isRoomCreator && users?.length >= 2 && users?.every(user => user.isReady) && securityInitialized && (
+            {isRoomCreator && users?.length >= 2 && users?.every(user => user.isReady) && isReady && securityInitialized && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
