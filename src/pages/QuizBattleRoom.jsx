@@ -410,7 +410,11 @@ const QuizBattleRoom = () => {
         console.error('Failed to mark battle as started:', error);
       }
       
-      battleSocketHelpers.startBattle(roomId, questionsToUse, userData._id);
+      socket.emit('startBattle', {
+        roomId,
+        questions: questionsToUse,
+        creatorUserId: userData._id
+      });
     } catch (error) {
       console.error('Error starting battle:', error);
       showError('Failed to start battle. Please try again.');
@@ -436,16 +440,16 @@ const QuizBattleRoom = () => {
     soundManager.play(isCorrect ? 'correctAnswer' : 'wrongAnswer');
 
     if (userData?._id) {
-      battleSocketHelpers.submitAnswer(
+      socket.emit('answerQuestion', {
         roomId,
-        userData._id,
-        currentQuestion,
-        selectedAnswer,
+        userId: userData._id,
+        questionIndex: currentQuestion,
+        answer: selectedAnswer,
         isCorrect,
-        finalTimeSpent,
-        selectedChapter,
+        timeSpent: finalTimeSpent,
+        chapterName: selectedChapter,
         lifelineUsed
-      );
+      });
     }
 
     setAnswered(true);
@@ -575,7 +579,7 @@ const QuizBattleRoom = () => {
 
   const handleLeaveRoom = async () => {
     if (userData?._id) {
-      battleSocketHelpers.leaveRoom(roomId, userData._id);
+      socket.emit('leaveRoom', { roomId, userId: userData._id });
       
       // If user is room creator and battle hasn't started, expire the room
       if (isRoomCreator && !battleStarted) {
