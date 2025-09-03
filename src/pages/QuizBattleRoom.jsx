@@ -139,7 +139,11 @@ const QuizBattleRoom = () => {
           setConnected(true);
           info('Connected to battle server');
           const username = userData.username || userData.email?.split('@')[0] || 'User';
-          socket.battleHelpers.joinRoom(roomId, userData._id, username);
+          socket.emit('joinBattleRoom', {
+            roomId,
+            userId: userData._id,
+            username
+          });
         });
 
         socket.addListener('roomJoined', (data) => {
@@ -277,7 +281,11 @@ const QuizBattleRoom = () => {
         if (connectionInfo.connected) {
           setConnected(true);
           const username = userData.username || userData.email?.split('@')[0] || 'User';
-          socket.battleHelpers.joinRoom(roomId, userData._id, username);
+          socket.emit('joinBattleRoom', {
+            roomId,
+            userId: userData._id,
+            username
+          });
         }
 
       } catch (error) {

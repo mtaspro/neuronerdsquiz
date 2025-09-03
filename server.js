@@ -330,7 +330,8 @@ io.on('connection', (socket) => {
           username: user.username,
           isReady: user.isReady
         })),
-        status: room.status
+        status: room.status,
+        creatorId: room.creatorId
       });
 
       console.log(`User ${username} joined room ${roomId}. Total users: ${room.users.size}`);
