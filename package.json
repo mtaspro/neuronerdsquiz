@@ -23,8 +23,6 @@
     "dompurify": "^3.2.6",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "express-rate-limit": "^8.0.1",
-    "express-validator": "^7.2.1",
     "framer-motion": "^12.23.9",
     "ical": "^0.8.0",
     "jsonwebtoken": "^9.0.2",

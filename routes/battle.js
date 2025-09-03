@@ -57,10 +57,10 @@ router.post('/start', sessionMiddleware, async (req, res) => {
     if (activeBattleRoom && activeBattleRoom.id === roomId) {
       activeBattleRoom.status = 'started';
       
-      // Broadcast to all connected clients
-      if (req.app.get('io')) {
-        req.app.get('io').emit('battleStarted', activeBattleRoom);
-      }
+      // Don't emit battleStarted here - let socket handler do it with questions
+      // if (req.app.get('io')) {
+      //   req.app.get('io').emit('battleStarted', activeBattleRoom);
+      // }
       
       // Send WhatsApp notifications with join link
       await sendBattleStartedNotifications(roomId, activeBattleRoom.chapter);
