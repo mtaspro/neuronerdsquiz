@@ -370,19 +370,24 @@ const QuizBattleRoom = () => {
                 _id: q._id,
                 question: q.question,
                 options: q.options,
-                correctAnswer: q.options.indexOf(q.correctAnswer),
+                correctAnswer: typeof q.correctAnswer === 'string' ? q.options.indexOf(q.correctAnswer) : q.correctAnswer,
                 explanation: q.explanation
               }));
               
+              console.log('✅ Questions transformed:', questionsToUse.length, 'Sample:', questionsToUse[0]);
+              
               success(`Loaded ${questionsToUse.length} random questions from ${selectedChapter} (Config: ${battleQuestionCount})`);
             } else {
+              console.error('❌ No questions in response:', chapterQuestions);
               showError(`No questions found in ${selectedChapter}`);
             }
           } else {
             throw new Error(`HTTP ${response.status}`);
           }
         } catch (error) {
-          console.error('Failed to fetch chapter questions:', error);
+          console.error('❌ Failed to fetch chapter questions:', error);
+          console.error('❌ Response status:', error.response?.status);
+          console.error('❌ Response data:', error.response?.data);
           showError(`Failed to load questions from ${selectedChapter}: ${error.message}`);
         }
       }
