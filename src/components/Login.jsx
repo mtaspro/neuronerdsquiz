@@ -6,6 +6,7 @@ import useTypingSound from '../hooks/useTypingSound';
 import soundManager from '../utils/soundUtils';
 import { secureStorage } from '../utils/secureStorage.js';
 import LoadingAnimation from '../components/LoadingAnimation';
+import ForgotPassword from './ForgotPassword';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
   const { handleKeyDown } = useTypingSound();
 
@@ -88,6 +90,14 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-purple-900 flex items-center justify-center p-4">
+        <ForgotPassword onBack={() => setShowForgotPassword(false)} />
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -227,7 +237,14 @@ const Login = () => {
             </motion.button>
           </div>
 
-          <div className="text-center">
+          <div className="text-center space-y-2">
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
+            >
+              Forgot your password?
+            </button>
             <p className="text-sm text-gray-600 dark:text-gray-300">
               Don't have an account?{' '}
               <button
