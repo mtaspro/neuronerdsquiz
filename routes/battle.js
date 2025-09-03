@@ -21,7 +21,7 @@ router.post('/create', sessionMiddleware, async (req, res) => {
     }
     
     // Set active battle room
-    activeBattleRoom = { id: roomId, chapter, status: 'waiting' };
+    activeBattleRoom = { id: roomId, chapter, status: 'waiting', creatorId: req.user.id };
     battleRoomCreator = req.user.id; // Track the creator
     
     // Broadcast to all connected clients via socket
@@ -41,6 +41,11 @@ router.post('/create', sessionMiddleware, async (req, res) => {
 
 // Get active battle room
 router.get('/active', (req, res) => {
+  // Don't return ended or expired rooms
+  if (activeBattleRoom && (activeBattleRoom.status === 'ended' || activeBattleRoom.status === 'expired')) {
+    activeBattleRoom = null;
+    battleRoomCreator = null;
+  }
   res.json({ battleRoom: activeBattleRoom });
 });
 
@@ -98,7 +103,7 @@ router.post('/end', sessionMiddleware, async (req, res) => {
           req.app.get('io').emit('battleRoomClosed');
         }
         console.log(`🗑️ Battle room ${roomId} cleared after ending`);
-      }, 5000); // Reduced to 5 seconds
+      }, 2000); // Reduced to 2 seconds for faster cleanup
       
       res.json({ success: true, battleRoom: activeBattleRoom });
     } else {

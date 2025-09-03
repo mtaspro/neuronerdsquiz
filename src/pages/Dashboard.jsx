@@ -60,7 +60,7 @@ const Dashboard = () => {
         const response = await fetch(`${apiUrl}/api/battle/active`);
         const data = await response.json();
         
-        if (data.battleRoom && data.battleRoom.status !== 'expired') {
+        if (data.battleRoom && data.battleRoom.status !== 'expired' && data.battleRoom.status !== 'ended') {
           setActiveBattleRoom(data.battleRoom);
           setBattleRoomId(data.battleRoom.id);
         } else {
@@ -69,13 +69,16 @@ const Dashboard = () => {
         }
       } catch (error) {
         console.error('Failed to check existing battle room:', error);
+        // Clear state on error to prevent stale data
+        setActiveBattleRoom(null);
+        setBattleRoomId('');
       }
     };
     
     checkExistingBattleRoom();
     
-    // Poll for battle room updates every 5 seconds
-    const interval = setInterval(checkExistingBattleRoom, 5000);
+    // Poll for battle room updates every 3 seconds for faster updates
+    const interval = setInterval(checkExistingBattleRoom, 3000);
     return () => clearInterval(interval);
   }, []);
   
@@ -633,8 +636,9 @@ const Dashboard = () => {
                   </div>
                 </motion.button>
                 
-                {/* End Battle Button - Only show if battle is active and user is admin/superadmin */}
-                {activeBattleRoom && activeBattleRoom.status === 'started' && (user?.isAdmin || user?.isSuperAdmin) && (
+                {/* End Battle Button - Show if battle exists and user is creator, admin, or superadmin */}
+                {activeBattleRoom && (activeBattleRoom.status === 'waiting' || activeBattleRoom.status === 'started') && 
+                 (activeBattleRoom.creatorId === user?._id || user?.isAdmin || user?.isSuperAdmin) && (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -643,7 +647,10 @@ const Dashboard = () => {
                   >
                     <div className="flex items-center justify-center space-x-2">
                       <span>🛑</span>
-                      <span>End Battle (Admin)</span>
+                      <span>
+                        {activeBattleRoom.creatorId === user?._id ? 'End Battle (Creator)' : 
+                         user?.isSuperAdmin ? 'End Battle (Super Admin)' : 'End Battle (Admin)'}
+                      </span>
                     </div>
                   </motion.button>
                 )}
