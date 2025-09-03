@@ -1087,11 +1087,20 @@ const QuizBattleRoom = () => {
                       </p>
                     </div>
                   )}
+                  
+                  {userData?.isSuperAdmin && !helpUsed && (
+                    <div className="bg-purple-500 bg-opacity-20 border border-purple-400 rounded-lg p-3 mb-4">
+                      <p className="text-purple-300 text-sm">
+                        👑 Super Admin: Correct answer highlighted with crown icon
+                      </p>
+                    </div>
+                  )}
 
                   <div className="space-y-3">
                     {questions?.[currentQuestion]?.options?.map((option, index) => {
                       const isHidden = hiddenOptions.has(index);
                       const isCorrect = helpUsed && index === questions?.[currentQuestion]?.correctAnswer;
+                      const isSuperAdminCorrect = userData?.isSuperAdmin && index === questions?.[currentQuestion]?.correctAnswer;
                       
                       if (isHidden) {
                         return (
@@ -1120,6 +1129,8 @@ const QuizBattleRoom = () => {
                               ? 'bg-red-500 text-white'
                               : isCorrect
                               ? 'bg-green-400 bg-opacity-30 border border-green-400 text-white'
+                              : isSuperAdminCorrect
+                              ? 'bg-yellow-400 bg-opacity-30 border border-yellow-400 text-white'
                               : 'bg-white bg-opacity-10 hover:bg-opacity-20 text-white'
                           }`}
                           whileHover={{ scale: answered ? 1 : 1.02 }}
@@ -1127,6 +1138,7 @@ const QuizBattleRoom = () => {
                         >
                           <span className="font-semibold mr-3">{String.fromCharCode(65 + index)}.</span>
                           {isCorrect && <span className="text-green-300 mr-2">✓</span>}
+                          {isSuperAdminCorrect && !isCorrect && <span className="text-yellow-300 mr-2">👑</span>}
                           <MathText>{option}</MathText>
                         </motion.button>
                       );
