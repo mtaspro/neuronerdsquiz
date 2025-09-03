@@ -29,8 +29,9 @@ router.post('/create', sessionMiddleware, async (req, res) => {
       req.app.get('io').emit('battleRoomCreated', activeBattleRoom);
     }
     
-    // Send WhatsApp group notification
-    await sendBattleNotification(`🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\nVisit dashboard and join now to test your skills!`);
+    // Send WhatsApp group notification with quick join link
+    const battleUrl = `https://neuronerdsquiz.vercel.app/battle/${roomId}`;
+    await sendBattleNotification(`🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\n🚀 Quick Join: ${battleUrl}\n\nOr visit dashboard and join now to test your skills!`);
     
     res.json({ success: true, battleRoom: activeBattleRoom });
   } catch (error) {
@@ -184,28 +185,16 @@ async function sendBattleNotification(message) {
   }
 }
 
-// Helper function to send battle started notifications with join links
+// Helper function to send battle started notifications (group only)
 async function sendBattleStartedNotifications(roomId, chapter) {
   try {
-    // Send to configured group
+    // Send to configured group only
     const WhatsAppSettings = (await import('../models/WhatsAppSettings.js')).default;
     const setting = await WhatsAppSettings.findOne({ settingKey: 'battleNotificationGroup' });
     
     if (setting?.settingValue) {
-      const battleUrl = `https://neuronerdsquiz.vercel.app/battle/${roomId}`;
-      const message = `🔥 *QUIZ BATTLE STARTED!* 🔥\n\n⚔️ Chapter: *${chapter}*\n🎯 Join the epic battle now!\n\n🚀 *Quick Join:* ${battleUrl}\n\n💡 Or go to Dashboard → Join Battle\n\nHurry up! The battle has begun! ⚡`;
+      const message = `🔥 *QUIZ BATTLE STARTED!* 🔥\n\n⚔️ Chapter: *${chapter}*\n🎯 The epic battle has begun!\n\n💡 Go to Dashboard → Join Battle\n\nHurry up! ⚡`;
       await whatsappService.sendGroupMessage(setting.settingValue, message);
-    }
-    
-    // Send to all registered users with WhatsApp notifications enabled
-    const users = await User.find({ 
-      whatsappNotifications: true,
-      phoneNumber: { $exists: true, $ne: '' }
-    });
-    
-    if (users.length > 0) {
-      const phoneNumbers = users.map(user => user.phoneNumber).filter(phone => phone);
-      await whatsappService.broadcastBattleNotification(phoneNumbers, roomId, chapter);
     }
   } catch (error) {
     console.error('Error sending battle started notifications:', error);
