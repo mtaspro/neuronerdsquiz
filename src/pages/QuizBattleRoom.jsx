@@ -420,20 +420,11 @@ const QuizBattleRoom = () => {
       }
       
       console.log('🚀 Starting battle with questions:', questionsToUse.length);
-      console.log('📤 Emitting startBattle event...');
       socket.emit('startBattle', {
         roomId,
         questions: questionsToUse,
         creatorUserId: userData._id
       });
-      
-      // Add timeout to detect if battleStarted event is not received
-      setTimeout(() => {
-        if (!battleStarted) {
-          console.error('❌ battleStarted event not received within 5 seconds');
-          showError('Battle failed to start. Please try again.');
-        }
-      }, 5000);
     } catch (error) {
       console.error('Error starting battle:', error);
       showError('Failed to start battle. Please try again.');
