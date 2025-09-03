@@ -163,6 +163,29 @@ class WhatsAppService {
     return results;
   }
 
+  async broadcastBattleNotification(phoneNumbers, roomId, chapter) {
+    if (!this.isConnected || !phoneNumbers.length) return false;
+    
+    const battleUrl = `https://neuronerdsquiz.vercel.app/battle/${roomId}`;
+    const message = `🔥 *QUIZ BATTLE STARTED!* 🔥
+
+⚔️ Chapter: *${chapter}*
+🎯 Join the epic battle now!
+
+🚀 *Quick Join:* ${battleUrl}
+
+💡 Or go to Dashboard → Join Battle
+
+Hurry up! The battle has begun! ⚡`;
+    
+    const results = [];
+    for (const phone of phoneNumbers) {
+      const result = await this.sendMessage(phone, message);
+      results.push({ phone, success: result });
+    }
+    return results;
+  }
+
   getQRCode() {
     return this.currentQR;
   }

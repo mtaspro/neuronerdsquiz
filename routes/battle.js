@@ -57,8 +57,8 @@ router.post('/start', sessionMiddleware, async (req, res) => {
         req.app.get('io').emit('battleStarted', activeBattleRoom);
       }
       
-      // Send WhatsApp group notification
-      await sendBattleNotification(`⚡ Battle Started! ⚡\n\nRoom: ${roomId}\nChapter: ${activeBattleRoom.chapter}\n\nThe battle has begun!`);
+      // Send WhatsApp notifications with join link
+      await sendBattleStartedNotifications(roomId, activeBattleRoom.chapter);
       
       res.json({ success: true, battleRoom: activeBattleRoom });
     } else {
@@ -181,6 +181,34 @@ async function sendBattleNotification(message) {
     }
   } catch (error) {
     console.error('Error sending battle notification:', error);
+  }
+}
+
+// Helper function to send battle started notifications with join links
+async function sendBattleStartedNotifications(roomId, chapter) {
+  try {
+    // Send to configured group
+    const WhatsAppSettings = (await import('../models/WhatsAppSettings.js')).default;
+    const setting = await WhatsAppSettings.findOne({ settingKey: 'battleNotificationGroup' });
+    
+    if (setting?.settingValue) {
+      const battleUrl = `https://neuronerdsquiz.vercel.app/battle/${roomId}`;
+      const message = `🔥 *QUIZ BATTLE STARTED!* 🔥\n\n⚔️ Chapter: *${chapter}*\n🎯 Join the epic battle now!\n\n🚀 *Quick Join:* ${battleUrl}\n\n💡 Or go to Dashboard → Join Battle\n\nHurry up! The battle has begun! ⚡`;
+      await whatsappService.sendGroupMessage(setting.settingValue, message);
+    }
+    
+    // Send to all registered users with WhatsApp notifications enabled
+    const users = await User.find({ 
+      whatsappNotifications: true,
+      phoneNumber: { $exists: true, $ne: '' }
+    });
+    
+    if (users.length > 0) {
+      const phoneNumbers = users.map(user => user.phoneNumber).filter(phone => phone);
+      await whatsappService.broadcastBattleNotification(phoneNumbers, roomId, chapter);
+    }
+  } catch (error) {
+    console.error('Error sending battle started notifications:', error);
   }
 }
 
