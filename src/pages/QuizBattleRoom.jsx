@@ -147,6 +147,7 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('roomJoined', (data) => {
+          console.log('🏠 Room joined event received:', data);
           setRoomData(data);
           setUsers(data.users);
           success(`Joined battle room: ${roomId}`);
@@ -197,10 +198,13 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('battleStarted', async (data) => {
+          console.log('🎯 Battle started event received:', data);
           setBattleStarted(true);
-          setQuestions(data.questions);
+          setQuestions(data.questions || []);
           setCurrentQuestion(0);
           setQuestionStartTime(Date.now());
+          
+          console.log('📝 Questions loaded:', data.questions?.length || 0);
           
           // Load lifeline configuration for battle
           try {
@@ -410,6 +414,7 @@ const QuizBattleRoom = () => {
         console.error('Failed to mark battle as started:', error);
       }
       
+      console.log('🚀 Starting battle with questions:', questionsToUse.length);
       socket.emit('startBattle', {
         roomId,
         questions: questionsToUse,
