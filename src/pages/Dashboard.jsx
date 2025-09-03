@@ -633,8 +633,8 @@ const Dashboard = () => {
                   </div>
                 </motion.button>
                 
-                {/* End Battle Button - Only show if battle is active */}
-                {activeBattleRoom && activeBattleRoom.status === 'started' && (
+                {/* End Battle Button - Only show if battle is active and user is admin/superadmin */}
+                {activeBattleRoom && activeBattleRoom.status === 'started' && (user?.isAdmin || user?.isSuperAdmin) && (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -643,7 +643,7 @@ const Dashboard = () => {
                   >
                     <div className="flex items-center justify-center space-x-2">
                       <span>🛑</span>
-                      <span>End Battle</span>
+                      <span>End Battle (Admin)</span>
                     </div>
                   </motion.button>
                 )}

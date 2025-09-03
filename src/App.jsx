@@ -39,7 +39,6 @@ import { secureStorage } from './utils/secureStorage.js';
 import MaintenanceOverlay from './components/MaintenanceOverlay';
 import MaintenanceNotification from './components/MaintenanceNotification';
 import { useMaintenance } from './hooks/useMaintenance';
-import CursorProvider from './components/CursorProvider';
 import { SmoothScrollProvider } from './components/SmoothScrollProvider';
 
 // Optional Navbar
@@ -476,11 +475,9 @@ export default function App() {
       <DarkModeProvider>
         <NotificationProvider>
           <MathProvider>
-            <CursorProvider>
-              <SmoothScrollProvider>
-                <AppContent />
-              </SmoothScrollProvider>
-            </CursorProvider>
+            <SmoothScrollProvider>
+              <AppContent />
+            </SmoothScrollProvider>
           </MathProvider>
         </NotificationProvider>
       </DarkModeProvider>

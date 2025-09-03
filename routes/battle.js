@@ -144,21 +144,16 @@ router.post('/expire', sessionMiddleware, (req, res) => {
         activeBattleRoom.status === 'waiting') {
       
       console.log(`Battle room ${roomId} expired - creator left before starting`);
-      activeBattleRoom.status = 'expired';
+      
+      // Immediately clear the battle room
+      activeBattleRoom = null;
+      battleRoomCreator = null;
       
       // Broadcast expiration to all connected clients
       if (req.app.get('io')) {
         req.app.get('io').emit('battleRoomExpired', { roomId, reason: 'Creator left' });
+        req.app.get('io').emit('battleRoomClosed');
       }
-      
-      // Clear the battle room after 5 seconds
-      setTimeout(() => {
-        activeBattleRoom = null;
-        battleRoomCreator = null;
-        if (req.app.get('io')) {
-          req.app.get('io').emit('battleRoomClosed');
-        }
-      }, 5000);
       
       res.json({ success: true, expired: true });
     } else {
