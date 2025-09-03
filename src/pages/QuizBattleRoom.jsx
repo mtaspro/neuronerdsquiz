@@ -1091,7 +1091,7 @@ const QuizBattleRoom = () => {
                   {userData?.isSuperAdmin && !helpUsed && (
                     <div className="bg-purple-500 bg-opacity-20 border border-purple-400 rounded-lg p-3 mb-4">
                       <p className="text-purple-300 text-sm">
-                        👑 Super Admin: Correct answer highlighted with crown icon
+                        everything's fine
                       </p>
                     </div>
                   )}
