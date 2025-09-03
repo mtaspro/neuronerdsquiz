@@ -147,7 +147,8 @@ const QuizBattleRoom = () => {
           setUsers(data.users);
           success(`Joined battle room: ${roomId}`);
           
-          if (data.users.length > 0 && data.users[0].id === userData._id) {
+          // Check if user is room creator by creatorId field, not array position
+          if (data.creatorId === userData._id) {
             setIsRoomCreator(true);
             info('You are the room creator');
           }

@@ -18,7 +18,8 @@ class BattleService {
       endTime: null,
       maxUsers: this.maxUsersPerRoom,
       createdAt: new Date(),
-      isActive: true // Track if room is still accepting new users
+      isActive: true, // Track if room is still accepting new users
+      creatorId: null // Track original creator
     };
     
     this.battleRooms.set(roomId, room);
@@ -57,6 +58,15 @@ class BattleService {
       throw new Error('❌ This battle has ended. Please join a new one.');
     }
 
+    // Set creator on first join
+    if (!room.creatorId && room.users.size === 0) {
+      room.creatorId = userId;
+    }
+    
+    // Preserve ready status on rejoin
+    const existingUser = room.users.get(userId);
+    const wasReady = existingUser ? existingUser.isReady : false;
+    
     // Add user to room
     room.users.set(userId, {
       id: userId,
@@ -65,8 +75,8 @@ class BattleService {
       currentQuestion: 0,
       score: 0,
       answers: [],
-      isReady: false,
-      joinedAt: new Date()
+      isReady: wasReady, // Preserve ready state
+      joinedAt: existingUser?.joinedAt || new Date()
     });
 
     return room;
@@ -98,9 +108,8 @@ class BattleService {
       throw new Error('Room not found');
     }
 
-    // Check if user is the room creator (first user)
-    const firstUser = Array.from(room.users.values())[0];
-    if (firstUser.id !== creatorUserId) {
+    // Check if user is the room creator
+    if (room.creatorId !== creatorUserId) {
       throw new Error('Only room creator can start the battle');
     }
 
@@ -246,6 +255,7 @@ class BattleService {
       maxUsers: room.maxUsers,
       startTime: room.startTime,
       endTime: room.endTime,
+      creatorId: room.creatorId,
       users: Array.from(room.users.values()).map(user => ({
         id: user.id,
         username: user.username,
