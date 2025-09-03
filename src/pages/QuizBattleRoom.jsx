@@ -152,6 +152,12 @@ const QuizBattleRoom = () => {
             setIsRoomCreator(true);
             info('You are the room creator');
           }
+          
+          // Find current user in the users list and set ready status
+          const currentUserInRoom = data.users.find(u => u.id === userData._id);
+          if (currentUserInRoom) {
+            setIsReady(currentUserInRoom.isReady || false);
+          }
 
           if (!securityInitialized) {
             setShowSecurityModal(true);
@@ -179,6 +185,11 @@ const QuizBattleRoom = () => {
           setUsers(prev => prev.map(user => 
             user.id === data.userId ? { ...user, isReady: data.isReady } : user
           ));
+          
+          // Update current user's ready status if it's them
+          if (data.userId === userData._id) {
+            setIsReady(data.isReady);
+          }
         });
 
         socket.addListener('battleStarted', async (data) => {
@@ -297,10 +308,10 @@ const QuizBattleRoom = () => {
   }, [battleStarted, questionStartTime, answered]);
 
   const handleReadyToggle = () => {
-    if (!userData?._id) return;
+    if (!userData?._id || !socket) return;
     const newReadyState = !isReady;
     setIsReady(newReadyState);
-    battleSocketHelpers.setReady(roomId, userData._id, newReadyState);
+    socket.emit('setReady', { roomId, userId: userData._id, isReady: newReadyState });
   };
 
   const handleStartBattle = async () => {
@@ -889,7 +900,7 @@ const QuizBattleRoom = () => {
             </div>
 
             {/* Start Battle Button (Room Creator Only) */}
-            {isRoomCreator && users?.length >= 2 && users?.every(user => user.isReady) && isReady && securityInitialized && (
+            {isRoomCreator && users?.length >= 2 && users?.every(user => user.isReady) && securityInitialized && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -902,7 +913,20 @@ const QuizBattleRoom = () => {
                   <FaPlay className="inline mr-2" />
                   Start Battle!
                 </button>
+                <p className="text-sm text-gray-300 mt-2">
+                  All players ready: {users?.filter(u => u.isReady).length}/{users?.length}
+                </p>
               </motion.div>
+            )}
+            
+            {/* Debug info for room creator */}
+            {isRoomCreator && (
+              <div className="text-center mt-4 text-xs text-gray-400">
+                <p>Debug: Creator={isRoomCreator ? '✓' : '✗'} | Players={users?.length}/2 | AllReady={users?.every(user => user.isReady) ? '✓' : '✗'} | Security={securityInitialized ? '✓' : '✗'}</p>
+                {users?.length < 2 && <p className="text-yellow-400">⚠️ Need at least 2 players to start</p>}
+                {!users?.every(user => user.isReady) && <p className="text-yellow-400">⚠️ All players must be ready</p>}
+                {!securityInitialized && <p className="text-yellow-400">⚠️ Security system not initialized</p>}
+              </div>
             )}
           </motion.div>
         ) : battleEnded ? (
