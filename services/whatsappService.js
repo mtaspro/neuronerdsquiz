@@ -172,7 +172,7 @@ class WhatsAppService {
 ⚔️ Chapter: *${chapter}*
 🎯 The epic battle has begun!
 
-👁️ *Watch Live:* ${spectatorUrl}
+👁️ *Watch Live:* ${spectatorstUrl}
 
 💡 Or go to Dashboard → Watch Battle
 
