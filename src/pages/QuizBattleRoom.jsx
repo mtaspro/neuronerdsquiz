@@ -1145,22 +1145,16 @@ const QuizBattleRoom = () => {
                     })}
                   </div>
 
-                  {!answered && selectedAnswer !== null && (
+                  {selectedAnswer !== null && currentQuestion < (questions?.length || 0) - 1 && (
                     <motion.button
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      onClick={handleSubmitAnswer}
-                      className="w-full mt-6 bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"
-                    >
-                      Submit Answer
-                    </motion.button>
-                  )}
-
-                  {answered && currentQuestion < (questions?.length || 0) - 1 && (
-                    <motion.button
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      onClick={handleNextQuestion}
+                      onClick={() => {
+                        if (!answered) {
+                          handleSubmitAnswer();
+                        }
+                        handleNextQuestion();
+                      }}
                       className="w-full mt-6 bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"
                     >
                       Next Question

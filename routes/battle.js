@@ -193,7 +193,7 @@ async function sendBattleStartedNotifications(roomId, chapter) {
     const setting = await WhatsAppSettings.findOne({ settingKey: 'battleNotificationGroup' });
     
     if (setting?.settingValue) {
-      const message = `🔥 *QUIZ BATTLE STARTED!* 🔥\n\n⚔️ Chapter: *${chapter}*\n🎯 The epic battle has begun!\n\n💡 Go to Dashboard → Join Battle\n\nHurry up! ⚡`;
+      const message = `🔥 *QUIZ BATTLE STARTED!* 🔥\n\n⚔️ Chapter: *${chapter}*\n🎯 The epic battle has begun!\n\n💡 Go to Dashboard → Watch Battle\n\nHurry up! ⚡`;
       await whatsappService.sendGroupMessage(setting.settingValue, message);
     }
   } catch (error) {

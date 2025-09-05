@@ -800,14 +800,12 @@ const Dashboard = () => {
       />
       
       {/* Spectator Access Modal */}
-      {activeBattleRoom && (
-        <SpectatorAccess
-          isOpen={showSpectatorModal}
-          onClose={() => setShowSpectatorModal(false)}
-          roomId={activeBattleRoom.id}
-          autoJoin={true}
-        />
-      )}
+      <SpectatorAccess
+        isOpen={showSpectatorModal}
+        onClose={() => setShowSpectatorModal(false)}
+        roomId={activeBattleRoom?.id}
+        autoJoin={true}
+      />
     </div>
   );
 };

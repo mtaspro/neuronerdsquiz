@@ -166,17 +166,17 @@ class WhatsAppService {
   async broadcastBattleNotification(phoneNumbers, roomId, chapter) {
     if (!this.isConnected || !phoneNumbers.length) return false;
     
-    const battleUrl = `https://neuronerdsquiz.vercel.app/battle/${roomId}`;
+    const spectatorUrl = `https://neuronerdsquiz.vercel.app/spectator/${roomId}`;
     const message = `🔥 *QUIZ BATTLE STARTED!* 🔥
 
 ⚔️ Chapter: *${chapter}*
-🎯 Join the epic battle now!
+🎯 The epic battle has begun!
 
-🚀 *Quick Join:* ${battleUrl}
+👁️ *Watch Live:* ${spectatorUrl}
 
-💡 Or go to Dashboard → Join Battle
+💡 Or go to Dashboard → Watch Battle
 
-Hurry up! The battle has begun! ⚡`;
+Don't miss the action! ⚡`;
     
     const results = [];
     for (const phone of phoneNumbers) {
