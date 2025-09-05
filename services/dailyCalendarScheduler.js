@@ -82,8 +82,7 @@ ${calendarData.hasHolidays ? '🎉 Special: ' + calendarData.holidays.join(', ')
 
 ${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `📚 Exam Alert\n*${e.examName}* - *TODAY*! Time to show what you've got! 💪` : `📚 Exam Alert\n*${e.examName}* in *${e.daysLeft}* days - Stop wasting time and start studying! 📖`).join('\n\n') : ''}
 
-Make it engaging with humor, light teasing, or clever motivation. Be relatable to students!`;
-
+Make it engaging with humor, light teasing, or clever motivation. Include Islamic values and be relatable to students!`;
       // Send to NeuraX AI
       const axios = (await import('axios')).default;
       const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
