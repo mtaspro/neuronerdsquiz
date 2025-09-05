@@ -40,13 +40,13 @@ export const useCRUD = (entityType, options = {}) => {
     
     try {
       const result = await apiCall('POST', customUrl, data, controller.signal);
-      if (options.onSuccess) options.onSuccess('create', result);
+      if (result && options.onSuccess) options.onSuccess('create', result);
       return result;
     } catch (err) {
       const errorMsg = err.response?.data?.error || `Failed to create ${entityType}`;
       setError(errorMsg);
       if (options.onError) options.onError('create', errorMsg);
-      throw err;
+      return null;
     } finally {
       setLoading(false);
     }
