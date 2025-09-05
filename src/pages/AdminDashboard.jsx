@@ -270,22 +270,18 @@ export default function AdminDashboard() {
   // Add new subject
   async function handleAddSubject(e) {
     e.preventDefault();
-    try {
-      await subjectsCRUD.create(sanitizeObject(newSubject));
+    const result = await subjectsCRUD.create(sanitizeObject(newSubject));
+    if (result) {
       setNewSubject({ name: '', description: '', order: 0, visible: true });
-    } catch (err) {
-      // Error handled by CRUD hook
     }
   }
 
   // Add new chapter
   async function handleAddChapter(e) {
     e.preventDefault();
-    try {
-      await chaptersCRUD.create(sanitizeObject(newChapter));
+    const result = await chaptersCRUD.create(sanitizeObject(newChapter));
+    if (result) {
       setNewChapter({ name: '', description: '', order: 0, visible: true, practiceMode: false, subject: '' });
-    } catch (err) {
-      // Error handled by CRUD hook
     }
   }
 
@@ -338,16 +334,14 @@ export default function AdminDashboard() {
   // Add new question
   async function handleAddQuestion(e) {
     e.preventDefault();
-    try {
-      const questionData = {
-        ...newQuestion,
-        correctAnswer: newQuestion.options[newQuestion.correctAnswer],
-        adminVisible: adminVisibleForChapter
-      };
-      await questionsCRUD.create(sanitizeObject(questionData));
+    const questionData = {
+      ...newQuestion,
+      correctAnswer: newQuestion.options[newQuestion.correctAnswer],
+      adminVisible: adminVisibleForChapter
+    };
+    const result = await questionsCRUD.create(sanitizeObject(questionData));
+    if (result) {
       setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: selectedChapter, duration: 60, explanation: '' });
-    } catch (err) {
-      // Error handled by CRUD hook
     }
   }
 
