@@ -13,7 +13,18 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
-      sourcemap: false
+      sourcemap: false,
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'react-router-dom'],
+            ui: ['@headlessui/react', 'lucide-react'],
+            math: ['katex', 'react-katex'],
+            utils: ['axios', 'socket.io-client']
+          }
+        }
+      }
     }
   };
 });

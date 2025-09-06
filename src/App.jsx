@@ -1,4 +1,4 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 import './styles/transitions.css';
 import './styles/smooth-scroll.css';
@@ -8,16 +8,18 @@ import QuizPage from "./pages/QuizPage";
 import ResultScreen from "./pages/ResultScreen";
 import Leaderboard from "./pages/Leaderboard";
 import Dashboard from "./pages/Dashboard";
-import QuizBattleRoom from "./pages/QuizBattleRoom";
-import ProfileEdit from "./pages/ProfileEdit";
-import UserProfile from "./pages/UserProfile";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from './components/AdminRoute';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminWhatsApp from './pages/AdminWhatsApp';
-import SuperAdminDashboard from './pages/SuperAdminDashboard';
+
+// Lazy load heavy components
+const QuizBattleRoom = lazy(() => import("./pages/QuizBattleRoom"));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminWhatsApp = lazy(() => import('./pages/AdminWhatsApp'));
+const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
+const ProfileEdit = lazy(() => import("./pages/ProfileEdit"));
+const UserProfile = lazy(() => import("./pages/UserProfile"));
 
 import UserWhatsApp from './pages/UserWhatsApp';
 import UserInbox from './pages/UserInbox';
@@ -308,7 +310,9 @@ function AnimatedRoutes() {
             element={
               <ProtectedRoute>
                 <ErrorBoundary fallbackMessage="Battle room encountered an error. Please refresh or rejoin the battle.">
-                  <QuizBattleRoom />
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                    <QuizBattleRoom />
+                  </Suspense>
                 </ErrorBoundary>
               </ProtectedRoute>
             }
@@ -317,7 +321,9 @@ function AnimatedRoutes() {
             path="/profile"
             element={
               <ProtectedRoute>
-                <UserProfile />
+                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                  <UserProfile />
+                </Suspense>
               </ProtectedRoute>
             }
           />
@@ -325,7 +331,9 @@ function AnimatedRoutes() {
             path="/profile/edit"
             element={
               <ProtectedRoute>
-                <ProfileEdit />
+                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                  <ProfileEdit />
+                </Suspense>
               </ProtectedRoute>
             }
           />
@@ -342,7 +350,9 @@ function AnimatedRoutes() {
             element={
               <AdminRoute>
                 <ErrorBoundary fallbackMessage="Admin dashboard encountered an error. Please refresh or contact support.">
-                  <AdminDashboard />
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                    <AdminDashboard />
+                  </Suspense>
                 </ErrorBoundary>
               </AdminRoute>
             }
@@ -351,7 +361,9 @@ function AnimatedRoutes() {
             path="/admin/whatsapp"
             element={
               <AdminRoute>
-                <AdminWhatsApp />
+                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                  <AdminWhatsApp />
+                </Suspense>
               </AdminRoute>
             }
           />
@@ -361,7 +373,9 @@ function AnimatedRoutes() {
             element={
               <ProtectedRoute>
                 <ErrorBoundary fallbackMessage="SuperAdmin dashboard encountered an error. Please refresh or contact support.">
-                  <SuperAdminDashboard />
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                    <SuperAdminDashboard />
+                  </Suspense>
                 </ErrorBoundary>
               </ProtectedRoute>
             }
