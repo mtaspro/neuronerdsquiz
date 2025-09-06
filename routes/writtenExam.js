@@ -31,10 +31,10 @@ const upload = multer({
   }
 });
 
-// Get all active written exams
+// Get all written exams
 router.get('/exams', sessionMiddleware, requireAuth, async (req, res) => {
   try {
-    const exams = await WrittenExam.find({ isActive: true })
+    const exams = await WrittenExam.find()
       .populate('createdBy', 'username')
       .sort({ createdAt: -1 });
     res.json(exams);

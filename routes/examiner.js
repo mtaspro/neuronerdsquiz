@@ -124,4 +124,19 @@ router.get('/leaderboard', async (req, res) => {
   }
 });
 
+// Promote user to examiner (admin only)
+router.put('/promote/:userId', sessionMiddleware, requireAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user.isAdmin && !user.isSuperAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    
+    await User.findByIdAndUpdate(req.params.userId, { isExaminer: true });
+    res.json({ message: 'User promoted to examiner' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to promote user' });
+  }
+});
+
 export default router;
