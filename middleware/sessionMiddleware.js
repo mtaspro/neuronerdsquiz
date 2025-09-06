@@ -49,3 +49,5 @@ export const requireSuperAdmin = (req, res, next) => {
   }
   next();
 };
+
+export const requireAuth = sessionMiddleware;
