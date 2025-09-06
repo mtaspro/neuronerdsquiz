@@ -780,15 +780,15 @@ const QuizBattleRoom = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="text-sm">
-                Room: <span className="font-mono bg-white bg-opacity-20 px-2 py-1 rounded">{roomId}</span>
-              </div>
               <button
                 onClick={handleLeaveRoom}
                 className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition-colors"
               >
                 Leave Room
               </button>
+              <div className="text-sm">
+                Room: <span className="font-mono bg-white bg-opacity-20 px-2 py-1 rounded">{roomId}</span>
+              </div>
             </div>
           </div>
         </div>
