@@ -19,8 +19,8 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
-            ui: ['@headlessui/react', 'lucide-react'],
-            math: ['katex', 'react-katex'],
+            animation: ['framer-motion'],
+            math: ['katex'],
             utils: ['axios', 'socket.io-client']
           }
         }
