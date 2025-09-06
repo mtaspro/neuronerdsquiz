@@ -22,6 +22,9 @@ export default function AdminDashboard() {
   const [quizConfigs, setQuizConfigs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [addingSubject, setAddingSubject] = useState(false);
+  const [addingChapter, setAddingChapter] = useState(false);
+  const [addingQuestion, setAddingQuestion] = useState(false);
   const navigate = useNavigate();
   
   // CRUD hooks for different entities
@@ -129,25 +132,26 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (tab !== 'Users') return;
     usersCRUD.read().catch(() => {});
-  }, [tab, usersCRUD]);
+  }, [tab]);
 
   // Load subjects
   useEffect(() => {
     if (tab !== 'Subjects') return;
     subjectsCRUD.read().catch(() => {});
-  }, [tab, subjectsCRUD]);
+  }, [tab]);
 
   // Load chapters
   useEffect(() => {
     if (tab !== 'Chapters') return;
     chaptersCRUD.read().catch(() => {});
-  }, [tab, chaptersCRUD]);
+  }, [tab]);
 
-  // Load questions
+  // Load questions only when needed
   useEffect(() => {
     if (tab !== 'Questions') return;
-    questionsCRUD.read().catch(() => {});
-  }, [tab, questionsCRUD]);
+    if (selectedChapterFilter === 'none') return;
+    questionsCRUD.read('', selectedChapterFilter ? `?chapter=${selectedChapterFilter}` : '').catch(() => {});
+  }, [tab, selectedChapterFilter]);
 
 
 
@@ -270,18 +274,28 @@ export default function AdminDashboard() {
   // Add new subject
   async function handleAddSubject(e) {
     e.preventDefault();
-    const result = await subjectsCRUD.create(sanitizeObject(newSubject));
-    if (result) {
-      setNewSubject({ name: '', description: '', order: 0, visible: true });
+    setAddingSubject(true);
+    try {
+      const result = await subjectsCRUD.create(sanitizeObject(newSubject));
+      if (result) {
+        setNewSubject({ name: '', description: '', order: 0, visible: true });
+      }
+    } finally {
+      setAddingSubject(false);
     }
   }
 
   // Add new chapter
   async function handleAddChapter(e) {
     e.preventDefault();
-    const result = await chaptersCRUD.create(sanitizeObject(newChapter));
-    if (result) {
-      setNewChapter({ name: '', description: '', order: 0, visible: true, practiceMode: false, subject: '' });
+    setAddingChapter(true);
+    try {
+      const result = await chaptersCRUD.create(sanitizeObject(newChapter));
+      if (result) {
+        setNewChapter({ name: '', description: '', order: 0, visible: true, practiceMode: false, subject: '' });
+      }
+    } finally {
+      setAddingChapter(false);
     }
   }
 
@@ -334,14 +348,19 @@ export default function AdminDashboard() {
   // Add new question
   async function handleAddQuestion(e) {
     e.preventDefault();
-    const questionData = {
-      ...newQuestion,
-      correctAnswer: newQuestion.options[newQuestion.correctAnswer],
-      adminVisible: adminVisibleForChapter
-    };
-    const result = await questionsCRUD.create(sanitizeObject(questionData));
-    if (result) {
-      setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: selectedChapter, duration: 60, explanation: '' });
+    setAddingQuestion(true);
+    try {
+      const questionData = {
+        ...newQuestion,
+        correctAnswer: newQuestion.options[newQuestion.correctAnswer],
+        adminVisible: adminVisibleForChapter
+      };
+      const result = await questionsCRUD.create(sanitizeObject(questionData));
+      if (result) {
+        setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: selectedChapter, duration: 60, explanation: '' });
+      }
+    } finally {
+      setAddingQuestion(false);
     }
   }
 
@@ -766,8 +785,8 @@ export default function AdminDashboard() {
                     <span>Visible to users</span>
                   </label>
                 </div>
-                <button type="submit" disabled={subjectsCRUD.loading} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
-                  {subjectsCRUD.loading ? 'Adding...' : 'Add Subject'}
+                <button type="submit" disabled={addingSubject} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
+                  {addingSubject ? 'Adding...' : 'Add Subject'}
                 </button>
               </form>
             </div>
@@ -928,8 +947,8 @@ export default function AdminDashboard() {
                     <span>Practice Mode (stats won't be calculated)</span>
                   </label>
                 </div>
-                <button type="submit" disabled={chaptersCRUD.loading} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
-                  {chaptersCRUD.loading ? 'Adding...' : 'Add Chapter'}
+                <button type="submit" disabled={addingChapter} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
+                  {addingChapter ? 'Adding...' : 'Add Chapter'}
                 </button>
               </form>
             </div>
@@ -1346,8 +1365,8 @@ export default function AdminDashboard() {
                     </div>
                   )}
                 </div>
-                <button type="submit" disabled={questionsCRUD.loading} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
-                  {questionsCRUD.loading ? 'Adding...' : 'Add Question'}
+                <button type="submit" disabled={addingQuestion} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
+                  {addingQuestion ? 'Adding...' : 'Add Question'}
                 </button>
               </form>
             </div>

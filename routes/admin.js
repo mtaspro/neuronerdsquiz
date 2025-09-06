@@ -16,7 +16,7 @@ const router = express.Router();
 
 // List all users
 router.get('/users', sessionMiddleware, requireAdmin, async (req, res) => {
-  const users = await User.find({}, '-password').select('+phoneNumber +whatsappNotifications');
+  const users = await User.find({}, '-password').select('+phoneNumber +whatsappNotifications').limit(100);
   res.json(users);
 });
 
@@ -304,6 +304,7 @@ router.delete('/chapters/:id', sessionMiddleware, requireAdmin, async (req, res)
 router.get('/questions', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const currentUserId = req.user.userId;
+    const { page = 1, limit = 100, chapter } = req.query;
     
     // Get all chapters that are either:
     // 1. Created by current admin, OR
@@ -313,14 +314,22 @@ router.get('/questions', sessionMiddleware, requireAdmin, async (req, res) => {
         { createdBy: currentUserId },
         { adminVisible: true }
       ]
-    });
+    }).select('name');
     
     const chapterNames = visibleChapters.map(ch => ch.name);
     
-    // Get questions from visible chapters
-    const questions = await Quiz.find({
-      chapter: { $in: chapterNames }
-    }).populate('createdBy', 'username');
+    // Build query
+    let query = { chapter: { $in: chapterNames } };
+    if (chapter) {
+      query.chapter = chapter;
+    }
+    
+    // Get questions from visible chapters with pagination
+    const questions = await Quiz.find(query)
+      .populate('createdBy', 'username')
+      .limit(parseInt(limit))
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .sort({ createdAt: -1 });
     
     res.json(questions);
   } catch (error) {
