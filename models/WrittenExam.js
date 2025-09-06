@@ -1,0 +1,15 @@
+import mongoose from 'mongoose';
+
+const writtenExamSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: String,
+  subject: String,
+  chapter: String,
+  totalMarks: { type: Number, required: true },
+  timeLimit: { type: Number, default: 180 }, // minutes
+  isActive: { type: Boolean, default: true },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
+export default mongoose.model('WrittenExam', writtenExamSchema);

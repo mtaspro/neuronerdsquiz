@@ -867,7 +867,7 @@ const QuizBattleRoom = () => {
                 <h3 className="text-xl font-semibold mb-4 text-center">Battle Chat</h3>
                 <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg border border-white border-opacity-20 h-80 flex flex-col">
                   {/* Chat Messages */}
-                  <div className="flex-1 p-4 overflow-y-auto space-y-2">
+                  <div className="flex-1 p-4 overflow-y-auto space-y-2" data-lenis-prevent>
                     {chatMessages.length === 0 ? (
                       <div className="text-center text-gray-400 text-sm mt-8">
                         💬 Start chatting with other players!

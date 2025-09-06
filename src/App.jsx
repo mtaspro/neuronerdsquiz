@@ -18,6 +18,8 @@ const QuizBattleRoom = lazy(() => import("./pages/QuizBattleRoom"));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminWhatsApp = lazy(() => import('./pages/AdminWhatsApp'));
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
+const ExaminerDashboard = lazy(() => import('./pages/ExaminerDashboard'));
+const WrittenExams = lazy(() => import('./pages/WrittenExams'));
 const ProfileEdit = lazy(() => import("./pages/ProfileEdit"));
 const UserProfile = lazy(() => import("./pages/UserProfile"));
 
@@ -50,6 +52,7 @@ import { FaBars, FaTimes, FaCog, FaPalette } from 'react-icons/fa';
 function Navbar() {
   const [isAdmin, setIsAdmin] = React.useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
+  const [isExaminer, setIsExaminer] = React.useState(false);
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -76,20 +79,24 @@ function Navbar() {
             setIsAuthenticated(true);
             setIsAdmin(userData.isAdmin === true);
             setIsSuperAdmin(userData.isSuperAdmin === true);
+            setIsExaminer(userData.isExaminer === true);
           } else {
             setIsAuthenticated(false);
             setIsAdmin(false);
             setIsSuperAdmin(false);
+            setIsExaminer(false);
           }
         } catch (error) {
           setIsAuthenticated(false);
           setIsAdmin(false);
           setIsSuperAdmin(false);
+          setIsExaminer(false);
         }
       } else {
         setIsAuthenticated(false);
         setIsAdmin(false);
         setIsSuperAdmin(false);
+        setIsExaminer(false);
       }
     }
     
@@ -158,6 +165,12 @@ function Navbar() {
               {isSuperAdmin && (
                 <Link to="/superadmin" className="text-gray-800 dark:text-white font-semibold hover:text-red-600 dark:hover:text-red-400 transition">SuperAdmin</Link>
               )}
+              {isExaminer && (
+                <Link to="/examiner" className="text-gray-800 dark:text-white font-semibold hover:text-purple-600 dark:hover:text-purple-400 transition">Examiner</Link>
+              )}
+              {isAuthenticated && (
+                <Link to="/written-exams" className="text-gray-800 dark:text-white font-semibold hover:text-indigo-600 dark:hover:text-indigo-400 transition">Written Exams</Link>
+              )}
 
             </div>
           </div>
@@ -191,6 +204,12 @@ function Navbar() {
                 )}
                 {isSuperAdmin && (
                   <Link to="/superadmin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">SuperAdmin</Link>
+                )}
+                {isExaminer && (
+                  <Link to="/examiner" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Examiner</Link>
+                )}
+                {isAuthenticated && (
+                  <Link to="/written-exams" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Written Exams</Link>
                 )}
 
               </div>
@@ -377,6 +396,26 @@ function AnimatedRoutes() {
                     <SuperAdminDashboard />
                   </Suspense>
                 </ErrorBoundary>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/examiner"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                  <ExaminerDashboard />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/written-exams"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                  <WrittenExams />
+                </Suspense>
               </ProtectedRoute>
             }
           />

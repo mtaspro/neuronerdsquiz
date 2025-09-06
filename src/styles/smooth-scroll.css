@@ -18,6 +18,17 @@ html.lenis {
   overscroll-behavior: contain;
 }
 
+/* Disable Lenis on modals and dialogs */
+.modal,
+.dialog,
+[role="dialog"],
+.overflow-y-auto,
+.overflow-auto,
+[data-lenis-prevent] {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Parallax container optimization */
 .parallax-container {
   will-change: transform;

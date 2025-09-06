@@ -1155,6 +1155,7 @@ export default function AdminDashboard() {
                     className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-purple-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
                     rows="10"
                     placeholder="Paste the extracted questions from Chorcha here. Format should be:\n\n1. Question text\nক. Option 1\nখ. Option 2\nগ. Option 3\nঘ. Option 4\nCorrect Answer: Option text\nExplanation: Explanation text\n\n---\n\n2. Next question..."
+                    data-lenis-prevent
                   />
                   <button
                     onClick={handleBulkParse}
@@ -1197,7 +1198,7 @@ export default function AdminDashboard() {
                     {loading ? 'Adding...' : 'Add All Questions'}
                   </button>
                 </div>
-                <div className="space-y-4 max-h-96 overflow-y-auto">
+                <div className="space-y-4 max-h-96 overflow-y-auto" data-lenis-prevent>
                   {parsedQuestions.map((pq, index) => (
                     <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded border">
                       <div className="flex justify-between items-start mb-2">

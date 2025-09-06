@@ -11,15 +11,24 @@ export const useSmoothScroll = (options = {}) => {
   useEffect(() => {
     // Initialize Lenis with optimized settings
     lenisRef.current = new Lenis({
-      duration: 1.2,        // Scroll duration (higher = smoother)
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Custom easing
-      direction: 'vertical', // Scroll direction
-      gestureDirection: 'vertical', // Gesture direction
-      smooth: true,         // Enable smooth scrolling
-      mouseMultiplier: 1,   // Mouse wheel sensitivity
-      smoothTouch: false,   // Disable on touch devices for better performance
-      touchMultiplier: 2,   // Touch sensitivity
-      infinite: false,      // Disable infinite scroll
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      direction: 'vertical',
+      gestureDirection: 'vertical',
+      smooth: true,
+      mouseMultiplier: 1,
+      smoothTouch: false,
+      touchMultiplier: 2,
+      infinite: false,
+      // Prevent smooth scrolling on specific elements
+      prevent: (node) => {
+        return node.closest('.modal') || 
+               node.closest('.dialog') || 
+               node.closest('[role="dialog"]') ||
+               node.closest('.overflow-y-auto') ||
+               node.closest('.overflow-auto') ||
+               node.hasAttribute('data-lenis-prevent');
+      },
       ...options
     });
 
