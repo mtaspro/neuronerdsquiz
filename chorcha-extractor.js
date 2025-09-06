@@ -22,7 +22,17 @@ javascript:(function(){
                 const questionDiv = questionArea.querySelector('div.flex-grow');
                 if (!questionDiv) return;
                 
-                let questionText = questionDiv.textContent.trim();
+                // Check for images in question
+                const questionImg = questionDiv.querySelector('img');
+                let questionText;
+                
+                if (questionImg) {
+                    const textContent = questionDiv.textContent.trim();
+                    questionText = textContent + ` [IMAGE: ${questionImg.src}]`;
+                } else {
+                    questionText = questionDiv.textContent.trim();
+                }
+                
                 if (!questionText) return;
                 
                 let optionButtons = container.querySelectorAll('div.grid.md\\:grid-cols-2.gap-1 button') ||
@@ -38,7 +48,16 @@ javascript:(function(){
                     
                     if (optionDiv && optionContent) {
                         const optionLetter = optionDiv.textContent.trim();
-                        const optionText = optionContent.textContent.trim();
+                        
+                        // Check for images in options
+                        const img = optionContent.querySelector('img');
+                        let optionText;
+                        
+                        if (img) {
+                            optionText = `[IMAGE: ${img.src}]`;
+                        } else {
+                            optionText = optionContent.textContent.trim();
+                        }
                         
                         if (optionLetter.match(/[কখগঘ]/)) {
                             options[optionLetter] = optionText;
@@ -50,7 +69,16 @@ javascript:(function(){
                 });
                 
                 const explanationDiv = container.querySelector('div.p-3.rounded-lg.bg-green-200\\/25');
-                const explanation = explanationDiv ? explanationDiv.textContent.trim() : '';
+                let explanation = '';
+                
+                if (explanationDiv) {
+                    const explanationImg = explanationDiv.querySelector('img');
+                    if (explanationImg) {
+                        explanation = explanationDiv.textContent.trim() + ` [IMAGE: ${explanationImg.src}]`;
+                    } else {
+                        explanation = explanationDiv.textContent.trim();
+                    }
+                }
                 
                 if (questionText && Object.keys(options).length >= 2) {
                     questions.push({
