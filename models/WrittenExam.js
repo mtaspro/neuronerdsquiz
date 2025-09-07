@@ -7,6 +7,7 @@ const writtenExamSchema = new mongoose.Schema({
   chapter: String,
   totalMarks: { type: Number, required: true },
   timeLimit: { type: Number, default: 180 }, // minutes
+  expireDate: { type: Date, required: true },
   isActive: { type: Boolean, default: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   createdAt: { type: Date, default: Date.now }

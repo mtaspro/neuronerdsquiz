@@ -12,15 +12,21 @@ const ExaminerDashboard = () => {
   const [markedImages, setMarkedImages] = useState([]);
   const [markingImage, setMarkingImage] = useState(null);
   const [activeTab, setActiveTab] = useState('pending');
-  const [newExam, setNewExam] = useState({ title: '', description: '', subject: '', chapter: '', totalMarks: '', timeLimit: 180 });
+  const [newExam, setNewExam] = useState({ title: '', description: '', subject: '', chapter: '', totalMarks: '', timeLimit: 180, expireDate: '' });
   const [showCreateExam, setShowCreateExam] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const { success, error: showError } = useNotification();
 
   useEffect(() => {
-    fetchSubmissions();
-    fetchLeaderboard();
+    if (activeTab === 'leaderboard') {
+      fetchLeaderboard();
+    } else if (activeTab === 'exams') {
+      fetchExams();
+    } else {
+      fetchSubmissions();
+    }
   }, [activeTab]);
 
   const fetchSubmissions = async () => {
@@ -54,6 +60,45 @@ const ExaminerDashboard = () => {
     }
   };
 
+  const fetchExams = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      const response = await fetch(`${apiUrl}/api/examiner/exams`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setExams(data);
+      }
+    } catch (error) {
+      showError('Failed to fetch exams');
+    }
+  };
+
+  const handleDeleteExam = async (examId) => {
+    if (!window.confirm('Are you sure you want to delete this exam?')) return;
+    
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      const response = await fetch(`${apiUrl}/api/examiner/exams/${examId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        success('Exam deleted successfully!');
+        setExams(prev => prev.filter(e => e._id !== examId));
+      } else {
+        const data = await response.json();
+        showError(data.error || 'Failed to delete exam');
+      }
+    } catch (error) {
+      showError('Failed to delete exam');
+    }
+  };
+
   const handleGrade = async () => {
     if (!selectedSubmission) return;
 
@@ -83,7 +128,8 @@ const ExaminerDashboard = () => {
         setSelectedSubmission(null);
         setGradeForm({ marksObtained: '', examinerComments: '', status: 'graded' });
         setMarkedImages([]);
-        fetchSubmissions();
+        // Remove from current submissions list immediately
+        setSubmissions(prev => prev.filter(s => s._id !== selectedSubmission._id));
         fetchLeaderboard();
       } else {
         const data = await response.json();
@@ -110,7 +156,7 @@ const ExaminerDashboard = () => {
       if (response.ok) {
         success('Exam created successfully!');
         setShowCreateExam(false);
-        setNewExam({ title: '', description: '', subject: '', chapter: '', totalMarks: '', timeLimit: 180 });
+        setNewExam({ title: '', description: '', subject: '', chapter: '', totalMarks: '', timeLimit: 180, expireDate: '' });
       } else {
         const data = await response.json();
         showError(data.error || 'Failed to create exam');
@@ -167,7 +213,7 @@ const ExaminerDashboard = () => {
 
         {/* Tabs */}
         <div className="flex space-x-4 mb-6">
-          {['pending', 'graded', 'leaderboard'].map(tab => (
+          {['pending', 'graded', 'exams', 'leaderboard'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -177,13 +223,40 @@ const ExaminerDashboard = () => {
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
-              {tab === 'leaderboard' ? 'Leaderboard' : `${tab.charAt(0).toUpperCase() + tab.slice(1)} Submissions`}
+              {tab === 'leaderboard' ? 'Leaderboard' : 
+               tab === 'exams' ? 'Manage Exams' :
+               `${tab.charAt(0).toUpperCase() + tab.slice(1)} Submissions`}
             </button>
           ))}
         </div>
 
         {/* Content */}
-        {activeTab === 'leaderboard' ? (
+        {activeTab === 'exams' ? (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h2 className="text-2xl font-bold mb-6">Manage Exams</h2>
+            <div className="space-y-4">
+              {exams.map(exam => (
+                <div key={exam._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold">{exam.title}</h3>
+                      <p className="text-gray-600 dark:text-gray-300">{exam.description}</p>
+                      <p className="text-sm text-gray-500">Subject: {exam.subject} | Chapter: {exam.chapter}</p>
+                      <p className="text-sm text-gray-500">Total Marks: {exam.totalMarks} | Time: {exam.timeLimit} min</p>
+                      <p className="text-sm text-gray-500">Created by: {exam.createdBy?.username}</p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteExam(exam._id)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : activeTab === 'leaderboard' ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <div className="flex items-center mb-6">
               <FaTrophy className="text-yellow-500 text-2xl mr-3" />
@@ -450,6 +523,17 @@ const ExaminerDashboard = () => {
                       className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Expire Date</label>
+                  <input
+                    type="datetime-local"
+                    value={newExam.expireDate}
+                    onChange={(e) => setNewExam({...newExam, expireDate: e.target.value})}
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                    required
+                  />
                 </div>
               </div>
 

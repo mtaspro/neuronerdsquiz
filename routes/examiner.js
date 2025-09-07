@@ -107,6 +107,39 @@ router.post('/exams', sessionMiddleware, requireAuth, requireExaminer, async (re
   }
 });
 
+// Delete written exam
+router.delete('/exams/:examId', sessionMiddleware, requireAuth, requireExaminer, async (req, res) => {
+  try {
+    const exam = await WrittenExam.findById(req.params.examId);
+    if (!exam) {
+      return res.status(404).json({ error: 'Exam not found' });
+    }
+    
+    // Check if user is creator or admin
+    const user = await User.findById(req.user.userId);
+    if (exam.createdBy.toString() !== req.user.userId && !user.isAdmin && !user.isSuperAdmin) {
+      return res.status(403).json({ error: 'Only exam creator or admin can delete' });
+    }
+    
+    await WrittenExam.findByIdAndDelete(req.params.examId);
+    res.json({ message: 'Exam deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete exam' });
+  }
+});
+
+// Get all exams for management
+router.get('/exams', sessionMiddleware, requireAuth, requireExaminer, async (req, res) => {
+  try {
+    const exams = await WrittenExam.find()
+      .populate('createdBy', 'username')
+      .sort({ createdAt: -1 });
+    res.json(exams);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch exams' });
+  }
+});
+
 // Get written exam leaderboard
 router.get('/leaderboard', async (req, res) => {
   try {

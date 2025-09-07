@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaUpload, FaClock, FaFileAlt, FaCheckCircle, FaHourglassHalf } from 'react-icons/fa';
+import { FaUpload, FaClock, FaFileAlt, FaCheckCircle, FaHourglassHalf, FaTimes } from 'react-icons/fa';
 import { useNotification } from '../components/NotificationSystem';
 import { secureStorage } from '../utils/secureStorage';
 
@@ -11,6 +11,9 @@ const WrittenExams = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [examStartTime, setExamStartTime] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [uploadStarted, setUploadStarted] = useState(false);
   const { success, error: showError } = useNotification();
 
   useEffect(() => {
@@ -61,6 +64,26 @@ const WrittenExams = () => {
     setSelectedFiles(files);
   };
 
+  const startExam = (exam) => {
+    const startTime = Date.now();
+    setExamStartTime(startTime);
+    setTimeLeft(exam.timeLimit * 60); // Convert minutes to seconds
+    setSelectedExam(exam);
+    
+    // Store in localStorage for persistence
+    localStorage.setItem(`exam_${exam._id}_start`, startTime.toString());
+  };
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 10) {
+      showError('Maximum 10 images allowed');
+      return;
+    }
+    setSelectedFiles(files);
+    setUploadStarted(true); // Mark upload as started
+  };
+
   const handleSubmit = async (examId) => {
     if (selectedFiles.length === 0) {
       showError('Please select at least one answer image');
@@ -87,6 +110,10 @@ const WrittenExams = () => {
         success('Answer submitted successfully!');
         setSelectedExam(null);
         setSelectedFiles([]);
+        setExamStartTime(null);
+        setTimeLeft(null);
+        setUploadStarted(false);
+        localStorage.removeItem(`exam_${examId}_start`);
         fetchMySubmissions();
       } else {
         const data = await response.json();
@@ -101,6 +128,55 @@ const WrittenExams = () => {
 
   const getSubmissionStatus = (examId) => {
     return submissions.find(sub => sub.examId._id === examId);
+  };
+
+  const isExamExpired = (exam) => {
+    return new Date() > new Date(exam.expireDate);
+  };
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (!examStartTime || !timeLeft) return;
+    
+    const timer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - examStartTime) / 1000);
+      const remaining = (selectedExam.timeLimit * 60) - elapsed;
+      
+      if (remaining <= 0) {
+        if (!uploadStarted) {
+          showError('Time expired! Answer not submitted within time.');
+          setSelectedExam(null);
+          setExamStartTime(null);
+          setTimeLeft(null);
+          localStorage.removeItem(`exam_${selectedExam._id}_start`);
+        }
+        clearInterval(timer);
+      } else {
+        setTimeLeft(remaining);
+      }
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [examStartTime, selectedExam, uploadStarted]);
+
+  // Restore exam state on page load
+  useEffect(() => {
+    if (selectedExam) {
+      const storedStartTime = localStorage.getItem(`exam_${selectedExam._id}_start`);
+      if (storedStartTime) {
+        const startTime = parseInt(storedStartTime);
+        setExamStartTime(startTime);
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const remaining = (selectedExam.timeLimit * 60) - elapsed;
+        setTimeLeft(remaining > 0 ? remaining : 0);
+      }
+    }
+  }, [selectedExam]);
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   if (loading) {
@@ -168,12 +244,20 @@ const WrittenExams = () => {
                       </div>
                     )}
                   </div>
+                ) : isExamExpired(exam) ? (
+                  <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-300">
+                    <div className="flex items-center">
+                      <FaTimes className="mr-2" />
+                      <span className="font-medium">Absent</span>
+                    </div>
+                    <p className="text-sm mt-1">Exam expired on {new Date(exam.expireDate).toLocaleDateString()}</p>
+                  </div>
                 ) : (
                   <button
-                    onClick={() => setSelectedExam(exam)}
+                    onClick={() => startExam(exam)}
                     className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded-lg transition-colors"
                   >
-                    Submit Answer
+                    Start Exam
                   </button>
                 )}
               </motion.div>
@@ -190,7 +274,16 @@ const WrittenExams = () => {
               className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               data-lenis-prevent
             >
-              <h2 className="text-2xl font-bold mb-4">Submit Answer: {selectedExam.title}</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Submit Answer: {selectedExam.title}</h2>
+                {timeLeft !== null && (
+                  <div className={`text-lg font-bold px-3 py-1 rounded ${
+                    timeLeft <= 300 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                  }`}>
+                    Time Left: {formatTime(timeLeft)}
+                  </div>
+                )}
+              </div>
               
               <div className="mb-6">
                 <label className="block text-sm font-medium mb-2">
