@@ -19,6 +19,7 @@ export default function AdminDashboard() {
   const [subjects, setSubjects] = useState([]);
   const [chapters, setChapters] = useState([]);
   const [questions, setQuestions] = useState([]);
+  const [questionCounts, setQuestionCounts] = useState({});
   const [quizConfigs, setQuizConfigs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -125,6 +126,11 @@ export default function AdminDashboard() {
 
   // Get question count for a chapter
   const getQuestionCount = (chapterName) => {
+    // For Quiz Config tab, use the loaded counts
+    if (tab === 'Quiz Config') {
+      return questionCounts[chapterName] || 0;
+    }
+    // For Questions tab, use filtered questions
     return questions.filter(q => q.chapter === chapterName).length;
   };
 
@@ -153,10 +159,23 @@ export default function AdminDashboard() {
     questionsCRUD.read('', selectedChapterFilter ? `?chapter=${selectedChapterFilter}` : '').catch(() => {});
   }, [tab, selectedChapterFilter]);
 
-  // Load all questions for quiz config calculations
+  // Load question counts for quiz config
   useEffect(() => {
     if (tab !== 'Quiz Config') return;
-    questionsCRUD.read().catch(() => {});
+    
+    const loadQuestionCounts = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await axios.get(`${apiUrl}/api/admin/question-counts`, { 
+          headers: authHeader() 
+        });
+        setQuestionCounts(response.data);
+      } catch (err) {
+        console.error('Failed to load question counts:', err);
+      }
+    };
+    
+    loadQuestionCounts();
   }, [tab]);
 
 
@@ -1628,7 +1647,7 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 {chapters.map(chapter => {
                   const config = quizConfigs.find(c => c.chapterId === chapter._id) || {};
-                  const questionCount = questions.filter(q => q.chapter === chapter.name).length;
+                  const questionCount = getQuestionCount(chapter.name);
                   
                   return (
                     <div key={chapter._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">

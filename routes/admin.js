@@ -491,6 +491,30 @@ router.get('/quiz-configs', sessionMiddleware, requireAdmin, async (req, res) =>
   }
 });
 
+// Get question counts for all chapters (for Quiz Config tab)
+router.get('/question-counts', sessionMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const questionCounts = await Quiz.aggregate([
+      {
+        $group: {
+          _id: '$chapter',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    const countsObject = {};
+    questionCounts.forEach(item => {
+      countsObject[item._id] = item.count;
+    });
+    
+    res.json(countsObject);
+  } catch (error) {
+    console.error('Error fetching question counts:', error);
+    res.status(500).json({ error: 'Failed to fetch question counts' });
+  }
+});
+
 // Get quiz config by chapter name (public endpoint for battle system)
 router.get('/quiz-config/:chapterName', async (req, res) => {
   try {
