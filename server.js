@@ -158,8 +158,13 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve uploaded files with fallback
+// Serve uploaded files with fallback (skip written exam files as they use Cloudinary)
 app.use('/uploads', (req, res, next) => {
+  // Skip written exam files - they're on Cloudinary
+  if (req.path.includes('written-exams') || req.path.includes('written-answers')) {
+    return res.status(404).json({ error: 'Written exam files are hosted on Cloudinary' });
+  }
+  
   const filePath = path.join(process.cwd(), 'uploads', req.path);
   
   // Check if file exists
