@@ -55,15 +55,6 @@ const WrittenExams = () => {
     }
   };
 
-  const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 10) {
-      showError('Maximum 10 images allowed');
-      return;
-    }
-    setSelectedFiles(files);
-  };
-
   const startExam = (exam) => {
     const startTime = Date.now();
     setExamStartTime(startTime);
