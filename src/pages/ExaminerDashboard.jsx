@@ -311,7 +311,7 @@ const ExaminerDashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700"
               >
-                <h3 className="text-lg font-semibold mb-2">{submission.examId.title}</h3>
+                <h3 className="text-lg font-semibold mb-2">{submission.examId?.title || 'Deleted Exam'}</h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-2">Student: {submission.username}</p>
                 <p className="text-sm text-gray-500 mb-4">
                   Submitted: {new Date(submission.submittedAt).toLocaleDateString()}
@@ -347,7 +347,7 @@ const ExaminerDashboard = () => {
               data-lenis-prevent
             >
               <h2 className="text-2xl font-bold mb-4">
-                {selectedSubmission.examId.title} - {selectedSubmission.username}
+                {selectedSubmission.examId?.title || 'Deleted Exam'} - {selectedSubmission.username}
               </h2>
               
               {/* Answer Images */}
@@ -397,12 +397,12 @@ const ExaminerDashboard = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Marks Obtained (out of {selectedSubmission.totalMarks})
+                    Marks Obtained (out of {selectedSubmission.totalMarks || selectedSubmission.examId?.totalMarks || 'N/A'})
                   </label>
                   <input
                     type="number"
                     min="0"
-                    max={selectedSubmission.totalMarks}
+                    max={selectedSubmission.totalMarks || selectedSubmission.examId?.totalMarks || 100}
                     value={gradeForm.marksObtained}
                     onChange={(e) => setGradeForm({...gradeForm, marksObtained: e.target.value})}
                     className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
