@@ -65,6 +65,22 @@ const WrittenExams = () => {
     localStorage.setItem(`exam_${exam._id}_start`, startTime.toString());
   };
 
+  const isExamStarted = (examId) => {
+    return localStorage.getItem(`exam_${examId}_start`) !== null;
+  };
+
+  const openUploadDialog = (exam) => {
+    setSelectedExam(exam);
+    const storedStartTime = localStorage.getItem(`exam_${exam._id}_start`);
+    if (storedStartTime) {
+      const startTime = parseInt(storedStartTime);
+      setExamStartTime(startTime);
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const remaining = (exam.timeLimit * 60) - elapsed;
+      setTimeLeft(remaining > 0 ? remaining : 0);
+    }
+  };
+
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 10) {
@@ -150,19 +166,27 @@ const WrittenExams = () => {
     return () => clearInterval(timer);
   }, [examStartTime, selectedExam, uploadStarted]);
 
-  // Restore exam state on page load
+  // Check for active exams on page load
   useEffect(() => {
-    if (selectedExam) {
-      const storedStartTime = localStorage.getItem(`exam_${selectedExam._id}_start`);
+    exams.forEach(exam => {
+      const storedStartTime = localStorage.getItem(`exam_${exam._id}_start`);
       if (storedStartTime) {
         const startTime = parseInt(storedStartTime);
-        setExamStartTime(startTime);
         const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        const remaining = (selectedExam.timeLimit * 60) - elapsed;
-        setTimeLeft(remaining > 0 ? remaining : 0);
+        const remaining = (exam.timeLimit * 60) - elapsed;
+        
+        if (remaining > 0) {
+          // Exam is still active
+          setSelectedExam(exam);
+          setExamStartTime(startTime);
+          setTimeLeft(remaining);
+        } else {
+          // Exam time expired, clean up
+          localStorage.removeItem(`exam_${exam._id}_start`);
+        }
       }
-    }
-  }, [selectedExam]);
+    });
+  }, [exams]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -242,6 +266,21 @@ const WrittenExams = () => {
                       <span className="font-medium">Absent</span>
                     </div>
                     <p className="text-sm mt-1">Exam expired on {new Date(exam.expireDate).toLocaleDateString()}</p>
+                  </div>
+                ) : isExamStarted(exam._id) ? (
+                  <div className="space-y-2">
+                    <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300">
+                      <div className="flex items-center">
+                        <FaClock className="mr-2" />
+                        <span className="font-medium">Exam Started</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => openUploadDialog(exam)}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors"
+                    >
+                      Upload Answer
+                    </button>
                   </div>
                 ) : (
                   <button
