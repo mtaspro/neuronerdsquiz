@@ -29,6 +29,13 @@ const ExaminerDashboard = () => {
     }
   }, [activeTab]);
 
+  // Refresh submissions when switching between pending/graded tabs
+  useEffect(() => {
+    if (activeTab === 'pending' || activeTab === 'graded') {
+      fetchSubmissions();
+    }
+  }, [activeTab]);
+
   const fetchSubmissions = async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -128,9 +135,11 @@ const ExaminerDashboard = () => {
         setSelectedSubmission(null);
         setGradeForm({ marksObtained: '', examinerComments: '', status: 'graded' });
         setMarkedImages([]);
-        // Remove from current submissions list immediately
-        setSubmissions(prev => prev.filter(s => s._id !== selectedSubmission._id));
-        fetchLeaderboard();
+        // Refresh submissions to ensure proper status update
+        await fetchSubmissions();
+        if (activeTab === 'leaderboard') {
+          fetchLeaderboard();
+        }
       } else {
         const data = await response.json();
         showError(data.error || 'Failed to grade submission');

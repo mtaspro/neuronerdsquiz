@@ -72,21 +72,30 @@ router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExamin
       return res.status(404).json({ error: 'Submission not found' });
     }
 
-    submission.marksObtained = parseInt(marksObtained) || 0;
-    submission.examinerComments = examinerComments || '';
-    submission.status = status;
-    submission.gradedBy = req.user.userId;
-    submission.gradedAt = new Date();
+    // Update submission fields
+    const updateData = {
+      marksObtained: parseInt(marksObtained) || 0,
+      examinerComments: examinerComments || '',
+      status: status,
+      gradedBy: req.user.userId,
+      gradedAt: new Date()
+    };
     
     // Add marked images if uploaded
     if (req.files && req.files.length > 0) {
-      submission.markedImages = req.files.map(file => file.path);
-      console.log('Added marked images:', submission.markedImages.length);
+      updateData.markedImages = req.files.map(file => file.path);
+      console.log('Added marked images:', updateData.markedImages.length);
     }
 
-    await submission.save();
-    console.log('Submission graded successfully:', submissionId);
-    res.json({ message: 'Submission graded successfully', submission });
+    // Use findByIdAndUpdate to ensure atomic update
+    const updatedSubmission = await WrittenSubmission.findByIdAndUpdate(
+      submissionId,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    console.log('Submission graded successfully:', submissionId, 'New status:', updatedSubmission.status);
+    res.json({ message: 'Submission graded successfully', submission: updatedSubmission });
   } catch (error) {
     console.error('Error grading submission:', error);
     res.status(500).json({ error: 'Failed to grade submission', details: error.message });
