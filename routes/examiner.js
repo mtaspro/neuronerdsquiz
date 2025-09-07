@@ -65,13 +65,15 @@ router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExamin
     const { submissionId } = req.params;
     const { marksObtained, examinerComments, status = 'graded' } = req.body;
     
+    console.log('Grading submission:', submissionId, { marksObtained, examinerComments, status });
+    
     const submission = await WrittenSubmission.findById(submissionId);
     if (!submission) {
       return res.status(404).json({ error: 'Submission not found' });
     }
 
-    submission.marksObtained = marksObtained;
-    submission.examinerComments = examinerComments;
+    submission.marksObtained = parseInt(marksObtained) || 0;
+    submission.examinerComments = examinerComments || '';
     submission.status = status;
     submission.gradedBy = req.user.userId;
     submission.gradedAt = new Date();
@@ -79,12 +81,15 @@ router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExamin
     // Add marked images if uploaded
     if (req.files && req.files.length > 0) {
       submission.markedImages = req.files.map(file => file.path);
+      console.log('Added marked images:', submission.markedImages.length);
     }
 
     await submission.save();
-    res.json({ message: 'Submission graded successfully' });
+    console.log('Submission graded successfully:', submissionId);
+    res.json({ message: 'Submission graded successfully', submission });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to grade submission' });
+    console.error('Error grading submission:', error);
+    res.status(500).json({ error: 'Failed to grade submission', details: error.message });
   }
 });
 

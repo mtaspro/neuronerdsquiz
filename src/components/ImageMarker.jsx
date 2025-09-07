@@ -14,6 +14,7 @@ const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     const img = new Image();
+    img.crossOrigin = 'anonymous';
     
     img.onload = () => {
       canvas.width = img.width;
@@ -61,6 +62,7 @@ const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
       ctx.strokeStyle = color;
     } else if (tool === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
+      ctx.strokeStyle = 'rgba(0,0,0,1)';
     }
     
     ctx.lineTo(x, y);
@@ -76,29 +78,33 @@ const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
 
   const undo = () => {
     if (historyIndex > 0) {
-      setHistoryIndex(historyIndex - 1);
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       const img = new Image();
+      img.crossOrigin = 'anonymous';
       img.onload = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
       };
-      img.src = history[historyIndex - 1];
+      img.src = history[newIndex];
     }
   };
 
   const redo = () => {
     if (historyIndex < history.length - 1) {
-      setHistoryIndex(historyIndex + 1);
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       const img = new Image();
+      img.crossOrigin = 'anonymous';
       img.onload = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
       };
-      img.src = history[historyIndex + 1];
+      img.src = history[newIndex];
     }
   };
 
