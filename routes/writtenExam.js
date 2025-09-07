@@ -43,6 +43,49 @@ router.get('/exams', sessionMiddleware, requireAuth, async (req, res) => {
   }
 });
 
+// Start written exam
+router.post('/start', sessionMiddleware, requireAuth, async (req, res) => {
+  try {
+    const { examId } = req.body;
+    const userId = req.user.userId;
+    
+    const exam = await WrittenExam.findById(examId);
+    if (!exam) {
+      return res.status(404).json({ error: 'Exam not found' });
+    }
+    
+    // Check if exam is expired
+    if (new Date() > new Date(exam.expireDate)) {
+      return res.status(400).json({ error: 'Exam has expired' });
+    }
+    
+    // Check if user already has a submission for this exam
+    let submission = await WrittenSubmission.findOne({ examId, userId });
+    
+    if (submission) {
+      // Return existing submission
+      return res.json({ submission });
+    }
+    
+    const user = await User.findById(userId);
+    
+    // Create new submission with started status
+    submission = new WrittenSubmission({
+      examId,
+      userId,
+      username: user.username,
+      totalMarks: exam.totalMarks,
+      status: 'started',
+      examStartTime: new Date()
+    });
+    
+    await submission.save();
+    res.json({ submission });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to start exam' });
+  }
+});
+
 // Submit written exam answers
 router.post('/submit', sessionMiddleware, requireAuth, upload.array('answerImages', 10), async (req, res) => {
   try {
@@ -58,22 +101,20 @@ router.post('/submit', sessionMiddleware, requireAuth, upload.array('answerImage
       return res.status(404).json({ error: 'Exam not found' });
     }
 
-    // Check if user already submitted
-    const existingSubmission = await WrittenSubmission.findOne({ examId, userId });
-    if (existingSubmission) {
-      return res.status(400).json({ error: 'You have already submitted this exam' });
+    // Find existing submission
+    const submission = await WrittenSubmission.findOne({ examId, userId });
+    if (!submission) {
+      return res.status(400).json({ error: 'Exam not started' });
     }
-
-    const user = await User.findById(userId);
+    
+    if (submission.status !== 'started') {
+      return res.status(400).json({ error: 'Exam already submitted' });
+    }
+    
     const answerImages = req.files.map(file => file.path);
-
-    const submission = new WrittenSubmission({
-      examId,
-      userId,
-      username: user.username,
-      answerImages,
-      totalMarks: exam.totalMarks
-    });
+    
+    submission.answerImages = answerImages;
+    submission.status = 'pending';
 
     await submission.save();
     res.json({ message: 'Answer submitted successfully', submissionId: submission._id });

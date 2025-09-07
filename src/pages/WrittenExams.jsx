@@ -11,9 +11,8 @@ const WrittenExams = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [examStartTime, setExamStartTime] = useState(null);
+  const [activeSubmission, setActiveSubmission] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
-  const [uploadStarted, setUploadStarted] = useState(false);
   const { success, error: showError } = useNotification();
 
   useEffect(() => {
@@ -55,26 +54,48 @@ const WrittenExams = () => {
     }
   };
 
-  const startExam = (exam) => {
-    const startTime = Date.now();
-    setExamStartTime(startTime);
-    setTimeLeft(exam.timeLimit * 60); // Convert minutes to seconds
-    setSelectedExam(exam);
-    
-    // Store in localStorage for persistence
-    localStorage.setItem(`exam_${exam._id}_start`, startTime.toString());
+  const startExam = async (exam) => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      const response = await fetch(`${apiUrl}/api/written-exam/start`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ examId: exam._id })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setActiveSubmission(data.submission);
+        setSelectedExam(exam);
+        
+        const startTime = new Date(data.submission.examStartTime).getTime();
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const remaining = (exam.timeLimit * 60) - elapsed;
+        setTimeLeft(remaining > 0 ? remaining : 0);
+      } else {
+        const error = await response.json();
+        showError(error.error || 'Failed to start exam');
+      }
+    } catch (error) {
+      showError('Failed to start exam');
+    }
   };
 
   const isExamStarted = (examId) => {
-    return localStorage.getItem(`exam_${examId}_start`) !== null;
+    return submissions.some(sub => sub.examId._id === examId && sub.status === 'started');
   };
 
   const openUploadDialog = (exam) => {
-    setSelectedExam(exam);
-    const storedStartTime = localStorage.getItem(`exam_${exam._id}_start`);
-    if (storedStartTime) {
-      const startTime = parseInt(storedStartTime);
-      setExamStartTime(startTime);
+    const submission = submissions.find(sub => sub.examId._id === exam._id && sub.status === 'started');
+    if (submission) {
+      setActiveSubmission(submission);
+      setSelectedExam(exam);
+      
+      const startTime = new Date(submission.examStartTime).getTime();
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       const remaining = (exam.timeLimit * 60) - elapsed;
       setTimeLeft(remaining > 0 ? remaining : 0);
@@ -88,7 +109,6 @@ const WrittenExams = () => {
       return;
     }
     setSelectedFiles(files);
-    setUploadStarted(true); // Mark upload as started
   };
 
   const handleSubmit = async (examId) => {
@@ -117,10 +137,8 @@ const WrittenExams = () => {
         success('Answer submitted successfully!');
         setSelectedExam(null);
         setSelectedFiles([]);
-        setExamStartTime(null);
+        setActiveSubmission(null);
         setTimeLeft(null);
-        setUploadStarted(false);
-        localStorage.removeItem(`exam_${examId}_start`);
         fetchMySubmissions();
       } else {
         const data = await response.json();
@@ -143,19 +161,19 @@ const WrittenExams = () => {
 
   // Countdown timer effect
   useEffect(() => {
-    if (!examStartTime || !timeLeft) return;
+    if (!activeSubmission || !timeLeft || !selectedExam) return;
     
     const timer = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - examStartTime) / 1000);
+      const startTime = new Date(activeSubmission.examStartTime).getTime();
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
       const remaining = (selectedExam.timeLimit * 60) - elapsed;
       
       if (remaining <= 0) {
-        if (!uploadStarted) {
+        if (selectedFiles.length === 0) {
           showError('Time expired! Answer not submitted within time.');
           setSelectedExam(null);
-          setExamStartTime(null);
+          setActiveSubmission(null);
           setTimeLeft(null);
-          localStorage.removeItem(`exam_${selectedExam._id}_start`);
         }
         clearInterval(timer);
       } else {
@@ -164,29 +182,27 @@ const WrittenExams = () => {
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [examStartTime, selectedExam, uploadStarted]);
+  }, [activeSubmission, selectedExam, selectedFiles.length]);
 
   // Check for active exams on page load
   useEffect(() => {
-    exams.forEach(exam => {
-      const storedStartTime = localStorage.getItem(`exam_${exam._id}_start`);
-      if (storedStartTime) {
-        const startTime = parseInt(storedStartTime);
+    const activeExam = submissions.find(sub => sub.status === 'started');
+    if (activeExam && exams.length > 0) {
+      const exam = exams.find(e => e._id === activeExam.examId._id);
+      if (exam) {
+        setActiveSubmission(activeExam);
+        setSelectedExam(exam);
+        
+        const startTime = new Date(activeExam.examStartTime).getTime();
         const elapsed = Math.floor((Date.now() - startTime) / 1000);
         const remaining = (exam.timeLimit * 60) - elapsed;
         
         if (remaining > 0) {
-          // Exam is still active
-          setSelectedExam(exam);
-          setExamStartTime(startTime);
           setTimeLeft(remaining);
-        } else {
-          // Exam time expired, clean up
-          localStorage.removeItem(`exam_${exam._id}_start`);
         }
       }
-    });
-  }, [exams]);
+    }
+  }, [exams, submissions]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);

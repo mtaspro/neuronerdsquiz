@@ -178,9 +178,8 @@ const ExaminerDashboard = () => {
   };
 
   const handleMarkImage = (imageUrl) => {
-    // Use CORS proxy for Cloudinary images to avoid tainted canvas
-    const proxyUrl = `https://cors-anywhere.herokuapp.com/${imageUrl}`;
-    setMarkingImage(proxyUrl);
+    // Direct Cloudinary URL should work with proper CORS headers
+    setMarkingImage(imageUrl);
   };
 
   const handleSaveMarkedImage = (blob) => {
