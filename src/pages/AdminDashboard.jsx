@@ -153,6 +153,12 @@ export default function AdminDashboard() {
     questionsCRUD.read('', selectedChapterFilter ? `?chapter=${selectedChapterFilter}` : '').catch(() => {});
   }, [tab, selectedChapterFilter]);
 
+  // Load all questions for quiz config calculations
+  useEffect(() => {
+    if (tab !== 'Quiz Config') return;
+    questionsCRUD.read().catch(() => {});
+  }, [tab]);
+
 
 
   // Load quiz configs
@@ -1654,7 +1660,7 @@ export default function AdminDashboard() {
                             <input
                               type="checkbox"
                               defaultChecked={config.negativeScoring || false}
-                              onChange={(e) => handleUpdateQuizConfig(chapter._id, config.examQuestions || 50, config.battleQuestions || 0, e.target.checked, config.negativeScore)}
+                              onChange={(e) => handleUpdateQuizConfig(chapter._id, config.examQuestions || 50, config.battleQuestions || 10, e.target.checked, config.negativeScore)}
                               className="rounded border-gray-300 dark:border-gray-500 text-red-600 focus:ring-red-500"
                             />
                             <span className="text-sm text-gray-700 dark:text-gray-300">Enable for battles</span>
@@ -1670,7 +1676,7 @@ export default function AdminDashboard() {
                             step="0.1"
                             disabled={!config.negativeScoring}
                             className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded border border-gray-300 dark:border-gray-500 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors disabled:opacity-50"
-                            onBlur={(e) => handleUpdateQuizConfig(chapter._id, config.examQuestions || 50, config.battleQuestions || 0, config.negativeScoring, e.target.value)}
+                            onBlur={(e) => handleUpdateQuizConfig(chapter._id, config.examQuestions || 50, config.battleQuestions || 10, config.negativeScoring, e.target.value)}
                             placeholder="Points to deduct"
                           />
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Points deducted per wrong answer</p>
@@ -1679,7 +1685,7 @@ export default function AdminDashboard() {
                       
                       <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
                         <p className="text-sm text-blue-700 dark:text-blue-300">
-                          <strong>Battle:</strong> {config.battleQuestions || 0} questions will be randomly selected from {questionCount} available questions for battles.
+                          <strong>Battle:</strong> {config.battleQuestions || 10} questions will be randomly selected from {questionCount} available questions for battles.
                         </p>
                         <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                           💡 Battle questions are randomly selected each time. Regular quizzes show all unsolved questions progressively.

@@ -282,13 +282,13 @@ const ExaminerDashboard = () => {
                   {selectedSubmission.answerImages.map((image, index) => (
                     <div key={index} className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden relative group">
                       <img
-                        src={`${import.meta.env.VITE_API_URL || ''}${image}`}
+                        src={image}
                         alt={`Answer ${index + 1}`}
                         className="w-full h-auto"
                         style={{ maxHeight: '400px', objectFit: 'contain' }}
                       />
                       <button
-                        onClick={() => handleMarkImage(`${import.meta.env.VITE_API_URL || ''}${image}`)}
+                        onClick={() => handleMarkImage(image)}
                         className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Mark this image"
                       >
@@ -307,7 +307,7 @@ const ExaminerDashboard = () => {
                     {selectedSubmission.markedImages.map((image, index) => (
                       <div key={index} className="border border-green-300 dark:border-green-600 rounded-lg overflow-hidden">
                         <img
-                          src={`${import.meta.env.VITE_API_URL || ''}${image}`}
+                          src={image}
                           alt={`Marked Answer ${index + 1}`}
                           className="w-full h-auto"
                           style={{ maxHeight: '400px', objectFit: 'contain' }}

@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
-import path from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import { sessionMiddleware, requireAuth } from '../middleware/sessionMiddleware.js';
 import WrittenExam from '../models/WrittenExam.js';
 import WrittenSubmission from '../models/WrittenSubmission.js';
@@ -8,27 +9,26 @@ import User from '../models/User.js';
 
 const router = express.Router();
 
-// Configure multer for image uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/written-answers/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `answer-${uniqueSuffix}${path.extname(file.originalname)}`);
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Configure multer with Cloudinary storage
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'written-exams',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    transformation: [{ quality: 'auto', fetch_format: 'auto' }]
   }
 });
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
-    }
-  }
+  limits: { fileSize: 10 * 1024 * 1024 }
 });
 
 // Get all written exams
@@ -65,7 +65,7 @@ router.post('/submit', sessionMiddleware, requireAuth, upload.array('answerImage
     }
 
     const user = await User.findById(userId);
-    const answerImages = req.files.map(file => `/uploads/written-answers/${file.filename}`);
+    const answerImages = req.files.map(file => file.path);
 
     const submission = new WrittenSubmission({
       examId,

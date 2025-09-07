@@ -1,34 +1,35 @@
 import express from 'express';
 import multer from 'multer';
-import path from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import { sessionMiddleware, requireAuth } from '../middleware/sessionMiddleware.js';
 import WrittenExam from '../models/WrittenExam.js';
 import WrittenSubmission from '../models/WrittenSubmission.js';
 import User from '../models/User.js';
 
-// Configure multer for marked images
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/written-exams/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `marked-${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(file.originalname)}`);
+// Configure multer with Cloudinary for marked images
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'written-exams/marked',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    transformation: [{ quality: 'auto', fetch_format: 'auto' }]
   }
 });
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files allowed'));
-    }
-  }
+  limits: { fileSize: 10 * 1024 * 1024 }
 });
 
 const router = express.Router();
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 // Middleware to check if user is examiner
 const requireExaminer = async (req, res, next) => {
@@ -77,7 +78,7 @@ router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExamin
     
     // Add marked images if uploaded
     if (req.files && req.files.length > 0) {
-      submission.markedImages = req.files.map(file => `/uploads/written-exams/${file.filename}`);
+      submission.markedImages = req.files.map(file => file.path);
     }
 
     await submission.save();

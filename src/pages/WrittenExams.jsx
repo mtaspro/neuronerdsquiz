@@ -306,10 +306,10 @@ const WrittenExams = () => {
                             {submission.markedImages.map((image, index) => (
                               <div key={index} className="border border-green-300 dark:border-green-600 rounded overflow-hidden">
                                 <img
-                                  src={`${import.meta.env.VITE_API_URL || ''}${image}`}
+                                  src={image}
                                   alt={`Marked Answer ${index + 1}`}
                                   className="w-full h-20 object-cover cursor-pointer hover:opacity-80"
-                                  onClick={() => window.open(`${import.meta.env.VITE_API_URL || ''}${image}`, '_blank')}
+                                  onClick={() => window.open(image, '_blank')}
                                 />
                               </div>
                             ))}

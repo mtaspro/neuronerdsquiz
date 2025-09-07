@@ -48,6 +48,11 @@ const QuizBattleRoom = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = useRef(null);
+  
+  // Offline battle mode
+  const [isOffline, setIsOffline] = useState(false);
+  const [offlineAnswers, setOfflineAnswers] = useState([]);
+  const [lastSyncedQuestion, setLastSyncedQuestion] = useState(-1);
 
   // Security system state
   const [showSecurityModal, setShowSecurityModal] = useState(false);
@@ -137,7 +142,13 @@ const QuizBattleRoom = () => {
         // Set up event handlers
         socket.addListener('connect', () => {
           setConnected(true);
-          info('Connected to battle server');
+          if (isOffline) {
+            setIsOffline(false);
+            info('Reconnected! Syncing progress...');
+            syncOfflineProgress();
+          } else {
+            info('Connected to battle server');
+          }
           const username = userData.username || userData.email?.split('@')[0] || 'User';
           socket.emit('joinBattleRoom', {
             roomId,
@@ -265,7 +276,10 @@ const QuizBattleRoom = () => {
 
         socket.addListener('disconnect', (reason) => {
           setConnected(false);
-          if (reason !== 'io client disconnect') {
+          if (reason !== 'io client disconnect' && battleStarted && !battleEnded) {
+            setIsOffline(true);
+            info('Network disconnected. Continuing in offline mode...');
+          } else if (reason !== 'io client disconnect') {
             showError('Disconnected from battle server');
           }
         });
@@ -449,21 +463,44 @@ const QuizBattleRoom = () => {
     // Play sound based on answer
     soundManager.play(isCorrect ? 'correctAnswer' : 'wrongAnswer');
 
-    if (userData?._id) {
-      socket.emit('answerQuestion', {
-        roomId,
-        userId: userData._id,
-        questionIndex: currentQuestion,
-        answer: selectedAnswer,
-        isCorrect,
-        timeSpent: finalTimeSpent,
-        chapterName: selectedChapter,
-        lifelineUsed
-      });
+    const answerData = {
+      roomId,
+      userId: userData._id,
+      questionIndex: currentQuestion,
+      answer: selectedAnswer,
+      isCorrect,
+      timeSpent: finalTimeSpent,
+      chapterName: selectedChapter,
+      lifelineUsed
+    };
+
+    if (connected && !isOffline) {
+      socket.emit('answerQuestion', answerData);
+    } else {
+      // Store answer offline
+      setOfflineAnswers(prev => [...prev, answerData]);
+      // Update local user progress
+      setUsers(prev => prev.map(user => 
+        user.id === userData._id 
+          ? { ...user, currentQuestion: currentQuestion + 1, score: (user.score || 0) + (isCorrect ? 100 : 0) }
+          : user
+      ));
     }
 
     setAnswered(true);
     setTimeSpent(finalTimeSpent);
+  };
+
+  const syncOfflineProgress = () => {
+    if (offlineAnswers.length === 0) return;
+    
+    offlineAnswers.forEach(answerData => {
+      socket.emit('answerQuestion', answerData);
+    });
+    
+    setOfflineAnswers([]);
+    setLastSyncedQuestion(currentQuestion);
+    success('Progress synced successfully!');
   };
 
   // Handle lifeline usage in battle
@@ -528,6 +565,9 @@ const QuizBattleRoom = () => {
       setTimeSpent(0);
       setHelpUsed(false);
       setHiddenOptions(new Set());
+    } else if (isOffline && offlineAnswers.length > 0) {
+      // In offline mode, show completion message
+      info('Battle completed offline. Will sync when reconnected.');
     }
   };
 
@@ -757,6 +797,16 @@ const QuizBattleRoom = () => {
               <span>Fullscreen</span>
             </button>
           )}
+        </div>
+      )}
+
+      {/* Offline Mode Indicator */}
+      {isOffline && battleStarted && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40">
+          <div className="bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <span>📡 Offline Mode - Progress will sync when reconnected</span>
+          </div>
         </div>
       )}
 
