@@ -92,9 +92,16 @@ router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExamin
       submissionId,
       updateData,
       { new: true, runValidators: true }
-    );
+    ).populate('examId', 'title subject chapter totalMarks')
+     .populate('userId', 'username email')
+     .populate('gradedBy', 'username');
 
     console.log('Submission graded successfully:', submissionId, 'New status:', updatedSubmission.status);
+    
+    // Verify the update was successful
+    const verifySubmission = await WrittenSubmission.findById(submissionId);
+    console.log('Verification - Status in DB:', verifySubmission.status);
+    
     res.json({ message: 'Submission graded successfully', submission: updatedSubmission });
   } catch (error) {
     console.error('Error grading submission:', error);

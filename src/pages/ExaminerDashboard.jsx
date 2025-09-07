@@ -135,11 +135,12 @@ const ExaminerDashboard = () => {
         setSelectedSubmission(null);
         setGradeForm({ marksObtained: '', examinerComments: '', status: 'graded' });
         setMarkedImages([]);
-        // Refresh submissions to ensure proper status update
-        await fetchSubmissions();
-        if (activeTab === 'leaderboard') {
+        
+        // Small delay to ensure database update is complete
+        setTimeout(async () => {
+          await fetchSubmissions();
           fetchLeaderboard();
-        }
+        }, 500);
       } else {
         const data = await response.json();
         showError(data.error || 'Failed to grade submission');
@@ -195,6 +196,8 @@ const ExaminerDashboard = () => {
     const file = new File([blob], `marked-${Date.now()}.png`, { type: 'image/png' });
     setMarkedImages(prev => [...prev, file]);
     setMarkingImage(null);
+    // Force re-render to show the new marked image
+    setSelectedSubmission(prev => ({ ...prev }));
   };
 
   if (loading) {
@@ -382,19 +385,34 @@ const ExaminerDashboard = () => {
                 </div>
               </div>
 
-              {/* Marked Images Display */}
-              {selectedSubmission.markedImages && selectedSubmission.markedImages.length > 0 && (
+              {/* Marked Images Display - Show both existing and newly marked */}
+              {((selectedSubmission.markedImages && selectedSubmission.markedImages.length > 0) || markedImages.length > 0) && (
                 <div className="mb-6">
                   <h3 className="font-semibold mb-3">Marked Answer Papers:</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedSubmission.markedImages.map((image, index) => (
-                      <div key={index} className="border border-green-300 dark:border-green-600 rounded-lg overflow-hidden">
+                    {/* Existing marked images */}
+                    {selectedSubmission.markedImages && selectedSubmission.markedImages.map((image, index) => (
+                      <div key={`existing-${index}`} className="border border-green-300 dark:border-green-600 rounded-lg overflow-hidden">
                         <img
                           src={image}
                           alt={`Marked Answer ${index + 1}`}
                           className="w-full h-auto"
                           style={{ maxHeight: '400px', objectFit: 'contain' }}
                         />
+                      </div>
+                    ))}
+                    {/* Newly marked images */}
+                    {markedImages.map((file, index) => (
+                      <div key={`new-${index}`} className="border border-blue-300 dark:border-blue-600 rounded-lg overflow-hidden">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`New Marked Answer ${index + 1}`}
+                          className="w-full h-auto"
+                          style={{ maxHeight: '400px', objectFit: 'contain' }}
+                        />
+                        <div className="p-2 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 text-sm">
+                          New Marking
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { FaPen, FaEraser, FaUndo, FaRedo, FaSave, FaPalette } from 'react-icons/fa';
+import { FaPen, FaUndo, FaRedo, FaSave, FaPalette } from 'react-icons/fa';
 
 const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
   const canvasRef = useRef(null);
@@ -57,13 +57,8 @@ const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
     ctx.lineWidth = lineWidth;
     ctx.lineCap = 'round';
     
-    if (tool === 'pen') {
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.strokeStyle = color;
-    } else if (tool === 'eraser') {
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.strokeStyle = 'rgba(0,0,0,1)';
-    }
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = color;
     
     ctx.lineTo(x, y);
     ctx.stroke();
@@ -127,12 +122,7 @@ const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
         >
           <FaPen />
         </button>
-        <button
-          onClick={() => setTool('eraser')}
-          className={`p-2 rounded ${tool === 'eraser' ? 'bg-blue-500 text-white' : 'bg-white dark:bg-gray-600'}`}
-        >
-          <FaEraser />
-        </button>
+
         
         <div className="flex items-center space-x-2">
           <FaPalette />
