@@ -86,11 +86,11 @@ const WrittenExams = () => {
   };
 
   const isExamStarted = (examId) => {
-    return submissions.some(sub => sub.examId._id === examId && sub.status === 'started');
+    return submissions.some(sub => sub.examId?._id === examId && sub.status === 'started');
   };
 
   const openUploadDialog = (exam) => {
-    const submission = submissions.find(sub => sub.examId._id === exam._id && sub.status === 'started');
+    const submission = submissions.find(sub => sub.examId?._id === exam._id && sub.status === 'started');
     if (submission) {
       setActiveSubmission(submission);
       setSelectedExam(exam);
@@ -186,9 +186,9 @@ const WrittenExams = () => {
 
   // Check for active exams on page load
   useEffect(() => {
-    const activeExam = submissions.find(sub => sub.status === 'started');
+    const activeExam = submissions.find(sub => sub.status === 'started' && sub.examId);
     if (activeExam && exams.length > 0) {
-      const exam = exams.find(e => e._id === activeExam.examId._id);
+      const exam = exams.find(e => e._id === activeExam.examId?._id);
       if (exam) {
         setActiveSubmission(activeExam);
         setSelectedExam(exam);
@@ -406,7 +406,7 @@ const WrittenExams = () => {
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-lg font-semibold">{submission.examId.title}</h3>
+                      <h3 className="text-lg font-semibold">{submission.examId?.title || 'Deleted Exam'}</h3>
                       <p className="text-gray-600 dark:text-gray-300">
                         Submitted: {new Date(submission.submittedAt).toLocaleDateString()}
                       </p>

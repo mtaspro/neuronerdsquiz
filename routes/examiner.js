@@ -122,6 +122,8 @@ router.delete('/exams/:examId', sessionMiddleware, requireAuth, requireExaminer,
     }
     
     await WrittenExam.findByIdAndDelete(req.params.examId);
+    // Delete all related submissions
+    await WrittenSubmission.deleteMany({ examId: req.params.examId });
     res.json({ message: 'Exam deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete exam' });
