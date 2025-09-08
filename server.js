@@ -319,6 +319,13 @@ io.on('connection', (socket) => {
     console.log(`User ${username} (${userId}) joining room ${roomId}`);
     
     try {
+      // Check if room exists and is still active
+      const existingRoom = battleService.getRoom(roomId);
+      if (existingRoom && (existingRoom.status === 'finished' || !existingRoom.isActive)) {
+        socket.emit('error', { message: 'This battle has already ended. Please join another battle.' });
+        return;
+      }
+      
       const room = battleService.addUserToRoom(roomId, userId, username, socket.id);
       socket.join(roomId);
       
@@ -469,7 +476,7 @@ io.on('connection', (socket) => {
     
     try {
       const room = battleService.getRoom(roomId);
-      if (room) {
+      if (room && room.isActive) {
         socket.join(roomId);
         
         // Send current room state to spectator
@@ -490,7 +497,7 @@ io.on('connection', (socket) => {
         
         console.log(`Spectator joined room ${roomId}`);
       } else {
-        socket.emit('error', { message: 'Battle room not found' });
+        socket.emit('error', { message: 'Battle room not found or has ended' });
       }
     } catch (error) {
       socket.emit('error', { message: error.message });

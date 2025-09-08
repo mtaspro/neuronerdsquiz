@@ -224,7 +224,7 @@ const WrittenExams = () => {
         <h1 className="text-3xl font-bold mb-8 text-center">Written Exams</h1>
 
         {/* Available Exams */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12">
           {exams.map(exam => {
             const submission = getSubmissionStatus(exam._id);
             return (
@@ -313,11 +313,11 @@ const WrittenExams = () => {
 
         {/* Upload Modal */}
         {selectedExam && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" data-lenis-prevent>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4" data-lenis-prevent>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               data-lenis-prevent
             >
               <div className="flex justify-between items-center mb-4">
@@ -350,7 +350,7 @@ const WrittenExams = () => {
               {selectedFiles.length > 0 && (
                 <div className="mb-6">
                   <h3 className="font-medium mb-2">Selected Files ({selectedFiles.length}):</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                     {selectedFiles.map((file, index) => (
                       <div key={index} className="text-sm p-2 bg-gray-100 dark:bg-gray-700 rounded">
                         {file.name}

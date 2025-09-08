@@ -16,6 +16,7 @@ import ExaminerRoute from './components/ExaminerRoute';
 
 // Lazy load heavy components
 const QuizBattleRoom = lazy(() => import("./pages/QuizBattleRoom"));
+const BattleReview = lazy(() => import("./pages/BattleReview"));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminWhatsApp = lazy(() => import('./pages/AdminWhatsApp'));
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
@@ -344,6 +345,16 @@ function AnimatedRoutes() {
                     <QuizBattleRoom />
                   </Suspense>
                 </ErrorBoundary>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/battle-review"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                  <BattleReview />
+                </Suspense>
               </ProtectedRoute>
             }
           />

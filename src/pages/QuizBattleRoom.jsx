@@ -270,8 +270,14 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('connect_error', (error) => {
-          setError('Failed to connect to battle server');
-          showError('Failed to connect to battle server. Please check your connection.');
+          if (!battleStarted || battleEnded) {
+            setError('Failed to connect to battle server');
+            showError('Failed to connect to battle server. Please check your connection.');
+          } else {
+            // During battle, just set offline mode
+            setIsOffline(true);
+            info('Connection lost. Continuing in offline mode...');
+          }
         });
 
         socket.addListener('disconnect', (reason) => {
@@ -279,7 +285,8 @@ const QuizBattleRoom = () => {
           if (reason !== 'io client disconnect' && battleStarted && !battleEnded) {
             setIsOffline(true);
             info('Network disconnected. Continuing in offline mode...');
-          } else if (reason !== 'io client disconnect') {
+            // Don't show error or redirect, stay in battle
+          } else if (reason !== 'io client disconnect' && !battleStarted) {
             showError('Disconnected from battle server');
           }
         });
@@ -485,6 +492,7 @@ const QuizBattleRoom = () => {
           ? { ...user, currentQuestion: currentQuestion + 1, score: (user.score || 0) + (isCorrect ? 100 : 0) }
           : user
       ));
+      info('Answer saved offline. Will sync when reconnected.');
     }
 
     setAnswered(true);
@@ -723,7 +731,7 @@ const QuizBattleRoom = () => {
     return `${seconds}.${milliseconds.toString().padStart(2, '0')}`;
   };
 
-  if (!connected) {
+  if (!connected && !battleStarted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
         <motion.div
@@ -801,7 +809,7 @@ const QuizBattleRoom = () => {
       )}
 
       {/* Offline Mode Indicator */}
-      {isOffline && battleStarted && (
+      {(isOffline || (!connected && battleStarted)) && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40">
           <div className="bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
@@ -1051,6 +1059,12 @@ const QuizBattleRoom = () => {
 
             <div className="text-center mt-8 space-y-4">
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => navigate('/battle-review', { state: { questions, results, roomId } })}
+                  className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 px-8 py-3 rounded-lg font-semibold transition-colors text-white shadow-lg"
+                >
+                  📝 Review Battle Questions
+                </button>
                 <button
                   onClick={() => navigate('/leaderboard')}
                   className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 px-8 py-3 rounded-lg font-semibold transition-colors text-white shadow-lg"

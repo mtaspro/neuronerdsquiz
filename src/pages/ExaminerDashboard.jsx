@@ -314,7 +314,7 @@ const ExaminerDashboard = () => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {submissions.map(submission => (
               <motion.div
                 key={submission._id}
@@ -354,7 +354,7 @@ const ExaminerDashboard = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto mx-2 sm:mx-0"
               data-lenis-prevent
             >
               <h2 className="text-2xl font-bold mb-4">
@@ -364,7 +364,7 @@ const ExaminerDashboard = () => {
               {/* Answer Images */}
               <div className="mb-6">
                 <h3 className="font-semibold mb-3">Submitted Answers:</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {selectedSubmission.answerImages.map((image, index) => (
                     <div key={index} className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden relative group">
                       <img
@@ -389,7 +389,7 @@ const ExaminerDashboard = () => {
               {((selectedSubmission.markedImages && selectedSubmission.markedImages.length > 0) || markedImages.length > 0) && (
                 <div className="mb-6">
                   <h3 className="font-semibold mb-3">Marked Answer Papers:</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Existing marked images */}
                     {selectedSubmission.markedImages && selectedSubmission.markedImages.map((image, index) => (
                       <div key={`existing-${index}`} className="border border-green-300 dark:border-green-600 rounded-lg overflow-hidden relative group">
