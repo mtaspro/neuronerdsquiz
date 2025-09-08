@@ -529,6 +529,59 @@ router.post('/end-showdown-event', sessionMiddleware, requireSuperAdmin, async (
   }
 });
 
+// Get all users for management
+router.get('/users', sessionMiddleware, requireSuperAdmin, async (req, res) => {
+  try {
+    const users = await User.find({}, '-password')
+      .select('+phoneNumber +whatsappNotifications')
+      .sort({ createdAt: -1 })
+      .limit(200);
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Promote user to different roles
+router.put('/users/:userId/promote', sessionMiddleware, requireSuperAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+    
+    if (!['admin', 'examiner', 'superadmin'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const updateData = {};
+    
+    if (role === 'admin') {
+      updateData.isAdmin = true;
+      updateData.isExaminer = true; // Admins are also examiners
+    } else if (role === 'examiner') {
+      updateData.isExaminer = true;
+    } else if (role === 'superadmin') {
+      updateData.isSuperAdmin = true;
+      updateData.isAdmin = true;
+      updateData.isExaminer = true;
+    }
+    
+    await User.findByIdAndUpdate(userId, updateData);
+    
+    console.log(`SuperAdmin promoted ${user.username} to ${role}`);
+    res.json({ message: `User promoted to ${role} successfully` });
+    
+  } catch (error) {
+    console.error('Error promoting user:', error);
+    res.status(500).json({ error: 'Failed to promote user' });
+  }
+});
+
 // Get lifeline configuration
 router.get('/lifeline-config', sessionMiddleware, requireSuperAdmin, async (req, res) => {
   try {

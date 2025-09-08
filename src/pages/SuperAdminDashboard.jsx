@@ -16,6 +16,8 @@ const SuperAdminDashboard = () => {
   const [showExamManager, setShowExamManager] = useState(false);
   const [exams, setExams] = useState([]);
   const [newExam, setNewExam] = useState({ examName: '', examDate: '' });
+  const [users, setUsers] = useState([]);
+  const [showUserManager, setShowUserManager] = useState(false);
   const { success, error: showError } = useNotification();
 
   const themes = [
@@ -32,6 +34,7 @@ const SuperAdminDashboard = () => {
     fetchRequests();
     fetchGlobalSettings();
     loadExams();
+    loadUsers();
   }, []);
 
   const fetchRequests = async () => {
@@ -83,6 +86,38 @@ const SuperAdminDashboard = () => {
       setExams(response.data);
     } catch (error) {
       console.error('Error loading exams:', error);
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      const response = await axios.get(`${apiUrl}/api/superadmin/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+  const promoteUser = async (userId, role) => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      
+      await axios.put(`${apiUrl}/api/superadmin/users/${userId}/promote`, {
+        role
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      success(`User promoted to ${role} successfully!`);
+      loadUsers(); // Refresh user list
+    } catch (error) {
+      console.error('Error promoting user:', error);
+      showError('Failed to promote user');
     }
   };
 
@@ -317,6 +352,74 @@ const SuperAdminDashboard = () => {
               ✅ Disable Maintenance Mode
             </button>
           </div>
+        </div>
+
+        {/* User Management */}
+        <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <FaUser className="text-blue-600 text-xl" />
+              <h2 className="text-xl font-semibold">User Management</h2>
+            </div>
+            <button
+              onClick={() => setShowUserManager(!showUserManager)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              {showUserManager ? 'Hide' : 'Show'} Users
+            </button>
+          </div>
+          
+          {showUserManager && (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {users.map((user) => (
+                <div key={user._id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div>
+                    <h4 className="font-medium">{user.username}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
+                    <div className="flex space-x-2 mt-1">
+                      {user.isSuperAdmin && <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">SuperAdmin</span>}
+                      {user.isAdmin && <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">Admin</span>}
+                      {user.isExaminer && <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Examiner</span>}
+                      {!user.isAdmin && !user.isExaminer && !user.isSuperAdmin && <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">User</span>}
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    {!user.isExaminer && (
+                      <button
+                        onClick={() => promoteUser(user._id, 'examiner')}
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                      >
+                        Make Examiner
+                      </button>
+                    )}
+                    {!user.isAdmin && (
+                      <button
+                        onClick={() => promoteUser(user._id, 'admin')}
+                        className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                      >
+                        Make Admin
+                      </button>
+                    )}
+                    {!user.isSuperAdmin && (
+                      <button
+                        onClick={() => {
+                          if (confirm(`Are you sure you want to make ${user.username} a SuperAdmin? This gives them full system access.`)) {
+                            promoteUser(user._id, 'superadmin');
+                          }
+                        }}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                      >
+                        Make SuperAdmin
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {users.length === 0 && (
+                <p className="text-gray-500 text-center py-4">No users found</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Exam Manager */}
