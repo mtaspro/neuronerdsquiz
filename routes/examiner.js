@@ -66,6 +66,7 @@ router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExamin
     const { marksObtained, examinerComments, status = 'graded' } = req.body;
     
     console.log('Grading submission:', submissionId, { marksObtained, examinerComments, status });
+    console.log('Current submission status:', submission.status);
     
     const submission = await WrittenSubmission.findById(submissionId);
     if (!submission) {
@@ -81,10 +82,11 @@ router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExamin
       gradedAt: new Date()
     };
     
-    // Add marked images if uploaded
+    // Add marked images if uploaded (append to existing ones)
     if (req.files && req.files.length > 0) {
-      updateData.markedImages = req.files.map(file => file.path);
-      console.log('Added marked images:', updateData.markedImages.length);
+      const newMarkedImages = req.files.map(file => file.path);
+      updateData.markedImages = [...(submission.markedImages || []), ...newMarkedImages];
+      console.log('Added marked images:', newMarkedImages.length, 'Total:', updateData.markedImages.length);
     }
 
     // Use findByIdAndUpdate to ensure atomic update

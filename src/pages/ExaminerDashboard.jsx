@@ -181,15 +181,15 @@ const ExaminerDashboard = () => {
     setGradeForm({
       marksObtained: submission.marksObtained || '',
       examinerComments: submission.examinerComments || '',
-      status: submission.status
+      status: submission.status === 'pending' ? 'graded' : submission.status
     });
     setMarkedImages([]);
     setMarkingImage(null);
   };
 
-  const handleMarkImage = (imageUrl) => {
-    // Direct Cloudinary URL should work with proper CORS headers
-    setMarkingImage(imageUrl);
+  const handleMarkImage = (imageUrl, isMarkedImage = false) => {
+    // If it's a marked image, pass it as existing marked image
+    setMarkingImage({ originalUrl: imageUrl, isMarkedImage });
   };
 
   const handleSaveMarkedImage = (blob) => {
@@ -374,7 +374,7 @@ const ExaminerDashboard = () => {
                         style={{ maxHeight: '400px', objectFit: 'contain' }}
                       />
                       <button
-                        onClick={() => handleMarkImage(image)}
+                        onClick={() => handleMarkImage(image, false)}
                         className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Mark this image"
                       >
@@ -392,13 +392,20 @@ const ExaminerDashboard = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Existing marked images */}
                     {selectedSubmission.markedImages && selectedSubmission.markedImages.map((image, index) => (
-                      <div key={`existing-${index}`} className="border border-green-300 dark:border-green-600 rounded-lg overflow-hidden">
+                      <div key={`existing-${index}`} className="border border-green-300 dark:border-green-600 rounded-lg overflow-hidden relative group">
                         <img
                           src={image}
                           alt={`Marked Answer ${index + 1}`}
                           className="w-full h-auto"
                           style={{ maxHeight: '400px', objectFit: 'contain' }}
                         />
+                        <button
+                          onClick={() => handleMarkImage(image, true)}
+                          className="absolute top-2 right-2 bg-green-600 hover:bg-green-700 text-white p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Edit marked image"
+                        >
+                          <FaPen />
+                        </button>
                       </div>
                     ))}
                     {/* Newly marked images */}
@@ -586,7 +593,8 @@ const ExaminerDashboard = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50" data-lenis-prevent>
             <div className="w-full h-full">
               <ImageMarker
-                imageUrl={markingImage}
+                imageUrl={markingImage?.originalUrl || markingImage}
+                existingMarkedImage={markingImage?.isMarkedImage ? markingImage.originalUrl : null}
                 onSave={handleSaveMarkedImage}
                 onCancel={() => setMarkingImage(null)}
               />

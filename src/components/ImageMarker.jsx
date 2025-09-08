@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { FaPen, FaUndo, FaRedo, FaSave, FaPalette } from 'react-icons/fa';
+import { FaPen, FaUndo, FaRedo, FaSave, FaPalette, FaFont } from 'react-icons/fa';
 
-const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
+const ImageMarker = ({ imageUrl, onSave, onCancel, existingMarkedImage }) => {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [tool, setTool] = useState('pen');
@@ -9,10 +9,16 @@ const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
   const [lineWidth, setLineWidth] = useState(3);
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [showTextInput, setShowTextInput] = useState(false);
+  const [textPosition, setTextPosition] = useState({ x: 0, y: 0 });
+  const [textValue, setTextValue] = useState('');
+  const [fontSize, setFontSize] = useState(16);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+    
+    // Load existing marked image if available, otherwise load original
     const img = new Image();
     img.crossOrigin = 'anonymous';
     
@@ -22,8 +28,10 @@ const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
       ctx.drawImage(img, 0, 0);
       saveToHistory();
     };
-    img.src = imageUrl;
-  }, [imageUrl]);
+    
+    // Use existing marked image if available, otherwise use original
+    img.src = existingMarkedImage || imageUrl;
+  }, [imageUrl, existingMarkedImage]);
 
   const saveToHistory = () => {
     const canvas = canvasRef.current;
@@ -34,19 +42,25 @@ const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
   };
 
   const startDrawing = (e) => {
-    setIsDrawing(true);
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
+    if (tool === 'text') {
+      setTextPosition({ x, y });
+      setShowTextInput(true);
+      return;
+    }
+    
+    setIsDrawing(true);
     const ctx = canvas.getContext('2d');
     ctx.beginPath();
     ctx.moveTo(x, y);
   };
 
   const draw = (e) => {
-    if (!isDrawing) return;
+    if (!isDrawing || tool === 'text') return;
     
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -56,7 +70,6 @@ const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
     const ctx = canvas.getContext('2d');
     ctx.lineWidth = lineWidth;
     ctx.lineCap = 'round';
-    
     ctx.globalCompositeOperation = 'source-over';
     ctx.strokeStyle = color;
     
@@ -103,6 +116,27 @@ const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
     }
   };
 
+  const addText = () => {
+    if (!textValue.trim()) {
+      setShowTextInput(false);
+      return;
+    }
+    
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    ctx.font = `${fontSize}px Arial`;
+    ctx.fillStyle = color;
+    ctx.textBaseline = 'top';
+    
+    // Add text with emoji support
+    ctx.fillText(textValue, textPosition.x, textPosition.y);
+    
+    setTextValue('');
+    setShowTextInput(false);
+    saveToHistory();
+  };
+
   const handleSave = () => {
     const canvas = canvasRef.current;
     canvas.toBlob((blob) => {
@@ -122,6 +156,12 @@ const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
         >
           <FaPen />
         </button>
+        <button
+          onClick={() => setTool('text')}
+          className={`p-2 rounded ${tool === 'text' ? 'bg-blue-500 text-white' : 'bg-white dark:bg-gray-600'}`}
+        >
+          <FaFont />
+        </button>
 
         
         <div className="flex items-center space-x-2">
@@ -136,14 +176,26 @@ const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
           ))}
         </div>
         
-        <input
-          type="range"
-          min="1"
-          max="10"
-          value={lineWidth}
-          onChange={(e) => setLineWidth(e.target.value)}
-          className="w-20"
-        />
+        {tool === 'pen' ? (
+          <input
+            type="range"
+            min="1"
+            max="10"
+            value={lineWidth}
+            onChange={(e) => setLineWidth(e.target.value)}
+            className="w-20"
+          />
+        ) : (
+          <input
+            type="range"
+            min="12"
+            max="48"
+            value={fontSize}
+            onChange={(e) => setFontSize(e.target.value)}
+            className="w-20"
+            title="Font Size"
+          />
+        )}
         
         <button onClick={undo} disabled={historyIndex <= 0} className="p-2 rounded bg-white dark:bg-gray-600 disabled:opacity-50">
           <FaUndo />
@@ -164,16 +216,50 @@ const ImageMarker = ({ imageUrl, onSave, onCancel }) => {
       </div>
       
       {/* Canvas */}
-      <div className="flex-1 overflow-auto p-4 bg-gray-50 dark:bg-gray-800">
+      <div className="flex-1 overflow-auto p-4 bg-gray-50 dark:bg-gray-800 relative">
         <canvas
           ref={canvasRef}
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
-          className="border border-gray-300 dark:border-gray-600 cursor-crosshair max-w-full"
+          className={`border border-gray-300 dark:border-gray-600 max-w-full ${
+            tool === 'text' ? 'cursor-text' : 'cursor-crosshair'
+          }`}
           style={{ display: 'block', margin: '0 auto' }}
         />
+        
+        {/* Text Input Modal */}
+        {showTextInput && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold mb-3">Add Text</h3>
+              <input
+                type="text"
+                value={textValue}
+                onChange={(e) => setTextValue(e.target.value)}
+                placeholder="Enter text (emojis supported: 😊 ✓ ✗ 👍)"
+                className="w-full p-2 border rounded mb-3"
+                autoFocus
+                onKeyPress={(e) => e.key === 'Enter' && addText()}
+              />
+              <div className="flex space-x-2">
+                <button
+                  onClick={addText}
+                  className="bg-green-600 text-white px-4 py-2 rounded"
+                >
+                  Add Text
+                </button>
+                <button
+                  onClick={() => setShowTextInput(false)}
+                  className="bg-gray-600 text-white px-4 py-2 rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
