@@ -66,9 +66,9 @@ router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExamin
     const { marksObtained, examinerComments, status = 'graded' } = req.body;
     
     console.log('Grading submission:', submissionId, { marksObtained, examinerComments, status });
-    console.log('Current submission status:', submission.status);
     
     const submission = await WrittenSubmission.findById(submissionId);
+    console.log('Current submission status:', submission.status);
     if (!submission) {
       return res.status(404).json({ error: 'Submission not found' });
     }
