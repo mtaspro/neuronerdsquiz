@@ -12,6 +12,7 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from './components/AdminRoute';
+import ExaminerRoute from './components/ExaminerRoute';
 
 // Lazy load heavy components
 const QuizBattleRoom = lazy(() => import("./pages/QuizBattleRoom"));
@@ -402,11 +403,11 @@ function AnimatedRoutes() {
           <Route
             path="/examiner"
             element={
-              <ProtectedRoute>
+              <ExaminerRoute>
                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
                   <ExaminerDashboard />
                 </Suspense>
-              </ProtectedRoute>
+              </ExaminerRoute>
             }
           />
           <Route
