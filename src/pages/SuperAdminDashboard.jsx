@@ -115,6 +115,9 @@ const SuperAdminDashboard = () => {
       
       success(`User promoted to ${role} successfully!`);
       loadUsers(); // Refresh user list
+      
+      // Notify all clients to refresh their role data
+      window.dispatchEvent(new CustomEvent('userRoleUpdate'));
     } catch (error) {
       console.error('Error promoting user:', error);
       showError('Failed to promote user');

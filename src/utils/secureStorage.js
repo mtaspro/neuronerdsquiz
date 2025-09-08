@@ -17,14 +17,17 @@ class SecureStorage {
   }
 
   // Get user data from server
-  async getUserData() {
+  async getUserData(forceRefresh = false) {
     const token = this.getToken();
     if (!token) return null;
     
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const response = await fetch(`${apiUrl}/api/auth/validate`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Cache-Control': forceRefresh ? 'no-cache' : 'default'
+        }
       });
       
       if (response.ok) {
@@ -38,10 +41,22 @@ class SecureStorage {
     }
   }
 
+  // Force refresh user data (for role changes)
+  async refreshUserData() {
+    const userData = await this.getUserData(true);
+    if (userData) {
+      // Dispatch event to notify components
+      window.dispatchEvent(new CustomEvent('userRoleUpdate', { detail: userData }));
+    }
+    return userData;
+  }
+
   // Clear all data
   clear() {
     localStorage.removeItem('sessionToken');
     // userData no longer stored in browser
+    // Dispatch event to notify components
+    window.dispatchEvent(new CustomEvent('userAuthChange'));
   }
 
   // Check if user is logged in

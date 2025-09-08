@@ -105,10 +105,20 @@ function Navbar() {
     
     window.addEventListener('storage', checkAuth);
     window.addEventListener('userAuthChange', checkAuth);
+    window.addEventListener('userRoleUpdate', checkAuth);
+    
+    // Check for role updates every 30 seconds
+    const roleCheckInterval = setInterval(async () => {
+      if (secureStorage.getToken()) {
+        await secureStorage.refreshUserData();
+      }
+    }, 30000);
     
     return () => {
       window.removeEventListener('storage', checkAuth);
       window.removeEventListener('userAuthChange', checkAuth);
+      window.removeEventListener('userRoleUpdate', checkAuth);
+      clearInterval(roleCheckInterval);
     };
   }, []);
 
