@@ -142,13 +142,20 @@ const QuizBattleRoom = () => {
         // Set up event handlers
         socket.addListener('connect', () => {
           setConnected(true);
-          if (isOffline) {
+          
+          // Re-enable reconnection if it was disabled
+          if (socket.io) {
+            socket.io.skipReconnect = false;
+          }
+          
+          if (isOffline && battleStarted && !battleEnded) {
             setIsOffline(false);
             info('Reconnected! Syncing progress...');
             syncOfflineProgress();
-          } else {
+          } else if (!battleStarted) {
             info('Connected to battle server');
           }
+          
           const username = userData.username || userData.email?.split('@')[0] || 'User';
           socket.emit('joinBattleRoom', {
             roomId,
@@ -270,23 +277,34 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('connect_error', (error) => {
+          console.log('🚨 Socket connection error:', error);
+          console.log('🌐 Attempted URL:', socket.io?.uri);
+          console.log('⚙️ Error details:', error);
+          
           if (!battleStarted || battleEnded) {
             setError('Failed to connect to battle server');
             showError('Failed to connect to battle server. Please check your connection.');
           } else {
-            // During battle, just set offline mode
+            // During battle, just set offline mode and stop reconnection attempts
+            setConnected(false);
             setIsOffline(true);
             info('Connection lost. Continuing in offline mode...');
           }
         });
 
         socket.addListener('disconnect', (reason) => {
+          console.log('🚨 Unexpected disconnection:', reason);
           setConnected(false);
-          if (reason !== 'io client disconnect' && battleStarted && !battleEnded) {
+          
+          if (battleStarted && !battleEnded) {
+            // During active battle, stay in offline mode
             setIsOffline(true);
             info('Network disconnected. Continuing in offline mode...');
-            // Don't show error or redirect, stay in battle
-          } else if (reason !== 'io client disconnect' && !battleStarted) {
+            // Prevent automatic reconnection during battle
+            if (socket.io) {
+              socket.io.skipReconnect = true;
+            }
+          } else if (!battleStarted && reason !== 'io client disconnect') {
             showError('Disconnected from battle server');
           }
         });
@@ -501,6 +519,8 @@ const QuizBattleRoom = () => {
 
   const syncOfflineProgress = () => {
     if (offlineAnswers.length === 0) return;
+    
+    console.log('🔄 Syncing offline progress:', offlineAnswers.length, 'answers');
     
     offlineAnswers.forEach(answerData => {
       socket.emit('answerQuestion', answerData);
@@ -814,6 +834,18 @@ const QuizBattleRoom = () => {
           <div className="bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
             <span>📡 Offline Mode - Progress will sync when reconnected</span>
+            <button
+              onClick={() => {
+                if (socket.io) {
+                  socket.io.skipReconnect = false;
+                }
+                socket.connect();
+                info('Attempting to reconnect...');
+              }}
+              className="ml-2 bg-white bg-opacity-20 hover:bg-opacity-30 px-2 py-1 rounded text-xs transition-colors"
+            >
+              🔄 Retry
+            </button>
           </div>
         </div>
       )}
