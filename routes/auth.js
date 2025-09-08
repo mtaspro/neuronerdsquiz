@@ -113,6 +113,7 @@ router.post('/register', memoryUpload.single('profilePicture'), async (req, res)
       email: user.email,
       isAdmin: user.isAdmin,
       isSuperAdmin: user.isSuperAdmin,
+      isExaminer: user.isExaminer,
       username: user.username,
       avatar: user.avatar,
       phoneNumber: user.phoneNumber,
@@ -168,6 +169,7 @@ router.post('/login', async (req, res) => {
       email: user.email,
       isAdmin: user.isAdmin,
       isSuperAdmin: user.isSuperAdmin,
+      isExaminer: user.isExaminer,
       username: user.username,
       avatar: user.avatar,
       phoneNumber: user.phoneNumber,
@@ -216,7 +218,8 @@ router.get('/validate', sessionMiddleware, async (req, res) => {
         username: user.username,
         avatar: avatar,
         isAdmin: user.isAdmin,
-        isSuperAdmin: user.isSuperAdmin
+        isSuperAdmin: user.isSuperAdmin,
+        isExaminer: user.isExaminer
       }
     });
   } catch (err) {
