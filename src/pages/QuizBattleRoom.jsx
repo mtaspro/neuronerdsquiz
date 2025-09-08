@@ -144,9 +144,7 @@ const QuizBattleRoom = () => {
           setConnected(true);
           
           // Re-enable reconnection if it was disabled
-          if (socket.io) {
-            socket.io.skipReconnect = false;
-          }
+          socket.enableReconnection();
           
           if (isOffline && battleStarted && !battleEnded) {
             setIsOffline(false);
@@ -278,16 +276,16 @@ const QuizBattleRoom = () => {
 
         socket.addListener('connect_error', (error) => {
           console.log('🚨 Socket connection error:', error);
-          console.log('🌐 Attempted URL:', socket.io?.uri);
           console.log('⚙️ Error details:', error);
           
           if (!battleStarted || battleEnded) {
             setError('Failed to connect to battle server');
             showError('Failed to connect to battle server. Please check your connection.');
           } else {
-            // During battle, just set offline mode and stop reconnection attempts
+            // During battle, just set offline mode and disable reconnection
             setConnected(false);
             setIsOffline(true);
+            socket.disableReconnection();
             info('Connection lost. Continuing in offline mode...');
           }
         });
@@ -297,13 +295,10 @@ const QuizBattleRoom = () => {
           setConnected(false);
           
           if (battleStarted && !battleEnded) {
-            // During active battle, stay in offline mode
+            // During active battle, stay in offline mode and disable reconnection
             setIsOffline(true);
+            socket.disableReconnection();
             info('Network disconnected. Continuing in offline mode...');
-            // Prevent automatic reconnection during battle
-            if (socket.io) {
-              socket.io.skipReconnect = true;
-            }
           } else if (!battleStarted && reason !== 'io client disconnect') {
             showError('Disconnected from battle server');
           }
@@ -836,9 +831,7 @@ const QuizBattleRoom = () => {
             <span>📡 Offline Mode - Progress will sync when reconnected</span>
             <button
               onClick={() => {
-                if (socket.io) {
-                  socket.io.skipReconnect = false;
-                }
+                socket.enableReconnection();
                 socket.connect();
                 info('Attempting to reconnect...');
               }}

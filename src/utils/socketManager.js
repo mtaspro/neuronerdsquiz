@@ -247,6 +247,22 @@ class SocketManager {
     }
   }
 
+  // Disable reconnection (for offline mode)
+  disableReconnection() {
+    if (this.socket && this.socket.io) {
+      console.log('🚫 Disabling socket reconnection');
+      this.socket.io.reconnection(false);
+    }
+  }
+
+  // Enable reconnection
+  enableReconnection() {
+    if (this.socket && this.socket.io) {
+      console.log('✅ Enabling socket reconnection');
+      this.socket.io.reconnection(true);
+    }
+  }
+
   // Disconnect socket
   disconnect() {
     if (this.socket) {
@@ -356,6 +372,10 @@ export const useSocket = (componentId = 'default') => {
   
   const getConnectionInfo = () => socketManager.getConnectionInfo();
   
+  const disableReconnection = () => socketManager.disableReconnection();
+  
+  const enableReconnection = () => socketManager.enableReconnection();
+  
   return {
     connect,
     addListener,
@@ -363,6 +383,8 @@ export const useSocket = (componentId = 'default') => {
     removeAllListeners,
     emit,
     getConnectionInfo,
+    disableReconnection,
+    enableReconnection,
     battleHelpers: battleSocketHelpers
   };
 };
