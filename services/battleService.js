@@ -19,7 +19,8 @@ class BattleService {
       maxUsers: this.maxUsersPerRoom,
       createdAt: new Date(),
       isActive: true, // Track if room is still accepting new users
-      creatorId: null // Track original creator
+      creatorId: null, // Track original creator
+      inappropriateReports: new Map() // Track inappropriate question reports by questionIndex
     };
     
     this.battleRooms.set(roomId, room);
@@ -190,6 +191,46 @@ class BattleService {
     );
   }
 
+  // Report inappropriate question
+  reportInappropriateQuestion(roomId, userId, questionIndex, questionId) {
+    const room = this.getRoom(roomId);
+    if (!room || room.status !== 'active') {
+      throw new Error('Battle not active');
+    }
+
+    const user = room.users.get(userId);
+    if (!user) {
+      throw new Error('User not found in room');
+    }
+
+    // Initialize reports for this question if not exists
+    if (!room.inappropriateReports.has(questionIndex)) {
+      room.inappropriateReports.set(questionIndex, new Set());
+    }
+
+    // Add user's report
+    room.inappropriateReports.get(questionIndex).add(userId);
+
+    return {
+      username: user.username,
+      questionIndex,
+      totalReports: room.inappropriateReports.get(questionIndex).size,
+      totalUsers: room.users.size
+    };
+  }
+
+  // Check if question is inappropriate by majority
+  isQuestionInappropriate(room, questionIndex) {
+    const reports = room.inappropriateReports.get(questionIndex);
+    if (!reports) return false;
+    
+    const totalUsers = room.users.size;
+    const reportCount = reports.size;
+    
+    // Majority rule: more than 50% of users reported it
+    return reportCount > Math.floor(totalUsers / 2);
+  }
+
   // End battle and calculate results
   endBattle(roomId) {
     const room = this.getRoom(roomId);
@@ -199,18 +240,39 @@ class BattleService {
     room.endTime = new Date();
     room.isActive = false; // Mark room as inactive for new users
     
-    // Calculate final results
+    // Find inappropriate questions by majority vote
+    const inappropriateQuestions = [];
+    for (const [questionIndex, reports] of room.inappropriateReports.entries()) {
+      if (this.isQuestionInappropriate(room, questionIndex)) {
+        inappropriateQuestions.push(questionIndex);
+      }
+    }
+    
+    // Calculate final results with inappropriate question bonuses
     const results = Array.from(room.users.values())
-      .map((user, index) => ({
-        userId: user.id,
-        username: user.username,
-        score: user.score,
-        rank: 0, // Will be set after sorting
-        totalTime: room.endTime - room.startTime,
-        answers: user.answers,
-        correctAnswers: user.answers.filter(a => a?.isCorrect).length,
-        totalQuestions: room.questions.length
-      }))
+      .map((user, index) => {
+        let bonusScore = 0;
+        
+        // Award bonus points for inappropriate questions reported by this user
+        inappropriateQuestions.forEach(qIndex => {
+          const userReported = room.inappropriateReports.get(qIndex)?.has(user.id);
+          if (userReported) {
+            bonusScore += 2; // 2 points bonus for correctly identifying inappropriate question
+          }
+        });
+        
+        return {
+          userId: user.id,
+          username: user.username,
+          score: user.score + bonusScore,
+          rank: 0, // Will be set after sorting
+          totalTime: room.endTime - room.startTime,
+          answers: user.answers,
+          correctAnswers: user.answers.filter(a => a?.isCorrect).length,
+          totalQuestions: room.questions.length,
+          inappropriateBonusScore: bonusScore
+        };
+      })
       .sort((a, b) => b.score - a.score)
       .map((result, index) => ({ ...result, rank: index + 1 }));
 
@@ -224,7 +286,12 @@ class BattleService {
       results,
       questions: room.questions,
       startTime: room.startTime,
-      endTime: room.endTime
+      endTime: room.endTime,
+      inappropriateQuestions: inappropriateQuestions.map(qIndex => ({
+        questionIndex: qIndex,
+        question: room.questions[qIndex],
+        reportCount: room.inappropriateReports.get(qIndex)?.size || 0
+      }))
     };
   }
 

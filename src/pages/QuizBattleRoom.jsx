@@ -37,6 +37,7 @@ const QuizBattleRoom = () => {
   const [questions, setQuestions] = useState([]);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [answered, setAnswered] = useState(false);
+  const [reportedInappropriate, setReportedInappropriate] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   const [questionStartTime, setQuestionStartTime] = useState(null);
   const [battleEnded, setBattleEnded] = useState(false);
@@ -259,6 +260,11 @@ const QuizBattleRoom = () => {
             submitBattleScore(currentUserResult.score, isWinner);
           }
           
+          // Show inappropriate question notifications if any
+          if (data.inappropriateQuestions && data.inappropriateQuestions.length > 0) {
+            info(`${data.inappropriateQuestions.length} question(s) were marked inappropriate by majority. Bonus points awarded!`);
+          }
+          
           addNotification('battle-ended', 'Battle Complete!', 'The quiz battle has ended!');
           success('Battle completed! Check your results!');
         });
@@ -466,15 +472,40 @@ const QuizBattleRoom = () => {
   };
 
   const handleAnswerSelect = (answerIndex) => {
-    if (answered) return;
+    if (answered || reportedInappropriate) return;
     // In battle mode, once an answer is selected, it cannot be changed
     if (selectedAnswer !== null) return;
     soundManager.play('click');
     setSelectedAnswer(answerIndex);
   };
 
+  const handleReportInappropriate = () => {
+    if (answered || reportedInappropriate) return;
+    
+    setReportedInappropriate(true);
+    
+    const reportData = {
+      roomId,
+      userId: userData._id,
+      questionIndex: currentQuestion,
+      questionId: questions?.[currentQuestion]?._id,
+      chapterName: selectedChapter
+    };
+
+    if (connected && !isOffline) {
+      socket.emit('reportInappropriate', reportData);
+    } else {
+      // Store report offline
+      setOfflineAnswers(prev => [...prev, { ...reportData, type: 'inappropriate_report' }]);
+      info('Report saved offline. Will sync when reconnected.');
+    }
+
+    // Move to next question immediately
+    handleNextQuestion();
+  };
+
   const handleSubmitAnswer = () => {
-    if (selectedAnswer === null || answered) return;
+    if (selectedAnswer === null || answered || reportedInappropriate) return;
 
     const isCorrect = selectedAnswer === questions?.[currentQuestion]?.correctAnswer;
     const finalTimeSpent = Date.now() - questionStartTime;
@@ -515,10 +546,14 @@ const QuizBattleRoom = () => {
   const syncOfflineProgress = () => {
     if (offlineAnswers.length === 0) return;
     
-    console.log('🔄 Syncing offline progress:', offlineAnswers.length, 'answers');
+    console.log('🔄 Syncing offline progress:', offlineAnswers.length, 'items');
     
-    offlineAnswers.forEach(answerData => {
-      socket.emit('answerQuestion', answerData);
+    offlineAnswers.forEach(data => {
+      if (data.type === 'inappropriate_report') {
+        socket.emit('reportInappropriate', data);
+      } else {
+        socket.emit('answerQuestion', data);
+      }
     });
     
     setOfflineAnswers([]);
@@ -584,6 +619,7 @@ const QuizBattleRoom = () => {
       setCurrentQuestion(prev => prev + 1);
       setSelectedAnswer(null);
       setAnswered(false);
+      setReportedInappropriate(false);
       setQuestionStartTime(Date.now());
       setTimeSpent(0);
       setHelpUsed(false);
@@ -1169,6 +1205,27 @@ const QuizBattleRoom = () => {
                     <MathText>{questions?.[currentQuestion]?.question || 'Loading question...'}</MathText>
                   </h3>
                   
+                  {/* Inappropriate Question Report */}
+                  <div className="mb-4">
+                    <label className="flex items-center space-x-2 text-sm text-gray-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={reportedInappropriate}
+                        onChange={handleReportInappropriate}
+                        disabled={answered || reportedInappropriate}
+                        className="w-4 h-4 text-red-500 bg-transparent border-2 border-red-400 rounded focus:ring-red-500 focus:ring-2"
+                      />
+                      <span className={reportedInappropriate ? 'text-red-400' : 'text-gray-300'}>
+                        🚨 Report as inappropriate question
+                      </span>
+                    </label>
+                    {reportedInappropriate && (
+                      <p className="text-xs text-red-400 mt-1 ml-6">
+                        ✓ Reported. If majority agrees, you'll get bonus points.
+                      </p>
+                    )}
+                  </div>
+                  
                   {helpUsed && (
                     <div className="bg-yellow-500 bg-opacity-20 border border-yellow-400 rounded-lg p-3 mb-4">
                       <p className="text-yellow-300 text-sm">
@@ -1234,12 +1291,12 @@ const QuizBattleRoom = () => {
                     })}
                   </div>
 
-                  {selectedAnswer !== null && (
+                  {(selectedAnswer !== null || reportedInappropriate) && (
                     <motion.button
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       onClick={() => {
-                        if (!answered) {
+                        if (!answered && !reportedInappropriate) {
                           handleSubmitAnswer();
                         }
                         if (currentQuestion < (questions?.length || 0) - 1) {
@@ -1248,7 +1305,10 @@ const QuizBattleRoom = () => {
                       }}
                       className="w-full mt-6 bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"
                     >
-                      {currentQuestion < (questions?.length || 0) - 1 ? 'Next Question' : 'Submit Final Answer'}
+                      {reportedInappropriate 
+                        ? (currentQuestion < (questions?.length || 0) - 1 ? 'Next Question' : 'Finish Battle')
+                        : (currentQuestion < (questions?.length || 0) - 1 ? 'Next Question' : 'Submit Final Answer')
+                      }
                     </motion.button>
                   )}
                 </motion.div>

@@ -372,6 +372,16 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Report inappropriate question
+  socket.on('reportInappropriate', ({ roomId, userId, questionIndex, questionId, chapterName }) => {
+    try {
+      const result = battleService.reportInappropriateQuestion(roomId, userId, questionIndex, questionId);
+      console.log(`User ${result.username} reported question ${questionIndex + 1} as inappropriate in room ${roomId}`);
+    } catch (error) {
+      socket.emit('error', { message: error.message });
+    }
+  });
+
   // Submit answer
   socket.on('answerQuestion', async ({ roomId, userId, questionIndex, answer, isCorrect, timeSpent, chapterName, lifelineUsed }) => {
     try {

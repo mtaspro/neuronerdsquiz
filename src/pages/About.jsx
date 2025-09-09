@@ -776,7 +776,7 @@ const About = () => {
   const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.2, 0.8]);
 
   const teamMembers = [
-   
+
     {
       name: 'Akhyar Fardin',
       role: 'Founder & CEO',
