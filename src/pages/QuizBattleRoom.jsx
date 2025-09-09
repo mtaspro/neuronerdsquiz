@@ -1216,7 +1216,7 @@ const QuizBattleRoom = () => {
                         className="w-4 h-4 text-red-500 bg-transparent border-2 border-red-400 rounded focus:ring-red-500 focus:ring-2"
                       />
                       <span className={reportedInappropriate ? 'text-red-400' : 'text-gray-300'}>
-                        🚨 Report as inappropriate question
+                        🚨 VOTE as inappropriate question!🚨 If majority VOTE, you'll get bonus points
                       </span>
                     </label>
                     {reportedInappropriate && (
