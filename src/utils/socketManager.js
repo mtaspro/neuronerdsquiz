@@ -252,6 +252,11 @@ class SocketManager {
     if (this.socket && this.socket.io) {
       console.log('🚫 Disabling socket reconnection');
       this.socket.io.reconnection(false);
+      this.socket.io.reconnectionAttempts(0);
+      // Force stop any ongoing reconnection
+      if (this.socket.io.engine) {
+        this.socket.io.engine.upgrade = false;
+      }
     }
   }
 
@@ -260,6 +265,10 @@ class SocketManager {
     if (this.socket && this.socket.io) {
       console.log('✅ Enabling socket reconnection');
       this.socket.io.reconnection(true);
+      this.socket.io.reconnectionAttempts(5);
+      if (this.socket.io.engine) {
+        this.socket.io.engine.upgrade = true;
+      }
     }
   }
 

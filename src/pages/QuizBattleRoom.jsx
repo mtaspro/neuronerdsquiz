@@ -293,6 +293,8 @@ const QuizBattleRoom = () => {
             setIsOffline(true);
             socket.disableReconnection();
             info('Connection lost. Continuing in offline mode...');
+            // Stop any further error handling
+            return;
           }
         });
 
@@ -305,6 +307,8 @@ const QuizBattleRoom = () => {
             setIsOffline(true);
             socket.disableReconnection();
             info('Network disconnected. Continuing in offline mode...');
+            // Prevent any error redirects during battle
+            return;
           } else if (!battleStarted && reason !== 'io client disconnect') {
             showError('Disconnected from battle server');
           }
