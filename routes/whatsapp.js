@@ -250,6 +250,80 @@ router.get('/group-messages/:groupId', sessionMiddleware, async (req, res) => {
   }
 });
 
+// Test page for group messages (no auth needed - for your personal use)
+router.get('/test-messages', async (req, res) => {
+  try {
+    const groupName = req.query.group || 'neuronerds';
+    const limit = parseInt(req.query.limit) || 20;
+    
+    // Get groups
+    const groupsResult = await whatsappService.getGroups();
+    if (!groupsResult.success) {
+      return res.send(`<h1>Error: ${groupsResult.error}</h1>`);
+    }
+    
+    let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>WhatsApp Group Messages</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .message { border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .sender { font-weight: bold; color: #0066cc; }
+        .timestamp { color: #666; font-size: 12px; }
+        .group-list { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+      </style>
+    </head>
+    <body>
+      <h1>📱 WhatsApp Group Messages</h1>
+      
+      <div class="group-list">
+        <h3>Available Groups:</h3>
+        <ul>`;
+    
+    groupsResult.groups.forEach(group => {
+      html += `<li><a href="?group=${encodeURIComponent(group.name)}&limit=${limit}">${group.name}</a> (${group.participants} members)</li>`;
+    });
+    
+    html += `</ul></div>`;
+    
+    // If specific group requested, show messages
+    if (req.query.group) {
+      const group = groupsResult.groups.find(g => 
+        g.name.toLowerCase().includes(groupName.toLowerCase())
+      );
+      
+      if (group) {
+        const result = await whatsappService.getGroupMessages(group.id, limit);
+        
+        if (result.success) {
+          html += `<h2>Last ${result.count} messages from "${group.name}":</h2>`;
+          
+          result.messages.forEach(msg => {
+            html += `
+            <div class="message">
+              <div class="sender">${msg.sender}</div>
+              <div>${msg.message}</div>
+              <div class="timestamp">${new Date(msg.timestamp).toLocaleString()}</div>
+            </div>`;
+          });
+        } else {
+          html += `<h2>Error: ${result.error}</h2>`;
+        }
+      } else {
+        html += `<h2>Group "${groupName}" not found</h2>`;
+      }
+    }
+    
+    html += `</body></html>`;
+    res.send(html);
+    
+  } catch (error) {
+    res.send(`<h1>Error: ${error.message}</h1>`);
+  }
+});
+
 // Simple endpoint to get group messages by group name (for quick access)
 router.get('/messages/:groupName', sessionMiddleware, async (req, res) => {
   try {

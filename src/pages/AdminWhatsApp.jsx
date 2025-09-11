@@ -31,9 +31,11 @@ const AdminWhatsApp = () => {
       const response = await axios.get(`${apiUrl}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUsers(response.data.users.filter(user => user.phoneNumber));
+      const usersData = response.data.users || response.data || [];
+      setUsers(usersData.filter(user => user && user.phoneNumber));
     } catch (error) {
       console.error('Failed to fetch users:', error);
+      setUsers([]);
     }
   };
 
@@ -44,11 +46,14 @@ const AdminWhatsApp = () => {
       const response = await axios.get(`${apiUrl}/api/whatsapp/groups`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (response.data.success) {
+      if (response.data.success && response.data.groups) {
         setGroups(response.data.groups);
+      } else {
+        setGroups([]);
       }
     } catch (error) {
       console.error('Failed to fetch groups:', error);
+      setGroups([]);
     }
   };
 
