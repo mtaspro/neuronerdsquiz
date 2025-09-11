@@ -253,10 +253,16 @@ class SocketManager {
       console.log('🚫 Disabling socket reconnection');
       this.socket.io.reconnection(false);
       this.socket.io.reconnectionAttempts(0);
-      // Force stop any ongoing reconnection
+      this.socket.io.reconnectionDelay(999999);
+      this.socket.io.reconnectionDelayMax(999999);
+      this.socket.io.timeout(1);
+      // Force close engine
       if (this.socket.io.engine) {
         this.socket.io.engine.upgrade = false;
+        this.socket.io.engine.close();
       }
+      // Disconnect completely
+      this.socket.disconnect();
     }
   }
 

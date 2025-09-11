@@ -288,12 +288,12 @@ const QuizBattleRoom = () => {
             setError('Failed to connect to battle server');
             showError('Failed to connect to battle server. Please check your connection.');
           } else {
-            // During battle, just set offline mode and disable reconnection
+            // During battle, completely stop socket activity
             setConnected(false);
             setIsOffline(true);
             socket.disableReconnection();
+            socket.removeAllListeners();
             info('Connection lost. Continuing in offline mode...');
-            // Stop any further error handling
             return;
           }
         });
@@ -303,11 +303,12 @@ const QuizBattleRoom = () => {
           setConnected(false);
           
           if (battleStarted && !battleEnded) {
-            // During active battle, stay in offline mode and disable reconnection
+            // During active battle, stay in offline mode and completely stop socket
             setIsOffline(true);
             socket.disableReconnection();
+            // Remove all listeners to prevent further events
+            socket.removeAllListeners();
             info('Network disconnected. Continuing in offline mode...');
-            // Prevent any error redirects during battle
             return;
           } else if (!battleStarted && reason !== 'io client disconnect') {
             showError('Disconnected from battle server');
