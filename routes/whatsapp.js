@@ -222,4 +222,78 @@ router.get('/calendar-group', sessionMiddleware, async (req, res) => {
   }
 });
 
+// Get last 20 messages from a group (for personal use)
+router.get('/group-messages/:groupId', sessionMiddleware, async (req, res) => {
+  try {
+    if (!req.user.isAdmin && !req.user.isSuperAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { groupId } = req.params;
+    const limit = parseInt(req.query.limit) || 20;
+    
+    const result = await whatsappService.getGroupMessages(groupId, limit);
+    
+    if (result.success) {
+      res.json({
+        success: true,
+        groupId: groupId,
+        messages: result.messages,
+        count: result.count,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(500).json({ success: false, error: result.error });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Simple endpoint to get group messages by group name (for quick access)
+router.get('/messages/:groupName', sessionMiddleware, async (req, res) => {
+  try {
+    if (!req.user.isAdmin && !req.user.isSuperAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { groupName } = req.params;
+    const limit = parseInt(req.query.limit) || 20;
+    
+    // Find group by name first
+    const groupsResult = await whatsappService.getGroups();
+    if (!groupsResult.success) {
+      return res.status(500).json({ error: 'Failed to fetch groups' });
+    }
+    
+    const group = groupsResult.groups.find(g => 
+      g.name.toLowerCase().includes(groupName.toLowerCase())
+    );
+    
+    if (!group) {
+      return res.status(404).json({ 
+        error: `Group containing '${groupName}' not found`,
+        availableGroups: groupsResult.groups.map(g => g.name)
+      });
+    }
+    
+    const result = await whatsappService.getGroupMessages(group.id, limit);
+    
+    if (result.success) {
+      res.json({
+        success: true,
+        groupName: group.name,
+        groupId: group.id,
+        messages: result.messages,
+        count: result.count,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(500).json({ success: false, error: result.error });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

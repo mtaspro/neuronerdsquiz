@@ -1518,6 +1518,50 @@ Once registered, come back and chat with me! 🚀`;
     return { allowed: true };
   }
 
+  async getGroupMessages(groupId, limit = 20) {
+    if (!this.isConnected || !this.sock) {
+      return { success: false, error: 'WhatsApp not connected' };
+    }
+
+    try {
+      console.log(`📱 Fetching last ${limit} messages from group: ${groupId}`);
+      
+      // Fetch message history from WhatsApp
+      const messages = await this.sock.fetchMessagesFromWA(groupId, limit);
+      
+      const formattedMessages = messages.map(msg => {
+        const messageText = msg.message?.conversation || 
+                           msg.message?.extendedTextMessage?.text || 
+                           msg.message?.imageMessage?.caption || 
+                           '[Media message]';
+        
+        const senderJid = msg.key.participant || msg.key.remoteJid;
+        const senderPhone = this.extractPhoneNumber(senderJid);
+        
+        return {
+          id: msg.key.id,
+          sender: msg.pushName || senderPhone,
+          senderPhone: senderPhone,
+          message: messageText,
+          timestamp: new Date(msg.messageTimestamp * 1000),
+          isFromMe: msg.key.fromMe,
+          hasImage: !!msg.message?.imageMessage,
+          hasVideo: !!msg.message?.videoMessage,
+          hasAudio: !!msg.message?.audioMessage
+        };
+      }).reverse(); // Reverse to get chronological order
+      
+      return {
+        success: true,
+        messages: formattedMessages,
+        count: formattedMessages.length
+      };
+    } catch (error) {
+      console.error('❌ Error fetching group messages:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   async saveToUserInbox(senderPhone, senderName, message) {
     try {
       const User = (await import('../models/User.js')).default;
