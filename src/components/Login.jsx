@@ -91,10 +91,18 @@ const Login = () => {
     }
   };
 
+  const handleLoginSuccess = () => {
+    window.dispatchEvent(new Event('userAuthChange'));
+    navigate('/dashboard');
+  };
+
   if (showForgotPassword) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-purple-900 flex items-center justify-center p-4">
-        <ForgotPassword onBack={() => setShowForgotPassword(false)} />
+        <ForgotPassword 
+          onBack={() => setShowForgotPassword(false)} 
+          onLoginSuccess={handleLoginSuccess}
+        />
       </div>
     );
   }

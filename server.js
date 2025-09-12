@@ -242,12 +242,22 @@ async function addBalancedBonus(userId, username) {
   }
 }
 
-// Send battle end notification
-async function sendBattleEndNotification(roomId) {
+// Send battle end notification with leaderboard
+async function sendBattleEndNotification(roomId, battleResults) {
   try {
     const setting = await WhatsAppSettings.findOne({ settingKey: 'battleNotificationGroup' });
-    if (setting?.settingValue) {
-      const message = `🏁 Battle Ended! 🏁\n\nRoom: ${roomId}\n\nAll participants have finished the battle!`;
+    if (setting?.settingValue && battleResults?.results) {
+      let message = `🏁 *BATTLE ENDED!* 🏁\n\nRoom: ${roomId}\n\n🏆 *LEADERBOARD:*\n`;
+      
+      battleResults.results.slice(0, 5).forEach((result, index) => {
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+        message += `${medal} *${result.username}* - ${result.score} pts\n`;
+      });
+      
+      if (battleResults.results.length > 5) {
+        message += `\n...and ${battleResults.results.length - 5} more players`;
+      }
+      
       await whatsappService.sendGroupMessage(setting.settingValue, message);
     }
   } catch (error) {
@@ -421,7 +431,7 @@ io.on('connection', (socket) => {
         saveBattleResultsToLeaderboard(battleResults);
         
         // Send WhatsApp notification for natural battle end
-        sendBattleEndNotification(roomId);
+        sendBattleEndNotification(roomId, battleResults);
         
         // Clear the active battle room from the API state
         try {

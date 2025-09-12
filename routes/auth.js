@@ -452,34 +452,43 @@ router.post('/debug/make-superadmin', async (req, res) => {
   }
 });
 
-// Forgot password - send reset link
+// Forgot password - auto login if user exists
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'No account found with this email address' });
     }
 
-    // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetExpiry = Date.now() + 3600000; // 1 hour
-
-    // Store token temporarily
-    resetTokens.set(resetToken, {
-      userId: user._id,
+    // Create user data object
+    const userData = {
+      _id: user._id,
       email: user.email,
-      expiry: resetExpiry
-    });
+      isAdmin: user.isAdmin,
+      isSuperAdmin: user.isSuperAdmin,
+      isExaminer: user.isExaminer,
+      username: user.username,
+      avatar: user.avatar,
+      phoneNumber: user.phoneNumber,
+      whatsappNotifications: user.whatsappNotifications
+    };
 
-    // In production, send email with reset link
-    console.log(`Password reset token for ${email}: ${resetToken}`);
+    // Create session in MongoDB with user data
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    const session = new UserSession({
+      userId: user._id,
+      sessionToken,
+      userData
+    });
+    await session.save();
     
+    console.log('Auto-login successful for user:', email);
     res.json({ 
-      message: 'Password reset link sent to your email',
-      // For development only - remove in production
-      resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined
+      message: 'Login successful!',
+      token: sessionToken, 
+      user: userData 
     });
   } catch (error) {
     console.error('Forgot password error:', error);

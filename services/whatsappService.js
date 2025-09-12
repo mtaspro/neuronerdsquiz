@@ -1524,36 +1524,35 @@ Once registered, come back and chat with me! 🚀`;
     }
 
     try {
-      console.log(`📱 Fetching last ${limit} messages from group: ${groupId}`);
+      console.log(`📱 Getting messages from memory for group: ${groupId}`);
       
-      // Fetch message history from WhatsApp
-      const messages = await this.sock.fetchMessagesFromWA(groupId, limit);
+      // Get messages from memory (last 10 stored messages)
+      const storedMessages = this.groupMemories.get(groupId) || [];
       
-      const formattedMessages = messages.map(msg => {
-        const messageText = msg.message?.conversation || 
-                           msg.message?.extendedTextMessage?.text || 
-                           msg.message?.imageMessage?.caption || 
-                           '[Media message]';
-        
-        const senderJid = msg.key.participant || msg.key.remoteJid;
-        const senderPhone = this.extractPhoneNumber(senderJid);
-        
+      if (storedMessages.length === 0) {
         return {
-          id: msg.key.id,
-          sender: msg.pushName || senderPhone,
-          senderPhone: senderPhone,
-          message: messageText,
-          timestamp: new Date(msg.messageTimestamp * 1000),
-          isFromMe: msg.key.fromMe,
-          hasImage: !!msg.message?.imageMessage,
-          hasVideo: !!msg.message?.videoMessage,
-          hasAudio: !!msg.message?.audioMessage
+          success: true,
+          messages: [],
+          count: 0,
+          note: 'No recent messages in memory. Messages are only stored when bot is active.'
         };
-      }).reverse(); // Reverse to get chronological order
+      }
+      
+      const formattedMessages = storedMessages.map((msg, index) => ({
+        id: `memory-${index}`,
+        sender: msg.sender,
+        senderPhone: msg.sender,
+        message: msg.message,
+        timestamp: msg.timestamp,
+        isFromMe: msg.isBot,
+        hasImage: false,
+        hasVideo: false,
+        hasAudio: false
+      }));
       
       return {
         success: true,
-        messages: formattedMessages,
+        messages: formattedMessages.slice(-limit),
         count: formattedMessages.length
       };
     } catch (error) {

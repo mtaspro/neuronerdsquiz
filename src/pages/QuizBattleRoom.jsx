@@ -281,35 +281,24 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('connect_error', (error) => {
-          console.log('🚨 Socket connection error:', error);
-          console.log('⚙️ Error details:', error);
-          
           if (!battleStarted || battleEnded) {
             setError('Failed to connect to battle server');
             showError('Failed to connect to battle server. Please check your connection.');
           } else {
-            // During battle, completely stop socket activity
             setConnected(false);
             setIsOffline(true);
             socket.disableReconnection();
-            socket.removeAllListeners();
             info('Connection lost. Continuing in offline mode...');
-            return;
           }
         });
 
         socket.addListener('disconnect', (reason) => {
-          console.log('🚨 Unexpected disconnection:', reason);
           setConnected(false);
           
           if (battleStarted && !battleEnded) {
-            // During active battle, stay in offline mode and completely stop socket
             setIsOffline(true);
             socket.disableReconnection();
-            // Remove all listeners to prevent further events
-            socket.removeAllListeners();
             info('Network disconnected. Continuing in offline mode...');
-            return;
           } else if (!battleStarted && reason !== 'io client disconnect') {
             showError('Disconnected from battle server');
           }

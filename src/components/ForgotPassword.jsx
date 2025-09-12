@@ -77,14 +77,14 @@ const ForgotPassword = ({ onBack }) => {
             disabled={isLoading}
             className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 px-6 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all disabled:opacity-50"
           >
-            {isLoading ? <LoadingAnimation size="small" /> : 'Send Reset Link'}
+            {isLoading ? <LoadingAnimation size="small" /> : 'Login with Email'}
           </button>
         </form>
       ) : (
         <div className="text-center">
           <div className="text-6xl mb-4">✅</div>
           <p className="text-green-600 dark:text-green-400 font-semibold">
-            Check your email for the reset link!
+            Login successful! Redirecting to dashboard...
           </p>
         </div>
       )}
