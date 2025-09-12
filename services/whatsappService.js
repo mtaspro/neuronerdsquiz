@@ -1524,19 +1524,75 @@ Once registered, come back and chat with me! 🚀`;
     }
 
     try {
-      console.log(`📱 Getting messages from memory for group: ${groupId}`);
+      console.log(`📱 Fetching chat history for group: ${groupId}`);
       
-      // Get messages from memory (last 10 stored messages)
-      const storedMessages = this.groupMemories.get(groupId) || [];
+      // Fetch chat history using Baileys
+      const messages = await this.sock.chatModify(
+        { clear: { messages: [{ id: '', fromMe: false, timestamp: Date.now() }] } },
+        groupId,
+        { star: false }
+      );
       
-      if (storedMessages.length === 0) {
+      // Alternative method - fetch using loadMessages
+      const chat = await this.sock.loadMessages(groupId, limit);
+      
+      if (!chat || chat.length === 0) {
+        // Fallback to memory if no chat history
+        const storedMessages = this.groupMemories.get(groupId) || [];
+        
+        const formattedMessages = storedMessages.map((msg, index) => ({
+          id: `memory-${index}`,
+          sender: msg.sender,
+          senderPhone: msg.sender,
+          message: msg.message,
+          timestamp: msg.timestamp,
+          isFromMe: msg.isBot,
+          hasImage: false,
+          hasVideo: false,
+          hasAudio: false
+        }));
+        
         return {
           success: true,
-          messages: [],
-          count: 0,
-          note: 'No recent messages in memory. Messages are only stored when bot is active.'
+          messages: formattedMessages.slice(-limit),
+          count: formattedMessages.length,
+          source: 'memory'
         };
       }
+      
+      const formattedMessages = chat.map(msg => {
+        const messageText = msg.message?.conversation || 
+                           msg.message?.extendedTextMessage?.text || 
+                           msg.message?.imageMessage?.caption || 
+                           '[Media message]';
+        
+        const senderJid = msg.key.participant || msg.key.remoteJid;
+        const senderPhone = this.extractPhoneNumber(senderJid);
+        
+        return {
+          id: msg.key.id,
+          sender: msg.pushName || senderPhone || 'Unknown',
+          senderPhone: senderPhone,
+          message: messageText,
+          timestamp: new Date(msg.messageTimestamp * 1000),
+          isFromMe: msg.key.fromMe,
+          hasImage: !!msg.message?.imageMessage,
+          hasVideo: !!msg.message?.videoMessage,
+          hasAudio: !!msg.message?.audioMessage
+        };
+      }).reverse();
+      
+      return {
+        success: true,
+        messages: formattedMessages.slice(-limit),
+        count: formattedMessages.length,
+        source: 'whatsapp'
+      };
+    } catch (error) {
+      console.error('❌ Error fetching group messages:', error);
+      
+      // Fallback to memory on error
+      const storedMessages = this.groupMemories.get(groupId) || [];
       
       const formattedMessages = storedMessages.map((msg, index) => ({
         id: `memory-${index}`,
@@ -1553,11 +1609,10 @@ Once registered, come back and chat with me! 🚀`;
       return {
         success: true,
         messages: formattedMessages.slice(-limit),
-        count: formattedMessages.length
+        count: formattedMessages.length,
+        source: 'memory_fallback',
+        error: error.message
       };
-    } catch (error) {
-      console.error('❌ Error fetching group messages:', error);
-      return { success: false, error: error.message };
     }
   }
 

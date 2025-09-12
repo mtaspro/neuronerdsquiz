@@ -300,14 +300,28 @@ router.get('/test-messages', async (req, res) => {
         if (result.success) {
           html += `<h2>Last ${result.count} messages from "${group.name}":</h2>`;
           
-          result.messages.forEach(msg => {
+          if (result.count === 0) {
             html += `
-            <div class="message">
-              <div class="sender">${msg.sender}</div>
-              <div>${msg.message}</div>
-              <div class="timestamp">${new Date(msg.timestamp).toLocaleString()}</div>
+            <div style="background: #f0f8ff; padding: 15px; border-radius: 5px; margin: 10px 0;">
+              <h3>📭 No Messages Available</h3>
+              <p><strong>Why no messages?</strong></p>
+              <ul>
+                <li>Bot only stores messages when it's actively running</li>
+                <li>Only last 10 messages per group are kept in memory</li>
+                <li>Messages are cleared when bot restarts</li>
+              </ul>
+              <p><strong>To see messages:</strong> Send some messages in the WhatsApp group while bot is online, then refresh this page.</p>
             </div>`;
-          });
+          } else {
+            result.messages.forEach(msg => {
+              html += `
+              <div class="message">
+                <div class="sender">${msg.sender}</div>
+                <div>${msg.message}</div>
+                <div class="timestamp">${new Date(msg.timestamp).toLocaleString()}</div>
+              </div>`;
+            });
+          }
         } else {
           html += `<h2>Error: ${result.error}</h2>`;
         }
