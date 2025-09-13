@@ -281,15 +281,14 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('connect_error', (error) => {
-          if (!battleStarted || battleEnded) {
-            setError('Failed to connect to battle server');
-            showError('Failed to connect to battle server. Please check your connection.');
-          } else {
+          if (battleStarted && !battleEnded) {
+            // Silent handling during battle - no errors shown
             setConnected(false);
             setIsOffline(true);
-            socket.disableReconnection();
-            info('Connection lost. Continuing in offline mode...');
+            return;
           }
+          setError('Failed to connect to battle server');
+          showError('Failed to connect to battle server. Please check your connection.');
         });
 
         socket.addListener('disconnect', (reason) => {
@@ -297,9 +296,10 @@ const QuizBattleRoom = () => {
           
           if (battleStarted && !battleEnded) {
             setIsOffline(true);
-            socket.disableReconnection();
             info('Network disconnected. Continuing in offline mode...');
-          } else if (!battleStarted && reason !== 'io client disconnect') {
+            return;
+          }
+          if (!battleStarted && reason !== 'io client disconnect') {
             showError('Disconnected from battle server');
           }
         });

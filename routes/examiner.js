@@ -112,15 +112,33 @@ router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExamin
 });
 
 // Create new written exam (admin/examiner only)
-router.post('/exams', sessionMiddleware, requireAuth, requireExaminer, async (req, res) => {
+router.post('/exams', sessionMiddleware, requireAuth, requireExaminer, upload.array('questionPapers', 10), async (req, res) => {
   try {
+    const { title, description, subject, chapter, totalMarks, timeLimit, expireDate } = req.body;
+    
+    let questionPaperUrls = [];
+    
+    // Upload question papers to Cloudinary if provided
+    if (req.files && req.files.length > 0) {
+      questionPaperUrls = req.files.map(file => file.path);
+    }
+    
     const exam = new WrittenExam({
-      ...req.body,
-      createdBy: req.user.userId
+      title,
+      description,
+      subject,
+      chapter,
+      totalMarks: parseInt(totalMarks),
+      timeLimit: parseInt(timeLimit),
+      expireDate: new Date(expireDate),
+      createdBy: req.user.userId,
+      questionPapers: questionPaperUrls
     });
+    
     await exam.save();
     res.status(201).json(exam);
   } catch (error) {
+    console.error('Create exam error:', error);
     res.status(500).json({ error: 'Failed to create exam' });
   }
 });

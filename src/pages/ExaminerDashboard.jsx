@@ -12,7 +12,7 @@ const ExaminerDashboard = () => {
   const [markedImages, setMarkedImages] = useState([]);
   const [markingImage, setMarkingImage] = useState(null);
   const [activeTab, setActiveTab] = useState('pending');
-  const [newExam, setNewExam] = useState({ title: '', description: '', subject: '', chapter: '', totalMarks: '', timeLimit: 180, expireDate: '' });
+  const [newExam, setNewExam] = useState({ title: '', description: '', subject: '', chapter: '', totalMarks: '', timeLimit: 180, expireDate: '', questionPapers: null });
   const [showCreateExam, setShowCreateExam] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
   const [exams, setExams] = useState([]);
@@ -154,19 +154,35 @@ const ExaminerDashboard = () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const token = secureStorage.getToken();
+      
+      const formData = new FormData();
+      formData.append('title', newExam.title);
+      formData.append('description', newExam.description);
+      formData.append('subject', newExam.subject);
+      formData.append('chapter', newExam.chapter);
+      formData.append('totalMarks', newExam.totalMarks);
+      formData.append('timeLimit', newExam.timeLimit);
+      formData.append('expireDate', newExam.expireDate);
+      
+      if (newExam.questionPapers) {
+        Array.from(newExam.questionPapers).forEach(file => {
+          formData.append('questionPapers', file);
+        });
+      }
+      
       const response = await fetch(`${apiUrl}/api/examiner/exams`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(newExam)
+        body: formData
       });
 
       if (response.ok) {
         success('Exam created successfully!');
         setShowCreateExam(false);
-        setNewExam({ title: '', description: '', subject: '', chapter: '', totalMarks: '', timeLimit: 180, expireDate: '' });
+        setNewExam({ title: '', description: '', subject: '', chapter: '', totalMarks: '', timeLimit: 180, expireDate: '', questionPapers: null });
+        fetchExams();
       } else {
         const data = await response.json();
         showError(data.error || 'Failed to create exam');
@@ -567,6 +583,18 @@ const ExaminerDashboard = () => {
                     className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
                     required
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Question Paper (Optional)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => setNewExam({...newExam, questionPapers: e.target.files})}
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">Upload question paper images (optional)</p>
                 </div>
               </div>
 

@@ -10,6 +10,7 @@ const writtenExamSchema = new mongoose.Schema({
   expireDate: { type: Date, required: true },
   isActive: { type: Boolean, default: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  questionPapers: [{ type: String }], // Array of Cloudinary URLs
   createdAt: { type: Date, default: Date.now }
 });
 
