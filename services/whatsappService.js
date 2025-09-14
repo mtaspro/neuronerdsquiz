@@ -388,7 +388,13 @@ Don't miss the action! ⚡`;
   async handleIncomingMessage(m) {
     try {
       const message = m.messages[0];
-      if (!message || message.key.fromMe) return; // Ignore our own messages
+      if (!message) return;
+
+      // Save message to database first
+      await this.saveMessageToDatabase(message);
+
+      // Skip bot's own messages for processing
+      if (message.key.fromMe) return;
 
       const messageText = message.message?.conversation || 
                          message.message?.extendedTextMessage?.text || '';
@@ -929,12 +935,11 @@ Quick commands:
 • Keep responses SHORT (1-2 lines max)
 • Use WhatsApp formatting: *bold*, _italic_, ~strikethrough~
 • Add relevant emojis for engagement
-• Be casual and friendly like a group member
-• Respond quickly to maintain conversation flow
+• Always keep assistive tone and be friendly , this is you default tone..however you will always follow combination of 70% default and 30% users' tone.
 
 📱 **WhatsApp Formatting:**
 • *Bold text* for emphasis
-• _Italic text_ for subtle points
+• _Italic text* for subtle points
 • Use bullet points (•) for lists
 • Add emojis naturally 😊
 • Keep paragraphs short
@@ -942,7 +947,6 @@ Quick commands:
 
 🤖 **Your Role:**
 • Help with studies and homework
-• Answer questions quickly
 • Share study tips
 • Be encouraging and motivational
 • Remember you're chatting in a group
@@ -956,14 +960,6 @@ Be helpful, concise, and engaging! 🚀`
 • *Ahmed Azmain Mahtab* – Developer & Management Lead  
 • *Md. Tanvir Mahtab* – Co-founder & Managing Director
 • Students from Intermediate classes
-
-📱 **WhatsApp Personal Chat Style:**
-• Use WhatsApp formatting: *bold*, _italic_, ~strikethrough~
-• Keep responses conversational and friendly
-• Add emojis naturally for warmth
-• Be more detailed than group responses
-• Use proper spacing and line breaks
-• Reply in Bengali if user prefers
 
 🎯 **Your Approach:**
 • Be helpful and educational
@@ -1518,80 +1514,122 @@ Once registered, come back and chat with me! 🚀`;
     return { allowed: true };
   }
 
-  async getGroupMessages(groupId, limit = 20) {
-    if (!this.isConnected || !this.sock) {
-      return { success: false, error: 'WhatsApp not connected' };
-    }
-
+  async saveMessageToDatabase(message) {
     try {
-      console.log(`📱 Fetching chat history for group: ${groupId}`);
+      const WhatsAppMessage = (await import('../models/WhatsAppMessage.js')).default;
       
-      // Fetch chat history using Baileys
-      const messages = await this.sock.chatModify(
-        { clear: { messages: [{ id: '', fromMe: false, timestamp: Date.now() }] } },
-        groupId,
-        { star: false }
-      );
+      const chatId = message.key.remoteJid;
+      const isGroup = chatId.includes('@g.us');
+      const messageId = message.key.id;
       
-      // Alternative method - fetch using loadMessages
-      const chat = await this.sock.loadMessages(groupId, limit);
+      // Extract message content
+      const messageText = message.message?.conversation || 
+                         message.message?.extendedTextMessage?.text || 
+                         message.message?.imageMessage?.caption || '';
       
-      if (!chat || chat.length === 0) {
-        // Fallback to memory if no chat history
-        const storedMessages = this.groupMemories.get(groupId) || [];
-        
-        const formattedMessages = storedMessages.map((msg, index) => ({
-          id: `memory-${index}`,
-          sender: msg.sender,
-          senderPhone: msg.sender,
-          message: msg.message,
-          timestamp: msg.timestamp,
-          isFromMe: msg.isBot,
-          hasImage: false,
-          hasVideo: false,
-          hasAudio: false
-        }));
-        
-        return {
-          success: true,
-          messages: formattedMessages.slice(-limit),
-          count: formattedMessages.length,
-          source: 'memory'
-        };
+      // Determine message type
+      let messageType = 'text';
+      let mediaUrl = null;
+      let caption = null;
+      
+      if (message.message?.imageMessage) {
+        messageType = 'image';
+        caption = message.message.imageMessage.caption;
+      } else if (message.message?.videoMessage) {
+        messageType = 'video';
+        caption = message.message.videoMessage.caption;
+      } else if (message.message?.audioMessage) {
+        messageType = 'audio';
+      } else if (message.message?.documentMessage) {
+        messageType = 'document';
+      } else if (message.message?.stickerMessage) {
+        messageType = 'sticker';
       }
       
-      const formattedMessages = chat.map(msg => {
-        const messageText = msg.message?.conversation || 
-                           msg.message?.extendedTextMessage?.text || 
-                           msg.message?.imageMessage?.caption || 
-                           '[Media message]';
-        
-        const senderJid = msg.key.participant || msg.key.remoteJid;
-        const senderPhone = this.extractPhoneNumber(senderJid);
-        
-        return {
-          id: msg.key.id,
-          sender: msg.pushName || senderPhone || 'Unknown',
-          senderPhone: senderPhone,
-          message: messageText,
-          timestamp: new Date(msg.messageTimestamp * 1000),
-          isFromMe: msg.key.fromMe,
-          hasImage: !!msg.message?.imageMessage,
-          hasVideo: !!msg.message?.videoMessage,
-          hasAudio: !!msg.message?.audioMessage
-        };
-      }).reverse();
+      // Extract sender info
+      const senderJid = isGroup ? message.key.participant : chatId;
+      const senderPhone = this.extractPhoneNumber(senderJid);
+      const senderName = message.pushName || senderPhone || 'Unknown';
+      
+      // Get chat name
+      let chatName = 'Unknown';
+      if (isGroup) {
+        try {
+          const groupMetadata = await this.sock.groupMetadata(chatId);
+          chatName = groupMetadata.subject;
+        } catch (error) {
+          console.log('Could not fetch group name');
+        }
+      } else {
+        chatName = senderName;
+      }
+      
+      // Extract mentioned users
+      const mentionedUsers = message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+      
+      // Extract quoted message ID
+      const quotedMessageId = message.message?.extendedTextMessage?.contextInfo?.stanzaId;
+      
+      // Save to database
+      const dbMessage = new WhatsAppMessage({
+        messageId,
+        chatId,
+        chatType: isGroup ? 'group' : 'personal',
+        chatName,
+        senderId: senderJid,
+        senderName,
+        senderPhone,
+        messageText,
+        messageType,
+        mediaUrl,
+        caption,
+        isFromBot: message.key.fromMe,
+        timestamp: new Date(message.messageTimestamp * 1000),
+        quotedMessageId,
+        mentionedUsers
+      });
+      
+      await dbMessage.save();
+      console.log(`💾 Message saved to database: ${messageId}`);
+    } catch (error) {
+      console.error('❌ Error saving message to database:', error);
+    }
+  }
+
+  async getGroupMessages(groupId, limit = 20) {
+    try {
+      console.log(`📱 Fetching messages from database for: ${groupId}`);
+      
+      const WhatsAppMessage = (await import('../models/WhatsAppMessage.js')).default;
+      
+      // Fetch from database
+      const messages = await WhatsAppMessage.find({ chatId: groupId })
+        .sort({ timestamp: -1 })
+        .limit(limit)
+        .lean();
+      
+      const formattedMessages = messages.reverse().map(msg => ({
+        id: msg.messageId,
+        sender: msg.senderName,
+        senderPhone: msg.senderPhone,
+        message: msg.messageText || msg.caption || `[${msg.messageType} message]`,
+        timestamp: msg.timestamp,
+        isFromMe: msg.isFromBot,
+        hasImage: msg.messageType === 'image',
+        hasVideo: msg.messageType === 'video',
+        hasAudio: msg.messageType === 'audio'
+      }));
       
       return {
         success: true,
-        messages: formattedMessages.slice(-limit),
+        messages: formattedMessages,
         count: formattedMessages.length,
-        source: 'whatsapp'
+        source: 'database'
       };
     } catch (error) {
-      console.error('❌ Error fetching group messages:', error);
+      console.error('❌ Error fetching messages from database:', error);
       
-      // Fallback to memory on error
+      // Fallback to memory
       const storedMessages = this.groupMemories.get(groupId) || [];
       
       const formattedMessages = storedMessages.map((msg, index) => ({

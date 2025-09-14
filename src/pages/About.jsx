@@ -776,7 +776,27 @@ const About = () => {
   const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.2, 0.8]);
 
   const teamMembers = [
-
+     {
+      name: 'Ahmed Azmain Mahtab',
+      role: 'Lead Developer',
+      avatar: '👨💻',
+      description: 'Full-stack development, feature planning, design, and deployment',
+      message: 'Building Neuronerds Quiz and NeuraX has been an incredible journey of turning ideas into reality. From simple quizzes to advanced AI capabilities - every line of code represents hours of passion and dedication to create something that truly revolutionizes how students learn.',
+      contributions: [
+        'Complete full-stack architecture',
+        'Real-time battle system implementation',
+        'Comprehensive badge system',
+        'Security & authentication',
+        'UI/UX design and animations'
+      ],
+      socials: [
+        { platform: 'X', icon: FaTwitter, url: 'https://x.com/AAMahtab', color: 'text-gray-800 dark:text-gray-200' },
+        { platform: 'Reddit', icon: FaReddit, url: 'https://www.reddit.com/user/After-Ad9008', color: 'text-gray-800 dark:text-gray-200' },
+        { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/mtaspro', color: 'text-gray-800 dark:text-gray-200' },
+        { platform: 'Devpost', icon: FaLaptopCode, url: 'https://devpost.com/mtaspro', color: 'text-gray-800 dark:text-gray-200' },
+        { platform: 'Email', icon: FaEnvelope, url: 'mailto:mowama36@gmail.com', color: 'text-gray-800 dark:text-gray-200' }
+      ]
+    },
     {
       name: 'Akhyar Fardin',
       role: 'Founder & CEO',

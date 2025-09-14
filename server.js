@@ -247,16 +247,15 @@ async function sendBattleEndNotification(roomId, battleResults) {
   try {
     const setting = await WhatsAppSettings.findOne({ settingKey: 'battleNotificationGroup' });
     if (setting?.settingValue && battleResults?.results) {
-      let message = `🏁 *BATTLE ENDED!* 🏁\n\nRoom: ${roomId}\n\n🏆 *LEADERBOARD:*\n`;
+      let message = `🏁 *BATTLE ENDED!* 🏁\n\nRoom: ${roomId}\n\n🏆 *COMPLETE LEADERBOARD:*\n`;
       
-      battleResults.results.slice(0, 5).forEach((result, index) => {
+      // Show all players, not just top 5
+      battleResults.results.forEach((result, index) => {
         const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
         message += `${medal} *${result.username}* - ${result.score} pts\n`;
       });
       
-      if (battleResults.results.length > 5) {
-        message += `\n...and ${battleResults.results.length - 5} more players`;
-      }
+      message += `\n🎮 Total Players: ${battleResults.results.length}`;
       
       await whatsappService.sendGroupMessage(setting.settingValue, message);
     }
@@ -421,6 +420,24 @@ io.on('connection', (socket) => {
           finalScore: result.user.score,
           totalTime: new Date() - battleService.getRoom(roomId).startTime
         });
+      }
+
+      // Check if user has finished
+      if (result.hasFinished) {
+        // Save individual user's battle score immediately
+        const userResult = {
+          userId: result.user.id,
+          username: result.user.username,
+          score: result.user.score,
+          rank: 1, // Will be updated when battle ends
+          totalTime: new Date() - battleService.getRoom(roomId).startTime,
+          answers: result.user.answers,
+          correctAnswers: result.user.answers.filter(a => a?.isCorrect).length,
+          totalQuestions: battleService.getRoom(roomId).questions.length
+        };
+        
+        // Save to leaderboard immediately
+        saveBattleResultsToLeaderboard({ results: [userResult] });
       }
 
       // Check if all users have finished

@@ -183,8 +183,8 @@ router.get('/exams/:examId/report', sessionMiddleware, requireAuth, requireExami
   try {
     const { examId } = req.params;
     
-    // Get all users
-    const allUsers = await User.find({ isAdmin: false, isSuperAdmin: false }, 'username email');
+    // Get all users (including admins)
+    const allUsers = await User.find({}, 'username email isAdmin isSuperAdmin isExaminer');
     
     // Get submissions for this exam
     const submissions = await WrittenSubmission.find({ examId })

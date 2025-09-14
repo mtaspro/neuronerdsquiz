@@ -58,7 +58,7 @@ const QuizBattleRoom = () => {
   // Security system state
   const [showSecurityModal, setShowSecurityModal] = useState(false);
   const [securityActive, setSecurityActive] = useState(false);
-  const [currentViolation, setCurrentViolation] = useState(null);
+
   const [securityInitialized, setSecurityInitialized] = useState(false);
   
   // Lifeline states
@@ -75,33 +75,22 @@ const QuizBattleRoom = () => {
     resetLifelines
   } = useLifelines(lifelineConfig);
 
-  // Security system hook
+  // Security system hook - only fullscreen
   const {
-    warnings,
-    maxWarnings,
     isFullscreen,
-    securityStatus,
     initializeSecurity,
     cleanupSecurity,
-    remainingWarnings,
     enterFullscreen
   } = useExamSecurity({
     isActive: securityActive,
-    onSecurityViolation: (violation) => {
-      console.log('Battle security violation:', violation);
-      setCurrentViolation(violation);
-    },
-    onAutoSubmit: (reason) => {
-      console.log('Battle auto-submit triggered:', reason);
-      showError(`Battle auto-ended due to security violations: ${reason.reason}`);
-      handleLeaveRoom();
-    },
-    maxWarnings: 3,
+    onSecurityViolation: () => {}, // No violations tracked
+    onAutoSubmit: () => {}, // No auto-submit
+    maxWarnings: 999, // Effectively disable warnings
     enableFullscreen: true,
-    enableTabSwitchDetection: true,
-    enableRightClickBlock: true,
-    enableDevToolsBlock: true,
-    enableExitConfirmation: true
+    enableTabSwitchDetection: false,
+    enableRightClickBlock: false,
+    enableDevToolsBlock: false,
+    enableExitConfirmation: false
   });
 
   // Get user data from secureStorage
@@ -643,9 +632,7 @@ const QuizBattleRoom = () => {
     navigate('/dashboard');
   };
 
-  const handleViolationDismiss = () => {
-    setCurrentViolation(null);
-  };
+
 
   // Cleanup security on unmount
   useEffect(() => {
@@ -822,34 +809,17 @@ const QuizBattleRoom = () => {
         quizType="battle"
       />
 
-      {/* Security Warning */}
-      {currentViolation && (
-        <SecurityWarning
-          violation={currentViolation}
-          warnings={warnings}
-          maxWarnings={maxWarnings}
-          onDismiss={handleViolationDismiss}
-          autoHide={true}
-          hideDelay={5000}
-        />
-      )}
-
-      {/* Security Status Indicator */}
-      {securityActive && (
-        <div className="fixed top-4 right-4 z-40 flex flex-col space-y-2">
-          <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-            🔒 Battle Secure Mode {warnings > 0 && `(${remainingWarnings} warnings left)`}
-          </div>
-          {!isFullscreen && (
-            <button
-              onClick={enterFullscreen}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1 transition-colors"
-              title="Click to enter fullscreen mode"
-            >
-              <span>📺</span>
-              <span>Fullscreen</span>
-            </button>
-          )}
+      {/* Fullscreen Button Only */}
+      {securityActive && !isFullscreen && (
+        <div className="fixed top-4 right-4 z-40">
+          <button
+            onClick={enterFullscreen}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1 transition-colors"
+            title="Click to enter fullscreen mode"
+          >
+            <span>📺</span>
+            <span>Fullscreen</span>
+          </button>
         </div>
       )}
 
