@@ -331,6 +331,27 @@ const WrittenExams = () => {
                 )}
               </div>
               
+              {/* Question Papers */}
+              {selectedExam.questionPapers && selectedExam.questionPapers.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-medium mb-3 text-blue-600 dark:text-blue-400">📄 Question Papers:</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {selectedExam.questionPapers.map((paper, index) => (
+                      <div key={index} className="border border-blue-300 dark:border-blue-600 rounded-lg overflow-hidden">
+                        <img
+                          src={paper}
+                          alt={`Question Paper ${index + 1}`}
+                          className="w-full h-auto cursor-pointer hover:opacity-80"
+                          onClick={() => window.open(paper, '_blank')}
+                          style={{ maxHeight: '400px', objectFit: 'contain' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">Click images to view full size</p>
+                </div>
+              )}
+              
               <div className="mb-6">
                 <label className="block text-sm font-medium mb-2">
                   Upload Answer Images (Max 10 files)
