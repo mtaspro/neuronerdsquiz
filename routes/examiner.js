@@ -178,6 +178,59 @@ router.get('/exams', sessionMiddleware, requireAuth, requireExaminer, async (req
   }
 });
 
+// Get exam participation report
+router.get('/exams/:examId/report', sessionMiddleware, requireAuth, requireExaminer, async (req, res) => {
+  try {
+    const { examId } = req.params;
+    
+    // Get all users
+    const allUsers = await User.find({ isAdmin: false, isSuperAdmin: false }, 'username email');
+    
+    // Get submissions for this exam
+    const submissions = await WrittenSubmission.find({ examId })
+      .populate('userId', 'username email')
+      .sort({ submittedAt: -1 });
+    
+    // Create participation report
+    const report = allUsers.map(user => {
+      const submission = submissions.find(s => s.userId && s.userId._id.toString() === user._id.toString());
+      
+      if (submission) {
+        return {
+          userId: user._id,
+          username: user.username,
+          email: user.email,
+          status: submission.status,
+          examStarted: submission.examStartTime ? 'Yes' : 'No',
+          submitted: submission.submittedAt ? 'Yes' : 'No',
+          submittedAt: submission.submittedAt,
+          marksObtained: submission.marksObtained || 0,
+          totalMarks: submission.totalMarks || 0,
+          examinerComments: submission.examinerComments || ''
+        };
+      } else {
+        return {
+          userId: user._id,
+          username: user.username,
+          email: user.email,
+          status: 'not_started',
+          examStarted: 'No',
+          submitted: 'No',
+          submittedAt: null,
+          marksObtained: 0,
+          totalMarks: 0,
+          examinerComments: ''
+        };
+      }
+    });
+    
+    res.json(report);
+  } catch (error) {
+    console.error('Exam report error:', error);
+    res.status(500).json({ error: 'Failed to fetch exam report' });
+  }
+});
+
 // Get written exam leaderboard
 router.get('/leaderboard', async (req, res) => {
   try {

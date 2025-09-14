@@ -17,6 +17,8 @@ const ExaminerDashboard = () => {
   const [leaderboard, setLeaderboard] = useState([]);
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedExamReport, setSelectedExamReport] = useState(null);
+  const [examReport, setExamReport] = useState([]);
   const { success, error: showError } = useNotification();
 
   useEffect(() => {
@@ -103,6 +105,23 @@ const ExaminerDashboard = () => {
       }
     } catch (error) {
       showError('Failed to delete exam');
+    }
+  };
+
+  const fetchExamReport = async (examId) => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      const response = await fetch(`${apiUrl}/api/examiner/exams/${examId}/report`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setExamReport(data);
+        setSelectedExamReport(examId);
+      }
+    } catch (error) {
+      showError('Failed to fetch exam report');
     }
   };
 
@@ -271,13 +290,24 @@ const ExaminerDashboard = () => {
                       <p className="text-sm text-gray-500">Subject: {exam.subject} | Chapter: {exam.chapter}</p>
                       <p className="text-sm text-gray-500">Total Marks: {exam.totalMarks} | Time: {exam.timeLimit} min</p>
                       <p className="text-sm text-gray-500">Created by: {exam.createdBy?.username}</p>
+                      {exam.questionPapers && exam.questionPapers.length > 0 && (
+                        <p className="text-sm text-blue-600 dark:text-blue-400">📄 {exam.questionPapers.length} question paper(s) attached</p>
+                      )}
                     </div>
-                    <button
-                      onClick={() => handleDeleteExam(exam._id)}
-                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => fetchExamReport(exam._id)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                      >
+                        View Report
+                      </button>
+                      <button
+                        onClick={() => handleDeleteExam(exam._id)}
+                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -610,6 +640,86 @@ const ExaminerDashboard = () => {
                   className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   Cancel
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Exam Report Modal */}
+        {selectedExamReport && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" data-lenis-prevent>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+              data-lenis-prevent
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Exam Participation Report</h2>
+                <button
+                  onClick={() => setSelectedExamReport(null)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-300 dark:border-gray-600">
+                  <thead>
+                    <tr className="bg-gray-100 dark:bg-gray-700">
+                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Student</th>
+                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Email</th>
+                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Started</th>
+                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Submitted</th>
+                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Status</th>
+                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {examReport.map(student => (
+                      <tr key={student.userId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2">{student.username}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm">{student.email}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            student.examStarted === 'Yes' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                          }`}>
+                            {student.examStarted}
+                          </span>
+                        </td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            student.submitted === 'Yes' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                          }`}>
+                            {student.submitted}
+                          </span>
+                        </td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            student.status === 'graded' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                            student.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                            'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+                          }`}>
+                            {student.status === 'not_started' ? 'Not Started' : student.status.charAt(0).toUpperCase() + student.status.slice(1)}
+                          </span>
+                        </td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2">
+                          {student.status === 'graded' ? `${student.marksObtained}/${student.totalMarks}` : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div className="mt-6 text-center">
+                <button
+                  onClick={() => setSelectedExamReport(null)}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg"
+                >
+                  Close
                 </button>
               </div>
             </motion.div>
