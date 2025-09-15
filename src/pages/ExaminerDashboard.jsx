@@ -674,6 +674,7 @@ const ExaminerDashboard = () => {
                       <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Started</th>
                       <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Submitted</th>
                       <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Status</th>
+                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Time Info</th>
                       <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Score</th>
                     </tr>
                   </thead>
@@ -709,6 +710,28 @@ const ExaminerDashboard = () => {
                              student.status === 'started' ? 'In Progress' :
                              student.status.charAt(0).toUpperCase() + student.status.slice(1)}
                           </span>
+                        </td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm">
+                          {student.timeRemaining ? (
+                            <div>
+                              <div className={`font-medium ${
+                                student.timeRemaining === 'Expired' ? 'text-red-600' : 'text-orange-600'
+                              }`}>
+                                {student.timeRemaining === 'Expired' ? '⏰ Expired' : `⏱️ ${student.timeRemaining}`}
+                              </div>
+                              {student.examStartTime && (
+                                <div className="text-xs text-gray-500">
+                                  Started: {new Date(student.examStartTime).toLocaleString()}
+                                </div>
+                              )}
+                            </div>
+                          ) : student.examStartTime ? (
+                            <div className="text-xs text-gray-500">
+                              Started: {new Date(student.examStartTime).toLocaleString()}
+                            </div>
+                          ) : (
+                            '-'
+                          )}
                         </td>
                         <td className="border border-gray-300 dark:border-gray-600 px-4 py-2">
                           {student.status === 'graded' ? `${student.marksObtained}/${student.totalMarks}` : '-'}

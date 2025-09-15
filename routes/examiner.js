@@ -204,14 +204,22 @@ router.get('/exams/:examId/report', sessionMiddleware, requireAuth, requireExami
       if (submission) {
         let actualStatus = submission.status;
         
-        // Check if exam time expired for started but not submitted exams
+        // Calculate time remaining for started exams
+        let timeRemaining = null;
         if (submission.status === 'started' && submission.examStartTime && !submission.submittedAt) {
           const startTime = new Date(submission.examStartTime);
           const timeLimit = exam.timeLimit * 60 * 1000; // Convert minutes to milliseconds
           const now = new Date();
+          const elapsed = now - startTime;
           
-          if (now - startTime > timeLimit) {
+          if (elapsed > timeLimit) {
             actualStatus = 'time_expired';
+            timeRemaining = 'Expired';
+          } else {
+            const remaining = timeLimit - elapsed;
+            const minutes = Math.floor(remaining / (60 * 1000));
+            const seconds = Math.floor((remaining % (60 * 1000)) / 1000);
+            timeRemaining = `${minutes}:${seconds.toString().padStart(2, '0')}`;
           }
         }
         
@@ -225,7 +233,9 @@ router.get('/exams/:examId/report', sessionMiddleware, requireAuth, requireExami
           submittedAt: submission.submittedAt,
           marksObtained: submission.marksObtained || 0,
           totalMarks: submission.totalMarks || 0,
-          examinerComments: submission.examinerComments || ''
+          examinerComments: submission.examinerComments || '',
+          timeRemaining: timeRemaining,
+          examStartTime: submission.examStartTime
         };
       } else {
         return {
@@ -238,7 +248,9 @@ router.get('/exams/:examId/report', sessionMiddleware, requireAuth, requireExami
           submittedAt: null,
           marksObtained: 0,
           totalMarks: 0,
-          examinerComments: ''
+          examinerComments: '',
+          timeRemaining: null,
+          examStartTime: null
         };
       }
     });
