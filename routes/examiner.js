@@ -191,16 +191,35 @@ router.get('/exams/:examId/report', sessionMiddleware, requireAuth, requireExami
       .populate('userId', 'username email')
       .sort({ submittedAt: -1 });
     
+    // Get exam details for time limit check
+    const exam = await WrittenExam.findById(examId);
+    if (!exam) {
+      return res.status(404).json({ error: 'Exam not found' });
+    }
+    
     // Create participation report
     const report = allUsers.map(user => {
       const submission = submissions.find(s => s.userId && s.userId._id.toString() === user._id.toString());
       
       if (submission) {
+        let actualStatus = submission.status;
+        
+        // Check if exam time expired for started but not submitted exams
+        if (submission.status === 'started' && submission.examStartTime && !submission.submittedAt) {
+          const startTime = new Date(submission.examStartTime);
+          const timeLimit = exam.timeLimit * 60 * 1000; // Convert minutes to milliseconds
+          const now = new Date();
+          
+          if (now - startTime > timeLimit) {
+            actualStatus = 'time_expired';
+          }
+        }
+        
         return {
           userId: user._id,
           username: user.username,
           email: user.email,
-          status: submission.status,
+          status: actualStatus,
           examStarted: submission.examStartTime ? 'Yes' : 'No',
           submitted: submission.submittedAt ? 'Yes' : 'No',
           submittedAt: submission.submittedAt,

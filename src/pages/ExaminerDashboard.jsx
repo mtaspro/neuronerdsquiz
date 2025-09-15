@@ -700,9 +700,14 @@ const ExaminerDashboard = () => {
                           <span className={`px-2 py-1 rounded text-xs ${
                             student.status === 'graded' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
                             student.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                            student.status === 'time_expired' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
+                            student.status === 'started' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' :
                             'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
                           }`}>
-                            {student.status === 'not_started' ? 'Not Started' : student.status.charAt(0).toUpperCase() + student.status.slice(1)}
+                            {student.status === 'not_started' ? 'Not Started' :
+                             student.status === 'time_expired' ? 'Time Expired' :
+                             student.status === 'started' ? 'In Progress' :
+                             student.status.charAt(0).toUpperCase() + student.status.slice(1)}
                           </span>
                         </td>
                         <td className="border border-gray-300 dark:border-gray-600 px-4 py-2">
