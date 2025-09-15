@@ -206,15 +206,31 @@ router.get('/exams/:examId/report', sessionMiddleware, requireAuth, requireExami
         
         // Calculate time remaining for started exams
         let timeRemaining = null;
-        if (submission.status === 'started' && submission.examStartTime && !submission.submittedAt) {
+        
+        // If submitted, show as pending/graded, not started
+        if (submission.submittedAt) {
+          actualStatus = submission.status; // Keep original status (pending/graded)
+        } else if (submission.status === 'started' && submission.examStartTime) {
           const startTime = new Date(submission.examStartTime);
           const timeLimit = exam.timeLimit * 60 * 1000; // Convert minutes to milliseconds
           const now = new Date();
           const elapsed = now - startTime;
           
+          console.log(`Debug - User: ${user.username}, Started: ${startTime}, Now: ${now}, Elapsed: ${elapsed}ms, Limit: ${timeLimit}ms`);
+          
           if (elapsed > timeLimit) {
             actualStatus = 'time_expired';
             timeRemaining = 'Expired';
+            
+            // Update database to mark as expired
+            try {
+              await WrittenSubmission.findByIdAndUpdate(submission._id, { 
+                status: 'time_expired' 
+              });
+              console.log(`Updated ${user.username} status to time_expired`);
+            } catch (updateError) {
+              console.error('Failed to update expired status:', updateError);
+            }
           } else {
             const remaining = timeLimit - elapsed;
             const minutes = Math.floor(remaining / (60 * 1000));

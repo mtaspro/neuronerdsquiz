@@ -8,7 +8,7 @@ const writtenSubmissionSchema = new mongoose.Schema({
   markedImages: [{ type: String }], // Array of marked image URLs by examiner
   status: { 
     type: String, 
-    enum: ['started', 'pending', 'graded', 'rejected'], 
+    enum: ['started', 'pending', 'graded', 'rejected', 'time_expired'], 
     default: 'started' 
   },
   marksObtained: { type: Number, default: 0 },
