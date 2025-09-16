@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './EventShowdown.css';
 import soundManager from '../utils/soundUtils';
-import backgroundMusicFile from '../assets/The Neuronerds Showdown.mp3';
+// Use Cloudinary URL instead of local file
+const backgroundMusicFile = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1/audio/neuronerds-showdown.mp3';
 
 const EventShowdown = ({ eventData }) => {
   const [timeLeft, setTimeLeft] = useState('');
@@ -45,17 +46,13 @@ const EventShowdown = ({ eventData }) => {
     }
   };
 
-  // Load and auto-play event music when component mounts
+  // Load music from Cloudinary with lazy loading
   useEffect(() => {
-    if (eventData?.isActive) {
-      soundManager.loadBackgroundMusic(backgroundMusicFile, 0.3);
-      // Auto-play background music when event is active
-      setTimeout(() => {
-        soundManager.playBackgroundMusic();
-        setIsPlaying(true);
-      }, 1000);
+    if (eventData?.isActive && isPlaying) {
+      // Only load when user wants to play
+      soundManager.loadBackgroundMusic(backgroundMusicFile, 0.2);
     }
-  }, [eventData?.isActive]);
+  }, [eventData?.isActive, isPlaying]);
 
   return (
     <div className="event-showdown">
@@ -68,7 +65,7 @@ const EventShowdown = ({ eventData }) => {
         <p className="event-subtitle">🏆 Epic Battle Event. Compete for Glory!</p>
         
         <div className="sound-toggle" onClick={toggleSound}>
-          🔊 {isPlaying ? 'Mute' : 'Epic Music'}
+          {isPlaying ? '🔇 Mute' : '🎵 Play Music'}
         </div>
       </div>
 

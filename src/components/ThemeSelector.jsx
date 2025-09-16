@@ -11,7 +11,7 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
       id: 'tech-bg',
       name: 'LOONY CIRCLES',
       description: 'Circular shapes flying around the screen',
-      video: '/src/assets/tech-bg.mp4',
+      video: 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021260/tech-bg_w8qhkh.mp4',
       color: 'from-blue-600 to-purple-600',
       preview: '⭕'
     },
@@ -19,7 +19,7 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
       id: 'tech-bg1',
       name: 'CUTY KITTENS',
       description: 'CUTE KITTENS TOGETHER',
-      video: '/src/assets/tech-bg1.mp4',
+      video: 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021288/tech-bg1_iuxvbj.mp4',
       color: 'from-green-500 to-teal-600',
       preview: '🐱'
     },
@@ -27,7 +27,7 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
       id: 'tech-bg2',
       name: 'LIVING KING',
       description: 'ANIME WARRIOR',
-      video: '/src/assets/tech-bg2.mp4',
+      video: 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021313/tech-bg2_nelghr.mp4',
       color: 'from-purple-500 to-pink-600',
       preview: '⚔️'
     },
@@ -35,7 +35,7 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
       id: 'tech-bg3',
       name: 'ALIEN ISOLATION',
       description: 'SPACESHIP INTERIOR',
-      video: '/src/assets/tech-bg3.mp4',
+      video: 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021337/tech-bg3_kuajzf.mp4',
       color: 'from-orange-500 to-red-600',
       preview: '👽'
     },
@@ -43,7 +43,7 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
       id: 'tech-bg4',
       name: 'RADIOGRAPHY',
       description: 'RADIOGRAPHY DNA',
-      video: '/src/assets/tech-bg4.mp4',
+      video: 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021361/tech-bg4_xkwzce.mp4',
       color: 'from-red-500 to-red-600',
       preview: '🔬'
     },
@@ -51,7 +51,7 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
       id: 'tech-bg5',
       name: 'CRYSTAL MATRIX',
       description: 'Blue crystalline geometric patterns',
-      video: '/src/assets/tech-bg5.mp4',
+      video: 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021392/tech-bg5_xvylzf.mp4',
       color: 'from-blue-500 to-cyan-600',
       preview: '💎'
     },
@@ -59,7 +59,7 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
       id: 'tech-bg6',
       name: 'NEON TUNNEL',
       description: 'Purple neon tunnel with energy effects',
-      video: '/src/assets/tech-bg6.mp4',
+      video: 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021421/tech-bg6_pnp74u.mp4',
       color: 'from-purple-500 to-fuchsia-600',
       preview: '🌌'
     }

@@ -1,13 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MathText from '../components/MathText';
-import AILatexGenerator from '../components/AILatexGenerator';
 import axios from 'axios';
 import { authHeader } from '../utils/auth';
 import { secureStorage } from '../utils/secureStorage.js';
 import { useCRUD } from '../hooks/useCRUD';
+import { useDebounce } from '../hooks/useDebounce';
+import { useVirtualization } from '../hooks/useVirtualization';
 import { sanitizeInput, sanitizeObject } from '../utils/sanitizer';
-import LifelineConfigPanel from '../components/LifelineConfigPanel';
+
+// Lazy load heavy components
+const AILatexGenerator = lazy(() => import('../components/AILatexGenerator'));
+const LifelineConfigPanel = lazy(() => import('../components/LifelineConfigPanel'));
 
 const TABS = ['Users', 'Subjects', 'Chapters', 'Questions', 'Quiz Config', 'Lifeline Config', 'Leaderboard Reset', 'WhatsApp'];
 
@@ -123,6 +127,7 @@ export default function AdminDashboard() {
   const [questionsPerPage] = useState(50);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChapterFilter, setSelectedChapterFilter] = useState('none');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Get question count for a chapter
   const getQuestionCount = (chapterName) => {
@@ -152,11 +157,17 @@ export default function AdminDashboard() {
     chaptersCRUD.read().catch(() => {});
   }, [tab]);
 
-  // Load questions only when needed
+  // Load questions with pagination
   useEffect(() => {
     if (tab !== 'Questions') return;
     if (selectedChapterFilter === 'none') return;
-    questionsCRUD.read('', selectedChapterFilter ? `?chapter=${selectedChapterFilter}` : '').catch(() => {});
+    
+    const params = new URLSearchParams();
+    if (selectedChapterFilter) params.set('chapter', selectedChapterFilter);
+    params.set('page', '1');
+    params.set('limit', '50'); // Limit initial load
+    
+    questionsCRUD.read('', `?${params.toString()}`).catch(() => {});
   }, [tab, selectedChapterFilter]);
 
   // Load question counts for quiz config
@@ -544,23 +555,18 @@ export default function AdminDashboard() {
     setParsedQuestions(prev => prev.filter((_, i) => i !== index));
   }
 
-  // Get filtered questions
-  const getFilteredQuestions = () => {
-    // If no filter is selected (default 'none'), return empty array
-    if (selectedChapterFilter === 'none') {
-      return [];
-    }
+  // Memoized filtered questions with debounced search
+  const filteredQuestions = useMemo(() => {
+    if (selectedChapterFilter === 'none') return [];
     
     let filtered = questions;
     
-    // Filter by selected chapter
     if (selectedChapterFilter) {
       filtered = filtered.filter(q => q.chapter === selectedChapterFilter);
     }
     
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase();
       filtered = filtered.filter(q => 
         q.question.toLowerCase().includes(query) ||
         q.chapter.toLowerCase().includes(query) ||
@@ -569,28 +575,28 @@ export default function AdminDashboard() {
     }
     
     return filtered;
-  };
+  }, [questions, selectedChapterFilter, debouncedSearchQuery]);
 
-  // Get paginated questions
-  const getPaginatedQuestions = () => {
-    const filtered = getFilteredQuestions();
+  // Memoized pagination
+  const paginationData = useMemo(() => {
+    const totalPages = Math.ceil(filteredQuestions.length / questionsPerPage);
     const startIndex = (currentPage - 1) * questionsPerPage;
     const endIndex = startIndex + questionsPerPage;
-    return filtered.slice(startIndex, endIndex);
-  };
+    const paginatedQuestions = filteredQuestions.slice(startIndex, endIndex);
+    
+    return { totalPages, paginatedQuestions };
+  }, [filteredQuestions, currentPage, questionsPerPage]);
 
-  // Get total pages
-  const getTotalPages = () => {
-    const filtered = getFilteredQuestions();
-    return Math.ceil(filtered.length / questionsPerPage);
-  };
-
-  // Reset pagination when filters change
-  const handleFilterChange = (newChapter, newSearch) => {
+  // Optimized filter change handlers
+  const handleChapterFilterChange = useCallback((newChapter) => {
     setSelectedChapterFilter(newChapter);
+    setCurrentPage(1);
+  }, []);
+  
+  const handleSearchChange = useCallback((newSearch) => {
     setSearchQuery(newSearch);
     setCurrentPage(1);
-  };
+  }, []);
 
   // Update quiz config with validation
   function handleUpdateQuizConfig(chapterId, examQuestions, battleQuestions, negativeScoring = false, negativeScore = -1) {
@@ -1196,7 +1202,8 @@ export default function AdminDashboard() {
             </div>
 
             {/* AI LaTeX Generator */}
-            <AILatexGenerator 
+            <Suspense fallback={<div className="p-4 text-center text-gray-600 dark:text-gray-400">Loading LaTeX Generator...</div>}>
+              <AILatexGenerator 
               onInsert={(latex) => setNewQuestion(prev => ({
                 ...prev, 
                 question: prev.question + latex
@@ -1209,8 +1216,9 @@ export default function AdminDashboard() {
                   return { ...prev, options: newOptions };
                 });
               }}
-              focusedField={focusedField}
-            />
+                focusedField={focusedField}
+              />
+            </Suspense>
 
             {/* Parsed Questions Preview */}
             {parsedQuestions.length > 0 && (
@@ -1403,10 +1411,10 @@ export default function AdminDashboard() {
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
-                  Manage Questions ({getFilteredQuestions().length} total)
+                  Manage Questions ({filteredQuestions.length} total)
                 </h3>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Page {currentPage} of {getTotalPages()}
+                  Page {currentPage} of {paginationData.totalPages}
                 </div>
               </div>
               
@@ -1417,7 +1425,7 @@ export default function AdminDashboard() {
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={e => handleFilterChange(selectedChapterFilter, e.target.value)}
+                    onChange={e => handleSearchChange(e.target.value)}
                     className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
                     placeholder="Search by question text, chapter, or options..."
                   />
@@ -1426,7 +1434,7 @@ export default function AdminDashboard() {
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Filter by Chapter</label>
                   <select
                     value={selectedChapterFilter}
-                    onChange={e => handleFilterChange(e.target.value, searchQuery)}
+                    onChange={e => handleChapterFilterChange(e.target.value)}
                     className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
                   >
                     <option value="none">Select a chapter to view questions</option>
@@ -1442,7 +1450,7 @@ export default function AdminDashboard() {
               
               {loading ? (
                 <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading questions...</div>
-              ) : getFilteredQuestions().length === 0 ? (
+              ) : filteredQuestions.length === 0 ? (
                 <div className="text-center py-8 text-gray-600 dark:text-gray-400">
                   {selectedChapterFilter === 'none' ? 'Please select a chapter to view questions.' : 
                    searchQuery || selectedChapterFilter ? 'No questions match your filters.' : 'No questions found.'}
@@ -1450,7 +1458,7 @@ export default function AdminDashboard() {
               ) : (
                 <>
                   {/* Pagination Controls */}
-                  {getTotalPages() > 1 && (
+                  {paginationData.totalPages > 1 && (
                     <div className="flex justify-center items-center space-x-2 mb-6 pb-4 border-b border-gray-200 dark:border-gray-600">
                       <button
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
@@ -1461,9 +1469,9 @@ export default function AdminDashboard() {
                       </button>
                       
                       <div className="flex space-x-1">
-                        {Array.from({ length: Math.min(5, getTotalPages()) }, (_, i) => {
-                          const pageNum = Math.max(1, Math.min(getTotalPages() - 4, currentPage - 2)) + i;
-                          if (pageNum > getTotalPages()) return null;
+                        {Array.from({ length: Math.min(5, paginationData.totalPages) }, (_, i) => {
+                          const pageNum = Math.max(1, Math.min(paginationData.totalPages - 4, currentPage - 2)) + i;
+                          if (pageNum > paginationData.totalPages) return null;
                           
                           return (
                             <button
@@ -1482,8 +1490,8 @@ export default function AdminDashboard() {
                       </div>
                       
                       <button
-                        onClick={() => setCurrentPage(prev => Math.min(getTotalPages(), prev + 1))}
-                        disabled={currentPage === getTotalPages()}
+                        onClick={() => setCurrentPage(prev => Math.min(paginationData.totalPages, prev + 1))}
+                        disabled={currentPage === paginationData.totalPages}
                         className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                       >
                         Next
@@ -1492,7 +1500,7 @@ export default function AdminDashboard() {
                   )}
                   
                   <div className="space-y-4">
-                    {getPaginatedQuestions().map(q => (
+                    {paginationData.paginatedQuestions.map(q => (
                       <div key={q._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                         {editingId === q._id ? (
                           <form onSubmit={handleEditQuestion} className="space-y-3">
@@ -1635,7 +1643,9 @@ export default function AdminDashboard() {
         )}
 
         {tab === 'Lifeline Config' && (
-          <LifelineConfigPanel />
+          <Suspense fallback={<div className="p-8 text-center text-gray-600 dark:text-gray-400">Loading...</div>}>
+            <LifelineConfigPanel />
+          </Suspense>
         )}
 
         {tab === 'Quiz Config' && (

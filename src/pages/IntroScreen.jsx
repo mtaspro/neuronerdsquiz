@@ -6,14 +6,14 @@ import ThemeSelector from "../components/ThemeSelector";
 import EventShowdown from "../components/EventShowdown";
 import ParallaxElement from "../components/ParallaxElement";
 
-// Import theme videos
-import techVideo from "../assets/tech-bg.mp4";
-import techVideo1 from "../assets/tech-bg1.mp4";
-import techVideo2 from "../assets/tech-bg2.mp4";
-import techVideo3 from "../assets/tech-bg3.mp4";
-import techVideo4 from "../assets/tech-bg4.mp4";
-import techVideo5 from "../assets/tech-bg5.mp4";
-import techVideo6 from "../assets/tech-bg6.mp4";
+// Cloudinary video URLs
+const techVideo = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021260/tech-bg_w8qhkh.mp4';
+const techVideo1 = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021288/tech-bg1_iuxvbj.mp4';
+const techVideo2 = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021313/tech-bg2_nelghr.mp4';
+const techVideo3 = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021337/tech-bg3_kuajzf.mp4';
+const techVideo4 = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021361/tech-bg4_xkwzce.mp4';
+const techVideo5 = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021392/tech-bg5_xvylzf.mp4';
+const techVideo6 = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021421/tech-bg6_pnp74u.mp4';
 
 export default function IntroScreen() {
   const [showVideo, setShowVideo] = useState(false);

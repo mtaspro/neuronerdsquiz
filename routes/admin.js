@@ -1,5 +1,6 @@
 import express from 'express';
 import { sessionMiddleware, requireAdmin } from '../middleware/sessionMiddleware.js';
+import { cacheMiddleware, clearCache } from '../middleware/cacheMiddleware.js';
 import User from '../models/User.js';
 import UserScore from '../models/UserScore.js';
 import Quiz from '../models/Quiz.js';
@@ -14,9 +15,9 @@ import axios from 'axios';
 
 const router = express.Router();
 
-// List all users
-router.get('/users', sessionMiddleware, requireAdmin, async (req, res) => {
-  const users = await User.find({}, '-password').select('+phoneNumber +whatsappNotifications').limit(100);
+// List all users with caching
+router.get('/users', sessionMiddleware, requireAdmin, cacheMiddleware('short'), async (req, res) => {
+  const users = await User.find({}, '-password').select('+phoneNumber +whatsappNotifications').limit(100).lean();
   res.json(users);
 });
 
@@ -52,9 +53,9 @@ router.put('/users/:id/whatsapp', sessionMiddleware, requireAdmin, async (req, r
   }
 });
 
-// List all subjects
-router.get('/subjects', sessionMiddleware, requireAdmin, async (req, res) => {
-  const subjects = await Subject.find().sort('order');
+// List all subjects with caching
+router.get('/subjects', sessionMiddleware, requireAdmin, cacheMiddleware('medium'), async (req, res) => {
+  const subjects = await Subject.find().sort('order').lean();
   res.json(subjects);
 });
 
@@ -63,6 +64,7 @@ router.post('/subjects', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const subject = new Subject(req.body);
     await subject.save();
+    clearCache('subjects');
     res.status(201).json(subject);
   } catch (error) {
     if (error.code === 11000) {
@@ -222,15 +224,14 @@ router.post('/users/:id/request-score-reset', sessionMiddleware, requireAdmin, a
   }
 });
 
-// List all chapters (all chapters visible in manage section)
-router.get('/chapters', sessionMiddleware, requireAdmin, async (req, res) => {
+// List all chapters with caching
+router.get('/chapters', sessionMiddleware, requireAdmin, cacheMiddleware('medium'), async (req, res) => {
   try {
     const currentUserId = req.user.userId;
-    const chapters = await Chapter.find().sort('order').populate('createdBy', 'username');
+    const chapters = await Chapter.find().sort('order').populate('createdBy', 'username').lean();
     
-    // Add canEdit flag to indicate if current admin can edit this chapter
     const chaptersWithPermissions = chapters.map(chapter => ({
-      ...chapter.toObject(),
+      ...chapter,
       canEdit: !chapter.createdBy || chapter.createdBy._id.toString() === currentUserId
     }));
     
@@ -243,14 +244,6 @@ router.get('/chapters', sessionMiddleware, requireAdmin, async (req, res) => {
 // Add a new chapter
 router.post('/chapters', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
-    // Drop unique index if it exists
-    try {
-      await Chapter.collection.dropIndex('name_1');
-      console.log('Dropped unique index on chapter name');
-    } catch (indexError) {
-      // Index might not exist, ignore error
-    }
-    
     const chapterData = {
       ...req.body,
       createdBy: req.user.userId,
@@ -258,6 +251,7 @@ router.post('/chapters', sessionMiddleware, requireAdmin, async (req, res) => {
     };
     const chapter = new Chapter(chapterData);
     await chapter.save();
+    clearCache('chapters');
     res.status(201).json(chapter);
   } catch (error) {
     console.error('Chapter creation error:', error);
@@ -491,8 +485,8 @@ router.get('/quiz-configs', sessionMiddleware, requireAdmin, async (req, res) =>
   }
 });
 
-// Get question counts for all chapters (for Quiz Config tab)
-router.get('/question-counts', sessionMiddleware, requireAdmin, async (req, res) => {
+// Get question counts with caching
+router.get('/question-counts', sessionMiddleware, requireAdmin, cacheMiddleware('medium'), async (req, res) => {
   try {
     const questionCounts = await Quiz.aggregate([
       {
