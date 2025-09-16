@@ -222,15 +222,8 @@ router.get('/exams/:examId/report', sessionMiddleware, requireAuth, requireExami
             actualStatus = 'time_expired';
             timeRemaining = 'Expired';
             
-            // Update database to mark as expired
-            try {
-              await WrittenSubmission.findByIdAndUpdate(submission._id, { 
-                status: 'time_expired' 
-              });
-              console.log(`Updated ${user.username} status to time_expired`);
-            } catch (updateError) {
-              console.error('Failed to update expired status:', updateError);
-            }
+            // Mark for database update (will be done after map)
+            submission._needsExpiredUpdate = true;
           } else {
             const remaining = timeLimit - elapsed;
             const minutes = Math.floor(remaining / (60 * 1000));
@@ -270,6 +263,19 @@ router.get('/exams/:examId/report', sessionMiddleware, requireAuth, requireExami
         };
       }
     });
+    
+    // Update expired submissions in database
+    const expiredSubmissions = submissions.filter(s => s._needsExpiredUpdate);
+    if (expiredSubmissions.length > 0) {
+      try {
+        await Promise.all(expiredSubmissions.map(s => 
+          WrittenSubmission.findByIdAndUpdate(s._id, { status: 'time_expired' })
+        ));
+        console.log(`Updated ${expiredSubmissions.length} submissions to time_expired`);
+      } catch (updateError) {
+        console.error('Failed to update expired statuses:', updateError);
+      }
+    }
     
     res.json(report);
   } catch (error) {
