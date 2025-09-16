@@ -131,12 +131,15 @@ export default function AdminDashboard() {
 
   // Get question count for a chapter
   const getQuestionCount = (chapterName) => {
-    // For Quiz Config tab, use the loaded counts
-    if (tab === 'Quiz Config') {
-      return questionCounts[chapterName] || 0;
+    // Always use database counts if available
+    if (questionCounts[chapterName] !== undefined) {
+      return questionCounts[chapterName];
     }
-    // For Questions tab, use filtered questions
-    return questions.filter(q => q.chapter === chapterName).length;
+    // Fallback to filtered questions for Questions tab
+    if (tab === 'Questions') {
+      return questions.filter(q => q.chapter === chapterName).length;
+    }
+    return 0;
   };
 
   // Load users
@@ -151,11 +154,13 @@ export default function AdminDashboard() {
     subjectsCRUD.read().catch(() => {});
   }, [tab]);
 
-  // Load chapters
+  // Load chapters for Chapters, Questions, and Quiz Config tabs
   useEffect(() => {
-    if (tab !== 'Chapters') return;
-    chaptersCRUD.read().catch(() => {});
-  }, [tab]);
+    if (!['Chapters', 'Questions', 'Quiz Config'].includes(tab)) return;
+    if (chapters.length === 0) {
+      chaptersCRUD.read().catch(() => {});
+    }
+  }, [tab, chapters.length]);
 
   // Load questions with pagination
   useEffect(() => {
@@ -176,6 +181,11 @@ export default function AdminDashboard() {
     
     const loadQuestionCounts = async () => {
       try {
+        // Ensure chapters are loaded first
+        if (chapters.length === 0) {
+          await chaptersCRUD.read();
+        }
+        
         const apiUrl = import.meta.env.VITE_API_URL || '';
         const response = await axios.get(`${apiUrl}/api/admin/question-counts`, { 
           headers: authHeader() 
@@ -187,9 +197,25 @@ export default function AdminDashboard() {
     };
     
     loadQuestionCounts();
-  }, [tab]);
+  }, [tab, chapters.length]);
 
-
+  // Load question counts when chapters become available
+  useEffect(() => {
+    if (chapters.length > 0 && Object.keys(questionCounts).length === 0) {
+      const loadQuestionCounts = async () => {
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || '';
+          const response = await axios.get(`${apiUrl}/api/admin/question-counts`, { 
+            headers: authHeader() 
+          });
+          setQuestionCounts(response.data);
+        } catch (err) {
+          console.error('Failed to load question counts:', err);
+        }
+      };
+      loadQuestionCounts();
+    }
+  }, [chapters.length]);
 
   // Load quiz configs
   useEffect(() => {
@@ -200,6 +226,11 @@ export default function AdminDashboard() {
       setError('');
       
       try {
+        // Ensure chapters are loaded first
+        if (chapters.length === 0) {
+          await chaptersCRUD.read();
+        }
+        
         const apiUrl = import.meta.env.VITE_API_URL || '';
         const response = await axios.get(`${apiUrl}/api/admin/quiz-configs`, { 
           headers: authHeader() 
@@ -220,7 +251,7 @@ export default function AdminDashboard() {
     };
 
     loadQuizConfigs();
-  }, [tab]);
+  }, [tab, chapters.length]);
 
   // Edit user WhatsApp settings
   function handleEditWhatsApp(userId, username, currentPhone, currentNotifications) {
@@ -1441,7 +1472,7 @@ export default function AdminDashboard() {
                     <option value="">All Chapters</option>
                     {chapters.map(ch => (
                       <option key={ch._id} value={ch.name}>
-                        {ch.name} ({getQuestionCount(ch.name)} questions)
+                        {ch.name} ({questionCounts[ch.name] || 0} questions)
                       </option>
                     ))}
                   </select>

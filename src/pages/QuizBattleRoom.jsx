@@ -237,6 +237,16 @@ const QuizBattleRoom = () => {
           addNotification('user-finished', 'Player Finished!', `${data.username} completed the quiz!`);
         });
 
+        socket.addListener('battleCompleted', (data) => {
+          console.log('🎉 Battle completed event received:', data);
+          success(data.message || '🎉 Battle completed! Your score has been saved.');
+          
+          if (data.canLeave) {
+            addNotification('battle-safe-leave', 'Safe to Leave!', 
+              `✅ Your position is saved! Final score: ${data.finalScore} points. You can safely leave the room now.`);
+          }
+        });
+
         socket.addListener('battleEnded', async (data) => {
           setBattleEnded(true);
           setResults(data.results || []);
@@ -1265,6 +1275,9 @@ const QuizBattleRoom = () => {
                         }
                         if (currentQuestion < (questions?.length || 0) - 1) {
                           handleNextQuestion();
+                        } else {
+                          // Last question - show completion message
+                          success('🎉 Battle completed! Your score is being saved...');
                         }
                       }}
                       className="w-full mt-6 bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"

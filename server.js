@@ -414,16 +414,6 @@ io.on('connection', (socket) => {
 
       // Check if user has finished all questions
       if (result.hasFinished) {
-        io.to(roomId).emit('userFinished', {
-          userId,
-          username: result.user.username,
-          finalScore: result.user.score,
-          totalTime: new Date() - battleService.getRoom(roomId).startTime
-        });
-      }
-
-      // Check if user has finished
-      if (result.hasFinished) {
         // Save individual user's battle score immediately
         const userResult = {
           userId: result.user.id,
@@ -437,7 +427,25 @@ io.on('connection', (socket) => {
         };
         
         // Save to leaderboard immediately
-        saveBattleResultsToLeaderboard({ results: [userResult] });
+        await saveBattleResultsToLeaderboard({ results: [userResult] });
+        
+        // Mark user as completed in battle service
+        battleService.markUserCompleted(roomId, userId);
+        
+        // Notify user and room about completion
+        socket.emit('battleCompleted', {
+          message: '🎉 Battle completed! Your score has been saved.',
+          canLeave: true,
+          finalScore: result.user.score,
+          totalTime: new Date() - battleService.getRoom(roomId).startTime
+        });
+        
+        io.to(roomId).emit('userFinished', {
+          userId,
+          username: result.user.username,
+          finalScore: result.user.score,
+          totalTime: new Date() - battleService.getRoom(roomId).startTime
+        });
       }
 
       // Check if all users have finished
@@ -496,14 +504,32 @@ io.on('connection', (socket) => {
 
   // Leave room
   socket.on('leaveRoom', ({ roomId, userId }) => {
-    const room = battleService.removeUserFromRoom(roomId, userId);
-    if (room) {
+    try {
+      const room = battleService.getRoom(roomId);
+      const user = room?.users.get(userId);
+      
+      // Check if user has completed the battle
+      const hasCompleted = user?.hasCompleted || user?.currentQuestion >= (room?.questions?.length || 0);
+      
+      if (hasCompleted) {
+        console.log(`✅ User ${user.username} leaving room ${roomId} - battle completed, score saved`);
+      } else {
+        console.log(`⚠️ User ${user?.username || 'Unknown'} leaving room ${roomId} - battle not completed`);
+      }
+      
+      const updatedRoom = battleService.removeUserFromRoom(roomId, userId);
+      if (updatedRoom) {
+        socket.leave(roomId);
+        io.to(roomId).emit('userLeft', {
+          userId,
+          username: user?.username || 'Unknown',
+          totalUsers: updatedRoom.users.size,
+          hasCompleted
+        });
+      }
+    } catch (error) {
+      console.error('Error in leaveRoom:', error);
       socket.leave(roomId);
-      io.to(roomId).emit('userLeft', {
-        userId,
-        username: room.users.get(userId)?.username || 'Unknown',
-        totalUsers: room.users.size
-      });
     }
   });
 
@@ -554,17 +580,26 @@ io.on('connection', (socket) => {
     const userInfo = battleService.getUserBySocketId(socket.id);
     if (userInfo) {
       const { user, room } = userInfo;
+      
+      // Check if user completed the battle before disconnecting
+      const hasCompleted = user.hasCompleted || user.currentQuestion >= (room.questions?.length || 0);
+      
+      if (hasCompleted) {
+        console.log(`✅ User ${user.username} disconnected from room ${room.id} - battle completed, score preserved`);
+      } else {
+        console.log(`⚠️ User ${user.username} disconnected from room ${room.id} - battle incomplete`);
+      }
+      
       const updatedRoom = battleService.removeUserFromRoom(room.id, user.id);
       
       if (updatedRoom) {
         io.to(room.id).emit('userLeft', {
           userId: user.id,
           username: user.username,
-          totalUsers: updatedRoom.users.size
+          totalUsers: updatedRoom.users.size,
+          hasCompleted,
+          disconnected: true
         });
-        
-        // Check if disconnected user was the room creator and battle hasn't started
-        // This requires importing the battle router's state - for now, we'll handle it via API call
       }
     }
   });

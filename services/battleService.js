@@ -309,6 +309,22 @@ class BattleService {
     return null;
   }
 
+  // Mark user as completed (for safe leaving)
+  markUserCompleted(roomId, userId) {
+    const room = this.getRoom(roomId);
+    if (!room) return null;
+
+    const user = room.users.get(userId);
+    if (user) {
+      user.hasCompleted = true;
+      user.completedAt = new Date();
+      console.log(`✅ Marked user ${user.username} as completed in room ${roomId}`);
+      return user;
+    }
+
+    return null;
+  }
+
   // Get room status for API
   getRoomStatus(roomId) {
     const room = this.getRoom(roomId);

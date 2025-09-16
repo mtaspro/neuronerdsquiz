@@ -33,6 +33,7 @@ const BattleNotification = ({ notifications, onRemove }) => {
                   {notification.type === 'battle-started' && <FaPlay />}
                   {notification.type === 'battle-ended' && <FaTrophy />}
                   {notification.type === 'user-finished' && <FaTrophy />}
+                  {notification.type === 'battle-safe-leave' && '✅'}
                 </div>
                 <div className="flex-1">
                   <h4 className="font-semibold text-gray-800 dark:text-white text-sm">
