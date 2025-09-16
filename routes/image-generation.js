@@ -20,38 +20,29 @@ router.post('/generate-image', async (req, res) => {
       return res.status(400).json({ error: 'Prompt must be less than 500 characters' });
     }
 
-    if (!process.env.OPENROUTER_API_KEY) {
+    if (!process.env.DEEPAI_API_KEY) {
       return res.status(500).json({ error: 'Image generation service not configured' });
     }
 
-    // Use Pollinations.ai with better validation
-    const encodedPrompt = encodeURIComponent(trimmedPrompt);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&seed=${Date.now()}&nologo=true`;
-    
-    // Actually download and validate the image
-    try {
-      const imageResponse = await axios.get(imageUrl, { 
-        responseType: 'arraybuffer',
-        timeout: 20000,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-      });
-      
-      const imageBuffer = Buffer.from(imageResponse.data);
-      
-      if (imageBuffer.length < 1000) {
-        throw new Error('Generated image is too small or invalid');
-      }
-      
-      console.log('✅ Generated and validated image URL:', imageUrl);
-      console.log('✅ Image size:', imageBuffer.length, 'bytes');
-      
-      res.json({ imageUrl, prompt: trimmedPrompt });
-    } catch (testError) {
-      console.error('❌ Image generation failed:', testError.message);
-      return res.status(500).json({ error: 'Failed to generate valid image. Please try again.' });
+    // Use DeepAI text-to-image API
+    const response = await axios.post('https://api.deepai.org/api/text2img', {
+      text: trimmedPrompt
+    }, {
+      headers: {
+        'Api-Key': process.env.DEEPAI_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      timeout: 30000
+    });
+
+    if (!response.data || !response.data.output_url) {
+      throw new Error('Invalid response from DeepAI');
     }
+
+    const imageUrl = response.data.output_url;
+    console.log('✅ Generated image with DeepAI:', imageUrl);
+    
+    res.json({ imageUrl, prompt: trimmedPrompt });
   } catch (error) {
     console.error('Image generation error:', error.response?.data || error.message);
     
