@@ -44,8 +44,10 @@ const ImageMarker = ({ imageUrl, onSave, onCancel, existingMarkedImage }) => {
   const startDrawing = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
     
     if (tool === 'text') {
       setTextPosition({ x, y });
@@ -64,8 +66,10 @@ const ImageMarker = ({ imageUrl, onSave, onCancel, existingMarkedImage }) => {
     
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
     
     const ctx = canvas.getContext('2d');
     ctx.lineWidth = lineWidth;
