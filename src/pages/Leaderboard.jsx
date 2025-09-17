@@ -20,11 +20,13 @@ const TableView = ({ players, activeTab }) => {
     const avgScore = player.averageScore || 0;
     const totalQuizzes = player.totalQuizzes || 0;
     
-    if (avgScore >= 90 && totalQuizzes >= 50) return { name: 'Champion', stage: Math.min(Math.floor(avgScore/10), 10), color: 'text-purple-600' };
-    if (avgScore >= 80 && totalQuizzes >= 30) return { name: 'Legendary', stage: 'I', color: 'text-yellow-600' };
-    if (avgScore >= 70 && totalQuizzes >= 20) return { name: 'World Class', stage: 'I', color: 'text-green-600' };
-    if (avgScore >= 60 && totalQuizzes >= 15) return { name: 'Pro', stage: 'I', color: 'text-blue-600' };
-    if (avgScore >= 50 && totalQuizzes >= 10) return { name: 'Semi Pro', stage: 'I', color: 'text-indigo-600' };
+    const points = (totalQuizzes * avgScore / 100) + ((player.currentStreak || 0) * 2);
+    
+    if (points >= 25) return { name: 'Champion', stage: 'I', color: 'text-purple-600' };
+    if (points >= 20) return { name: 'Legendary', stage: 'I', color: 'text-yellow-600' };
+    if (points >= 15) return { name: 'World Class', stage: 'I', color: 'text-green-600' };
+    if (points >= 10) return { name: 'Pro', stage: 'I', color: 'text-blue-600' };
+    if (points >= 5) return { name: 'Semi Pro', stage: 'I', color: 'text-indigo-600' };
     return { name: 'Amateur', stage: 'III', color: 'text-gray-600' };
   };
   

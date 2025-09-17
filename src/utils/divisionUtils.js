@@ -15,13 +15,13 @@ export function calculateDivision(userStats) {
   // Points system: quizzes * average + streak bonus
   const points = (totalQuizzes * averageScore / 100) + (streak * 2);
   
-  // Division thresholds
-  if (points >= 500) return { division: 'CHAMPION', stage: Math.min(Math.floor((points - 500) / 100), 2) };
-  if (points >= 300) return { division: 'LEGENDARY', stage: Math.min(Math.floor((points - 300) / 67), 2) };
-  if (points >= 200) return { division: 'WORLD_CLASS', stage: Math.min(Math.floor((points - 200) / 33), 2) };
-  if (points >= 100) return { division: 'PRO', stage: Math.min(Math.floor((points - 100) / 33), 2) };
-  if (points >= 50) return { division: 'SEMI_PRO', stage: Math.min(Math.floor((points - 50) / 17), 2) };
-  return { division: 'AMATEUR', stage: Math.min(Math.floor(points / 17), 2) };
+  // Division thresholds - much shorter ranges for quick progression
+  if (points >= 25) return { division: 'CHAMPION', stage: Math.min(Math.floor((points - 25) / 2), 2) };
+  if (points >= 20) return { division: 'LEGENDARY', stage: Math.min(Math.floor((points - 20) / 1.5), 2) };
+  if (points >= 15) return { division: 'WORLD_CLASS', stage: Math.min(Math.floor((points - 15) / 1.5), 2) };
+  if (points >= 10) return { division: 'PRO', stage: Math.min(Math.floor((points - 10) / 1.5), 2) };
+  if (points >= 5) return { division: 'SEMI_PRO', stage: Math.min(Math.floor((points - 5) / 1.5), 2) };
+  return { division: 'AMATEUR', stage: Math.min(Math.floor(points / 1.5), 2) };
 }
 
 // Get division display info
@@ -45,6 +45,6 @@ export function getChampionMultiplier(userStats) {
   const { totalQuizzes = 0, averageScore = 0, streak = 0 } = userStats;
   const points = (totalQuizzes * averageScore / 100) + (streak * 2);
   
-  if (points >= 800) return Math.floor((points - 500) / 300) + 1; // 2x, 3x, etc.
+  if (points >= 35) return Math.floor((points - 25) / 5) + 1; // 2x, 3x, etc.
   return 1;
 }

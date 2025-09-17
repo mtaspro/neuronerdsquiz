@@ -278,7 +278,7 @@ export default function QuizLeaderboardCard({ player, index }) {
         <div className="w-full bg-black/10 rounded-full h-2 border border-white/20">
           <div 
             className="bg-white/80 h-2 rounded-full transition-all duration-500 shadow-sm"
-            style={{ width: `${Math.min(((userStats.totalQuizzes * userStats.averageScore / 100) % 50) * 2, 100)}%` }}
+            style={{ width: `${Math.min(((userStats.totalQuizzes * userStats.averageScore / 100) % 5) * 20, 100)}%` }}
           />
         </div>
       </div>
