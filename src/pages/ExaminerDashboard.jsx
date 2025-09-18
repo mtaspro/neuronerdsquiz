@@ -5,7 +5,7 @@ import { useNotification } from '../components/NotificationSystem';
 import { secureStorage } from '../utils/secureStorage';
 import ImageMarker from '../components/ImageMarker';
 
-const ExaminerDashboard = () => {
+const ExaminerDashboard = ({ isExaminer = false }) => {
   const [submissions, setSubmissions] = useState([]);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [gradeForm, setGradeForm] = useState({ marksObtained: '', examinerComments: '', status: 'graded' });
@@ -248,13 +248,15 @@ const ExaminerDashboard = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Examiner Dashboard</h1>
-          <button
-            onClick={() => setShowCreateExam(true)}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center"
-          >
-            <FaPlus className="mr-2" />
-            Create Exam
-          </button>
+          {isExaminer && (
+            <button
+              onClick={() => setShowCreateExam(true)}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center"
+            >
+              <FaPlus className="mr-2" />
+              Create Exam
+            </button>
+          )}
         </div>
 
         {/* Tabs */}
@@ -295,18 +297,22 @@ const ExaminerDashboard = () => {
                       )}
                     </div>
                     <div className="flex space-x-2">
-                      <button
-                        onClick={() => fetchExamReport(exam._id)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
-                      >
-                        View Report
-                      </button>
-                      <button
-                        onClick={() => handleDeleteExam(exam._id)}
-                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
-                      >
-                        Delete
-                      </button>
+                      {isExaminer && (
+                        <>
+                          <button
+                            onClick={() => fetchExamReport(exam._id)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                          >
+                            View Report
+                          </button>
+                          <button
+                            onClick={() => handleDeleteExam(exam._id)}
+                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -382,13 +388,15 @@ const ExaminerDashboard = () => {
                   </div>
                 )}
 
-                <button
-                  onClick={() => openSubmissionModal(submission)}
-                  className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
-                >
-                  <FaEye className="mr-2" />
-                  {submission.status === 'pending' ? 'Grade Submission' : 'View Details'}
-                </button>
+                {isExaminer && (
+                  <button
+                    onClick={() => openSubmissionModal(submission)}
+                    className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
+                  >
+                    <FaEye className="mr-2" />
+                    {submission.status === 'pending' ? 'Grade Submission' : 'View Details'}
+                  </button>
+                )}
               </motion.div>
             ))}
           </div>
@@ -513,18 +521,20 @@ const ExaminerDashboard = () => {
               </div>
 
               <div className="flex space-x-4 mt-6">
-                <button
-                  onClick={handleGrade}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
-                >
-                  <FaCheck className="mr-2" />
-                  Save Grade
-                </button>
+                {isExaminer && (
+                  <button
+                    onClick={handleGrade}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
+                  >
+                    <FaCheck className="mr-2" />
+                    Save Grade
+                  </button>
+                )}
                 <button
                   onClick={() => setSelectedSubmission(null)}
                   className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
-                  Cancel
+                  {isExaminer ? 'Cancel' : 'Close'}
                 </button>
               </div>
             </motion.div>

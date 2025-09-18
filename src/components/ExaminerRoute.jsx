@@ -4,33 +4,35 @@ import { secureStorage } from '../utils/secureStorage.js';
 
 const ExaminerRoute = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isExaminer, setIsExaminer] = useState(false);
 
   useEffect(() => {
-    const checkExaminerAccess = async () => {
+    const checkAccess = async () => {
       try {
         const token = secureStorage.getToken();
         if (!token) {
-          setIsAuthorized(false);
+          setIsAuthenticated(false);
           setIsLoading(false);
           return;
         }
 
         const userData = await secureStorage.getUserData();
-        if (userData && (userData.isExaminer || userData.isAdmin || userData.isSuperAdmin)) {
-          setIsAuthorized(true);
+        if (userData) {
+          setIsAuthenticated(true);
+          setIsExaminer(userData.isExaminer || userData.isAdmin || userData.isSuperAdmin);
         } else {
-          setIsAuthorized(false);
+          setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error('Error checking examiner access:', error);
-        setIsAuthorized(false);
+        console.error('Error checking access:', error);
+        setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkExaminerAccess();
+    checkAccess();
   }, []);
 
   if (isLoading) {
@@ -41,11 +43,11 @@ const ExaminerRoute = ({ children }) => {
     );
   }
 
-  if (!isAuthorized) {
+  if (!isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  return children;
+  return React.cloneElement(children, { isExaminer });
 };
 
 export default ExaminerRoute;
