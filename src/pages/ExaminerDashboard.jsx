@@ -244,7 +244,7 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
   };
 
   const handleSaveMarkedImage = (blob) => {
-    const file = new File([blob], `marked-${Date.now()}.png`, { type: 'image/png' });
+    const file = new File([blob], `marked-${Date.now()}.jpg`, { type: 'image/jpeg' });
     setMarkedImages(prev => [...prev, file]);
     setMarkingImage(null);
     // Force re-render to show the new marked image

@@ -19,7 +19,10 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }
+  limits: { 
+    fileSize: 50 * 1024 * 1024, // 50MB per file
+    files: 20 // Max 20 files
+  }
 });
 
 const router = express.Router();
@@ -60,15 +63,20 @@ router.get('/submissions', sessionMiddleware, requireAuth, requireExaminer, asyn
 });
 
 // Grade a submission
-router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExaminer, upload.array('markedImages', 10), async (req, res) => {
+router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExaminer, (req, res, next) => {
+  // Set longer timeout for file uploads
+  req.setTimeout(300000); // 5 minutes
+  res.setTimeout(300000);
+  next();
+}, upload.array('markedImages', 20), async (req, res) => {
   try {
     const { submissionId } = req.params;
     const { marksObtained, examinerComments, status = 'graded' } = req.body;
     
     console.log('Grading submission:', submissionId, { marksObtained, examinerComments, status });
+    console.log('Files received:', req.files?.length || 0);
     
     const submission = await WrittenSubmission.findById(submissionId);
-    console.log('Current submission status:', submission.status);
     if (!submission) {
       return res.status(404).json({ error: 'Submission not found' });
     }
@@ -82,14 +90,13 @@ router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExamin
       gradedAt: new Date()
     };
     
-    // Add marked images if uploaded (append to existing ones)
+    // Add marked images if uploaded
     if (req.files && req.files.length > 0) {
       const newMarkedImages = req.files.map(file => file.path);
       updateData.markedImages = [...(submission.markedImages || []), ...newMarkedImages];
-      console.log('Added marked images:', newMarkedImages.length, 'Total:', updateData.markedImages.length);
+      console.log('Added marked images:', newMarkedImages.length);
     }
 
-    // Use findByIdAndUpdate to ensure atomic update
     const updatedSubmission = await WrittenSubmission.findByIdAndUpdate(
       submissionId,
       updateData,
@@ -98,15 +105,22 @@ router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExamin
      .populate('userId', 'username email')
      .populate('gradedBy', 'username');
 
-    console.log('Submission graded successfully:', submissionId, 'New status:', updatedSubmission.status);
-    
-    // Verify the update was successful
-    const verifySubmission = await WrittenSubmission.findById(submissionId);
-    console.log('Verification - Status in DB:', verifySubmission.status);
-    
+    console.log('Submission graded successfully:', submissionId);
     res.json({ message: 'Submission graded successfully', submission: updatedSubmission });
   } catch (error) {
     console.error('Error grading submission:', error);
+    
+    // Handle specific error types
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Invalid data provided', details: error.message });
+    }
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'File too large. Maximum 50MB per file.' });
+    }
+    if (error.code === 'LIMIT_FILE_COUNT') {
+      return res.status(413).json({ error: 'Too many files. Maximum 20 files allowed.' });
+    }
+    
     res.status(500).json({ error: 'Failed to grade submission', details: error.message });
   }
 });

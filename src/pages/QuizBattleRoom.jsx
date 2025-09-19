@@ -59,7 +59,7 @@ const QuizBattleRoom = () => {
   const [showSecurityModal, setShowSecurityModal] = useState(false);
   const [securityActive, setSecurityActive] = useState(false);
 
-  const [securityInitialized, setSecurityInitialized] = useState(false);
+  const [securityInitialized, setSecurityInitialized] = useState(true);
   
   // Lifeline states
   const [lifelineConfig, setLifelineConfig] = useState(null);
@@ -170,8 +170,9 @@ const QuizBattleRoom = () => {
             setIsReady(currentUserInRoom.isReady || false);
           }
 
+          // Auto-initialize security without modal
           if (!securityInitialized) {
-            setShowSecurityModal(true);
+            handleSecurityAccept();
           }
         });
 
@@ -1015,7 +1016,7 @@ const QuizBattleRoom = () => {
             </div>
 
             {/* Start Battle Button (Room Creator Only) */}
-            {isRoomCreator && users?.length >= 2 && users?.every(user => user.isReady) && securityInitialized && (
+            {isRoomCreator && users?.length >= 2 && users?.every(user => user.isReady) && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1122,25 +1123,37 @@ const QuizBattleRoom = () => {
             <div className="mb-8">
               <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full h-4 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-30"></div>
-                {users?.map((user, index) => (
-                  <motion.div
-                    key={user.id}
-                    className="absolute top-0 h-full flex items-center"
-                    style={{ left: `${getProgressPercentage(user)}%` }}
-                    animate={{ left: `${getProgressPercentage(user)}%` }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                  >
-                    <div className="relative">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg border-2 border-white">
-                        {user.username.charAt(0).toUpperCase()}
+                {users?.sort((a, b) => (b.score || 0) - (a.score || 0)).map((user, index) => {
+                  const isFirst = index === 0 && (user.score || 0) > 0;
+                  return (
+                    <motion.div
+                      key={user.id}
+                      className="absolute top-0 h-full flex items-center"
+                      style={{ left: `${getProgressPercentage(user)}%` }}
+                      animate={{ left: `${getProgressPercentage(user)}%` }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                    >
+                      <div className="relative">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg border-2 ${
+                          isFirst 
+                            ? 'bg-gradient-to-br from-yellow-400 to-orange-500 border-yellow-300' 
+                            : 'bg-gradient-to-br from-blue-400 to-purple-500 border-white'
+                        }`}>
+                          {user.username.charAt(0).toUpperCase()}
+                        </div>
+                        {isFirst && (
+                          <div className="absolute -top-2 -right-1 text-yellow-400 text-xs">
+                            👑
+                          </div>
+                        )}
+                        <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                          <div className={`text-xs font-semibold ${isFirst ? 'text-yellow-300' : ''}`}>{user.username}</div>
+                          <div className={`text-xs ${isFirst ? 'text-yellow-200' : 'text-gray-300'}`}>{user.score} pts</div>
+                        </div>
                       </div>
-                      <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-                        <div className="text-xs font-semibold">{user.username}</div>
-                        <div className="text-xs text-gray-300">{user.score} pts</div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
 

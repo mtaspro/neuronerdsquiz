@@ -187,9 +187,11 @@ const ImageMarker = ({ imageUrl, onSave, onCancel, existingMarkedImage }) => {
 
   const handleSave = () => {
     const canvas = canvasRef.current;
+    
+    // Compress image to reduce file size
     canvas.toBlob((blob) => {
       onSave(blob);
-    }, 'image/png');
+    }, 'image/jpeg', 0.7); // JPEG with 70% quality for smaller files
   };
 
   const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#000000'];
