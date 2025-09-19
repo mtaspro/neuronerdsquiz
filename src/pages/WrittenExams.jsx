@@ -13,11 +13,14 @@ const WrittenExams = () => {
   const [loading, setLoading] = useState(true);
   const [activeSubmission, setActiveSubmission] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const { success, error: showError } = useNotification();
 
   useEffect(() => {
     fetchExams();
     fetchMySubmissions();
+    fetchLeaderboard();
   }, []);
 
   const fetchExams = async () => {
@@ -35,6 +38,19 @@ const WrittenExams = () => {
       showError('Failed to fetch written exams');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLeaderboard = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/written-exam/leaderboard`);
+      if (response.ok) {
+        const data = await response.json();
+        setLeaderboard(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch leaderboard:', error);
     }
   };
 
@@ -221,9 +237,75 @@ const WrittenExams = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">Written Exams</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Written Exams</h1>
+          <button
+            onClick={() => setShowLeaderboard(!showLeaderboard)}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+          >
+            🏆 {showLeaderboard ? 'Hide' : 'Show'} Leaderboard
+          </button>
+        </div>
+
+        {/* Leaderboard Section */}
+        {showLeaderboard && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8 border border-gray-200 dark:border-gray-700"
+          >
+            <h2 className="text-2xl font-bold mb-6 text-center flex items-center justify-center">
+              🏆 Written Exam Leaderboard
+            </h2>
+            <div className="space-y-4">
+              {leaderboard.map((entry, index) => (
+                <motion.div
+                  key={entry._id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`flex items-center justify-between p-4 rounded-lg ${
+                    index === 0 ? 'bg-yellow-100 dark:bg-yellow-900/20 border-2 border-yellow-400' :
+                    index === 1 ? 'bg-gray-100 dark:bg-gray-700 border-2 border-gray-400' :
+                    index === 2 ? 'bg-orange-100 dark:bg-orange-900/20 border-2 border-orange-400' :
+                    'bg-gray-50 dark:bg-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mr-4 ${
+                      index === 0 ? 'bg-yellow-500 text-white' :
+                      index === 1 ? 'bg-gray-500 text-white' :
+                      index === 2 ? 'bg-orange-500 text-white' :
+                      'bg-gray-400 text-white'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">{entry.username}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {entry.examCount} exams • Avg: {entry.averageMarks.toFixed(1)} • Time: {entry.avgSubmissionTime}s
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
+                      {entry.totalMarks}
+                    </div>
+                    <div className="text-sm text-gray-500">Total Points</div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+            {leaderboard.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                No submissions yet. Be the first to take an exam!
+              </div>
+            )}
+          </motion.div>
+        )}
 
         {/* Available Exams */}
+        <h2 className="text-2xl font-bold mb-6">Available Exams</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12">
           {exams.map(exam => {
             const submission = getSubmissionStatus(exam._id);

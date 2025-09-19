@@ -14,7 +14,7 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
   const [activeTab, setActiveTab] = useState('pending');
   const [newExam, setNewExam] = useState({ title: '', description: '', subject: '', chapter: '', totalMarks: '', timeLimit: 180, expireDate: '', questionPapers: null });
   const [showCreateExam, setShowCreateExam] = useState(false);
-  const [leaderboard, setLeaderboard] = useState([]);
+
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedExamReport, setSelectedExamReport] = useState(null);
@@ -38,9 +38,7 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'leaderboard') {
-      fetchLeaderboard();
-    } else if (activeTab === 'exams') {
+    if (activeTab === 'exams') {
       fetchExams();
     } else {
       fetchSubmissions();
@@ -72,18 +70,7 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
     }
   };
 
-  const fetchLeaderboard = async () => {
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      const response = await fetch(`${apiUrl}/api/examiner/leaderboard`);
-      if (response.ok) {
-        const data = await response.json();
-        setLeaderboard(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch leaderboard:', error);
-    }
-  };
+
 
   const fetchExams = async () => {
     try {
@@ -277,7 +264,7 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
 
         {/* Tabs */}
         <div className="flex space-x-4 mb-6">
-          {['pending', 'graded', 'exams', 'leaderboard'].map(tab => (
+          {['pending', 'graded', 'exams'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -287,8 +274,7 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
-              {tab === 'leaderboard' ? 'Leaderboard' : 
-               tab === 'exams' ? 'Manage Exams' :
+              {tab === 'exams' ? 'Manage Exams' :
                `${tab.charAt(0).toUpperCase() + tab.slice(1)} Submissions`}
             </button>
           ))}
@@ -332,52 +318,6 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        ) : activeTab === 'leaderboard' ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <div className="flex items-center mb-6">
-              <FaTrophy className="text-yellow-500 text-2xl mr-3" />
-              <h2 className="text-2xl font-bold">Written Exam Leaderboard</h2>
-            </div>
-            <div className="space-y-4">
-              {leaderboard.map((entry, index) => (
-                <motion.div
-                  key={entry._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`flex items-center justify-between p-4 rounded-lg ${
-                    index === 0 ? 'bg-yellow-100 dark:bg-yellow-900/20 border-2 border-yellow-400' :
-                    index === 1 ? 'bg-gray-100 dark:bg-gray-700 border-2 border-gray-400' :
-                    index === 2 ? 'bg-orange-100 dark:bg-orange-900/20 border-2 border-orange-400' :
-                    'bg-gray-50 dark:bg-gray-700'
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mr-4 ${
-                      index === 0 ? 'bg-yellow-500 text-white' :
-                      index === 1 ? 'bg-gray-500 text-white' :
-                      index === 2 ? 'bg-orange-500 text-white' :
-                      'bg-gray-400 text-white'
-                    }`}>
-                      {index + 1}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{entry.username}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {entry.examCount} exams • Avg: {entry.averageMarks.toFixed(1)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
-                      {entry.totalMarks}
-                    </div>
-                    <div className="text-sm text-gray-500">Total Points</div>
-                  </div>
-                </motion.div>
               ))}
             </div>
           </div>

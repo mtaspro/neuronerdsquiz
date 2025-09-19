@@ -302,21 +302,47 @@ router.get('/exams/:examId/report', sessionMiddleware, requireAuth, requireExami
 router.get('/leaderboard', async (req, res) => {
   try {
     const leaderboard = await WrittenSubmission.aggregate([
-      { $match: { status: 'graded' } },
+      { $match: { status: 'graded', submittedAt: { $exists: true }, examStartTime: { $exists: true } } },
+      {
+        $addFields: {
+          submissionTime: {
+            $divide: [
+              { $subtract: ['$submittedAt', '$examStartTime'] },
+              1000 // Convert to seconds
+            ]
+          }
+        }
+      },
       {
         $group: {
           _id: '$userId',
           username: { $first: '$username' },
           totalMarks: { $sum: '$marksObtained' },
           examCount: { $sum: 1 },
-          averageMarks: { $avg: '$marksObtained' }
+          averageMarks: { $avg: '$marksObtained' },
+          avgSubmissionTime: { $avg: '$submissionTime' },
+          minSubmissionTime: { $min: '$submissionTime' }
         }
       },
-      { $sort: { totalMarks: -1 } },
+      { 
+        $sort: { 
+          totalMarks: -1, 
+          avgSubmissionTime: 1 // Faster average time wins for same marks
+        } 
+      },
       { $limit: 50 }
     ]);
-    res.json(leaderboard);
+    
+    // Round submission times for display
+    const formattedLeaderboard = leaderboard.map(entry => ({
+      ...entry,
+      avgSubmissionTime: Math.round(entry.avgSubmissionTime || 0),
+      minSubmissionTime: Math.round(entry.minSubmissionTime || 0)
+    }));
+    
+    res.json(formattedLeaderboard);
   } catch (error) {
+    console.error('Leaderboard error:', error);
     res.status(500).json({ error: 'Failed to fetch leaderboard' });
   }
 });
