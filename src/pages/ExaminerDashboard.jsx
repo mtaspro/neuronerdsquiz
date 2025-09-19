@@ -5,7 +5,7 @@ import { useNotification } from '../components/NotificationSystem';
 import { secureStorage } from '../utils/secureStorage';
 import ImageMarker from '../components/ImageMarker';
 
-const ExaminerDashboard = ({ isExaminer = false }) => {
+const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
   const [submissions, setSubmissions] = useState([]);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [gradeForm, setGradeForm] = useState({ marksObtained: '', examinerComments: '', status: 'graded' });
@@ -19,7 +19,23 @@ const ExaminerDashboard = ({ isExaminer = false }) => {
   const [loading, setLoading] = useState(true);
   const [selectedExamReport, setSelectedExamReport] = useState(null);
   const [examReport, setExamReport] = useState([]);
+  const [isExaminer, setIsExaminer] = useState(false);
   const { success, error: showError } = useNotification();
+
+  useEffect(() => {
+    const checkExaminerStatus = async () => {
+      try {
+        const userData = await secureStorage.getUserData();
+        if (userData) {
+          setIsExaminer(userData.isExaminer || userData.isAdmin || userData.isSuperAdmin);
+        }
+      } catch (error) {
+        console.error('Error checking examiner status:', error);
+      }
+    };
+    
+    checkExaminerStatus();
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'leaderboard') {

@@ -47,7 +47,7 @@ const ExaminerRoute = ({ children }) => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  return React.cloneElement(children, { isExaminer });
+  return children;
 };
 
 export default ExaminerRoute;
