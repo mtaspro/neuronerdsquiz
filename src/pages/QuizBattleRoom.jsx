@@ -189,8 +189,23 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('userLeft', (data) => {
-          setUsers(prev => prev.filter(user => user.id !== data.userId));
-          addNotification('user-left', 'Player Left', `${data.username} left the battle.`);
+          // Only remove users who haven't completed the battle
+          if (!data.hasCompleted) {
+            setUsers(prev => prev.filter(user => user.id !== data.userId));
+            addNotification('user-left', 'Player Left', `${data.username} left the battle.`);
+          }
+        });
+
+        socket.addListener('userDisconnected', (data) => {
+          // Mark completed users as disconnected but keep them in leaderboard
+          if (data.hasCompleted) {
+            setUsers(prev => prev.map(user => 
+              user.id === data.userId 
+                ? { ...user, disconnected: true }
+                : user
+            ));
+            addNotification('user-disconnected', 'Player Disconnected', `${data.username} left but their score is saved.`);
+          }
         });
 
         socket.addListener('userReadyStatus', (data) => {
@@ -1315,16 +1330,27 @@ const QuizBattleRoom = () => {
                     {users?.map((user) => (
                       <div
                         key={user.id}
-                        className="flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg"
+                        className={`flex items-center justify-between p-3 rounded-lg ${
+                          user.disconnected ? 'bg-gray-600 bg-opacity-30' : 'bg-white bg-opacity-5'
+                        }`}
                       >
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-xs font-bold">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                            user.disconnected ? 'bg-gray-500' : 'bg-gradient-to-br from-blue-400 to-purple-500'
+                          }`}>
                             {user.username.charAt(0).toUpperCase()}
                           </div>
-                          <span className="font-medium">{user.username}</span>
+                          <span className={`font-medium ${
+                            user.disconnected ? 'text-gray-400' : ''
+                          }`}>
+                            {user.username}
+                            {user.disconnected && ' (Left)'}
+                          </span>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-semibold text-yellow-400">{user.score || 0}</div>
+                          <div className={`text-sm font-semibold ${
+                            user.disconnected ? 'text-gray-400' : 'text-yellow-400'
+                          }`}>{user.score || 0}</div>
                           <div className="text-xs text-gray-300">
                             Q{(user.currentQuestion || 0) + 1}/{questions?.length || 0}
                           </div>

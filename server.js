@@ -512,20 +512,33 @@ io.on('connection', (socket) => {
       const hasCompleted = user?.hasCompleted || user?.currentQuestion >= (room?.questions?.length || 0);
       
       if (hasCompleted) {
-        console.log(`✅ User ${user.username} leaving room ${roomId} - battle completed, score saved`);
-      } else {
-        console.log(`⚠️ User ${user?.username || 'Unknown'} leaving room ${roomId} - battle not completed`);
-      }
-      
-      const updatedRoom = battleService.removeUserFromRoom(roomId, userId);
-      if (updatedRoom) {
+        console.log(`✅ User ${user.username} leaving room ${roomId} - battle completed, keeping in leaderboard`);
+        // Don't remove completed users from room - just disconnect socket
         socket.leave(roomId);
-        io.to(roomId).emit('userLeft', {
+        
+        // Update user as disconnected but keep in room
+        if (user) {
+          user.socketId = null;
+          user.disconnected = true;
+        }
+        
+        io.to(roomId).emit('userDisconnected', {
           userId,
           username: user?.username || 'Unknown',
-          totalUsers: updatedRoom.users.size,
-          hasCompleted
+          hasCompleted: true
         });
+      } else {
+        console.log(`⚠️ User ${user?.username || 'Unknown'} leaving room ${roomId} - battle not completed, removing`);
+        const updatedRoom = battleService.removeUserFromRoom(roomId, userId);
+        if (updatedRoom) {
+          socket.leave(roomId);
+          io.to(roomId).emit('userLeft', {
+            userId,
+            username: user?.username || 'Unknown',
+            totalUsers: updatedRoom.users.size,
+            hasCompleted: false
+          });
+        }
       }
     } catch (error) {
       console.error('Error in leaveRoom:', error);
@@ -585,21 +598,30 @@ io.on('connection', (socket) => {
       const hasCompleted = user.hasCompleted || user.currentQuestion >= (room.questions?.length || 0);
       
       if (hasCompleted) {
-        console.log(`✅ User ${user.username} disconnected from room ${room.id} - battle completed, score preserved`);
-      } else {
-        console.log(`⚠️ User ${user.username} disconnected from room ${room.id} - battle incomplete`);
-      }
-      
-      const updatedRoom = battleService.removeUserFromRoom(room.id, user.id);
-      
-      if (updatedRoom) {
-        io.to(room.id).emit('userLeft', {
+        console.log(`✅ User ${user.username} disconnected from room ${room.id} - battle completed, keeping in leaderboard`);
+        // Don't remove completed users - just mark as disconnected
+        user.socketId = null;
+        user.disconnected = true;
+        
+        io.to(room.id).emit('userDisconnected', {
           userId: user.id,
           username: user.username,
-          totalUsers: updatedRoom.users.size,
-          hasCompleted,
+          hasCompleted: true,
           disconnected: true
         });
+      } else {
+        console.log(`⚠️ User ${user.username} disconnected from room ${room.id} - battle incomplete, removing`);
+        const updatedRoom = battleService.removeUserFromRoom(room.id, user.id);
+        
+        if (updatedRoom) {
+          io.to(room.id).emit('userLeft', {
+            userId: user.id,
+            username: user.username,
+            totalUsers: updatedRoom.users.size,
+            hasCompleted: false,
+            disconnected: true
+          });
+        }
       }
     }
   });
