@@ -191,17 +191,18 @@ export default function AdminDashboard() {
           headers: authHeader() 
         });
         setQuestionCounts(response.data);
+        console.log('Question counts loaded:', response.data);
       } catch (err) {
         console.error('Failed to load question counts:', err);
       }
     };
     
     loadQuestionCounts();
-  }, [tab, chapters.length]);
+  }, [tab]);
 
-  // Load question counts when chapters become available
+  // Load question counts when chapters become available or when switching to Quiz Config
   useEffect(() => {
-    if (chapters.length > 0 && Object.keys(questionCounts).length === 0) {
+    if ((tab === 'Quiz Config' || tab === 'Questions') && chapters.length > 0 && Object.keys(questionCounts).length === 0) {
       const loadQuestionCounts = async () => {
         try {
           const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -209,13 +210,14 @@ export default function AdminDashboard() {
             headers: authHeader() 
           });
           setQuestionCounts(response.data);
+          console.log('Question counts loaded for', tab, ':', response.data);
         } catch (err) {
           console.error('Failed to load question counts:', err);
         }
       };
       loadQuestionCounts();
     }
-  }, [chapters.length]);
+  }, [chapters.length, tab]);
 
   // Load quiz configs
   useEffect(() => {
@@ -232,10 +234,16 @@ export default function AdminDashboard() {
         }
         
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        const response = await axios.get(`${apiUrl}/api/admin/quiz-configs`, { 
-          headers: authHeader() 
-        });
-        setQuizConfigs(response.data);
+        
+        // Load both quiz configs and question counts
+        const [configResponse, countsResponse] = await Promise.all([
+          axios.get(`${apiUrl}/api/admin/quiz-configs`, { headers: authHeader() }),
+          axios.get(`${apiUrl}/api/admin/question-counts`, { headers: authHeader() })
+        ]);
+        
+        setQuizConfigs(configResponse.data);
+        setQuestionCounts(countsResponse.data);
+        console.log('Quiz configs and question counts loaded:', configResponse.data.length, 'configs,', Object.keys(countsResponse.data).length, 'chapters');
       } catch (err) {
         const errorMessage = err.response?.data?.error || err.message || 'Failed to load quiz configs';
         setError(errorMessage);
@@ -251,7 +259,7 @@ export default function AdminDashboard() {
     };
 
     loadQuizConfigs();
-  }, [tab, chapters.length]);
+  }, [tab]);
 
   // Edit user WhatsApp settings
   function handleEditWhatsApp(userId, username, currentPhone, currentNotifications) {
