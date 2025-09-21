@@ -50,9 +50,17 @@ class BattleService {
       throw new Error('Room is full');
     }
 
-    // Check if battle is already in progress or finished
+    // Check if battle is already in progress - allow rejoin if user was previously in the room
     if (room.status === 'active') {
-      throw new Error('❌ This battle is already in progress. Please join a new one.');
+      const existingUser = room.users.get(userId);
+      if (!existingUser) {
+        throw new Error('❌ This battle is already in progress. Please join a new one.');
+      }
+      // User is rejoining - update their socket ID
+      existingUser.socketId = socketId;
+      existingUser.disconnected = false;
+      console.log(`✅ User ${username} rejoined active battle in room ${roomId}`);
+      return room;
     }
     
     if (room.status === 'finished') {
@@ -64,21 +72,27 @@ class BattleService {
       room.creatorId = userId;
     }
     
-    // Preserve ready status on rejoin
+    // Preserve user data on rejoin
     const existingUser = room.users.get(userId);
-    const wasReady = existingUser ? existingUser.isReady : false;
     
-    // Add user to room
-    room.users.set(userId, {
-      id: userId,
-      username,
-      socketId,
-      currentQuestion: 0,
-      score: 0,
-      answers: [],
-      isReady: wasReady, // Preserve ready state
-      joinedAt: existingUser?.joinedAt || new Date()
-    });
+    if (existingUser) {
+      // Update socket ID for existing user
+      existingUser.socketId = socketId;
+      existingUser.disconnected = false;
+    } else {
+      // Add new user to room
+      room.users.set(userId, {
+        id: userId,
+        username,
+        socketId,
+        currentQuestion: 0,
+        score: 0,
+        answers: [],
+        isReady: false,
+        joinedAt: new Date(),
+        disconnected: false
+      });
+    }
 
     return room;
   }

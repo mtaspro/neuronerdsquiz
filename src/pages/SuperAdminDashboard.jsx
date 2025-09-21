@@ -4,6 +4,7 @@ import axios from 'axios';
 import { FaCheck, FaTimes, FaUser, FaTrash, FaHistory, FaPalette, FaGraduationCap, FaPlus } from 'react-icons/fa';
 import { useNotification } from '../components/NotificationSystem';
 import { secureStorage } from '../utils/secureStorage.js';
+import BattleReminderManager from '../components/BattleReminderManager';
 
 const SuperAdminDashboard = () => {
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -495,6 +496,11 @@ const SuperAdminDashboard = () => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Battle Reminder Management */}
+        <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          <BattleReminderManager />
         </div>
 
         {/* Event Management */}

@@ -33,6 +33,7 @@ import BattleService from './services/battleService.js';
 import BadgeService from './services/badgeService.js';
 import whatsappService from './services/whatsappService.js';
 import DailyCalendarScheduler from './services/dailyCalendarScheduler.js';
+import battleReminderService from './services/battleReminderService.js';
 import WhatsAppSettings from './models/WhatsAppSettings.js';
 import UserScore from './models/UserScore.js';
 
@@ -196,6 +197,8 @@ mongoose.connect(process.env.MONGO_URI, {
     whatsappService.initialize();
     // Start daily calendar scheduler
     dailyCalendarScheduler.start();
+    // Start battle reminder service
+    battleReminderService.start();
   })
   .catch((err) => {
     console.error('❌ MongoDB connection error:', err);
@@ -346,16 +349,28 @@ io.on('connection', (socket) => {
       });
 
       // Send current room state to the joining user
-      socket.emit('roomJoined', {
+      const roomState = {
         roomId,
         users: Array.from(room.users.values()).map(user => ({
           id: user.id,
           username: user.username,
-          isReady: user.isReady
+          isReady: user.isReady,
+          currentQuestion: user.currentQuestion || 0,
+          score: user.score || 0,
+          disconnected: user.disconnected || false
         })),
         status: room.status,
         creatorId: room.creatorId
-      });
+      };
+      
+      // If battle is active, include questions and current state
+      if (room.status === 'active') {
+        roomState.questions = room.questions;
+        roomState.startTime = room.startTime;
+        roomState.isRejoin = true;
+      }
+      
+      socket.emit('roomJoined', roomState);
 
       console.log(`User ${username} joined room ${roomId}. Total users: ${room.users.size}`);
     } catch (error) {
@@ -775,6 +790,34 @@ app.post('/api/calendar/trigger', async (req, res) => {
   try {
     await dailyCalendarScheduler.triggerManually();
     res.json({ message: 'Daily calendar update triggered successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Battle reminder endpoints
+app.get('/api/battle-reminder/status', (req, res) => {
+  const status = battleReminderService.getStatus();
+  res.json(status);
+});
+
+app.post('/api/battle-reminder/trigger', async (req, res) => {
+  try {
+    await battleReminderService.triggerManually();
+    res.json({ message: 'Battle reminder triggered successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/battle-reminder/time', (req, res) => {
+  try {
+    const { time } = req.body;
+    if (!time || !/^\d{2}:\d{2}$/.test(time)) {
+      return res.status(400).json({ error: 'Invalid time format. Use HH:MM' });
+    }
+    battleReminderService.updateReminderTime(time);
+    res.json({ message: 'Reminder time updated successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

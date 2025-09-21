@@ -11,6 +11,7 @@ import UserQuizRecord from '../models/UserQuizRecord.js';
 import BadgeService from '../services/badgeService.js';
 import QuizConfig from '../models/QuizConfig.js';
 import Subject from '../models/Subject.js';
+import BattleReminder from '../models/BattleReminder.js';
 import axios from 'axios';
 
 const router = express.Router();
@@ -661,5 +662,77 @@ router.post('/leaderboard/request-reset', sessionMiddleware, requireAdmin, async
 });
 
 
+
+// Battle reminder management (SuperAdmin only)
+router.get('/battle-reminders', sessionMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const reminders = await BattleReminder.find()
+      .populate('createdBy', 'username')
+      .sort({ date: 1 })
+      .limit(30);
+    res.json(reminders);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch battle reminders' });
+  }
+});
+
+router.post('/battle-reminders', sessionMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const { date, topics } = req.body;
+    
+    if (!date || !topics) {
+      return res.status(400).json({ error: 'Date and topics are required' });
+    }
+    
+    const reminder = new BattleReminder({
+      date: new Date(date),
+      topics: topics.trim(),
+      createdBy: req.user.userId
+    });
+    
+    await reminder.save();
+    res.status(201).json(reminder);
+  } catch (error) {
+    if (error.code === 11000) {
+      res.status(400).json({ error: 'Reminder already exists for this date' });
+    } else {
+      res.status(500).json({ error: 'Failed to create battle reminder' });
+    }
+  }
+});
+
+router.put('/battle-reminders/:id', sessionMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const { topics, isActive } = req.body;
+    
+    const reminder = await BattleReminder.findByIdAndUpdate(
+      req.params.id,
+      { topics: topics?.trim(), isActive },
+      { new: true }
+    );
+    
+    if (!reminder) {
+      return res.status(404).json({ error: 'Reminder not found' });
+    }
+    
+    res.json(reminder);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update battle reminder' });
+  }
+});
+
+router.delete('/battle-reminders/:id', sessionMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const reminder = await BattleReminder.findByIdAndDelete(req.params.id);
+    
+    if (!reminder) {
+      return res.status(404).json({ error: 'Reminder not found' });
+    }
+    
+    res.json({ message: 'Battle reminder deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete battle reminder' });
+  }
+});
 
 export default router;

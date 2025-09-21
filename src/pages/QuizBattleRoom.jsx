@@ -156,7 +156,22 @@ const QuizBattleRoom = () => {
           console.log('🏠 Room joined event received:', data);
           setRoomData(data);
           setUsers(data.users);
-          success(`Joined battle room: ${roomId}`);
+          
+          // Handle rejoining active battle
+          if (data.isRejoin && data.status === 'active') {
+            console.log('🔄 Rejoining active battle');
+            setBattleStarted(true);
+            setQuestions(data.questions || []);
+            
+            // Find current user's progress
+            const currentUserInRoom = data.users.find(u => u.id === userData._id);
+            if (currentUserInRoom) {
+              setCurrentQuestion(currentUserInRoom.currentQuestion || 0);
+              success(`Rejoined battle! Current question: ${(currentUserInRoom.currentQuestion || 0) + 1}`);
+            }
+          } else {
+            success(`Joined battle room: ${roomId}`);
+          }
           
           // Check if user is room creator by creatorId field, not array position
           if (data.creatorId === userData._id) {
@@ -302,8 +317,7 @@ const QuizBattleRoom = () => {
             setIsOffline(true);
             return;
           }
-          setError('Failed to connect to battle server');
-          showError('Failed to connect to battle server. Please check your connection.');
+          setError('Connection lost. You can rejoin the battle after reconnecting to internet.');
         });
 
         socket.addListener('disconnect', (reason) => {
@@ -311,11 +325,11 @@ const QuizBattleRoom = () => {
           
           if (battleStarted && !battleEnded) {
             setIsOffline(true);
-            info('Network disconnected. Continuing in offline mode...');
+            setError('Connection lost during battle. You can rejoin after reconnecting to internet by clicking the battle link again or from dashboard.');
             return;
           }
           if (!battleStarted && reason !== 'io client disconnect') {
-            showError('Disconnected from battle server');
+            setError('Connection lost. You can rejoin the battle after reconnecting.');
           }
         });
 
@@ -804,22 +818,57 @@ const QuizBattleRoom = () => {
   }
 
   if (error) {
+    const isConnectionError = error.includes('Connection lost') || error.includes('rejoin');
+    
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-700 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${
+        isConnectionError 
+          ? 'bg-gradient-to-br from-orange-900 via-yellow-800 to-orange-700'
+          : 'bg-gradient-to-br from-red-900 via-red-800 to-red-700'
+      }`}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center bg-white rounded-lg p-8 shadow-2xl"
+          className="text-center bg-white rounded-lg p-8 shadow-2xl max-w-md mx-4"
         >
-          <FaTimes className="text-red-500 text-4xl mx-auto mb-4" />
-          <h2 className="text-red-600 text-xl font-bold mb-2">Error</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition-colors"
-          >
-            Back to Dashboard
-          </button>
+          {isConnectionError ? (
+            <>
+              <div className="text-orange-500 text-4xl mx-auto mb-4">📡</div>
+              <h2 className="text-orange-600 text-xl font-bold mb-2">Connection Lost</h2>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    window.location.reload();
+                  }}
+                  className="w-full bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition-colors"
+                >
+                  🔄 Reload & Rejoin Battle
+                </button>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
+                >
+                  📱 Go to Dashboard
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-3">
+                💡 Your progress is saved! You can rejoin anytime during the battle.
+              </p>
+            </>
+          ) : (
+            <>
+              <FaTimes className="text-red-500 text-4xl mx-auto mb-4" />
+              <h2 className="text-red-600 text-xl font-bold mb-2">Error</h2>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition-colors"
+              >
+                Back to Dashboard
+              </button>
+            </>
+          )}
         </motion.div>
       </div>
     );
