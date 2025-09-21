@@ -40,27 +40,28 @@ class BattleService {
       room = this.createRoom(roomId);
     }
 
-    // Check if room is still active for new users
+    // Check if user was previously in this room (for rejoining)
+    const existingUser = room.users.get(userId);
+    
+    if (existingUser) {
+      // User is rejoining - always allow and update their socket ID
+      existingUser.socketId = socketId;
+      existingUser.disconnected = false;
+      console.log(`✅ User ${username} rejoined room ${roomId} (Status: ${room.status}, Progress: ${existingUser.currentQuestion}/${room.questions.length})`);
+      return room;
+    }
+
+    // For new users, check room constraints
     if (!room.isActive) {
       throw new Error('❌ This battle room is no longer accepting new players.');
     }
 
-    // Check if room is full
     if (room.users.size >= room.maxUsers) {
       throw new Error('Room is full');
     }
 
-    // Check if battle is already in progress - allow rejoin if user was previously in the room
     if (room.status === 'active') {
-      const existingUser = room.users.get(userId);
-      if (!existingUser) {
-        throw new Error('❌ This battle is already in progress. Please join a new one.');
-      }
-      // User is rejoining - update their socket ID
-      existingUser.socketId = socketId;
-      existingUser.disconnected = false;
-      console.log(`✅ User ${username} rejoined active battle in room ${roomId}`);
-      return room;
+      throw new Error('❌ This battle is already in progress. Please join a new one.');
     }
     
     if (room.status === 'finished') {
@@ -72,42 +73,43 @@ class BattleService {
       room.creatorId = userId;
     }
     
-    // Preserve user data on rejoin
-    const existingUser = room.users.get(userId);
-    
-    if (existingUser) {
-      // Update socket ID for existing user
-      existingUser.socketId = socketId;
-      existingUser.disconnected = false;
-    } else {
-      // Add new user to room
-      room.users.set(userId, {
-        id: userId,
-        username,
-        socketId,
-        currentQuestion: 0,
-        score: 0,
-        answers: [],
-        isReady: false,
-        joinedAt: new Date(),
-        disconnected: false
-      });
-    }
+    // Add new user to room
+    room.users.set(userId, {
+      id: userId,
+      username,
+      socketId,
+      currentQuestion: 0,
+      score: 0,
+      answers: [],
+      isReady: false,
+      joinedAt: new Date(),
+      disconnected: false
+    });
 
+    console.log(`🆕 New user ${username} added to room ${roomId}`);
     return room;
   }
 
-  // Remove user from room
+  // Remove user from room (only for users who haven't started battle)
   removeUserFromRoom(roomId, userId) {
     const room = this.getRoom(roomId);
     if (!room) return null;
 
     const user = room.users.get(userId);
     if (user) {
-      room.users.delete(userId);
+      // Only actually remove user if battle hasn't started or they haven't made progress
+      if (room.status === 'waiting' || user.currentQuestion === 0) {
+        room.users.delete(userId);
+        console.log(`🗑️ Removed user ${user.username} from room ${roomId} (no progress)`);
+      } else {
+        // Mark as disconnected but keep in room to preserve progress
+        user.disconnected = true;
+        user.socketId = null;
+        console.log(`📡 Marked user ${user.username} as disconnected in room ${roomId} (progress preserved)`);
+      }
       
-      // If no users left, delete the room
-      if (room.users.size === 0) {
+      // If no active users left in waiting room, delete the room
+      if (room.status === 'waiting' && room.users.size === 0) {
         this.battleRooms.delete(roomId);
         return null;
       }
@@ -332,6 +334,8 @@ class BattleService {
     if (user) {
       user.hasCompleted = true;
       user.completedAt = new Date();
+      // Keep user connected for leaderboard display
+      user.disconnected = false;
       console.log(`✅ Marked user ${user.username} as completed in room ${roomId}`);
       return user;
     }

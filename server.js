@@ -331,22 +331,28 @@ io.on('connection', (socket) => {
     console.log(`User ${username} (${userId}) joining room ${roomId}`);
     
     try {
-      // Check if room exists and is still active
-      const existingRoom = battleService.getRoom(roomId);
-      if (existingRoom && (existingRoom.status === 'finished' || !existingRoom.isActive)) {
-        socket.emit('error', { message: 'This battle has already ended. Please join another battle.' });
-        return;
-      }
-      
       const room = battleService.addUserToRoom(roomId, userId, username, socket.id);
       socket.join(roomId);
       
-      // Notify all users in the room
-      io.to(roomId).emit('userJoined', {
-        userId,
-        username,
-        totalUsers: room.users.size
-      });
+      const user = room.users.get(userId);
+      const isRejoining = user && (user.currentQuestion > 0 || room.status === 'active');
+      
+      // Only notify about new joins, not rejoins
+      if (!isRejoining) {
+        io.to(roomId).emit('userJoined', {
+          userId,
+          username,
+          totalUsers: room.users.size
+        });
+      } else {
+        // Notify about reconnection
+        io.to(roomId).emit('userReconnected', {
+          userId,
+          username,
+          currentQuestion: user.currentQuestion,
+          score: user.score
+        });
+      }
 
       // Send current room state to the joining user
       const roomState = {
@@ -360,19 +366,19 @@ io.on('connection', (socket) => {
           disconnected: user.disconnected || false
         })),
         status: room.status,
-        creatorId: room.creatorId
+        creatorId: room.creatorId,
+        isRejoin: isRejoining
       };
       
       // If battle is active, include questions and current state
       if (room.status === 'active') {
         roomState.questions = room.questions;
         roomState.startTime = room.startTime;
-        roomState.isRejoin = true;
       }
       
       socket.emit('roomJoined', roomState);
 
-      console.log(`User ${username} joined room ${roomId}. Total users: ${room.users.size}`);
+      console.log(`User ${username} ${isRejoining ? 'rejoined' : 'joined'} room ${roomId}. Total users: ${room.users.size}`);
     } catch (error) {
       socket.emit('error', { message: error.message });
     }
@@ -523,35 +529,41 @@ io.on('connection', (socket) => {
       const room = battleService.getRoom(roomId);
       const user = room?.users.get(userId);
       
-      // Check if user has completed the battle
-      const hasCompleted = user?.hasCompleted || user?.currentQuestion >= (room?.questions?.length || 0);
-      
-      if (hasCompleted) {
-        console.log(`✅ User ${user.username} leaving room ${roomId} - battle completed, keeping in leaderboard`);
-        // Don't remove completed users from room - just disconnect socket
+      if (!user) {
         socket.leave(roomId);
-        
-        // Update user as disconnected but keep in room
-        if (user) {
-          user.socketId = null;
-          user.disconnected = true;
-        }
+        return;
+      }
+      
+      // Check if user has made progress or completed the battle
+      const hasProgress = user.currentQuestion > 0;
+      const hasCompleted = user.hasCompleted || user.currentQuestion >= (room?.questions?.length || 0);
+      
+      socket.leave(roomId);
+      
+      if (hasProgress) {
+        console.log(`📡 User ${user.username} leaving room ${roomId} - progress preserved`);
+        // Keep user in room but mark as disconnected
+        user.socketId = null;
+        user.disconnected = true;
         
         io.to(roomId).emit('userDisconnected', {
           userId,
-          username: user?.username || 'Unknown',
-          hasCompleted: true
+          username: user.username,
+          hasCompleted: hasCompleted,
+          hasProgress: true,
+          currentQuestion: user.currentQuestion,
+          score: user.score
         });
       } else {
-        console.log(`⚠️ User ${user?.username || 'Unknown'} leaving room ${roomId} - battle not completed, removing`);
+        console.log(`🗑️ User ${user.username} leaving room ${roomId} - no progress, removing`);
         const updatedRoom = battleService.removeUserFromRoom(roomId, userId);
         if (updatedRoom) {
-          socket.leave(roomId);
           io.to(roomId).emit('userLeft', {
             userId,
-            username: user?.username || 'Unknown',
+            username: user.username,
             totalUsers: updatedRoom.users.size,
-            hasCompleted: false
+            hasCompleted: false,
+            hasProgress: false
           });
         }
       }
@@ -604,28 +616,34 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log(`User disconnected: ${socket.id}`);
     
-    // Find and remove user from all rooms
+    // Find user in all rooms
     const userInfo = battleService.getUserBySocketId(socket.id);
     if (userInfo) {
       const { user, room } = userInfo;
       
-      // Check if user completed the battle before disconnecting
+      // Always preserve user data during disconnection
+      user.socketId = null;
+      user.disconnected = true;
+      
+      // Check if user has made progress or completed the battle
+      const hasProgress = user.currentQuestion > 0 || user.hasCompleted;
       const hasCompleted = user.hasCompleted || user.currentQuestion >= (room.questions?.length || 0);
       
-      if (hasCompleted) {
-        console.log(`✅ User ${user.username} disconnected from room ${room.id} - battle completed, keeping in leaderboard`);
-        // Don't remove completed users - just mark as disconnected
-        user.socketId = null;
-        user.disconnected = true;
+      if (hasProgress) {
+        console.log(`📡 User ${user.username} disconnected from room ${room.id} - progress preserved (Q${user.currentQuestion}, Score: ${user.score})`);
         
+        // Keep user in room but mark as disconnected
         io.to(room.id).emit('userDisconnected', {
           userId: user.id,
           username: user.username,
-          hasCompleted: true,
+          hasCompleted: hasCompleted,
+          hasProgress: true,
+          currentQuestion: user.currentQuestion,
+          score: user.score,
           disconnected: true
         });
       } else {
-        console.log(`⚠️ User ${user.username} disconnected from room ${room.id} - battle incomplete, removing`);
+        console.log(`⚠️ User ${user.username} disconnected from room ${room.id} - no progress, removing`);
         const updatedRoom = battleService.removeUserFromRoom(room.id, user.id);
         
         if (updatedRoom) {
@@ -634,6 +652,7 @@ io.on('connection', (socket) => {
             username: user.username,
             totalUsers: updatedRoom.users.size,
             hasCompleted: false,
+            hasProgress: false,
             disconnected: true
           });
         }
@@ -647,8 +666,9 @@ setInterval(() => {
   battleService.cleanupInactiveRooms();
 }, 30 * 60 * 1000);
 
-// Make io available to routes
+// Make io and battleService available to routes
 app.set('io', io);
+app.set('battleService', battleService);
 
 // Mount the routers with /api prefix
 console.log('Mounting leaderboard router...');

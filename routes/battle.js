@@ -40,14 +40,49 @@ router.post('/create', sessionMiddleware, async (req, res) => {
   }
 });
 
-// Get active battle room
-router.get('/active', (req, res) => {
-  // Don't return ended or expired rooms
-  if (activeBattleRoom && (activeBattleRoom.status === 'ended' || activeBattleRoom.status === 'expired')) {
-    activeBattleRoom = null;
-    battleRoomCreator = null;
+// Get active battle room with user participation info
+router.get('/active', sessionMiddleware, async (req, res) => {
+  try {
+    // Don't return ended or expired rooms
+    if (activeBattleRoom && (activeBattleRoom.status === 'ended' || activeBattleRoom.status === 'expired')) {
+      activeBattleRoom = null;
+      battleRoomCreator = null;
+    }
+    
+    let userInBattle = false;
+    let userProgress = null;
+    
+    // Check if user is already in the battle room
+    if (activeBattleRoom && req.user?.id) {
+      try {
+        // Get battle service from server.js to check user participation
+        const battleService = req.app.get('battleService');
+        if (battleService) {
+          const room = battleService.getRoom(activeBattleRoom.id);
+          if (room && room.users.has(req.user.id)) {
+            const user = room.users.get(req.user.id);
+            userInBattle = true;
+            userProgress = {
+              currentQuestion: user.currentQuestion || 0,
+              score: user.score || 0,
+              hasProgress: user.currentQuestion > 0 || user.hasCompleted
+            };
+          }
+        }
+      } catch (error) {
+        console.error('Error checking user battle participation:', error);
+      }
+    }
+    
+    res.json({ 
+      battleRoom: activeBattleRoom,
+      userInBattle,
+      userProgress
+    });
+  } catch (error) {
+    console.error('Error getting active battle room:', error);
+    res.status(500).json({ error: 'Failed to get battle room info' });
   }
-  res.json({ battleRoom: activeBattleRoom });
 });
 
 // Start battle (mark as started)

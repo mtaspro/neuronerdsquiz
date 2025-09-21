@@ -26,6 +26,8 @@ const Dashboard = () => {
   const [showBattleModal, setShowBattleModal] = useState(false);
   const [selectedBattleChapter, setSelectedBattleChapter] = useState('');
   const [activeBattleRoom, setActiveBattleRoom] = useState(null);
+  const [userInBattle, setUserInBattle] = useState(false);
+  const [userProgress, setUserProgress] = useState(null);
   const [showSpectatorModal, setShowSpectatorModal] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [particles, setParticles] = useState([]);
@@ -52,26 +54,34 @@ const Dashboard = () => {
   
 
   
-  // Check for existing battle room
+  // Check for existing battle room and user's participation
   useEffect(() => {
     const checkExistingBattleRoom = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        const response = await fetch(`${apiUrl}/api/battle/active`);
+        const response = await fetch(`${apiUrl}/api/battle/active`, {
+          headers: authHeader()
+        });
         const data = await response.json();
         
         if (data.battleRoom && data.battleRoom.status !== 'expired' && data.battleRoom.status !== 'ended') {
           setActiveBattleRoom(data.battleRoom);
           setBattleRoomId(data.battleRoom.id);
+          setUserInBattle(data.userInBattle || false);
+          setUserProgress(data.userProgress || null);
         } else {
           setActiveBattleRoom(null);
           setBattleRoomId('');
+          setUserInBattle(false);
+          setUserProgress(null);
         }
       } catch (error) {
         console.error('Failed to check existing battle room:', error);
         // Clear state on error to prevent stale data
         setActiveBattleRoom(null);
         setBattleRoomId('');
+        setUserInBattle(false);
+        setUserProgress(null);
       }
     };
     
@@ -80,7 +90,7 @@ const Dashboard = () => {
     // Poll for battle room updates every 3 seconds for faster updates
     const interval = setInterval(checkExistingBattleRoom, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
   
   // Onboarding hook
   const { shouldShowTour, setShouldShowTour, startTour, markTutorialAsCompleted } = useOnboarding();
@@ -660,23 +670,42 @@ const Dashboard = () => {
             {/* Join Battle - For all users */}
             <div className="space-y-3">
               {activeBattleRoom && (
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mb-3">
-                  <div className="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">
-                    ⚔️ Battle Available!
+                <div className={`border rounded-lg p-3 mb-3 ${
+                  userInBattle 
+                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                    : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                }`}>
+                  <div className={`text-sm font-semibold mb-1 ${
+                    userInBattle 
+                      ? 'text-blue-800 dark:text-blue-200'
+                      : 'text-green-800 dark:text-green-200'
+                  }`}>
+                    {userInBattle ? '🔄 Your Active Battle!' : '⚔️ Battle Available!'}
                   </div>
-                  <div className="text-xs text-green-600 dark:text-green-300">
+                  <div className={`text-xs ${
+                    userInBattle 
+                      ? 'text-blue-600 dark:text-blue-300'
+                      : 'text-green-600 dark:text-green-300'
+                  }`}>
                     Chapter: {activeBattleRoom.chapter}
+                    {userProgress && userProgress.hasProgress && (
+                      <div className="mt-1">
+                        Progress: Q{userProgress.currentQuestion + 1} | Score: {userProgress.score}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
               <motion.button
-                whileHover={{ scale: (activeBattleRoom && activeBattleRoom.status === 'waiting') ? 1.05 : 1 }}
-                whileTap={{ scale: (activeBattleRoom && activeBattleRoom.status === 'waiting') ? 0.95 : 1 }}
+                whileHover={{ scale: (activeBattleRoom && (activeBattleRoom.status === 'waiting' || userInBattle)) ? 1.05 : 1 }}
+                whileTap={{ scale: (activeBattleRoom && (activeBattleRoom.status === 'waiting' || userInBattle)) ? 0.95 : 1 }}
                 onClick={handleJoinBattle}
-                disabled={!activeBattleRoom || activeBattleRoom.status !== 'waiting'}
+                disabled={!activeBattleRoom || (activeBattleRoom.status !== 'waiting' && !userInBattle)}
                 className={`w-full font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                  activeBattleRoom && activeBattleRoom.status === 'waiting'
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white focus:ring-green-500 animate-pulse' 
+                  activeBattleRoom && (activeBattleRoom.status === 'waiting' || userInBattle)
+                    ? userInBattle
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white focus:ring-blue-500 animate-pulse'
+                      : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white focus:ring-green-500 animate-pulse'
                     : 'bg-gray-400 text-gray-600 cursor-not-allowed'
                 }`}
               >
@@ -685,6 +714,8 @@ const Dashboard = () => {
                   <span>
                     {!activeBattleRoom 
                       ? 'No Battle Available' 
+                      : userInBattle
+                      ? 'Rejoin Battle!'
                       : activeBattleRoom.status === 'started' 
                       ? 'Battle In Progress'
                       : activeBattleRoom.status === 'ended'
@@ -696,6 +727,10 @@ const Dashboard = () => {
               {!activeBattleRoom ? (
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
                   Waiting for an admin to create a battle room...
+                </p>
+              ) : userInBattle ? (
+                <p className="text-sm text-blue-500 dark:text-blue-400 text-center">
+                  You can rejoin your active battle anytime! Your progress is saved.
                 </p>
               ) : activeBattleRoom.status === 'started' ? (
                 <p className="text-sm text-orange-500 dark:text-orange-400 text-center">

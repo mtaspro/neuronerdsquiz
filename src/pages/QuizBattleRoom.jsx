@@ -167,7 +167,8 @@ const QuizBattleRoom = () => {
             const currentUserInRoom = data.users.find(u => u.id === userData._id);
             if (currentUserInRoom) {
               setCurrentQuestion(currentUserInRoom.currentQuestion || 0);
-              success(`Rejoined battle! Current question: ${(currentUserInRoom.currentQuestion || 0) + 1}`);
+              setQuestionStartTime(Date.now()); // Reset timer for current question
+              success(`Rejoined battle! Continuing from question ${(currentUserInRoom.currentQuestion || 0) + 1}`);
             }
           } else {
             success(`Joined battle room: ${roomId}`);
@@ -204,22 +205,37 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('userLeft', (data) => {
-          // Only remove users who haven't completed the battle
-          if (!data.hasCompleted) {
+          // Only remove users who haven't made progress
+          if (!data.hasProgress) {
             setUsers(prev => prev.filter(user => user.id !== data.userId));
             addNotification('user-left', 'Player Left', `${data.username} left the battle.`);
           }
         });
 
+        socket.addListener('userReconnected', (data) => {
+          // Update user status to show they're back
+          setUsers(prev => prev.map(user => 
+            user.id === data.userId 
+              ? { ...user, disconnected: false, currentQuestion: data.currentQuestion, score: data.score }
+              : user
+          ));
+          addNotification('user-reconnected', 'Player Reconnected', `${data.username} rejoined the battle!`);
+        });
+
         socket.addListener('userDisconnected', (data) => {
-          // Mark completed users as disconnected but keep them in leaderboard
-          if (data.hasCompleted) {
+          // Mark users with progress as disconnected but keep them in leaderboard
+          if (data.hasProgress) {
             setUsers(prev => prev.map(user => 
               user.id === data.userId 
-                ? { ...user, disconnected: true }
+                ? { ...user, disconnected: true, currentQuestion: data.currentQuestion, score: data.score }
                 : user
             ));
-            addNotification('user-disconnected', 'Player Disconnected', `${data.username} left but their score is saved.`);
+            
+            const message = data.hasCompleted 
+              ? `${data.username} left but their score is saved.`
+              : `${data.username} disconnected but can rejoin anytime.`;
+            
+            addNotification('user-disconnected', 'Player Disconnected', message);
           }
         });
 
@@ -325,7 +341,7 @@ const QuizBattleRoom = () => {
           
           if (battleStarted && !battleEnded) {
             setIsOffline(true);
-            setError('Connection lost during battle. You can rejoin after reconnecting to internet by clicking the battle link again or from dashboard.');
+            info('Connection lost. Your progress is saved - you can rejoin anytime!');
             return;
           }
           if (!battleStarted && reason !== 'io client disconnect') {
