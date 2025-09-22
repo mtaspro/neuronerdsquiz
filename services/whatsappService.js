@@ -301,6 +301,24 @@ Don't miss the action! ⚡`;
     }
   }
 
+  async getGroupMembers(groupId) {
+    if (!this.isConnected || !this.sock) {
+      console.log('⚠️ WhatsApp client not ready, cannot get group members');
+      return [];
+    }
+
+    try {
+      const groupMetadata = await this.sock.groupMetadata(groupId);
+      return groupMetadata.participants.map(p => ({ 
+        id: p.id, 
+        isAdmin: p.admin !== null 
+      }));
+    } catch (error) {
+      console.error('❌ Error getting group members:', error);
+      return [];
+    }
+  }
+
   async sendFormattedMessage(chatId, text, formatting = {}) {
     if (!this.isConnected || !this.sock) {
       return { success: false, error: 'WhatsApp not connected' };

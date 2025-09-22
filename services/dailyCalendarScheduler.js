@@ -67,7 +67,7 @@ class DailyCalendarScheduler {
       // Create prompt for NeuraX
       const examInfo = examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `${e.examName} - TODAY` : `${e.examName} in ${e.daysLeft} days`).join(', ') : 'None';
       
-      const prompt = `Generate a SHORT, fun daily calendar message for students. Add some humor, light roasting, or witty motivation!
+      const prompt = `Generate a SHORT daily calendar message for students.
 
 Data:
 Day: ${calendarData.dayName}
@@ -78,11 +78,11 @@ Exams: ${examInfo}
 Format:
 Today: *${calendarData.dayName}, ${calendarData.englishDate}*
 
-${calendarData.hasHolidays ? '🎉 Special: ' + calendarData.holidays.join(', ') + ' - Enjoy responsibly!' : '💡 Daily Motivation: [Write something funny/witty/slightly roasting but motivational]'}
+${calendarData.hasHolidays ? '🎉 Special: ' + calendarData.holidays.join(', ') + ' - Enjoy responsibly!' : ''}
 
-${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `📚 Exam Alert\n*${e.examName}* - *TODAY*! Time to show what you've got! 💪` : `📚 Exam Alert\n*${e.examName}* in *${e.daysLeft}* days - Stop wasting time and start studying! 📖`).join('\n\n') : ''}
+${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `📚 Exam Alert\n*${e.examName}* - *TODAY*! 💪` : `📚 Exam Alert\n*${e.examName}* in *${e.daysLeft}* days 📖`).join('\n\n') : ''}
 
-Make it engaging with humor, light teasing, or clever motivation. Include Islamic values and be relatable to students!`;
+💡 [Add a very brief motivational message at the end - one line only]`;
       // Send to NeuraX AI
       const axios = (await import('axios')).default;
       const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
@@ -90,13 +90,18 @@ Make it engaging with humor, light teasing, or clever motivation. Include Islami
       const aiResponse = await axios.post(`${apiUrl}/api/ai-chat`, {
         message: prompt,
         model: 'qwen/qwen3-32b',
-        systemPrompt: 'You are NeuraX, generate creative and engaging daily calendar messages following the exact format provided.',
+        systemPrompt: 'You are NeuraX. Generate concise calendar messages following the exact format provided. NEVER include reasoning tags like <think> or any meta-commentary in your response. Keep the message clean and direct.',
         conversationHistory: []
       });
 
-      const neuraXMessage = aiResponse.data.response;
+      let neuraXMessage = aiResponse.data.response;
       
-      // Send NeuraX response to WhatsApp group
+      // Filter out any reasoning tags or thinking sections
+      neuraXMessage = neuraXMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
+      neuraXMessage = neuraXMessage.replace(/<reasoning>[\s\S]*?<\/reasoning>/g, '');
+      neuraXMessage = neuraXMessage.replace(/<.*?>/g, ''); // Remove any other tags
+      
+      // Send filtered NeuraX response to WhatsApp group
       await whatsappService.sendGroupMessage(calendarGroupSetting.settingValue, neuraXMessage);
       
       console.log('✅ Daily calendar update sent via NeuraX successfully');
@@ -109,9 +114,14 @@ Make it engaging with humor, light teasing, or clever motivation. Include Islami
       try {
         const calendarData = await this.calendarService.generateCalendarData();
         const examData = await this.getUpcomingExams();
-        const examMessages = examData.map(e => e.daysLeft === 0 ? `✨ **EXAM TODAY!**\n${e.examName} - You've got this! 💪` : `📚 **Exam Alert**\n${e.examName} in ${e.daysLeft} days - Stay focused! 📖`).join('\n\n');
+        const examMessages = examData.map(e => e.daysLeft === 0 ? `📚 Exam Alert\n*${e.examName}* - *TODAY*! 💪` : `📚 Exam Alert\n*${e.examName}* in *${e.daysLeft}* days 📖`).join('\n\n');
         
-        const fallbackMessage = `📅 Today: ${calendarData.dayName}, ${calendarData.englishDate}\n🗓️ বাংলা তারিখ: ${calendarData.banglaDate}\n🕌 Hijri Date: ${calendarData.hijriDate}\n\n${calendarData.hasHolidays ? `🎉 Special: ${calendarData.holidays.join(', ')} - Enjoy responsibly!` : '💡 Daily Motivation: Another day, another chance to procrastinate... or actually study! 😏'}${examMessages ? '\n\n' + examMessages : ''}`;
+        let fallbackMessage = `Today: *${calendarData.dayName}, ${calendarData.englishDate}*\n\n${calendarData.hasHolidays ? `🎉 Special: ${calendarData.holidays.join(', ')} - Enjoy responsibly!\n\n` : ''}${examMessages ? examMessages + '\n\n' : ''}💡 Stay focused and make today count!`;
+        
+        // Filter out any reasoning tags or thinking sections
+        fallbackMessage = fallbackMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
+        fallbackMessage = fallbackMessage.replace(/<reasoning>[\s\S]*?<\/reasoning>/g, '');
+        fallbackMessage = fallbackMessage.replace(/<.*?>/g, ''); // Remove any other tags
         
         const calendarGroupSetting = await WhatsAppSettings.findOne({ settingKey: 'dailyCalendarGroup' });
         if (calendarGroupSetting?.settingValue) {

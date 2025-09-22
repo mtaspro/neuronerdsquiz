@@ -29,9 +29,10 @@ router.post('/create', sessionMiddleware, async (req, res) => {
       req.app.get('io').emit('battleRoomCreated', activeBattleRoom);
     }
     
-    // Send WhatsApp group notification with quick join link
+    // Send WhatsApp group notification with quick join link and mentions
     const battleUrl = `https://neuronerdsquiz.vercel.app/battle/${roomId}`;
-    await sendBattleNotification(`🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\n🚀 Quick Join: ${battleUrl}\n\nOr visit dashboard and join now to test your skills!\n _(যদি কেউ কোনো কারণে Battle থেকে Disconnected হয়ে বের হয়ে যায়, সে উপোরোক্ত Link দিয়ে পুনরায় JOIN করতে পারবে এবং Last Progress থেকে Continue করতে পাবে)_`);
+    const mentionMessage = await createBattleNotificationWithMentions(roomId, chapter, battleUrl);
+    await sendBattleNotification(mentionMessage);
     
     res.json({ success: true, battleRoom: activeBattleRoom });
   } catch (error) {
@@ -205,6 +206,34 @@ router.post('/expire', sessionMiddleware, (req, res) => {
     res.status(500).json({ error: 'Failed to expire battle room' });
   }
 });
+
+// Helper function to create battle notification with member mentions
+async function createBattleNotificationWithMentions(roomId, chapter, battleUrl) {
+  try {
+    const WhatsAppSettings = (await import('../models/WhatsAppSettings.js')).default;
+    const setting = await WhatsAppSettings.findOne({ settingKey: 'battleNotificationGroup' });
+    
+    if (setting?.settingValue) {
+      // Get group members
+      const groupMembers = await whatsappService.getGroupMembers(setting.settingValue);
+      
+      // Create mentions string
+      let mentions = '';
+      if (groupMembers && groupMembers.length > 0) {
+        mentions = groupMembers.map(member => `@${member.id.split('@')[0]}`).join(' ');
+      }
+      
+      return `🔥 *BATTLE ROOM CREATED!* 🔥\n\n⚔️ Room ID: ${roomId}\n📚 Chapter: *${chapter}*\n\n🚀 *Quick Join:* ${battleUrl}\n\n📱 Or visit Dashboard → Join Battle\n\n🎯 \n${mentions}\n\n⏰ *Join now to test your skills!*\n\n_(যদি কেউ কোনো কারণে Battle থেকে Disconnected হয়ে বের হয়ে যায়, সে উপোরোক্ত Link দিয়ে পুনরায় JOIN করতে পারবে এবং Last Progress থেকে Continue করতে পাবে)_`;
+    }
+    
+    // Fallback without mentions
+    return `🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\n🚀 Quick Join: ${battleUrl}\n\nOr visit dashboard and join now to test your skills!`;
+  } catch (error) {
+    console.error('Error creating mention message:', error);
+    // Fallback without mentions
+    return `🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\n🚀 Quick Join: ${battleUrl}\n\nOr visit dashboard and join now to test your skills!`;
+  }
+}
 
 // Helper function to send battle notifications to configured group
 async function sendBattleNotification(message) {
