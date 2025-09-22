@@ -9,11 +9,22 @@ class BattleReminderService {
     this.reminderTime = '09:00'; // Default 9:00 AM
   }
 
-  start() {
+  async start() {
     if (this.isRunning) return;
     
+    // Load saved time from database
+    try {
+      const timeSetting = await WhatsAppSettings.findOne({ settingKey: 'battleReminderTime' });
+      if (timeSetting?.settingValue) {
+        this.reminderTime = timeSetting.settingValue;
+      }
+    } catch (error) {
+      console.error('Failed to load saved reminder time:', error);
+    }
+    
     // Schedule daily reminder at configured time
-    this.cronJob = cron.schedule('0 9 * * *', async () => {
+    const [hour, minute] = this.reminderTime.split(':');
+    this.cronJob = cron.schedule(`${minute} ${hour} * * *`, async () => {
       await this.sendDailyReminder();
     }, {
       scheduled: true,
@@ -21,7 +32,7 @@ class BattleReminderService {
     });
     
     this.isRunning = true;
-    console.log('✅ Battle Reminder Service started - Daily reminders at 9:00 AM');
+    console.log(`✅ Battle Reminder Service started - Daily reminders at ${this.reminderTime}`);
   }
 
   stop() {
@@ -34,6 +45,17 @@ class BattleReminderService {
 
   async updateReminderTime(time) {
     this.reminderTime = time;
+    
+    // Save to database
+    try {
+      await WhatsAppSettings.findOneAndUpdate(
+        { settingKey: 'battleReminderTime' },
+        { settingValue: time },
+        { upsert: true }
+      );
+    } catch (error) {
+      console.error('Failed to save reminder time:', error);
+    }
     
     if (this.cronJob) {
       this.cronJob.stop();
