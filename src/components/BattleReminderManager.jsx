@@ -35,10 +35,25 @@ const BattleReminderManager = () => {
   const fetchReminderStatus = async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      
+      // First try to get saved time from WhatsApp settings
+      const settingsResponse = await axios.get(`${apiUrl}/api/superadmin/whatsapp-settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const timeSetting = settingsResponse.data.find(s => s.settingKey === 'battleReminderTime');
+      if (timeSetting?.settingValue) {
+        setReminderTime(timeSetting.settingValue);
+        return;
+      }
+      
+      // Fallback to service status
       const response = await axios.get(`${apiUrl}/api/battle-reminder/status`);
       setReminderTime(response.data.reminderTime || '09:00');
     } catch (error) {
       console.error('Error fetching reminder status:', error);
+      setReminderTime('09:00');
     }
   };
 
@@ -106,7 +121,19 @@ const BattleReminderManager = () => {
   const updateReminderTime = async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token = secureStorage.getToken();
+      
+      // Update service time
       await axios.put(`${apiUrl}/api/battle-reminder/time`, { time: reminderTime });
+      
+      // Save to WhatsApp settings for persistence
+      await axios.put(`${apiUrl}/api/superadmin/whatsapp-settings`, {
+        settingKey: 'battleReminderTime',
+        settingValue: reminderTime
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
       success(`Reminder time updated to ${reminderTime}`);
     } catch (error) {
       showError('Failed to update reminder time');
