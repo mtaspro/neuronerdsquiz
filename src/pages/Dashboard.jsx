@@ -700,9 +700,9 @@ const Dashboard = () => {
                 whileHover={{ scale: (activeBattleRoom && (activeBattleRoom.status === 'waiting' || userInBattle)) ? 1.05 : 1 }}
                 whileTap={{ scale: (activeBattleRoom && (activeBattleRoom.status === 'waiting' || userInBattle)) ? 0.95 : 1 }}
                 onClick={handleJoinBattle}
-                disabled={!activeBattleRoom || (activeBattleRoom.status !== 'waiting' && !userInBattle)}
+                disabled={!activeBattleRoom || (activeBattleRoom.status === 'ended' || (!userInBattle && activeBattleRoom.status === 'started'))}
                 className={`w-full font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                  activeBattleRoom && (activeBattleRoom.status === 'waiting' || userInBattle)
+                  activeBattleRoom && (activeBattleRoom.status === 'waiting' || (activeBattleRoom.status === 'started' && userInBattle))
                     ? userInBattle
                       ? 'bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white focus:ring-blue-500 animate-pulse'
                       : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white focus:ring-green-500 animate-pulse'
@@ -717,7 +717,7 @@ const Dashboard = () => {
                       : userInBattle
                       ? 'Rejoin Battle!'
                       : activeBattleRoom.status === 'started' 
-                      ? 'Battle In Progress'
+                      ? 'Battle In Progress (Can\'t Join)'
                       : activeBattleRoom.status === 'ended'
                       ? 'Battle Ended'
                       : 'Join Battle Now!'}
@@ -734,7 +734,7 @@ const Dashboard = () => {
                 </p>
               ) : activeBattleRoom.status === 'started' ? (
                 <p className="text-sm text-orange-500 dark:text-orange-400 text-center">
-                  Battle has already started. Wait for the next one!
+                  Battle has started. Only participants can rejoin.
                 </p>
               ) : activeBattleRoom.status === 'ended' && (
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center">

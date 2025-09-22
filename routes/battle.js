@@ -31,7 +31,7 @@ router.post('/create', sessionMiddleware, async (req, res) => {
     
     // Send WhatsApp group notification with quick join link
     const battleUrl = `https://neuronerdsquiz.vercel.app/battle/${roomId}`;
-    await sendBattleNotification(`🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\n🚀 Quick Join: ${battleUrl}\n\nOr visit dashboard and join now to test your skills!`);
+    await sendBattleNotification(`🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\n🚀 Quick Join: ${battleUrl}\n\nOr visit dashboard and join now to test your skills!\n _(যদি কেউ কোনো কারণে Battle থেকে Disconnected হয়ে বের হয়ে যায়, সে উপোরোক্ত Link দিয়ে পুনরায় JOIN করতে পারবে এবং Last Progress থেকে Continue করতে পাবে)_`);
     
     res.json({ success: true, battleRoom: activeBattleRoom });
   } catch (error) {
