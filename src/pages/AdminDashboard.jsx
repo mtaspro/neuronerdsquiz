@@ -1478,11 +1478,14 @@ export default function AdminDashboard() {
                   >
                     <option value="none">Select a chapter to view questions</option>
                     <option value="">All Chapters</option>
-                    {chapters.map(ch => (
-                      <option key={ch._id} value={ch.name}>
-                        {ch.name} ({questionCounts[ch.name] || 0} questions)
-                      </option>
-                    ))}
+                    {chapters.map(ch => {
+                      const count = getQuestionCount(ch.name);
+                      return (
+                        <option key={ch._id} value={ch.name}>
+                          {ch.name} ({count} questions)
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               </div>

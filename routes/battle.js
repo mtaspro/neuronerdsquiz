@@ -217,10 +217,20 @@ async function createBattleNotificationWithMentions(roomId, chapter, battleUrl) 
       // Get group members
       const groupMembers = await whatsappService.getGroupMembers(setting.settingValue);
       
-      // Create mentions string
+      // Create mentions string with proper usernames
       let mentions = '';
       if (groupMembers && groupMembers.length > 0) {
-        mentions = groupMembers.map(member => `@${member.id.split('@')[0]}`).join(' ');
+        try {
+          const groupMetadata = await whatsappService.sock.groupMetadata(setting.settingValue);
+          mentions = groupMembers.map(member => {
+            const participant = groupMetadata.participants.find(p => p.id === member.id);
+            const username = participant?.notify || participant?.name || member.id.split('@')[0];
+            return `@${username}`;
+          }).join(' ');
+        } catch (error) {
+          // Fallback to phone numbers
+          mentions = groupMembers.map(member => `@${member.id.split('@')[0]}`).join(' ');
+        }
       }
       
       return `🔥 *BATTLE ROOM CREATED!* 🔥\n\n⚔️ Room ID: ${roomId}\n📚 Chapter: *${chapter}*\n\n🚀 *Quick Join:* ${battleUrl}\n\n📱 Or visit Dashboard → Join Battle\n\n🎯 \n${mentions}\n\n⏰ *Join now to test your skills!*\n\n_(যদি কেউ কোনো কারণে Battle থেকে Disconnected হয়ে বের হয়ে যায়, সে উপোরোক্ত Link দিয়ে পুনরায় JOIN করতে পারবে এবং Last Progress থেকে Continue করতে পাবে)_`;

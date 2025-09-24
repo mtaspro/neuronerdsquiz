@@ -260,13 +260,19 @@ router.post('/chapters', sessionMiddleware, requireAdmin, async (req, res) => {
   }
 });
 
-// Edit a chapter
+// Edit a chapter (SuperAdmin can edit all, Admin can edit only their own)
 router.put('/chapters/:id', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const chapter = await Chapter.findById(req.params.id);
     
     if (!chapter) {
       return res.status(404).json({ error: 'Chapter not found' });
+    }
+    
+    // Check permissions: SuperAdmin can edit all, Admin can edit only their own
+    const user = await User.findById(req.user.userId);
+    if (!user.isSuperAdmin && chapter.createdBy.toString() !== req.user.userId) {
+      return res.status(403).json({ error: 'You can only edit chapters you created' });
     }
     
     const updatedChapter = await Chapter.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -277,13 +283,19 @@ router.put('/chapters/:id', sessionMiddleware, requireAdmin, async (req, res) =>
   }
 });
 
-// Delete a chapter
+// Delete a chapter (SuperAdmin can delete all, Admin can delete only their own)
 router.delete('/chapters/:id', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const chapter = await Chapter.findById(req.params.id);
     
     if (!chapter) {
       return res.status(404).json({ error: 'Chapter not found' });
+    }
+    
+    // Check permissions: SuperAdmin can delete all, Admin can delete only their own
+    const user = await User.findById(req.user.userId);
+    if (!user.isSuperAdmin && chapter.createdBy.toString() !== req.user.userId) {
+      return res.status(403).json({ error: 'You can only delete chapters you created' });
     }
     
     await Chapter.findByIdAndDelete(req.params.id);
@@ -374,7 +386,7 @@ router.post('/questions/bulk', sessionMiddleware, requireAdmin, async (req, res)
   }
 });
 
-// Edit a question (only if created by current admin)
+// Edit a question (SuperAdmin can edit all, Admin can edit only their own)
 router.put('/questions/:id', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const currentUserId = req.user.userId;
@@ -384,7 +396,9 @@ router.put('/questions/:id', sessionMiddleware, requireAdmin, async (req, res) =
       return res.status(404).json({ error: 'Question not found' });
     }
     
-    if (question.createdBy.toString() !== currentUserId) {
+    // Check permissions: SuperAdmin can edit all, Admin can edit only their own
+    const user = await User.findById(currentUserId);
+    if (!user.isSuperAdmin && question.createdBy.toString() !== currentUserId) {
       return res.status(403).json({ error: 'You can only edit questions you created' });
     }
     
@@ -395,7 +409,7 @@ router.put('/questions/:id', sessionMiddleware, requireAdmin, async (req, res) =
   }
 });
 
-// Delete a question (only if created by current admin)
+// Delete a question (SuperAdmin can delete all, Admin can delete only their own)
 router.delete('/questions/:id', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const currentUserId = req.user.userId;
@@ -405,7 +419,9 @@ router.delete('/questions/:id', sessionMiddleware, requireAdmin, async (req, res
       return res.status(404).json({ error: 'Question not found' });
     }
     
-    if (question.createdBy.toString() !== currentUserId) {
+    // Check permissions: SuperAdmin can delete all, Admin can delete only their own
+    const user = await User.findById(currentUserId);
+    if (!user.isSuperAdmin && question.createdBy.toString() !== currentUserId) {
       return res.status(403).json({ error: 'You can only delete questions you created' });
     }
     
@@ -487,7 +503,7 @@ router.get('/quiz-configs', sessionMiddleware, requireAdmin, async (req, res) =>
 });
 
 // Get question counts with caching
-router.get('/question-counts', sessionMiddleware, requireAdmin, cacheMiddleware('medium'), async (req, res) => {
+router.get('/question-counts', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
     const questionCounts = await Quiz.aggregate([
       {
@@ -500,7 +516,9 @@ router.get('/question-counts', sessionMiddleware, requireAdmin, cacheMiddleware(
     
     const countsObject = {};
     questionCounts.forEach(item => {
-      countsObject[item._id] = item.count;
+      if (item._id) {
+        countsObject[item._id] = item.count;
+      }
     });
     
     res.json(countsObject);
