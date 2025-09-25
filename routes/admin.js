@@ -286,24 +286,34 @@ router.put('/chapters/:id', sessionMiddleware, requireAdmin, async (req, res) =>
 // Delete a chapter (SuperAdmin can delete all, Admin can delete only their own)
 router.delete('/chapters/:id', sessionMiddleware, requireAdmin, async (req, res) => {
   try {
+    console.log(`Attempting to delete chapter with ID: ${req.params.id}`);
+    
     const chapter = await Chapter.findById(req.params.id);
     
     if (!chapter) {
-      return res.status(404).json({ error: 'Chapter not found' });
+      console.log(`Chapter not found with ID: ${req.params.id}`);
+      return res.status(404).json({ error: `Chapter not found with ID: ${req.params.id}` });
     }
+    
+    console.log(`Found chapter: ${chapter.name}, created by: ${chapter.createdBy}`);
     
     // Check permissions: SuperAdmin can delete all, Admin can delete only their own
     const user = await User.findById(req.user.userId);
-    if (!user.isSuperAdmin && chapter.createdBy.toString() !== req.user.userId) {
+    console.log(`User ${user.username} is SuperAdmin: ${user.isSuperAdmin}`);
+    
+    if (!user.isSuperAdmin && chapter.createdBy && chapter.createdBy.toString() !== req.user.userId) {
       return res.status(403).json({ error: 'You can only delete chapters you created' });
     }
     
     await Chapter.findByIdAndDelete(req.params.id);
     // Also delete all questions in this chapter
-    await Quiz.deleteMany({ chapter: chapter.name });
-    res.json({ message: 'Chapter and its questions deleted' });
+    const deletedQuestions = await Quiz.deleteMany({ chapter: chapter.name });
+    console.log(`Deleted chapter ${chapter.name} and ${deletedQuestions.deletedCount} questions`);
+    
+    res.json({ message: `Chapter '${chapter.name}' and ${deletedQuestions.deletedCount} questions deleted` });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete chapter' });
+    console.error('Delete chapter error:', error);
+    res.status(500).json({ error: `Failed to delete chapter: ${error.message}` });
   }
 });
 

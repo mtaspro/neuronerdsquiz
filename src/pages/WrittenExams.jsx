@@ -121,7 +121,7 @@ const WrittenExams = () => {
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 10) {
-      showError('Maximum 10 images allowed');
+      showError('Maximum 20 images allowed');
       return;
     }
     setSelectedFiles(files);
@@ -436,7 +436,7 @@ const WrittenExams = () => {
               
               <div className="mb-6">
                 <label className="block text-sm font-medium mb-2">
-                  Upload Answer Images (Max 10 files)
+                  Upload Answer Images (Max 20 files)
                 </label>
                 <input
                   type="file"
