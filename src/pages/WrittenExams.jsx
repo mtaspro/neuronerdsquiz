@@ -120,7 +120,7 @@ const WrittenExams = () => {
 
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length > 10) {
+    if (files.length > 20) {
       showError('Maximum 20 images allowed');
       return;
     }
