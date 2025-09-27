@@ -96,7 +96,7 @@ class BattleReminderService {
         return;
       }
       
-      const message = `🎯 *DAILY BATTLE REMINDER* 🎯\n\n📅 *Today's Battle Topics:*\n\n${reminder.topics}\n\n⏰ *Get Ready!* Battles will start soon!\n\n🔥 Join from Dashboard or click the battle link when it's shared!\n\n💪 Good luck, warriors! 🏆`;
+      const message = `BATTLE REMINDER* \n\n📅 *👋hey guys... Today's Battle Topics:*\n\n_${reminder.topics}_\n\n🔥 Join from Dashboard or click the battle link when it's shared!\n\n💪 Good luck,🤞`;
       
       await whatsappService.sendGroupMessage(setting.settingValue, message);
       console.log('✅ Daily battle reminder sent successfully');
