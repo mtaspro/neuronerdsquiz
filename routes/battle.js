@@ -31,8 +31,8 @@ router.post('/create', sessionMiddleware, async (req, res) => {
     
     // Send WhatsApp group notification with quick join link and mentions
     const battleUrl = `https://neuronerdsquiz.vercel.app/battle/${roomId}`;
-    const mentionMessage = await createBattleNotificationWithMentions(roomId, chapter, battleUrl);
-    await sendBattleNotification(mentionMessage);
+    const mentionData = await createBattleNotificationWithMentions(roomId, chapter, battleUrl);
+    await sendBattleNotificationWithMentions(mentionData);
     
     res.json({ success: true, battleRoom: activeBattleRoom });
   } catch (error) {
@@ -233,7 +233,12 @@ async function createBattleNotificationWithMentions(roomId, chapter, battleUrl) 
         }
       }
       
-      return `🔥 *BATTLE ROOM CREATED!* 🔥\n\n⚔️ Room ID: ${roomId}\n📚 Chapter: *${chapter}*\n\n🚀 *Quick Join:* ${battleUrl}\n\n📱 Or visit Dashboard → Join Battle\n\n🎯 \n${mentions}\n\n⏰ *Join now to test your skills!*\n\n_(যদি কেউ কোনো কারণে Battle থেকে Disconnected হয়ে বের হয়ে যায়, সে উপোরোক্ত Link দিয়ে পুনরায় JOIN করতে পারবে এবং Last Progress থেকে Continue করতে পাবে)_`;
+      const message = `🔥 *BATTLE ROOM CREATED!* 🔥\n\n⚔️ Room ID: ${roomId}\n📚 Chapter: *${chapter}*\n\n🚀 *Quick Join:* ${battleUrl}\n\n📱 Or visit Dashboard → Join Battle\n\n🎯 *Calling all warriors!* 🎯\n${mentions}\n\n⏰ *Join now to test your skills!*\n\n_(যদি কেউ কোনো কারণে Battle থেকে Disconnected হয়ে বের হয়ে যায়, সে উপোরোক্ত Link দিয়ে পুনরায় JOIN করতে পারবে এবং Last Progress থেকে Continue করতে পাবে)_`;
+      
+      return {
+        message,
+        mentions: groupMembers.map(member => member.id)
+      };
     }
     
     // Fallback without mentions
@@ -242,6 +247,26 @@ async function createBattleNotificationWithMentions(roomId, chapter, battleUrl) 
     console.error('Error creating mention message:', error);
     // Fallback without mentions
     return `🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\n🚀 Quick Join: ${battleUrl}\n\nOr visit dashboard and join now to test your skills!`;
+  }
+}
+
+// Helper function to send battle notifications with mentions
+async function sendBattleNotificationWithMentions(mentionData) {
+  try {
+    const WhatsAppSettings = (await import('../models/WhatsAppSettings.js')).default;
+    const setting = await WhatsAppSettings.findOne({ settingKey: 'battleNotificationGroup' });
+    
+    if (setting?.settingValue) {
+      if (typeof mentionData === 'string') {
+        await whatsappService.sendGroupMessage(setting.settingValue, mentionData);
+      } else {
+        await whatsappService.sendGroupMessage(setting.settingValue, mentionData.message, {
+          mentions: mentionData.mentions
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error sending battle notification:', error);
   }
 }
 
