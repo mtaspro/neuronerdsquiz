@@ -29,6 +29,7 @@ import maintenanceRouter from './routes/maintenance.js';
 import shareRouter from './routes/share.js';
 import writtenExamRouter from './routes/writtenExam.js';
 import examinerRouter from './routes/examiner.js';
+import messengerRouter from './routes/messenger.js';
 import BattleService from './services/battleService.js';
 import BadgeService from './services/badgeService.js';
 import whatsappService from './services/whatsappService.js';
@@ -714,6 +715,8 @@ console.log('Mounting written exam router...');
 app.use('/api/written-exam', writtenExamRouter);
 console.log('Mounting examiner router...');
 app.use('/api/examiner', examinerRouter);
+console.log('Mounting messenger router...');
+app.use('/api/messenger', messengerRouter);
 console.log('All routers mounted successfully');
 
 // Test route for API connectivity
