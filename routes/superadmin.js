@@ -611,4 +611,30 @@ router.put('/lifeline-config', sessionMiddleware, requireSuperAdmin, async (req,
   }
 });
 
+// Update WhatsApp settings (battle reminder time)
+router.put('/whatsapp-settings', sessionMiddleware, requireSuperAdmin, async (req, res) => {
+  try {
+    const { reminderTime } = req.body;
+    
+    if (!reminderTime) {
+      return res.status(400).json({ error: 'Reminder time is required' });
+    }
+    
+    await GlobalSettings.findOneAndUpdate(
+      { settingKey: 'whatsappSettings' },
+      { 
+        settingValue: { reminderTime },
+        updatedBy: req.user.userId,
+        updatedAt: new Date()
+      },
+      { upsert: true }
+    );
+    
+    res.json({ message: 'WhatsApp settings updated successfully' });
+  } catch (error) {
+    console.error('Error updating WhatsApp settings:', error);
+    res.status(500).json({ error: 'Failed to update WhatsApp settings' });
+  }
+});
+
 export default router;
