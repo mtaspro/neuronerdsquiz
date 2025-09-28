@@ -253,88 +253,135 @@ router.get('/group-messages/:groupId', sessionMiddleware, async (req, res) => {
 // Test page for group messages (no auth needed - for your personal use)
 router.get('/test-messages', async (req, res) => {
   try {
-    const groupName = req.query.group || 'neuronerds';
-    const limit = parseInt(req.query.limit) || 20;
-    
-    // Get groups
-    const groupsResult = await whatsappService.getGroups();
-    if (!groupsResult.success) {
-      return res.send(`<h1>Error: ${groupsResult.error}</h1>`);
-    }
+    const groupName = req.query.group || '';
+    const limit = parseInt(req.query.limit) || 50;
+    const WhatsAppMessage = (await import('../models/WhatsAppMessage.js')).default;
     
     let html = `
     <!DOCTYPE html>
     <html>
     <head>
-      <title>WhatsApp Group Messages</title>
+      <title>WhatsApp Messages from MongoDB</title>
       <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .message { border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 5px; }
-        .sender { font-weight: bold; color: #0066cc; }
-        .timestamp { color: #666; font-size: 12px; }
-        .group-list { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .message { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; background: #fafafa; }
+        .message.bot { background: #e3f2fd; border-left: 4px solid #2196f3; }
+        .sender { font-weight: bold; color: #0066cc; margin-bottom: 5px; }
+        .timestamp { color: #666; font-size: 12px; margin-top: 8px; }
+        .chat-list { background: #f0f8ff; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .stats { background: #e8f5e8; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .phone { color: #888; font-size: 11px; }
+        .message-type { background: #ff9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; }
       </style>
     </head>
     <body>
-      <h1>📱 WhatsApp Group Messages</h1>
-      
-      <div class="group-list">
-        <h3>Available Groups:</h3>
+      <div class="container">
+        <h1>📱 WhatsApp Messages from MongoDB</h1>`;
+    
+    // Get all chats from MongoDB
+    const chats = await WhatsAppMessage.aggregate([
+      {
+        $group: {
+          _id: '$chatId',
+          chatName: { $first: '$chatName' },
+          chatType: { $first: '$chatType' },
+          lastMessage: { $first: '$messageText' },
+          lastTimestamp: { $max: '$timestamp' },
+          messageCount: { $sum: 1 }
+        }
+      },
+      { $sort: { lastTimestamp: -1 } },
+      { $limit: 20 }
+    ]);
+    
+    html += `
+      <div class="chat-list">
+        <h3>📋 Available Chats (${chats.length} total):</h3>
         <ul>`;
     
-    groupsResult.groups.forEach(group => {
-      html += `<li><a href="?group=${encodeURIComponent(group.name)}&limit=${limit}">${group.name}</a> (${group.participants} members)</li>`;
+    chats.forEach(chat => {
+      const chatType = chat.chatType === 'group' ? '👥' : '👤';
+      html += `<li>${chatType} <a href="?group=${encodeURIComponent(chat.chatName || chat._id)}&limit=${limit}">${chat.chatName || 'Unknown Chat'}</a> (${chat.messageCount} messages)</li>`;
     });
     
     html += `</ul></div>`;
     
-    // If specific group requested, show messages
+    // If specific group requested, show messages from MongoDB
     if (req.query.group) {
-      const group = groupsResult.groups.find(g => 
-        g.name.toLowerCase().includes(groupName.toLowerCase())
+      const selectedChat = chats.find(c => 
+        (c.chatName && c.chatName.toLowerCase().includes(groupName.toLowerCase())) ||
+        c._id.includes(groupName)
       );
       
-      if (group) {
-        const result = await whatsappService.getGroupMessages(group.id, limit);
+      if (selectedChat) {
+        const messages = await WhatsAppMessage.find({ chatId: selectedChat._id })
+          .sort({ timestamp: -1 })
+          .limit(limit);
         
-        if (result.success) {
-          html += `<h2>Last ${result.count} messages from "${group.name}":</h2>`;
-          
-          if (result.count === 0) {
-            html += `
-            <div style="background: #f0f8ff; padding: 15px; border-radius: 5px; margin: 10px 0;">
-              <h3>📭 No Messages Available</h3>
-              <p><strong>Why no messages?</strong></p>
-              <ul>
-                <li>Bot only stores messages when it's actively running</li>
-                <li>Only last 10 messages per group are kept in memory</li>
-                <li>Messages are cleared when bot restarts</li>
-              </ul>
-              <p><strong>To see messages:</strong> Send some messages in the WhatsApp group while bot is online, then refresh this page.</p>
-            </div>`;
-          } else {
-            result.messages.forEach(msg => {
-              html += `
-              <div class="message">
-                <div class="sender">${msg.sender}</div>
-                <div>${msg.message}</div>
-                <div class="timestamp">${new Date(msg.timestamp).toLocaleString()}</div>
-              </div>`;
-            });
-          }
+        html += `
+        <div class="stats">
+          <h2>💬 Last ${messages.length} messages from "${selectedChat.chatName || 'Unknown Chat'}"</h2>
+          <p><strong>Chat ID:</strong> ${selectedChat._id}</p>
+          <p><strong>Type:</strong> ${selectedChat.chatType}</p>
+          <p><strong>Total Messages:</strong> ${selectedChat.messageCount}</p>
+        </div>`;
+        
+        if (messages.length === 0) {
+          html += `
+          <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 10px 0;">
+            <h3>📭 No Messages Found</h3>
+            <p>This chat exists but has no messages in the database yet.</p>
+          </div>`;
         } else {
-          html += `<h2>Error: ${result.error}</h2>`;
+          messages.reverse().forEach(msg => {
+            const botClass = msg.isFromBot ? ' bot' : '';
+            const messageType = msg.messageType !== 'text' ? `<span class="message-type">${msg.messageType.toUpperCase()}</span> ` : '';
+            const messageText = msg.messageText || msg.caption || `[${msg.messageType} message]`;
+            
+            html += `
+            <div class="message${botClass}">
+              <div class="sender">
+                ${msg.senderName || 'Unknown'} 
+                ${msg.isFromBot ? '🤖' : ''}
+                <span class="phone">(${msg.senderPhone || 'No phone'})</span>
+              </div>
+              <div>${messageType}${messageText}</div>
+              <div class="timestamp">${new Date(msg.timestamp).toLocaleString()}</div>
+            </div>`;
+          });
         }
       } else {
-        html += `<h2>Group "${groupName}" not found</h2>`;
+        html += `<h2>❌ Chat "${groupName}" not found in database</h2>`;
       }
+    } else {
+      // Show overall stats
+      const totalMessages = await WhatsAppMessage.countDocuments();
+      const groupMessages = await WhatsAppMessage.countDocuments({ chatType: 'group' });
+      const personalMessages = await WhatsAppMessage.countDocuments({ chatType: 'personal' });
+      const botMessages = await WhatsAppMessage.countDocuments({ isFromBot: true });
+      
+      html += `
+      <div class="stats">
+        <h3>📊 Database Statistics:</h3>
+        <p><strong>Total Messages:</strong> ${totalMessages}</p>
+        <p><strong>Group Messages:</strong> ${groupMessages}</p>
+        <p><strong>Personal Messages:</strong> ${personalMessages}</p>
+        <p><strong>Bot Messages:</strong> ${botMessages}</p>
+        <p><strong>User Messages:</strong> ${totalMessages - botMessages}</p>
+      </div>
+      <p>👆 Click on any chat above to view its messages!</p>`;
     }
     
-    html += `</body></html>`;
+    html += `
+      </div>
+    </body>
+    </html>`;
+    
     res.send(html);
     
   } catch (error) {
-    res.send(`<h1>Error: ${error.message}</h1>`);
+    res.send(`<h1>❌ Error: ${error.message}</h1><pre>${error.stack}</pre>`);
   }
 });
 
