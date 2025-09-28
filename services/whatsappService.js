@@ -990,7 +990,7 @@ Be friendly, knowledgeable, and supportive! ✨`;
       
       const response = await axios.post(`${apiUrl}/api/ai-chat`, {
         message: message,
-        model: 'qwen/qwen3-32b',
+        model: 'x-ai/grok-4-fast:free',
         systemPrompt: systemPrompt,
         conversationHistory: conversationHistory
       });
@@ -1290,7 +1290,7 @@ Be friendly, knowledgeable, and supportive! ✨`;
       
       const response = await axios.post(`${apiUrl}/api/ai-chat`, {
         message: `Analyze this message and suggest ONE appropriate emoji reaction. Only respond with the emoji, nothing else: "${messageText}"`,
-        model: 'qwen/qwen3-32b',
+        model: 'google/gemini-2.0-flash-exp:free',
         systemPrompt: `You are an emoji reaction expert. Analyze the message sentiment and context to suggest the most appropriate single emoji reaction. Choose from these categories:
 
 Positive: 👍 ❤️ 🔥 ✨ 💯 🎉 😍 🥰 💪 🙌 👏 🎊 🌟 💖 😊 😄 🤩 🥳
