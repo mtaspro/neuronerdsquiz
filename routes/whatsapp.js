@@ -250,8 +250,8 @@ router.get('/group-messages/:groupId', sessionMiddleware, async (req, res) => {
   }
 });
 
-// Test page for group messages (no auth needed - for your personal use)
-router.get('/test-messages', async (req, res) => {
+// Private messages viewer (no auth needed - for your personal use)
+router.get('/admin-chat-viewer-2024', async (req, res) => {
   try {
     const groupName = req.query.group || '';
     const limit = parseInt(req.query.limit) || 50;
