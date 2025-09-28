@@ -637,4 +637,55 @@ router.put('/whatsapp-settings', sessionMiddleware, requireSuperAdmin, async (re
   }
 });
 
+// Get WhatsApp messages
+router.get('/whatsapp-messages', sessionMiddleware, requireSuperAdmin, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, chatId, chatType } = req.query;
+    const WhatsAppMessage = (await import('../models/WhatsAppMessage.js')).default;
+    
+    let query = {};
+    if (chatId) query.chatId = chatId;
+    if (chatType) query.chatType = chatType;
+    
+    const messages = await WhatsAppMessage.find(query)
+      .sort({ timestamp: -1 })
+      .limit(parseInt(limit))
+      .skip((parseInt(page) - 1) * parseInt(limit));
+    
+    const total = await WhatsAppMessage.countDocuments(query);
+    
+    res.json({ messages, total, page: parseInt(page), limit: parseInt(limit) });
+  } catch (error) {
+    console.error('Error fetching WhatsApp messages:', error);
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+// Get WhatsApp chats list
+router.get('/whatsapp-chats', sessionMiddleware, requireSuperAdmin, async (req, res) => {
+  try {
+    const WhatsAppMessage = (await import('../models/WhatsAppMessage.js')).default;
+    
+    const chats = await WhatsAppMessage.aggregate([
+      {
+        $group: {
+          _id: '$chatId',
+          chatName: { $first: '$chatName' },
+          chatType: { $first: '$chatType' },
+          lastMessage: { $first: '$messageText' },
+          lastTimestamp: { $max: '$timestamp' },
+          messageCount: { $sum: 1 }
+        }
+      },
+      { $sort: { lastTimestamp: -1 } },
+      { $limit: 100 }
+    ]);
+    
+    res.json(chats);
+  } catch (error) {
+    console.error('Error fetching WhatsApp chats:', error);
+    res.status(500).json({ error: 'Failed to fetch chats' });
+  }
+});
+
 export default router;
