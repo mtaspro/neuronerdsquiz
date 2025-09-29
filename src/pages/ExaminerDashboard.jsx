@@ -61,7 +61,8 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
       });
       if (response.ok) {
         const data = await response.json();
-        setSubmissions(data);
+        // Handle both old format (direct array) and new format (object with submissions)
+        setSubmissions(Array.isArray(data) ? data : data.submissions || []);
       }
     } catch (error) {
       showError('Failed to fetch submissions');
