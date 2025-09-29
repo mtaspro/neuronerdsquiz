@@ -777,7 +777,6 @@ export default function AdminDashboard() {
                     <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Email</th>
                     <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Gender</th>
                     <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">WhatsApp</th>
-                    <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Roles</th>
                     <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Actions</th>
                   </tr>
                 </thead>
@@ -792,7 +791,7 @@ export default function AdminDashboard() {
                           u.gender === 'female' ? 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300' :
                           'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                         }`}>
-                          {u.gender === 'male' ? '👨 Male' : u.gender === 'female' ? '👩 Female' : '❓ Not Set'}
+                          {u.gender === 'male' ? 'Male' : u.gender === 'female' ? 'Female' : '❓ Not Set'}
                         </span>
                       </td>
                       <td className="p-4">
@@ -803,14 +802,7 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                       </td>
-                      <td className="p-4">
-                        <div className="text-xs space-y-1">
-                          {u.isSuperAdmin && <span className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300 px-2 py-1 rounded">SuperAdmin</span>}
-                          {u.isAdmin && <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 px-2 py-1 rounded">Admin</span>}
-                          {u.isExaminer && <span className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 px-2 py-1 rounded">Examiner</span>}
-                          {u.canBypassGenderRestriction && <span className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 px-2 py-1 rounded">Bypass</span>}
-                        </div>
-                      </td>
+
                       <td className="p-4">
                         <div className="flex gap-2 flex-wrap">
                           <button
