@@ -25,7 +25,8 @@ const Register = () => {
     username: '',
     phoneNumber: '',
     avatar: avatarOptions[0],
-    profilePicture: null
+    profilePicture: null,
+    gender: ''
   });
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
@@ -50,6 +51,9 @@ const Register = () => {
       newErrors.phoneNumber = 'WhatsApp number is required';
     } else if (!/^01[0-9]{9}$/.test(formData.phoneNumber)) {
       newErrors.phoneNumber = 'Please enter a valid 11-digit number (01XXXXXXXXX)';
+    }
+    if (!formData.gender) {
+      newErrors.gender = 'Please select your gender';
     }
     if (!formData.password) {
       newErrors.password = 'Password is required';
@@ -122,6 +126,7 @@ const Register = () => {
       submitData.append('password', formData.password);
       submitData.append('username', formData.username);
       submitData.append('phoneNumber', `880${formData.phoneNumber.substring(1)}`);
+      submitData.append('gender', formData.gender);
       if (useCustomImage && formData.profilePicture) {
         submitData.append('profilePicture', formData.profilePicture);
       } else {
@@ -334,6 +339,31 @@ const Register = () => {
               />
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Gender
+              </label>
+              <select
+                id="gender"
+                name="gender"
+                required
+                value={formData.gender}
+                onChange={handleInputChange}
+                className={`appearance-none relative block w-full px-3 py-2 border rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 text-sm leading-tight transition-colors ${
+                  errors.gender 
+                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
+                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                }`}
+              >
+                <option value="">Select your gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+              {errors.gender && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.gender}</p>
               )}
             </div>
 

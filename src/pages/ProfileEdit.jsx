@@ -16,7 +16,8 @@ const ProfileEdit = () => {
     newPassword: '',
     confirmPassword: '',
     avatar: '',
-    profilePicture: null
+    profilePicture: null,
+    gender: ''
   });
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
@@ -53,7 +54,8 @@ const ProfileEdit = () => {
             email: userData.email || '',
             phoneNumber: userData.phoneNumber || '',
             whatsappNotifications: userData.whatsappNotifications || false,
-            avatar: userData.avatar || avatarOptions[0]
+            avatar: userData.avatar || avatarOptions[0],
+            gender: userData.gender || ''
           }));
           // Use the avatar utility to get the correct URL for display
           const avatarUrl = getAvatarUrl(userData.avatar || avatarOptions[0]);
@@ -182,6 +184,7 @@ const ProfileEdit = () => {
       submitData.append('email', formData.email);
       submitData.append('phoneNumber', formData.phoneNumber);
       submitData.append('whatsappNotifications', formData.whatsappNotifications);
+      submitData.append('gender', formData.gender);
       if (formData.newPassword) {
         submitData.append('currentPassword', formData.currentPassword);
         submitData.append('newPassword', formData.newPassword);
@@ -398,6 +401,22 @@ const ProfileEdit = () => {
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-colors border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
                 />
+              </div>
+              <div>
+                <label htmlFor="gender" className="block text-sm font-medium mb-1">
+                  Gender
+                </label>
+                <select
+                  id="gender"
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-colors border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                >
+                  <option value="">Select your gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
               </div>
               <div className="flex items-center space-x-2">
                 <input

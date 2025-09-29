@@ -47,22 +47,41 @@ const requireExaminer = async (req, res, next) => {
   }
 };
 
-// Get all pending submissions for grading
+// Get all pending submissions for grading (with gender restrictions)
 router.get('/submissions', sessionMiddleware, requireAuth, requireExaminer, async (req, res) => {
   try {
-    const { status = 'pending' } = req.query;
+    const { status = 'pending', override } = req.query;
+    const examiner = await User.findById(req.user.userId);
+    
     const submissions = await WrittenSubmission.find({ status })
       .populate('examId', 'title subject chapter totalMarks')
-      .populate('userId', 'username email')
+      .populate('userId', 'username email gender')
       .populate('gradedBy', 'username')
       .sort({ submittedAt: -1 });
-    res.json(submissions);
+    
+    // Check if examiner can bypass gender restrictions
+    const canBypass = examiner.canBypassGenderRestriction || examiner.isSuperAdmin;
+    
+    if (canBypass) {
+      // Examiner with bypass permission can see all submissions
+      return res.json({ submissions, bypassActive: true });
+    }
+    
+    // Filter submissions based on gender restrictions
+    const filteredSubmissions = submissions.filter(submission => {
+      if (!submission.userId || !submission.userId.gender || !examiner.gender) {
+        return true; // Allow if gender not set
+      }
+      return submission.userId.gender !== examiner.gender;
+    });
+    
+    res.json({ submissions: filteredSubmissions });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch submissions' });
   }
 });
 
-// Grade a submission
+// Grade a submission (with gender restrictions)
 router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExaminer, (req, res, next) => {
   // Set longer timeout for file uploads
   req.setTimeout(300000); // 5 minutes
@@ -76,9 +95,26 @@ router.put('/grade/:submissionId', sessionMiddleware, requireAuth, requireExamin
     console.log('Grading submission:', submissionId, { marksObtained, examinerComments, status });
     console.log('Files received:', req.files?.length || 0);
     
-    const submission = await WrittenSubmission.findById(submissionId);
+    const submission = await WrittenSubmission.findById(submissionId)
+      .populate('userId', 'username email gender');
     if (!submission) {
       return res.status(404).json({ error: 'Submission not found' });
+    }
+    
+    // Check gender restrictions with bypass capability
+    const examiner = await User.findById(req.user.userId);
+    
+    if (submission.userId && submission.userId.gender && examiner.gender) {
+      if (submission.userId.gender === examiner.gender) {
+        // Check if examiner can bypass gender restrictions
+        const canBypass = examiner.canBypassGenderRestriction || examiner.isSuperAdmin;
+        
+        if (!canBypass) {
+          return res.status(403).json({ 
+            error: 'Gender restriction: You can only grade students of opposite gender. Contact SuperAdmin for bypass permission.'
+          });
+        }
+      }
     }
 
     // Update submission fields
@@ -359,6 +395,33 @@ router.put('/promote/:userId', sessionMiddleware, requireAuth, async (req, res) 
     res.json({ message: 'User promoted to examiner' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to promote user' });
+  }
+});
+
+// Toggle gender restriction bypass (SuperAdmin only)
+router.put('/toggle-bypass/:userId', sessionMiddleware, requireAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user.isSuperAdmin) {
+      return res.status(403).json({ error: 'SuperAdmin access required' });
+    }
+    
+    const targetUser = await User.findById(req.params.userId);
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const newBypassStatus = !targetUser.canBypassGenderRestriction;
+    await User.findByIdAndUpdate(req.params.userId, { 
+      canBypassGenderRestriction: newBypassStatus 
+    });
+    
+    res.json({ 
+      message: `Gender restriction bypass ${newBypassStatus ? 'enabled' : 'disabled'} for ${targetUser.username}`,
+      canBypassGenderRestriction: newBypassStatus
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to toggle bypass permission' });
   }
 });
 

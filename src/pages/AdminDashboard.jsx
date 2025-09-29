@@ -323,6 +323,26 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false));
   }
 
+  // Toggle gender restriction bypass (SuperAdmin only)
+  function handleToggleBypass(userId, username, currentBypass) {
+    if (!window.confirm(`${currentBypass ? 'Remove' : 'Grant'} gender restriction bypass for "${username}"?`)) return;
+    
+    setLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    axios.put(`${apiUrl}/api/examiner/toggle-bypass/${userId}`, {}, { headers: authHeader() })
+      .then((response) => {
+        setError('');
+        // Reload users to show updated data
+        usersCRUD.read().catch(() => {});
+        alert(response.data.message);
+      })
+      .catch(err => {
+        const errorMsg = err.response?.data?.error || 'Failed to toggle bypass permission';
+        setError(errorMsg);
+      })
+      .finally(() => setLoading(false));
+  }
+
   // Request user score reset (reset scores, stats, badges - keep account)
   function handleResetUserScore(userId, username) {
     const reason = prompt(`Please provide a reason for resetting "${username}"'s scores and stats:`);
@@ -755,8 +775,9 @@ export default function AdminDashboard() {
                   <tr>
                     <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Username</th>
                     <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Email</th>
+                    <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Gender</th>
                     <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">WhatsApp</th>
-                    <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Admin</th>
+                    <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Roles</th>
                     <th className="p-4 text-left text-gray-700 dark:text-gray-300 font-semibold">Actions</th>
                   </tr>
                 </thead>
@@ -766,6 +787,15 @@ export default function AdminDashboard() {
                       <td className="p-4 text-gray-800 dark:text-white">{u.username}</td>
                       <td className="p-4 text-gray-600 dark:text-gray-300">{u.email}</td>
                       <td className="p-4">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          u.gender === 'male' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                          u.gender === 'female' ? 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300' :
+                          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                        }`}>
+                          {u.gender === 'male' ? '👨 Male' : u.gender === 'female' ? '👩 Female' : '❓ Not Set'}
+                        </span>
+                      </td>
+                      <td className="p-4">
                         <div className="text-xs">
                           <div>{u.phoneNumber || 'No phone'}</div>
                           <div className={u.whatsappNotifications ? 'text-green-600' : 'text-gray-400'}>
@@ -773,7 +803,14 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                       </td>
-                      <td className="p-4">{u.isAdmin ? '✅' : ''}</td>
+                      <td className="p-4">
+                        <div className="text-xs space-y-1">
+                          {u.isSuperAdmin && <span className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300 px-2 py-1 rounded">SuperAdmin</span>}
+                          {u.isAdmin && <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 px-2 py-1 rounded">Admin</span>}
+                          {u.isExaminer && <span className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 px-2 py-1 rounded">Examiner</span>}
+                          {u.canBypassGenderRestriction && <span className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 px-2 py-1 rounded">Bypass</span>}
+                        </div>
+                      </td>
                       <td className="p-4">
                         <div className="flex gap-2 flex-wrap">
                           <button
@@ -800,6 +837,20 @@ export default function AdminDashboard() {
                               title="Request user deletion (requires SuperAdmin approval)"
                             >
                               Request Delete
+                            </button>
+                          )}
+                          {(u.isExaminer || u.isAdmin) && (
+                            <button
+                              onClick={() => handleToggleBypass(u._id, u.username, u.canBypassGenderRestriction)}
+                              disabled={loading}
+                              className={`px-3 py-1 rounded text-sm text-white transition-colors disabled:opacity-50 ${
+                                u.canBypassGenderRestriction 
+                                  ? 'bg-orange-600 hover:bg-orange-700' 
+                                  : 'bg-gray-600 hover:bg-gray-700'
+                              }`}
+                              title="Toggle gender restriction bypass for examiner"
+                            >
+                              {u.canBypassGenderRestriction ? 'Remove Bypass' : 'Grant Bypass'}
                             </button>
                           )}
                         </div>
