@@ -9,10 +9,10 @@ const GlobalLoader = ({ isLoading, children, skeletonType = 'default' }) => {
       setProgress(0);
       const interval = setInterval(() => {
         setProgress(prev => {
-          if (prev >= 90) return prev;
-          return prev + Math.random() * 15;
+          if (prev >= 85) return prev;
+          return prev + Math.random() * 8;
         });
-      }, 200);
+      }, 400);
       return () => clearInterval(interval);
     } else {
       setProgress(100);
@@ -101,7 +101,7 @@ const GlobalLoader = ({ isLoading, children, skeletonType = 'default' }) => {
             initial={{ scaleX: 0 }}
             animate={{ scaleX: progress / 100 }}
             exit={{ scaleX: 1, opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             className="fixed top-0 left-0 h-1 bg-gradient-to-r from-cyan-500 to-blue-500 z-50 origin-left"
             style={{ width: '100vw' }}
           />

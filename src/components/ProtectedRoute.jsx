@@ -35,25 +35,9 @@ const ProtectedRoute = ({ children }) => {
     checkAuth();
   }, []);
 
-  // Show loading spinner while checking authentication
+  // Show nothing while checking authentication - let GlobalLoader handle loading state
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
-        <motion.div
-          className="flex flex-col items-center space-y-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-12 h-12 border-4 border-white border-t-transparent rounded-full"
-          />
-          <p className="text-white text-lg">Checking authentication...</p>
-        </motion.div>
-      </div>
-    );
+    return null;
   }
 
   // Redirect to login if not authenticated
