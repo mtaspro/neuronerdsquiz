@@ -47,6 +47,8 @@ class BattleService {
       // User is rejoining - always allow and update their socket ID
       existingUser.socketId = socketId;
       existingUser.disconnected = false;
+      existingUser.autoSubmitted = false; // Clear auto-submit flag
+      delete existingUser.disconnectedAt; // Clear disconnect timestamp
       console.log(`✅ User ${username} rejoined room ${roomId} (Status: ${room.status}, Progress: ${existingUser.currentQuestion}/${room.questions.length})`);
       return room;
     }
@@ -104,8 +106,12 @@ class BattleService {
       } else {
         // Mark as disconnected but keep in room to preserve progress
         user.disconnected = true;
+        user.disconnectedAt = new Date();
         user.socketId = null;
         console.log(`📡 Marked user ${user.username} as disconnected in room ${roomId} (progress preserved)`);
+        
+        // Set 5-minute auto-submit timer
+        this.setAutoSubmitTimer(roomId, userId);
       }
       
       // If no active users left in waiting room, delete the room
@@ -116,6 +122,29 @@ class BattleService {
     }
 
     return room;
+  }
+
+  // Set auto-submit timer for disconnected user
+  setAutoSubmitTimer(roomId, userId) {
+    setTimeout(() => {
+      const room = this.getRoom(roomId);
+      if (!room || room.status !== 'active') return;
+      
+      const user = room.users.get(userId);
+      if (!user || !user.disconnected) return;
+      
+      // Auto-submit user's current progress
+      user.currentQuestion = room.questions.length; // Mark as finished
+      user.hasCompleted = true;
+      user.autoSubmitted = true;
+      console.log(`⏰ Auto-submitted ${user.username} after 5min disconnect in room ${roomId}`);
+      
+      // Check if all users are now finished
+      if (this.checkAllUsersFinished(room)) {
+        // Emit battle completion event if needed
+        console.log(`🏁 All users finished in room ${roomId} (including auto-submit)`);
+      }
+    }, 5 * 60 * 1000); // 5 minutes
   }
 
   // Start battle
@@ -200,10 +229,10 @@ class BattleService {
     };
   }
 
-  // Check if all users have finished
+  // Check if all users have finished (including auto-submitted)
   checkAllUsersFinished(room) {
     return Array.from(room.users.values()).every(
-      user => user.currentQuestion >= room.questions.length
+      user => user.currentQuestion >= room.questions.length || user.hasCompleted
     );
   }
 
@@ -286,7 +315,9 @@ class BattleService {
           answers: user.answers,
           correctAnswers: user.answers.filter(a => a?.isCorrect).length,
           totalQuestions: room.questions.length,
-          inappropriateBonusScore: bonusScore
+          inappropriateBonusScore: bonusScore,
+          autoSubmitted: user.autoSubmitted || false,
+          disconnected: user.disconnected || false
         };
       })
       .sort((a, b) => b.score - a.score)
@@ -336,6 +367,7 @@ class BattleService {
       user.completedAt = new Date();
       // Keep user connected for leaderboard display
       user.disconnected = false;
+      user.autoSubmitted = false; // Clear auto-submit flag if manually completed
       console.log(`✅ Marked user ${user.username} as completed in room ${roomId}`);
       return user;
     }
