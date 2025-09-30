@@ -14,10 +14,13 @@ import soundManager from '../utils/soundUtils';
 import { secureStorage } from '../utils/secureStorage.js';
 import { authHeader } from '../utils/auth.js';
 import ParallaxElement from '../components/ParallaxElement';
+import GlobalLoader from '../components/GlobalLoader';
+import { useGlobalLoader } from '../hooks/useGlobalLoader';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGlobalLoading, setGlobalLoading] = useGlobalLoader(true);
   const navigate = useNavigate();
   const [selectedChapter, setSelectedChapter] = useState('');
   const [chapters, setChapters] = useState([]);
@@ -123,6 +126,7 @@ const Dashboard = () => {
         navigate('/login');
       }
       setIsLoading(false);
+      setGlobalLoading(false);
     };
     
     loadUserData();
@@ -306,6 +310,7 @@ const Dashboard = () => {
   }
 
   return (
+    <GlobalLoader isLoading={isGlobalLoading} skeletonType="dashboard">
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-blue-950 dark:to-purple-950 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
       {/* Animated Background Particles with Parallax */}
       <ParallaxElement speed={0.2} className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -842,6 +847,7 @@ const Dashboard = () => {
         autoJoin={true}
       />
     </div>
+    </GlobalLoader>
   );
 };
 

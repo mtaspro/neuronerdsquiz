@@ -8,6 +8,8 @@ import { useCRUD } from '../hooks/useCRUD';
 import { useDebounce } from '../hooks/useDebounce';
 import { useVirtualization } from '../hooks/useVirtualization';
 import { sanitizeInput, sanitizeObject } from '../utils/sanitizer';
+import GlobalLoader from '../components/GlobalLoader';
+import { useGlobalLoader } from '../hooks/useGlobalLoader';
 
 // Lazy load heavy components
 const AILatexGenerator = lazy(() => import('../components/AILatexGenerator'));
@@ -30,6 +32,7 @@ export default function AdminDashboard() {
   const [addingSubject, setAddingSubject] = useState(false);
   const [addingChapter, setAddingChapter] = useState(false);
   const [addingQuestion, setAddingQuestion] = useState(false);
+  const [isGlobalLoading, setGlobalLoading] = useGlobalLoader(true);
   const navigate = useNavigate();
   
   // CRUD hooks for different entities
@@ -102,6 +105,8 @@ export default function AdminDashboard() {
         // Clear auth data on any error
         secureStorage.clear();
         navigate('/login');
+      } finally {
+        setGlobalLoading(false);
       }
     };
 
@@ -737,6 +742,7 @@ export default function AdminDashboard() {
   }
 
   return (
+    <GlobalLoader isLoading={isGlobalLoading} skeletonType="table">
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200">
       <div className="max-w-7xl mx-auto p-8">
         <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">Admin Dashboard</h1>
@@ -1905,5 +1911,6 @@ export default function AdminDashboard() {
         )}
       </div>
     </div>
+    </GlobalLoader>
   );
 }

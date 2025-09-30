@@ -4,6 +4,8 @@ import { FaEye, FaCheck, FaTimes, FaPlus, FaTrophy, FaPen } from 'react-icons/fa
 import { useNotification } from '../components/NotificationSystem';
 import { secureStorage } from '../utils/secureStorage';
 import ImageMarker from '../components/ImageMarker';
+import GlobalLoader from '../components/GlobalLoader';
+import { useGlobalLoader } from '../hooks/useGlobalLoader';
 
 const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
   const [submissions, setSubmissions] = useState([]);
@@ -20,6 +22,7 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
   const [selectedExamReport, setSelectedExamReport] = useState(null);
   const [examReport, setExamReport] = useState([]);
   const [isExaminer, setIsExaminer] = useState(false);
+  const [isGlobalLoading, setGlobalLoading] = useGlobalLoader(true);
   const { success, error: showError } = useNotification();
 
   useEffect(() => {
@@ -68,6 +71,7 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
       showError('Failed to fetch submissions');
     } finally {
       setLoading(false);
+      setGlobalLoading(false);
     }
   };
 
@@ -239,15 +243,10 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
     setSelectedSubmission(prev => ({ ...prev }));
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div>
-      </div>
-    );
-  }
+
 
   return (
+    <GlobalLoader isLoading={isGlobalLoading} skeletonType="dashboard">
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
@@ -736,6 +735,7 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
         )}
       </div>
     </div>
+    </GlobalLoader>
   );
 };
 
