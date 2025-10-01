@@ -212,6 +212,17 @@ const QuizBattleRoom = () => {
           }
         });
 
+        socket.addListener('userKicked', (data) => {
+          setUsers(prev => prev.filter(user => user.id !== data.userId));
+          addNotification('user-kicked', 'Player Kicked', `${data.username} was kicked from the battle.`);
+          
+          // If current user was kicked, redirect to dashboard
+          if (data.userId === userData._id) {
+            showError('You have been kicked from the battle room');
+            setTimeout(() => navigate('/dashboard'), 2000);
+          }
+        });
+
         socket.addListener('userReconnected', (data) => {
           // Update user status to show they're back
           setUsers(prev => prev.map(user => 
@@ -722,6 +733,15 @@ const QuizBattleRoom = () => {
       // Don't call handleLeaveRoom on unmount to prevent interfering with battle start
     };
   }, [userData?._id, isRoomCreator, battleStarted, roomId]);
+
+  const handleKickUser = (userId, username) => {
+    if (!isRoomCreator || !socket) return;
+    
+    if (window.confirm(`Kick ${username} from the battle room?`)) {
+      socket.emit('kickUser', { roomId, userId, kickedBy: userData._id });
+      info(`${username} has been kicked from the room`);
+    }
+  };
 
   const handleLeaveRoom = async () => {
     if (userData?._id) {

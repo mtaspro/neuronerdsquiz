@@ -16,7 +16,7 @@ const NeuraflowAIChat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('qwen/qwen3-32b');
+  const [selectedModel, setSelectedModel] = useState('x-ai/grok-4-fast:free');
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isProcessingVision, setIsProcessingVision] = useState(false);
@@ -44,10 +44,10 @@ const NeuraflowAIChat = () => {
   const synthRef = useRef(null);
 
   const models = [
-    { id: 'qwen/qwen3-32b', name: 'Qwen 32B', description: 'Fast responses & multilingual support' },
+    { id: 'x-ai/grok-4-fast:free', name: 'Grok 4 Fast', description: 'Fast responses & multilingual support' },
     { id: 'qwen/qwen3-235b-a22b:free', name: 'Bengali Expert', description: 'Perfect for Bengali language support' },
-    { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Code Expert', description: 'Best for coding & complex reasoning' },
-    { id: 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free', name: 'Dolphin Mistral', description: 'Unfiltered and Full Controll' }
+    { id: 'google/gemini-2.0-flash-exp:free', name: 'Gemini 2.0 Flash', description: 'Best for coding & complex reasoning' },
+    { id: 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free', name: 'Dolphin Mistral', description: 'Unfiltered and Full Control' }
   ];
 
   // Initialize speech recognition and synthesis

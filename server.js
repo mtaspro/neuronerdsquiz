@@ -524,6 +524,40 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Kick user (room creator only)
+  socket.on('kickUser', ({ roomId, userId, kickedBy }) => {
+    try {
+      const room = battleService.getRoom(roomId);
+      if (!room || room.creatorId !== kickedBy) {
+        socket.emit('error', { message: 'Only room creator can kick users' });
+        return;
+      }
+      
+      const user = room.users.get(userId);
+      if (!user) return;
+      
+      // Remove user from room
+      battleService.removeUserFromRoom(roomId, userId);
+      
+      // Disconnect the kicked user's socket
+      const kickedSocket = [...io.sockets.sockets.values()].find(s => s.id === user.socketId);
+      if (kickedSocket) {
+        kickedSocket.leave(roomId);
+      }
+      
+      // Notify all users about the kick
+      io.to(roomId).emit('userKicked', {
+        userId,
+        username: user.username,
+        kickedBy
+      });
+      
+      console.log(`User ${user.username} was kicked from room ${roomId}`);
+    } catch (error) {
+      socket.emit('error', { message: error.message });
+    }
+  });
+
   // Leave room
   socket.on('leaveRoom', ({ roomId, userId }) => {
     try {
@@ -546,6 +580,7 @@ io.on('connection', (socket) => {
         // Keep user in room but mark as disconnected
         user.socketId = null;
         user.disconnected = true;
+        user.disconnectedAt = new Date();
         
         io.to(roomId).emit('userDisconnected', {
           userId,
@@ -633,6 +668,9 @@ io.on('connection', (socket) => {
       if (hasProgress) {
         console.log(`📡 User ${user.username} disconnected from room ${room.id} - progress preserved (Q${user.currentQuestion}, Score: ${user.score})`);
         
+        // Mark disconnect time for auto-submit
+        user.disconnectedAt = new Date();
+        
         // Keep user in room but mark as disconnected
         io.to(room.id).emit('userDisconnected', {
           userId: user.id,
@@ -666,6 +704,61 @@ io.on('connection', (socket) => {
 setInterval(() => {
   battleService.cleanupInactiveRooms();
 }, 30 * 60 * 1000);
+
+// Check for auto-submit every minute
+setInterval(() => {
+  const now = new Date();
+  const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+  
+  // Check all active battle rooms
+  for (const room of battleService.battleRooms.values()) {
+    if (room.status !== 'active') continue;
+    
+    for (const user of room.users.values()) {
+      // Auto-submit users disconnected for 5+ minutes
+      if (user.disconnected && user.disconnectedAt && 
+          user.disconnectedAt < fiveMinutesAgo && 
+          !user.autoSubmitted && !user.hasCompleted) {
+        
+        console.log(`⏰ Auto-submitting ${user.username} after 5min disconnect in room ${room.id}`);
+        
+        // Mark as completed and auto-submitted
+        user.currentQuestion = room.questions.length;
+        user.hasCompleted = true;
+        user.autoSubmitted = true;
+        
+        // Check if all users are now finished
+        const allFinished = Array.from(room.users.values()).every(
+          u => u.currentQuestion >= room.questions.length || u.hasCompleted
+        );
+        
+        if (allFinished) {
+          console.log(`🏁 All users finished in room ${room.id} (including auto-submit)`);
+          
+          const battleResults = battleService.endBattle(room.id);
+          
+          // Save battle results to leaderboard
+          saveBattleResultsToLeaderboard(battleResults);
+          
+          // Send WhatsApp notification
+          sendBattleEndNotification(room.id, battleResults);
+          
+          // Clear the active battle room from API state
+          try {
+            const battleRouterModule = await import('./routes/battle.js');
+            if (battleRouterModule.clearActiveBattleRoom) {
+              battleRouterModule.clearActiveBattleRoom(room.id);
+            }
+          } catch (apiError) {
+            console.error('Failed to clear battle room from API:', apiError);
+          }
+          
+          io.to(room.id).emit('battleEnded', battleResults);
+        }
+      }
+    }
+  }
+}, 60 * 1000); // Check every minute
 
 // Make io and battleService available to routes
 app.set('io', io);
