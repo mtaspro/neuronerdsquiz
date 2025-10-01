@@ -7,7 +7,7 @@ import { secureStorage } from '../utils/secureStorage.js';
 
 const BattleReminderManager = () => {
   const [reminders, setReminders] = useState([]);
-  const [reminderTime, setReminderTime] = useState('09:00');
+  const [reminderTime, setReminderTime] = useState('20:00');
   const [newReminder, setNewReminder] = useState({ date: '', topics: '' });
   const [editingId, setEditingId] = useState(null);
   const [editReminder, setEditReminder] = useState({ topics: '', isActive: true });
