@@ -11,6 +11,19 @@ import 'katex/dist/katex.min.css';
 const RichMessageRenderer = ({ content, className = '' }) => {
   const [copiedCode, setCopiedCode] = useState(null);
 
+  // Preprocess content to fix LaTeX delimiters
+  const preprocessContent = (text) => {
+    if (!text) return text;
+    
+    // Convert [ ] to $$ $$ for display math
+    let processed = text.replace(/\[([^\]]+)\]/g, '$$$$1$$');
+    
+    // Convert \( \) to $ $ for inline math (if any)
+    processed = processed.replace(/\\\(([^\)]+)\\\)/g, '$$1$');
+    
+    return processed;
+  };
+
   const copyToClipboard = async (text, id) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -265,7 +278,7 @@ const RichMessageRenderer = ({ content, className = '' }) => {
         components={components}
         className="prose prose-sm max-w-none prose-invert"
       >
-        {content}
+        {preprocessContent(content)}
       </ReactMarkdown>
     </div>
   );
