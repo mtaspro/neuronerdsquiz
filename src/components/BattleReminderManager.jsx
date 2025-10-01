@@ -50,10 +50,10 @@ const BattleReminderManager = () => {
       
       // Fallback to service status
       const response = await axios.get(`${apiUrl}/api/battle-reminder/status`);
-      setReminderTime(response.data.reminderTime || '09:00');
+      setReminderTime(response.data.reminderTime || '20:00');
     } catch (error) {
       console.error('Error fetching reminder status:', error);
-      setReminderTime('09:00');
+      setReminderTime('20:00');
     }
   };
 
