@@ -177,7 +177,7 @@ function Navbar() {
               {isSuperAdmin && (
                 <Link to="/superadmin" className="text-gray-800 dark:text-white font-semibold hover:text-red-600 dark:hover:text-red-400 transition">SuperAdmin</Link>
               )}
-              {(isExaminer || isSuperAdmin) && (
+              {isAuthenticated && (
                 <Link to="/examiner" className="text-gray-800 dark:text-white font-semibold hover:text-purple-600 dark:hover:text-purple-400 transition">Examiner</Link>
               )}
               {isAuthenticated && (
@@ -217,7 +217,7 @@ function Navbar() {
                 {isSuperAdmin && (
                   <Link to="/superadmin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">SuperAdmin</Link>
                 )}
-                {(isExaminer || isSuperAdmin) && (
+                {isAuthenticated && (
                   <Link to="/examiner" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Examiner</Link>
                 )}
                 {isAuthenticated && (
@@ -424,11 +424,11 @@ function AnimatedRoutes() {
           <Route
             path="/examiner"
             element={
-              <ExaminerRoute>
+              <ProtectedRoute>
                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
                   <ExaminerDashboard />
                 </Suspense>
-              </ExaminerRoute>
+              </ProtectedRoute>
             }
           />
           <Route
