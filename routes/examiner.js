@@ -48,7 +48,7 @@ const requireExaminer = async (req, res, next) => {
 };
 
 // Get all pending submissions for grading (with gender restrictions)
-router.get('/submissions', sessionMiddleware, requireAuth, requireExaminer, async (req, res) => {
+router.get('/submissions', sessionMiddleware, requireAuth, async (req, res) => {
   try {
     const { status = 'pending', override } = req.query;
     const examiner = await User.findById(req.user.userId);
@@ -217,7 +217,7 @@ router.delete('/exams/:examId', sessionMiddleware, requireAuth, requireExaminer,
 });
 
 // Get all exams for management
-router.get('/exams', sessionMiddleware, requireAuth, requireExaminer, async (req, res) => {
+router.get('/exams', sessionMiddleware, requireAuth, async (req, res) => {
   try {
     const exams = await WrittenExam.find()
       .populate('createdBy', 'username')
@@ -229,7 +229,7 @@ router.get('/exams', sessionMiddleware, requireAuth, requireExaminer, async (req
 });
 
 // Get exam participation report
-router.get('/exams/:examId/report', sessionMiddleware, requireAuth, requireExaminer, async (req, res) => {
+router.get('/exams/:examId/report', sessionMiddleware, requireAuth, async (req, res) => {
   try {
     const { examId } = req.params;
     
