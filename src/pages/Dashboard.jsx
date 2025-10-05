@@ -8,7 +8,7 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
 import LoadingAnimation from '../components/LoadingAnimation';
 import { useNotification } from '../components/NotificationSystem';
-import SpectatorAccess from '../components/SpectatorAccess';
+
 import SoundToggle from '../components/SoundToggle';
 import soundManager from '../utils/soundUtils';
 import { secureStorage } from '../utils/secureStorage.js';
@@ -31,7 +31,7 @@ const Dashboard = () => {
   const [activeBattleRoom, setActiveBattleRoom] = useState(null);
   const [userInBattle, setUserInBattle] = useState(false);
   const [userProgress, setUserProgress] = useState(null);
-  const [showSpectatorModal, setShowSpectatorModal] = useState(false);
+
   const [unreadCount, setUnreadCount] = useState(0);
   const [particles, setParticles] = useState([]);
   const contentRef = useRef(null);
@@ -263,6 +263,36 @@ const Dashboard = () => {
       return;
     }
     navigate(`/battle/${activeBattleRoom.id}`);
+  };
+
+  const handleForceSubmission = async () => {
+    if (!activeBattleRoom) return;
+    
+    if (!window.confirm('Force submission for all participants? This will end the battle and show final results immediately.')) {
+      return;
+    }
+    
+    try {
+      // Use socket to force submission
+      const socket = window.socketManager?.getSocket('dashboard');
+      if (socket) {
+        socket.emit('forceSubmission', {
+          roomId: activeBattleRoom.id,
+          creatorId: user._id
+        });
+        
+        success('Force submission initiated! Battle will end shortly.', {
+          duration: 3000,
+          title: '⚡ Force Submission'
+        });
+        setActiveBattleRoom(null);
+      } else {
+        throw new Error('Socket connection not available');
+      }
+    } catch (error) {
+      console.error('Failed to force submission:', error);
+      alert('Failed to force submission. Please try again.');
+    }
   };
 
   const handleEndBattle = async () => {
@@ -651,6 +681,21 @@ const Dashboard = () => {
                   </div>
                 </motion.button>
                 
+                {/* Force Submission Button - Show if battle is started and user is creator */}
+                {activeBattleRoom && activeBattleRoom.status === 'started' && activeBattleRoom.creatorId === user?._id && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleForceSubmission}
+                    className="w-full py-3 px-4 rounded-lg font-bold shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 bg-gradient-to-r from-orange-500 to-yellow-600 hover:from-orange-600 hover:to-yellow-700 text-white mb-3"
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <span>⚡</span>
+                      <span>Force Submission</span>
+                    </div>
+                  </motion.button>
+                )}
+                
                 {/* End Battle Button - Show if battle exists and user is creator, admin, or superadmin */}
                 {activeBattleRoom && (activeBattleRoom.status === 'waiting' || activeBattleRoom.status === 'started') && 
                  (activeBattleRoom.creatorId === user?._id || user?.isAdmin || user?.isSuperAdmin) && (
@@ -752,7 +797,7 @@ const Dashboard = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowSpectatorModal(true)}
+                  onClick={() => navigate(`/battle/${activeBattleRoom.id}?spectator=true`)}
                   className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 mt-3"
                 >
                   <div className="flex items-center justify-center space-x-2">
@@ -839,13 +884,7 @@ const Dashboard = () => {
         onTourComplete={markTutorialAsCompleted}
       />
       
-      {/* Spectator Access Modal */}
-      <SpectatorAccess
-        isOpen={showSpectatorModal}
-        onClose={() => setShowSpectatorModal(false)}
-        roomId={activeBattleRoom?.id}
-        autoJoin={true}
-      />
+
     </div>
     </GlobalLoader>
   );

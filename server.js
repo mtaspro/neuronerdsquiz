@@ -253,18 +253,37 @@ async function sendBattleEndNotification(roomId, battleResults) {
     if (setting?.settingValue && battleResults?.results) {
       let message = `🏁 *BATTLE ENDED!* 🏁\n\nRoom: ${roomId}\n\n🏆 *COMPLETE LEADERBOARD:*\n`;
       
-      // Show all players, not just top 5
+      // Show all players with detailed stats
       battleResults.results.forEach((result, index) => {
         const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
-        message += `${medal} *${result.username}* - ${result.score} pts\n`;
+        const correctAnswers = result.correctAnswers || 0;
+        const totalQuestions = result.totalQuestions || 0;
+        const submissionTime = result.totalTime ? formatTimeForWhatsApp(result.totalTime) : 'N/A';
+        
+        message += `${medal} *${result.username}*\n`;
+        message += `   💯 ${result.score} pts (${correctAnswers}/${totalQuestions})\n`;
+        message += `   ⏱️ ${submissionTime}\n\n`;
       });
       
-      message += `\n🎮 Total Players: ${battleResults.results.length}`;
+      message += `🎮 Total Players: ${battleResults.results.length}`;
       
       await whatsappService.sendGroupMessage(setting.settingValue, message);
     }
   } catch (error) {
     console.error('Failed to send battle end notification:', error);
+  }
+}
+
+// Helper function to format time for WhatsApp
+function formatTimeForWhatsApp(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  } else {
+    return `${seconds}s`;
   }
 }
 
@@ -554,6 +573,55 @@ io.on('connection', (socket) => {
       
       console.log(`User ${user.username} was kicked from room ${roomId}`);
     } catch (error) {
+      socket.emit('error', { message: error.message });
+    }
+  });
+
+  // Force submission (room creator only)
+  socket.on('forceSubmission', async ({ roomId, creatorId }) => {
+    try {
+      const room = battleService.getRoom(roomId);
+      if (!room || room.creatorId !== creatorId) {
+        socket.emit('error', { message: 'Only room creator can force submission' });
+        return;
+      }
+      
+      console.log(`⚡ Force submission initiated by creator for room ${roomId}`);
+      
+      // Force complete all users
+      for (const user of room.users.values()) {
+        if (!user.hasCompleted) {
+          user.currentQuestion = room.questions.length;
+          user.hasCompleted = true;
+          user.forceSubmitted = true;
+        }
+      }
+      
+      // End the battle and get results
+      const battleResults = battleService.endBattle(roomId);
+      
+      // Save results to leaderboard
+      await saveBattleResultsToLeaderboard(battleResults);
+      
+      // Send WhatsApp notification
+      await sendBattleEndNotification(roomId, battleResults);
+      
+      // Clear the active battle room from API state
+      try {
+        const battleRouterModule = await import('./routes/battle.js');
+        if (battleRouterModule.clearActiveBattleRoom) {
+          battleRouterModule.clearActiveBattleRoom(roomId);
+        }
+      } catch (apiError) {
+        console.error('Failed to clear battle room from API:', apiError);
+      }
+      
+      // Emit battle ended to all participants
+      io.to(roomId).emit('battleEnded', battleResults);
+      
+      console.log(`✅ Force submission completed for room ${roomId}`);
+    } catch (error) {
+      console.error('Error in force submission:', error);
       socket.emit('error', { message: error.message });
     }
   });

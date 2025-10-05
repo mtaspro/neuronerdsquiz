@@ -112,6 +112,71 @@ router.post('/start', sessionMiddleware, async (req, res) => {
   }
 });
 
+// Force submission for all participants
+router.post('/force-submission', sessionMiddleware, async (req, res) => {
+  try {
+    const { roomId, creatorId } = req.body;
+    
+    if (!activeBattleRoom || activeBattleRoom.id !== roomId) {
+      return res.status(404).json({ error: 'Battle room not found' });
+    }
+    
+    if (activeBattleRoom.creatorId !== creatorId) {
+      return res.status(403).json({ error: 'Only battle creator can force submission' });
+    }
+    
+    // Get battle service and force submission for all users
+    const battleService = req.app.get('battleService');
+    if (battleService) {
+      const io = req.app.get('io');
+      const room = battleService.getRoom(roomId);
+      
+      if (room) {
+        console.log(`⚡ Force submission initiated for room ${roomId}`);
+        
+        // Force complete all users and trigger battle end
+        for (const user of room.users.values()) {
+          if (!user.hasCompleted) {
+            user.currentQuestion = room.questions.length;
+            user.hasCompleted = true;
+            user.forceSubmitted = true;
+          }
+        }
+        
+        // End the battle and get results
+        const battleResults = battleService.endBattle(roomId);
+        
+        // Save results to leaderboard
+        const { saveBattleResultsToLeaderboard, sendBattleEndNotification } = await import('../server.js');
+        if (saveBattleResultsToLeaderboard) {
+          await saveBattleResultsToLeaderboard(battleResults);
+        }
+        
+        // Send WhatsApp notification
+        if (sendBattleEndNotification) {
+          await sendBattleEndNotification(roomId, battleResults);
+        }
+        
+        // Clear the active battle room
+        activeBattleRoom = null;
+        battleRoomCreator = null;
+        
+        // Emit battle ended to all participants
+        io.to(roomId).emit('battleEnded', battleResults);
+        
+        res.json({ success: true, message: 'Force submission completed', results: battleResults });
+      } else {
+        res.status(404).json({ error: 'Battle room not found in service' });
+      }
+    } else {
+      res.status(500).json({ error: 'Battle service not available' });
+    }
+  } catch (error) {
+    console.error('Error in force submission:', error);
+    res.status(500).json({ error: 'Failed to force submission' });
+  }
+});
+
 // End battle (mark as ended)
 router.post('/end', sessionMiddleware, async (req, res) => {
   try {

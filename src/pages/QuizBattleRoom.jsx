@@ -213,6 +213,7 @@ const QuizBattleRoom = () => {
         });
 
         socket.addListener('userKicked', (data) => {
+          console.log('User kicked event received:', data);
           setUsers(prev => prev.filter(user => user.id !== data.userId));
           addNotification('user-kicked', 'Player Kicked', `${data.username} was kicked from the battle.`);
           
@@ -1185,7 +1186,7 @@ const QuizBattleRoom = () => {
                     <div className="text-right">
                       <div className="text-2xl font-bold text-yellow-400">{result.score}</div>
                       <div className="text-sm text-gray-300">
-                        {formatTime(result.totalTime)}
+                        Time: {formatTime(result.totalTime)}
                       </div>
                     </div>
                   </div>
