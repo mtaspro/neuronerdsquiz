@@ -199,80 +199,83 @@ const ImageMarker = ({ imageUrl, onSave, onCancel, existingMarkedImage }) => {
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center space-x-4 p-4 bg-gray-100 dark:bg-gray-700 border-b">
-        <button
-          onClick={() => setTool('pen')}
-          className={`p-2 rounded ${tool === 'pen' ? 'bg-blue-500 text-white' : 'bg-white dark:bg-gray-600'}`}
-        >
-          <FaPen />
-        </button>
-        <button
-          onClick={() => setTool('text')}
-          className={`p-2 rounded ${tool === 'text' ? 'bg-blue-500 text-white' : 'bg-white dark:bg-gray-600'}`}
-        >
-          <FaFont />
-        </button>
-        
-        <div className="border-l border-gray-300 h-8 mx-2"></div>
-        
-        <button
-          onClick={rotateImage}
-          className="p-2 rounded bg-orange-500 hover:bg-orange-600 text-white"
-          title="Rotate 90°"
-        >
-          <FaRedoAlt />
-        </button>
-
-        
-        <div className="flex items-center space-x-2">
-          <FaPalette />
-          {colors.map(c => (
+      <div className="bg-gray-100 dark:bg-gray-700 border-b">
+        {/* Top row - Tools and colors */}
+        <div className="flex items-center justify-between p-2 sm:p-4 overflow-x-auto">
+          <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
             <button
-              key={c}
-              onClick={() => setColor(c)}
-              className={`w-6 h-6 rounded border-2 ${color === c ? 'border-gray-800' : 'border-gray-300'}`}
-              style={{ backgroundColor: c }}
-            />
-          ))}
+              onClick={() => setTool('pen')}
+              className={`p-2 rounded text-sm ${tool === 'pen' ? 'bg-blue-500 text-white' : 'bg-white dark:bg-gray-600'}`}
+            >
+              <FaPen className="w-3 h-3 sm:w-4 sm:h-4" />
+            </button>
+            <button
+              onClick={() => setTool('text')}
+              className={`p-2 rounded text-sm ${tool === 'text' ? 'bg-blue-500 text-white' : 'bg-white dark:bg-gray-600'}`}
+            >
+              <FaFont className="w-3 h-3 sm:w-4 sm:h-4" />
+            </button>
+            
+            <button
+              onClick={rotateImage}
+              className="p-2 rounded bg-orange-500 hover:bg-orange-600 text-white text-sm"
+              title="Rotate 90°"
+            >
+              <FaRedoAlt className="w-3 h-3 sm:w-4 sm:h-4" />
+            </button>
+            
+            <div className="flex items-center space-x-1">
+              <FaPalette className="w-3 h-3 sm:w-4 sm:h-4" />
+              {colors.map(c => (
+                <button
+                  key={c}
+                  onClick={() => setColor(c)}
+                  className={`w-4 h-4 sm:w-6 sm:h-6 rounded border-2 ${color === c ? 'border-gray-800' : 'border-gray-300'}`}
+                  style={{ backgroundColor: c }}
+                />
+              ))}
+            </div>
+            
+            {tool === 'pen' ? (
+              <input
+                type="range"
+                min="1"
+                max="10"
+                value={lineWidth}
+                onChange={(e) => setLineWidth(e.target.value)}
+                className="w-16 sm:w-20"
+              />
+            ) : (
+              <input
+                type="range"
+                min="12"
+                max="48"
+                value={fontSize}
+                onChange={(e) => setFontSize(e.target.value)}
+                className="w-16 sm:w-20"
+                title="Font Size"
+              />
+            )}
+            
+            <button onClick={undo} disabled={historyIndex <= 0} className="p-2 rounded bg-white dark:bg-gray-600 disabled:opacity-50">
+              <FaUndo className="w-3 h-3 sm:w-4 sm:h-4" />
+            </button>
+            <button onClick={redo} disabled={historyIndex >= history.length - 1} className="p-2 rounded bg-white dark:bg-gray-600 disabled:opacity-50">
+              <FaRedo className="w-3 h-3 sm:w-4 sm:h-4" />
+            </button>
+          </div>
         </div>
         
-        {tool === 'pen' ? (
-          <input
-            type="range"
-            min="1"
-            max="10"
-            value={lineWidth}
-            onChange={(e) => setLineWidth(e.target.value)}
-            className="w-20"
-          />
-        ) : (
-          <input
-            type="range"
-            min="12"
-            max="48"
-            value={fontSize}
-            onChange={(e) => setFontSize(e.target.value)}
-            className="w-20"
-            title="Font Size"
-          />
-        )}
-        
-        <button onClick={undo} disabled={historyIndex <= 0} className="p-2 rounded bg-white dark:bg-gray-600 disabled:opacity-50">
-          <FaUndo />
-        </button>
-        <button onClick={redo} disabled={historyIndex >= history.length - 1} className="p-2 rounded bg-white dark:bg-gray-600 disabled:opacity-50">
-          <FaRedo />
-        </button>
-        
-        <div className="flex-1" />
-        
-        <button onClick={handleSave} className="px-4 py-2 bg-green-600 text-white rounded flex items-center">
-          <FaSave className="mr-2" />
-          Save
-        </button>
-        <button onClick={onCancel} className="px-4 py-2 bg-gray-600 text-white rounded">
-          Cancel
-        </button>
+        {/* Bottom row - Action buttons */}
+        <div className="flex space-x-2 p-2 sm:p-4 border-t border-gray-200 dark:border-gray-600">
+          <button onClick={handleSave} className="flex-1 px-3 py-2 bg-green-600 text-white rounded flex items-center justify-center text-sm sm:text-base">
+            <FaSave className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4" />
+            Save
+          </button>
+          <button onClick={onCancel} className="flex-1 px-3 py-2 bg-gray-600 text-white rounded text-sm sm:text-base">
+            Cancel
+          </button>
+        </div>
       </div>
       
       {/* Canvas */}
