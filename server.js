@@ -505,11 +505,14 @@ io.on('connection', (socket) => {
         // Clear the active battle room from the API state
         try {
           // Import and clear the battle room directly
-          const battleRouterModule = await import('./routes/battle.js');
-          if (battleRouterModule.clearActiveBattleRoom) {
-            battleRouterModule.clearActiveBattleRoom(roomId);
-            console.log(`🗑️ Auto-cleared battle room ${roomId} from API state`);
-          }
+          import('./routes/battle.js').then(battleRouterModule => {
+            if (battleRouterModule.clearActiveBattleRoom) {
+              battleRouterModule.clearActiveBattleRoom(roomId);
+              console.log(`🗑️ Auto-cleared battle room ${roomId} from API state`);
+            }
+          }).catch(apiError => {
+            console.error('Failed to clear battle room from API:', apiError.message);
+          });
         } catch (apiError) {
           console.error('Failed to clear battle room from API:', apiError.message);
         }
@@ -612,10 +615,13 @@ io.on('connection', (socket) => {
       
       // Clear the active battle room from API state
       try {
-        const battleRouterModule = await import('./routes/battle.js');
-        if (battleRouterModule.clearActiveBattleRoom) {
-          battleRouterModule.clearActiveBattleRoom(roomId);
-        }
+        import('./routes/battle.js').then(battleRouterModule => {
+          if (battleRouterModule.clearActiveBattleRoom) {
+            battleRouterModule.clearActiveBattleRoom(roomId);
+          }
+        }).catch(apiError => {
+          console.error('Failed to clear battle room from API:', apiError);
+        });
       } catch (apiError) {
         console.error('Failed to clear battle room from API:', apiError);
       }
@@ -817,10 +823,13 @@ setInterval(() => {
           
           // Clear the active battle room from API state
           try {
-            const battleRouterModule = await import('./routes/battle.js');
-            if (battleRouterModule.clearActiveBattleRoom) {
-              battleRouterModule.clearActiveBattleRoom(room.id);
-            }
+            import('./routes/battle.js').then(battleRouterModule => {
+              if (battleRouterModule.clearActiveBattleRoom) {
+                battleRouterModule.clearActiveBattleRoom(room.id);
+              }
+            }).catch(apiError => {
+              console.error('Failed to clear battle room from API:', apiError);
+            });
           } catch (apiError) {
             console.error('Failed to clear battle room from API:', apiError);
           }
