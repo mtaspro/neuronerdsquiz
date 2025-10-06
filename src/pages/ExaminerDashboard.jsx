@@ -420,11 +420,11 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
 
         {/* Grading Modal */}
         {selectedSubmission && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" data-lenis-prevent>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto" data-lenis-prevent>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto mx-2 sm:mx-0"
+              className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 max-w-4xl w-full mx-2 sm:mx-0 my-4"
               data-lenis-prevent
             >
               <h2 className="text-2xl font-bold mb-4">
