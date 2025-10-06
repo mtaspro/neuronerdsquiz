@@ -280,6 +280,64 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
           ))}
         </div>
 
+        {/* Tutorial Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+          <h2 className="text-2xl font-bold mb-4 text-center">📚 How to Grade Answer Papers - Tutorial</h2>
+          <div className="space-y-6">
+            {/* Step 1 */}
+            <div className="border-l-4 border-blue-500 pl-4">
+              <h3 className="font-semibold text-lg mb-2">1. Click the Grade Button</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-3">Start by clicking the "Grade Submission" button on any pending submission.</p>
+              <img src="https://res.cloudinary.com/dxqtqnfgf/image/upload/v1759729588/1_fss2if.png" alt="Click grade button" className="w-full max-w-md rounded-lg border" />
+            </div>
+
+            {/* Step 2 */}
+            <div className="border-l-4 border-green-500 pl-4">
+              <h3 className="font-semibold text-lg mb-2">2. Mark Answer Papers</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-3">Answer papers will appear. Tap the pencil icon on any paper to start marking it.</p>
+              <img src="https://res.cloudinary.com/dxqtqnfgf/image/upload/v1759729588/2_j6c1fc.png" alt="Mark papers" className="w-full max-w-md rounded-lg border" />
+            </div>
+
+            {/* Step 3 */}
+            <div className="border-l-4 border-purple-500 pl-4">
+              <h3 className="font-semibold text-lg mb-2">3. Marking Tools</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-3">Use the available tools: Pencil for drawing, Text button for annotations, color palette for different colors, width slider for line thickness, and undo/redo buttons.</p>
+              <img src="https://res.cloudinary.com/dxqtqnfgf/image/upload/v1759729589/3_cqcfcw.png" alt="Marking tools" className="w-full max-w-md rounded-lg border" />
+            </div>
+
+            {/* Step 4 */}
+            <div className="border-l-4 border-orange-500 pl-4">
+              <h3 className="font-semibold text-lg mb-2">4. Add Text Annotations</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-3">Click the text input button [A] and tap anywhere on the paper to add comments, marks, or feedback.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <img src="https://res.cloudinary.com/dxqtqnfgf/image/upload/v1759729605/4_olkmju.png" alt="Text input" className="w-full rounded-lg border" />
+                <img src="https://res.cloudinary.com/dxqtqnfgf/image/upload/v1759729605/5_q7qpmo.png" alt="Add text" className="w-full rounded-lg border" />
+              </div>
+            </div>
+
+            {/* Step 5 */}
+            <div className="border-l-4 border-red-500 pl-4">
+              <h3 className="font-semibold text-lg mb-2">5. Save Marked Paper</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-3">After marking, click the Save button to save your annotations.</p>
+              <img src="https://res.cloudinary.com/dxqtqnfgf/image/upload/v1759729606/6_lnhf9f.png" alt="Save marked paper" className="w-full max-w-md rounded-lg border" />
+            </div>
+
+            {/* Step 6 */}
+            <div className="border-l-4 border-teal-500 pl-4">
+              <h3 className="font-semibold text-lg mb-2">6. Mark Remaining Papers</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-3">Repeat the same process for all remaining answer papers.</p>
+              <img src="https://res.cloudinary.com/dxqtqnfgf/image/upload/v1759729606/7_vv2q8c.png" alt="Mark remaining papers" className="w-full max-w-md rounded-lg border" />
+            </div>
+
+            {/* Step 7 */}
+            <div className="border-l-4 border-indigo-500 pl-4">
+              <h3 className="font-semibold text-lg mb-2">7. Fill Grading Form & Save</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-3">Scroll down, fill in the total marks, examiner comments, and most importantly click the "Save Grade" button to complete the grading process.</p>
+              <img src="https://res.cloudinary.com/dxqtqnfgf/image/upload/v1759729606/8_vctfka.png" alt="Save grade" className="w-full max-w-md rounded-lg border" />
+            </div>
+          </div>
+        </div>
+
         {/* Content */}
         {activeTab === 'exams' ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
