@@ -311,7 +311,7 @@ class BattleService {
           username: user.username,
           score: user.score + bonusScore,
           rank: 0, // Will be set after sorting
-          totalTime: room.endTime - room.startTime,
+          totalTime: (user.completedAt || room.endTime) - room.startTime,
           answers: user.answers,
           correctAnswers: user.answers.filter(a => a?.isCorrect).length,
           totalQuestions: room.questions.length,

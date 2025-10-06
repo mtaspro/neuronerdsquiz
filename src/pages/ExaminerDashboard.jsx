@@ -385,10 +385,10 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
                       />
                       <button
                         onClick={() => handleMarkImage(image, false)}
-                        className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-sm"
                         title="Mark this image"
                       >
-                        <FaPen />
+                        <FaPen className="w-3 h-3 sm:w-4 sm:h-4" />
                       </button>
                     </div>
                   ))}
@@ -411,10 +411,10 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
                         />
                         <button
                           onClick={() => handleMarkImage(image, true)}
-                          className="absolute top-2 right-2 bg-green-600 hover:bg-green-700 text-white p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-2 right-2 bg-green-600 hover:bg-green-700 text-white p-2 rounded opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-sm"
                           title="Edit marked image"
                         >
-                          <FaPen />
+                          <FaPen className="w-3 h-3 sm:w-4 sm:h-4" />
                         </button>
                       </div>
                     ))}
@@ -476,11 +476,11 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
                 </div>
               </div>
 
-              <div className="flex space-x-4 mt-6">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-6">
                 {isExaminer && (
                   <button
                     onClick={handleGrade}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
+                    className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
                   >
                     <FaCheck className="mr-2" />
                     Save Grade
@@ -488,7 +488,7 @@ const ExaminerDashboard = ({ isExaminer: propIsExaminer }) => {
                 )}
                 <button
                   onClick={() => setSelectedSubmission(null)}
-                  className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="w-full sm:w-auto px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   {isExaminer ? 'Cancel' : 'Close'}
                 </button>

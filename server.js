@@ -455,13 +455,16 @@ io.on('connection', (socket) => {
 
       // Check if user has finished all questions
       if (result.hasFinished) {
+        // Mark completion time for this user
+        result.user.completedAt = new Date();
+        
         // Save individual user's battle score immediately
         const userResult = {
           userId: result.user.id,
           username: result.user.username,
           score: result.user.score,
           rank: 1, // Will be updated when battle ends
-          totalTime: new Date() - battleService.getRoom(roomId).startTime,
+          totalTime: result.user.completedAt - battleService.getRoom(roomId).startTime,
           answers: result.user.answers,
           correctAnswers: result.user.answers.filter(a => a?.isCorrect).length,
           totalQuestions: battleService.getRoom(roomId).questions.length
@@ -555,13 +558,14 @@ io.on('connection', (socket) => {
       const user = room.users.get(userId);
       if (!user) return;
       
-      // Remove user from room
-      battleService.removeUserFromRoom(roomId, userId);
+      // Force remove user from room completely
+      room.users.delete(userId);
       
       // Disconnect the kicked user's socket
       const kickedSocket = [...io.sockets.sockets.values()].find(s => s.id === user.socketId);
       if (kickedSocket) {
         kickedSocket.leave(roomId);
+        kickedSocket.disconnect(true);
       }
       
       // Notify all users about the kick
