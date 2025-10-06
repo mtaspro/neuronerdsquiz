@@ -395,17 +395,17 @@ const WrittenExams = () => {
 
         {/* Upload Modal */}
         {selectedExam && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4" data-lenis-prevent>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-2 sm:p-4 overflow-y-auto" data-lenis-prevent>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 max-w-2xl w-full my-4"
               data-lenis-prevent
             >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">Submit Answer: {selectedExam.title}</h2>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 space-y-2 sm:space-y-0">
+                <h2 className="text-lg sm:text-2xl font-bold">Submit Answer: {selectedExam.title}</h2>
                 {timeLeft !== null && (
-                  <div className={`text-lg font-bold px-3 py-1 rounded ${
+                  <div className={`text-sm sm:text-lg font-bold px-2 sm:px-3 py-1 rounded text-center ${
                     timeLeft <= 300 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
                   }`}>
                     Time Left: {formatTime(timeLeft)}
@@ -415,9 +415,9 @@ const WrittenExams = () => {
               
               {/* Question Papers */}
               {selectedExam.questionPapers && selectedExam.questionPapers.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="font-medium mb-3 text-blue-600 dark:text-blue-400">📄 Question Papers:</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="font-medium mb-2 sm:mb-3 text-blue-600 dark:text-blue-400 text-sm sm:text-base">📄 Question Papers:</h3>
+                  <div className="grid grid-cols-1 gap-3">
                     {selectedExam.questionPapers.map((paper, index) => (
                       <div key={index} className="border border-blue-300 dark:border-blue-600 rounded-lg overflow-hidden">
                         <img
@@ -425,16 +425,16 @@ const WrittenExams = () => {
                           alt={`Question Paper ${index + 1}`}
                           className="w-full h-auto cursor-pointer hover:opacity-80"
                           onClick={() => window.open(paper, '_blank')}
-                          style={{ maxHeight: '400px', objectFit: 'contain' }}
+                          style={{ maxHeight: '300px', objectFit: 'contain' }}
                         />
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">Click images to view full size</p>
+                  <p className="text-xs text-gray-500 mt-1 sm:mt-2">Click images to view full size</p>
                 </div>
               )}
               
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 <label className="block text-sm font-medium mb-2">
                   Upload Answer Images (Max 20 files)
                 </label>
@@ -443,19 +443,19 @@ const WrittenExams = () => {
                   multiple
                   accept="image/*"
                   onChange={handleFileSelect}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                  className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"
                 />
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">
                   Upload clear photos of your written answers. Supported formats: JPG, PNG, etc.
                 </p>
               </div>
 
               {selectedFiles.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="font-medium mb-2">Selected Files ({selectedFiles.length}):</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="font-medium mb-2 text-sm sm:text-base">Selected Files ({selectedFiles.length}):</h3>
+                  <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
                     {selectedFiles.map((file, index) => (
-                      <div key={index} className="text-sm p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                      <div key={index} className="text-xs sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 rounded truncate">
                         {file.name}
                       </div>
                     ))}
@@ -463,11 +463,11 @@ const WrittenExams = () => {
                 </div>
               )}
 
-              <div className="flex space-x-4">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 sticky bottom-0 bg-white dark:bg-gray-800 pt-4 -mx-4 sm:-mx-6 px-4 sm:px-6 pb-4 sm:pb-6">
                 <button
                   onClick={() => handleSubmit(selectedExam._id)}
                   disabled={uploading || selectedFiles.length === 0}
-                  className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
+                  className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white py-3 px-4 sm:px-6 rounded-lg transition-colors flex items-center justify-center text-sm sm:text-base"
                 >
                   {uploading ? (
                     <>
@@ -486,7 +486,7 @@ const WrittenExams = () => {
                     setSelectedExam(null);
                     setSelectedFiles([]);
                   }}
-                  className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="w-full sm:w-auto px-4 sm:px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm sm:text-base"
                 >
                   Cancel
                 </button>
