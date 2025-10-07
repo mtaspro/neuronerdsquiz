@@ -990,7 +990,7 @@ Be friendly, knowledgeable, and supportive! ✨`;
       
       const response = await axios.post(`${apiUrl}/api/ai-chat`, {
         message: message,
-        model: 'x-ai/grok-4-fast:free',
+        model: 'google/gemini-2.0-flash-exp:free',
         systemPrompt: systemPrompt,
         conversationHistory: conversationHistory
       });
