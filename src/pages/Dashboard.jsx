@@ -16,6 +16,7 @@ import { authHeader } from '../utils/auth.js';
 import ParallaxElement from '../components/ParallaxElement';
 import GlobalLoader from '../components/GlobalLoader';
 import { useGlobalLoader } from '../hooks/useGlobalLoader';
+import MultiChapterBattleSelector from '../components/MultiChapterBattleSelector';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -28,6 +29,8 @@ const Dashboard = () => {
   const [battleRoomId, setBattleRoomId] = useState('');
   const [showBattleModal, setShowBattleModal] = useState(false);
   const [selectedBattleChapter, setSelectedBattleChapter] = useState('');
+  const [multiChapterSelection, setMultiChapterSelection] = useState([]);
+  const [battleMode, setBattleMode] = useState('single'); // 'single' or 'multi'
   const [activeBattleRoom, setActiveBattleRoom] = useState(null);
   const [userInBattle, setUserInBattle] = useState(false);
   const [userProgress, setUserProgress] = useState(null);
@@ -221,39 +224,59 @@ const Dashboard = () => {
   };
 
   const handleCreateBattle = async () => {
-    if (!selectedBattleChapter) {
-      alert('Please select a chapter for the battle.');
-      return;
+    // Validate based on battle mode
+    if (battleMode === 'single') {
+      if (!selectedBattleChapter) {
+        alert('Please select a chapter for the battle.');
+        return;
+      }
+    } else {
+      if (multiChapterSelection.length === 0 || 
+          !multiChapterSelection.every(item => item.chapter && item.questions > 0) ||
+          multiChapterSelection.reduce((total, item) => total + item.questions, 0) < 5) {
+        alert('Please complete the multi-chapter setup with at least 5 total questions.');
+        return;
+      }
     }
+    
     const roomId = `battle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     try {
       // Broadcast battle room creation to all users
       const apiUrl = import.meta.env.VITE_API_URL || '';
+      const battleData = battleMode === 'single' 
+        ? { roomId, chapter: selectedBattleChapter, mode: 'single' }
+        : { roomId, chapters: multiChapterSelection, mode: 'multi' };
+        
       const response = await fetch(`${apiUrl}/api/battle/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...authHeader()
         },
-        body: JSON.stringify({
-          roomId,
-          chapter: selectedBattleChapter
-        })
+        body: JSON.stringify(battleData)
       });
       
       if (response.ok) {
-        success('Battle room created! Users can now join the battle.', {
+        const modeText = battleMode === 'single' ? 'Single Chapter' : 'Multi-Chapter';
+        success(`${modeText} battle room created! Users can now join the battle.`, {
           duration: 5000,
           title: '🔥 Battle Room Created!'
         });
       }
       
-      navigate(`/battle/${roomId}`, { state: { chapter: selectedBattleChapter } });
+      const stateData = battleMode === 'single' 
+        ? { chapter: selectedBattleChapter, mode: 'single' }
+        : { chapters: multiChapterSelection, mode: 'multi' };
+        
+      navigate(`/battle/${roomId}`, { state: stateData });
     } catch (error) {
       console.error('Failed to create battle room:', error);
       // Fallback - still navigate to battle room
-      navigate(`/battle/${roomId}`, { state: { chapter: selectedBattleChapter } });
+      const stateData = battleMode === 'single' 
+        ? { chapter: selectedBattleChapter, mode: 'single' }
+        : { chapters: multiChapterSelection, mode: 'multi' };
+      navigate(`/battle/${roomId}`, { state: stateData });
     }
   };
 
@@ -642,42 +665,90 @@ const Dashboard = () => {
             {/* Admin-only Create Battle Section */}
             {user?.isAdmin === true && (
               <div className="mb-4">
-                {/* Chapter Selection for Battle */}
+                {/* Battle Mode Selection */}
                 <div className="mb-3">
-                  <label htmlFor="battle-chapter-select" className="text-orange-600 dark:text-orange-300 font-semibold mb-1 block text-sm">
-                    Select Chapter for Battle
+                  <label className="text-orange-600 dark:text-orange-300 font-semibold mb-2 block text-sm">
+                    Battle Mode
                   </label>
-                  <select 
-                    id="battle-chapter-select" 
-                    className="px-3 py-2 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-400 border border-gray-300 dark:border-gray-600 w-full transition-colors text-sm"
-                    value={selectedBattleChapter}
-                    onChange={e => setSelectedBattleChapter(e.target.value)}
-                    disabled={chaptersLoading}
-                  >
-                    <option value="">-- Choose chapter for battle --</option>
-                    {chapters.map(chapter => (
-                      <option key={chapter._id || chapter.name} value={chapter.name}>
-                        {chapter.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex space-x-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => setBattleMode('single')}
+                      className={`px-3 py-1 text-xs rounded transition-colors ${
+                        battleMode === 'single'
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      Single Chapter
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBattleMode('multi')}
+                      className={`px-3 py-1 text-xs rounded transition-colors ${
+                        battleMode === 'multi'
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      Multi-Chapter
+                    </button>
+                  </div>
                 </div>
+
+                {/* Single Chapter Selection */}
+                {battleMode === 'single' && (
+                  <div className="mb-3">
+                    <label htmlFor="battle-chapter-select" className="text-orange-600 dark:text-orange-300 font-semibold mb-1 block text-sm">
+                      Select Chapter for Battle
+                    </label>
+                    <select 
+                      id="battle-chapter-select" 
+                      className="px-3 py-2 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-400 border border-gray-300 dark:border-gray-600 w-full transition-colors text-sm"
+                      value={selectedBattleChapter}
+                      onChange={e => setSelectedBattleChapter(e.target.value)}
+                      disabled={chaptersLoading}
+                    >
+                      <option value="">-- Choose chapter for battle --</option>
+                      {chapters.map(chapter => (
+                        <option key={chapter._id || chapter.name} value={chapter.name}>
+                          {chapter.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Multi-Chapter Selection */}
+                {battleMode === 'multi' && (
+                  <MultiChapterBattleSelector
+                    chapters={chapters}
+                    onSelectionChange={setMultiChapterSelection}
+                    disabled={chaptersLoading || (activeBattleRoom && activeBattleRoom.status === 'waiting')}
+                  />
+                )}
                 
                 {/* Create Battle Button */}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleCreateBattle}
-                  disabled={!selectedBattleChapter || (activeBattleRoom && activeBattleRoom.status === 'waiting')}
+                  disabled={(
+                    (battleMode === 'single' && !selectedBattleChapter) ||
+                    (battleMode === 'multi' && (multiChapterSelection.length === 0 || multiChapterSelection.reduce((total, item) => total + item.questions, 0) < 5)) ||
+                    (activeBattleRoom && activeBattleRoom.status === 'waiting')
+                  )}
                   className={`w-full py-4 px-6 rounded-lg font-bold shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 mb-3 ${
-                    selectedBattleChapter && (!activeBattleRoom || activeBattleRoom.status !== 'waiting')
+                    ((battleMode === 'single' && selectedBattleChapter) || 
+                     (battleMode === 'multi' && multiChapterSelection.length > 0 && multiChapterSelection.reduce((total, item) => total + item.questions, 0) >= 5)) &&
+                    (!activeBattleRoom || activeBattleRoom.status !== 'waiting')
                       ? 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white' 
                       : 'bg-gray-400 text-gray-600 cursor-not-allowed'
                   }`}
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <FaPlus className="text-lg" />
-                    <span>Create Battle Room</span>
+                    <span>Create {battleMode === 'multi' ? 'Multi-Chapter' : 'Single'} Battle</span>
                   </div>
                 </motion.button>
                 
@@ -731,13 +802,22 @@ const Dashboard = () => {
                       : 'text-green-800 dark:text-green-200'
                   }`}>
                     {userInBattle ? '🔄 Your Active Battle!' : '⚔️ Battle Available!'}
+                    {activeBattleRoom.mode === 'multi' && (
+                      <span className="ml-2 text-xs bg-purple-500 text-white px-2 py-1 rounded">MULTI</span>
+                    )}
                   </div>
                   <div className={`text-xs ${
                     userInBattle 
                       ? 'text-blue-600 dark:text-blue-300'
                       : 'text-green-600 dark:text-green-300'
                   }`}>
-                    Chapter: {activeBattleRoom.chapter}
+                    {activeBattleRoom.mode === 'multi' ? (
+                      <div>
+                        Multi-Chapter: {activeBattleRoom.chapters?.map(ch => `${ch.questions} from ${ch.chapter}`).join(', ')}
+                      </div>
+                    ) : (
+                      <div>Chapter: {activeBattleRoom.chapter}</div>
+                    )}
                     {userProgress && userProgress.hasProgress && (
                       <div className="mt-1">
                         Progress: Q{userProgress.currentQuestion + 1} | Score: {userProgress.score}
@@ -765,12 +845,12 @@ const Dashboard = () => {
                     {!activeBattleRoom 
                       ? 'No Battle Available' 
                       : userInBattle
-                      ? 'Rejoin Battle!'
+                      ? `Rejoin ${activeBattleRoom.mode === 'multi' ? 'Multi-Chapter ' : ''}Battle!`
                       : activeBattleRoom.status === 'started' 
                       ? 'Battle In Progress (Can\'t Join)'
                       : activeBattleRoom.status === 'ended'
                       ? 'Battle Ended'
-                      : 'Join Battle Now!'}
+                      : `Join ${activeBattleRoom.mode === 'multi' ? 'Multi-Chapter ' : ''}Battle Now!`}
                   </span>
                 </div>
               </motion.button>

@@ -22,8 +22,11 @@ const QuizBattleRoom = () => {
   const location = useLocation();
   const { success, error: showError, info } = useNotification();
   
-  // Get selected chapter from navigation state
-  const selectedChapter = location.state?.chapter;
+  // Get battle data from navigation state
+  const battleData = location.state;
+  const selectedChapter = battleData?.chapter;
+  const selectedChapters = battleData?.chapters;
+  const battleMode = battleData?.mode || 'single';
   
   // Use the new socket hook with component-specific ID
   const socket = useSocket(`battle-room-${roomId}`);
@@ -422,8 +425,54 @@ const QuizBattleRoom = () => {
       soundManager.play('battleStart');
       let questionsToUse = [];
       
-      // Try to fetch questions from the selected chapter
-      if (selectedChapter) {
+      if (battleMode === 'multi' && selectedChapters) {
+        // Multi-chapter battle
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || '';
+          const token = secureStorage.getToken();
+          
+          for (const chapterConfig of selectedChapters) {
+            const response = await fetch(`${apiUrl}/api/quizzes?chapter=${encodeURIComponent(chapterConfig.chapter)}`, {
+              headers: {
+                'Authorization': token ? `Bearer ${token}` : ''
+              }
+            });
+            
+            if (response.ok) {
+              const chapterQuestions = await response.json();
+              
+              if (chapterQuestions && chapterQuestions.length > 0) {
+                // Shuffle and take required number of questions
+                const shuffled = chapterQuestions.sort(() => 0.5 - Math.random());
+                const questionsToTake = Math.min(chapterConfig.questions, chapterQuestions.length);
+                
+                const chapterQs = shuffled.slice(0, questionsToTake).map(q => ({
+                  _id: q._id,
+                  question: q.question,
+                  options: q.options,
+                  correctAnswer: typeof q.correctAnswer === 'string' ? q.options.indexOf(q.correctAnswer) : q.correctAnswer,
+                  explanation: q.explanation,
+                  chapter: chapterConfig.chapter
+                }));
+                
+                questionsToUse.push(...chapterQs);
+                console.log(`✅ Added ${chapterQs.length} questions from ${chapterConfig.chapter}`);
+              }
+            }
+          }
+          
+          // Shuffle all questions together
+          questionsToUse = questionsToUse.sort(() => 0.5 - Math.random());
+          
+          const totalExpected = selectedChapters.reduce((sum, ch) => sum + ch.questions, 0);
+          success(`Loaded ${questionsToUse.length}/${totalExpected} questions from ${selectedChapters.length} chapters`);
+          
+        } catch (error) {
+          console.error('❌ Failed to fetch multi-chapter questions:', error);
+          showError(`Failed to load multi-chapter questions: ${error.message}`);
+        }
+      } else if (selectedChapter) {
+        // Single chapter battle
         try {
           const apiUrl = import.meta.env.VITE_API_URL || '';
           const token = secureStorage.getToken();
@@ -485,13 +534,15 @@ const QuizBattleRoom = () => {
       
       // Prevent battle start if no questions loaded
       if (questionsToUse.length === 0) {
-        showError(`Cannot start battle: No questions available${selectedChapter ? ` for chapter "${selectedChapter}"` : ''}. Please select a different chapter or contact admin.`);
+        const battleDesc = battleMode === 'multi' ? 'multi-chapter selection' : `chapter "${selectedChapter}"`;
+        showError(`Cannot start battle: No questions available for ${battleDesc}. Please check your selection or contact admin.`);
         return;
       }
       
       // Ensure minimum 5 questions for battle
       if (questionsToUse.length < 5) {
-        showError(`Cannot start battle: Only ${questionsToUse.length} questions available in "${selectedChapter}". Need at least 5 questions.`);
+        const battleDesc = battleMode === 'multi' ? 'multi-chapter selection' : `"${selectedChapter}"`;
+        showError(`Cannot start battle: Only ${questionsToUse.length} questions available in ${battleDesc}. Need at least 5 questions.`);
         return;
       }
 
@@ -540,7 +591,7 @@ const QuizBattleRoom = () => {
       userId: userData._id,
       questionIndex: currentQuestion,
       questionId: questions?.[currentQuestion]?._id,
-      chapterName: selectedChapter
+      chapterName: battleMode === 'multi' ? 'Multi-Chapter' : selectedChapter
     };
 
     if (connected && !isOffline) {
@@ -572,7 +623,7 @@ const QuizBattleRoom = () => {
       answer: selectedAnswer,
       isCorrect,
       timeSpent: finalTimeSpent,
-      chapterName: selectedChapter,
+      chapterName: battleMode === 'multi' ? 'Multi-Chapter' : selectedChapter,
       lifelineUsed
     };
 
@@ -741,6 +792,15 @@ const QuizBattleRoom = () => {
     if (window.confirm(`Kick ${username} from the battle room?`)) {
       socket.emit('kickUser', { roomId, userId, kickedBy: userData._id });
       info(`${username} has been kicked from the room`);
+    }
+  };
+
+  const handleForceSubmission = () => {
+    if (!isRoomCreator || !socket) return;
+    
+    if (window.confirm('Force submit all participants? This will end the battle immediately and calculate final scores.')) {
+      socket.emit('forceSubmission', { roomId, creatorId: userData._id });
+      info('Force submission initiated. Battle will end shortly...');
     }
   };
 
@@ -975,6 +1035,16 @@ const QuizBattleRoom = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              {/* Force Submission Button (Room Creator Only, During Battle) */}
+              {isRoomCreator && battleStarted && !battleEnded && (
+                <button
+                  onClick={handleForceSubmission}
+                  className="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-lg transition-colors font-semibold text-sm"
+                  title="Force submit all participants and end battle"
+                >
+                  ⚡ Force Submit
+                </button>
+              )}
               <button
                 onClick={handleLeaveRoom}
                 className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition-colors"
@@ -1000,9 +1070,25 @@ const QuizBattleRoom = () => {
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-2">Waiting for Players</h2>
               <p className="text-gray-300">Get ready for an epic quiz battle!</p>
-              {selectedChapter && (
+              {(selectedChapter || selectedChapters) && (
                 <div className="mt-4 inline-block bg-orange-500 bg-opacity-20 border border-orange-400 rounded-lg px-4 py-2">
-                  <span className="text-orange-300 text-sm font-semibold">Chapter: {selectedChapter}</span>
+                  <span className="text-orange-300 text-sm font-semibold">
+                    {battleMode === 'multi' ? (
+                      <div>
+                        <div className="font-bold text-purple-300 mb-1">Multi-Chapter Battle</div>
+                        <div className="text-xs">
+                          {selectedChapters?.map((ch, i) => (
+                            <span key={i}>
+                              {ch.questions} from {ch.chapter}
+                              {i < selectedChapters.length - 1 ? ', ' : ''}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      `Chapter: ${selectedChapter}`
+                    )}
+                  </span>
                 </div>
               )}
             </div>

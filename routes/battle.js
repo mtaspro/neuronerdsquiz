@@ -13,15 +13,32 @@ let battleRoomCreator = null; // Track who created the room
 // Create battle room (admin only)
 router.post('/create', sessionMiddleware, async (req, res) => {
   try {
-    const { roomId, chapter } = req.body;
+    const { roomId, chapter, chapters, mode } = req.body;
     
     // Check if user is admin
     if (!req.user.isAdmin) {
       return res.status(403).json({ error: 'Only admins can create battle rooms' });
     }
     
-    // Set active battle room
-    activeBattleRoom = { id: roomId, chapter, status: 'waiting', creatorId: req.user.id };
+    // Set active battle room based on mode
+    if (mode === 'multi') {
+      activeBattleRoom = { 
+        id: roomId, 
+        chapters, 
+        mode: 'multi',
+        status: 'waiting', 
+        creatorId: req.user.id 
+      };
+    } else {
+      activeBattleRoom = { 
+        id: roomId, 
+        chapter, 
+        mode: 'single',
+        status: 'waiting', 
+        creatorId: req.user.id 
+      };
+    }
+    
     battleRoomCreator = req.user.id; // Track the creator
     
     // Broadcast to all connected clients via socket
@@ -31,7 +48,10 @@ router.post('/create', sessionMiddleware, async (req, res) => {
     
     // Send WhatsApp group notification with quick join link and mentions
     const battleUrl = `https://neuronerdsquiz.vercel.app/battle/${roomId}`;
-    const mentionData = await createBattleNotificationWithMentions(roomId, chapter, battleUrl);
+    const battleDescription = mode === 'multi' 
+      ? `Multi-Chapter (${chapters.map(ch => `${ch.questions} from ${ch.chapter}`).join(', ')})`
+      : chapter;
+    const mentionData = await createBattleNotificationWithMentions(roomId, battleDescription, battleUrl);
     await sendBattleNotificationWithMentions(mentionData);
     
     res.json({ success: true, battleRoom: activeBattleRoom });
@@ -100,7 +120,10 @@ router.post('/start', sessionMiddleware, async (req, res) => {
       // }
       
       // Send WhatsApp notifications with join link
-      await sendBattleStartedNotifications(roomId, activeBattleRoom.chapter);
+      const battleDescription = activeBattleRoom.mode === 'multi'
+        ? `Multi-Chapter (${activeBattleRoom.chapters.map(ch => `${ch.questions} from ${ch.chapter}`).join(', ')})`
+        : activeBattleRoom.chapter;
+      await sendBattleStartedNotifications(roomId, battleDescription);
       
       res.json({ success: true, battleRoom: activeBattleRoom });
     } else {
@@ -350,14 +373,14 @@ async function sendBattleNotification(message) {
 }
 
 // Helper function to send battle started notifications (group only)
-async function sendBattleStartedNotifications(roomId, chapter) {
+async function sendBattleStartedNotifications(roomId, battleDescription) {
   try {
     // Send to configured group only
     const WhatsAppSettings = (await import('../models/WhatsAppSettings.js')).default;
     const setting = await WhatsAppSettings.findOne({ settingKey: 'battleNotificationGroup' });
     
     if (setting?.settingValue) {
-      const message = `🔥 *QUIZ BATTLE STARTED!* 🔥\n\n⚔️ Chapter: *${chapter}*\n🎯 The epic battle has begun!\n\n💡 Go to Dashboard → Watch Battle\n\nHurry up! ⚡`;
+      const message = `🔥 *QUIZ BATTLE STARTED!* 🔥\n\n⚔️ Battle: *${battleDescription}*\n🎯 The epic battle has begun!\n\n💡 Go to Dashboard → Watch Battle\n\nHurry up! ⚡`;
       await whatsappService.sendGroupMessage(setting.settingValue, message);
     }
   } catch (error) {
