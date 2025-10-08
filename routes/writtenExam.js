@@ -87,7 +87,7 @@ router.post('/start', sessionMiddleware, requireAuth, async (req, res) => {
 });
 
 // Submit written exam answers
-router.post('/submit', sessionMiddleware, requireAuth, upload.array('answerImages', 20), async (req, res) => {
+router.post('/submit', sessionMiddleware, requireAuth, upload.array('answerImages', 50), async (req, res) => {
   try {
     const { examId } = req.body;
     const userId = req.user.userId;
