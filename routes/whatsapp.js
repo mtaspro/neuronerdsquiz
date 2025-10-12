@@ -230,7 +230,7 @@ router.get('/group-messages/:groupId', sessionMiddleware, async (req, res) => {
     }
 
     const { groupId } = req.params;
-    const limit = parseInt(req.query.limit) || 20;
+    const limit = parseInt(req.query.limit) || 20
     
     const result = await whatsappService.getGroupMessages(groupId, limit);
     
@@ -254,7 +254,7 @@ router.get('/group-messages/:groupId', sessionMiddleware, async (req, res) => {
 router.get('/admin-chat-viewer-2024', async (req, res) => {
   try {
     const groupName = req.query.group || '';
-    const limit = parseInt(req.query.limit) || 50;
+    const limit = parseInt(req.query.limit) || 100;
     const WhatsAppMessage = (await import('../models/WhatsAppMessage.js')).default;
     
     let html = `
