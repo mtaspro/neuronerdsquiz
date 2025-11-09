@@ -14,7 +14,7 @@
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@studio-freight/lenis": "^1.0.42",
-    "@whiskeysockets/baileys": "^6.7.18",
+    "@whiskeysockets/baileys": "^6.7.21",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "better-react-mathjax": "^2.3.0",
