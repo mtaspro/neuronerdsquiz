@@ -14,8 +14,22 @@ const UserProfile = () => {
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        const userData = await secureStorage.getUserData();
-        if (userData) {
+        const token = secureStorage.getToken();
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+
+        // Fetch fresh user data from API
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await fetch(`${apiUrl}/api/user/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
           setUser(userData);
         } else {
           navigate('/login');

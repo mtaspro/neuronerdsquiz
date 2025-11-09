@@ -136,4 +136,19 @@ router.get('/inbox/unread-count', sessionMiddleware, async (req, res) => {
   }
 });
 
+// Get user profile
+router.get('/profile', sessionMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
+
 export default router;
