@@ -62,7 +62,7 @@ public/audio/
 *.avi
 
 # Session files
-session/
+# session/
 
 # Uploads
 uploads/
