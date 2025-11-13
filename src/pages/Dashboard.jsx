@@ -34,6 +34,7 @@ const Dashboard = () => {
   const [activeBattleRoom, setActiveBattleRoom] = useState(null);
   const [userInBattle, setUserInBattle] = useState(false);
   const [userProgress, setUserProgress] = useState(null);
+  const [battleNotification, setBattleNotification] = useState(false);
 
   const [unreadCount, setUnreadCount] = useState(0);
   const [particles, setParticles] = useState([]);
@@ -71,15 +72,22 @@ const Dashboard = () => {
         const data = await response.json();
         
         if (data.battleRoom && data.battleRoom.status !== 'expired' && data.battleRoom.status !== 'ended') {
+          const wasNoBattle = !activeBattleRoom;
           setActiveBattleRoom(data.battleRoom);
           setBattleRoomId(data.battleRoom.id);
           setUserInBattle(data.userInBattle || false);
           setUserProgress(data.userProgress || null);
+          
+          // Show notification if new battle detected
+          if (wasNoBattle && data.battleRoom.status === 'waiting') {
+            setBattleNotification(true);
+          }
         } else {
           setActiveBattleRoom(null);
           setBattleRoomId('');
           setUserInBattle(false);
           setUserProgress(null);
+          setBattleNotification(false);
         }
       } catch (error) {
         console.error('Failed to check existing battle room:', error);
@@ -88,6 +96,7 @@ const Dashboard = () => {
         setBattleRoomId('');
         setUserInBattle(false);
         setUserProgress(null);
+        setBattleNotification(false);
       }
     };
     
@@ -96,7 +105,35 @@ const Dashboard = () => {
     // Poll for battle room updates every 3 seconds for faster updates
     const interval = setInterval(checkExistingBattleRoom, 3000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user, activeBattleRoom]);
+  
+  // Tab notification effect
+  useEffect(() => {
+    const originalTitle = document.title;
+    
+    if (battleNotification) {
+      document.title = '🔴 Battle Available! - NeuroNerds Quiz';
+      
+      // Clear notification when user focuses on tab
+      const handleFocus = () => {
+        setBattleNotification(false);
+        document.title = originalTitle;
+      };
+      
+      window.addEventListener('focus', handleFocus);
+      
+      return () => {
+        window.removeEventListener('focus', handleFocus);
+        document.title = originalTitle;
+      };
+    } else {
+      document.title = originalTitle;
+    }
+    
+    return () => {
+      document.title = originalTitle;
+    };
+  }, [battleNotification]);
   
   // Onboarding hook
   const { shouldShowTour, setShouldShowTour, startTour, markTutorialAsCompleted } = useOnboarding();
