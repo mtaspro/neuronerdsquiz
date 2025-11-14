@@ -205,7 +205,7 @@ const TeamSection = ({ teamMembers, setCursorVariant }) => {
                   >
                     {member.role}
                   </motion.p>
-                  {(member.name.includes('Akhyar') || member.name.includes('Tanvir') || member.name.includes('Ahmed')) && (
+                  {(member.name.includes('Akhyar') || member.name.includes('Tanvir') || member.name.includes('Ahmed') || member.name.includes('Zahin')) && (
                     <motion.p 
                       className="text-sm font-medium text-blue-500 dark:text-blue-300 mb-4"
                       initial={{ opacity: 0 }}
@@ -837,7 +837,7 @@ const About = () => {
     {
       name: 'Zahin Ushrut Parsa',
       role: 'Managing Director',
-      avatar: '👩‍💼',
+      avatar: '🗓️',
       description: 'Manages operations, schedules exams, hosts battles, and oversees group activities',
       message: 'Managing Neuronerds is about creating an environment where everyone can thrive. From scheduling exams to hosting battles, every task is an opportunity to make learning more engaging and organized for our community.',
       contributions: [
