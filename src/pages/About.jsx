@@ -997,7 +997,7 @@ const About = () => {
                 className="text-lg sm:text-xl md:text-2xl text-purple-200 max-w-4xl mx-auto leading-relaxed"
               >
                 Meet the passionate team behind Neuronerds Quiz and discover NeuraX - 
-                our advanced AI assistant that's revolutionizing how students learn and compete.
+                our advanced AI assistant that's revolutionizing how we learn and compete.
               </motion.p>
             </motion.div>
             
