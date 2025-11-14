@@ -5,8 +5,27 @@ import { authHeader } from '../utils/auth';
 const Notepad = () => {
   const [content, setContent] = useState('');
   const [groupId, setGroupId] = useState('');
+  const [groups, setGroups] = useState([]);
   const [lastMessageId, setLastMessageId] = useState(0);
   const textareaRef = useRef(null);
+
+  // Fetch WhatsApp groups
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await axios.get(`${apiUrl}/api/whatsapp/groups`, {
+          headers: authHeader()
+        });
+        if (response.data.success) {
+          setGroups(response.data.groups);
+        }
+      } catch (error) {
+        console.error('Failed to fetch groups:', error);
+      }
+    };
+    fetchGroups();
+  }, []);
 
   // Poll for new messages
   useEffect(() => {
@@ -114,32 +133,37 @@ const Notepad = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
-          <input
-            type="text"
-            placeholder="WhatsApp Group ID"
-            value={groupId}
-            onChange={(e) => setGroupId(e.target.value)}
-            className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white"
-          />
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="w-full h-96 p-4 font-mono text-sm border-none focus:outline-none dark:bg-gray-800 dark:text-gray-300 resize-none"
-            placeholder="Type here... Use ::send <message> and Ctrl+Enter to send. Use ::Hist for history. Use ::clear to clear all."
-          />
-        </div>
-        
-        <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-          <p>Commands: ::send &lt;msg&gt; | ::Hist | ::clear</p>
-          <p>Shortcuts: :sm: 😊 | :thumb: 👍 | :j: 😂 | :thinking: 🤔 | :l: 🥰</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      <div className="max-w-5xl mx-auto">
+        <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-gray-700 dark:to-gray-800 px-6 py-4 flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-white">Notepad</h1>
+            <div className="flex items-center space-x-2">
+              <select
+                value={groupId}
+                onChange={(e) => setGroupId(e.target.value)}
+                className="w-48 px-2 py-1 text-xs bg-white/20 border border-white/30 rounded text-white focus:outline-none focus:bg-white/30"
+              >
+                <option value="" className="text-gray-800">Select Config</option>
+                {groups.map(group => (
+                  <option key={group.id} value={group.id} className="text-gray-800">
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          
+          <div className="p-0">
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="w-full h-[600px] p-6 font-mono text-sm border-none focus:outline-none dark:bg-gray-800 dark:text-gray-300 resize-none bg-white"
+              placeholder="Type your notes here..."
+            />
+          </div>
         </div>
       </div>
     </div>
