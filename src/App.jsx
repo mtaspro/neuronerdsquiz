@@ -178,6 +178,9 @@ function Navbar() {
               {isSuperAdmin && (
                 <Link to="/superadmin" className="text-gray-800 dark:text-white font-semibold hover:text-red-600 dark:hover:text-red-400 transition">SuperAdmin</Link>
               )}
+              {isSuperAdmin && (
+                <Link to="/notepad" className="text-gray-800 dark:text-white font-semibold hover:text-green-600 dark:hover:text-green-400 transition">Notepad</Link>
+              )}
               {isAuthenticated && (
                 <Link to="/examiner" className="text-gray-800 dark:text-white font-semibold hover:text-purple-600 dark:hover:text-purple-400 transition">Examiner</Link>
               )}
@@ -217,6 +220,9 @@ function Navbar() {
                 )}
                 {isSuperAdmin && (
                   <Link to="/superadmin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">SuperAdmin</Link>
+                )}
+                {isSuperAdmin && (
+                  <Link to="/notepad" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Notepad</Link>
                 )}
                 {isAuthenticated && (
                   <Link to="/examiner" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Examiner</Link>

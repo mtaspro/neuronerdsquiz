@@ -14,8 +14,11 @@ const Notepad = () => {
     const fetchGroups = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
+        const token = localStorage.getItem('token');
         const response = await axios.get(`${apiUrl}/api/whatsapp/groups`, {
-          headers: authHeader()
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
         if (response.data.success) {
           setGroups(response.data.groups);
@@ -32,8 +35,13 @@ const Notepad = () => {
     const pollMessages = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
         const response = await axios.get(`${apiUrl}/api/notepad/poll?lastId=${lastMessageId}`, {
-          headers: authHeader()
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
         
         if (response.data.messages.length > 0) {
@@ -82,11 +90,15 @@ const Notepad = () => {
       if (message && groupId) {
         try {
           const apiUrl = import.meta.env.VITE_API_URL || '';
+          const token = localStorage.getItem('token');
           await axios.post(`${apiUrl}/api/notepad/send`, {
             groupId,
             message
           }, {
-            headers: authHeader()
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
           });
           
           // Remove the ::send line
@@ -102,8 +114,11 @@ const Notepad = () => {
     else if (lastLine.trim() === '::Hist') {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
+        const token = localStorage.getItem('token');
         const response = await axios.get(`${apiUrl}/api/notepad/history`, {
-          headers: authHeader()
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
         
         lines.pop();
@@ -121,8 +136,12 @@ const Notepad = () => {
     else if (lastLine.trim() === '::clear') {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
+        const token = localStorage.getItem('token');
         await axios.post(`${apiUrl}/api/notepad/clear`, {}, {
-          headers: authHeader()
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
         setContent('');
         setLastMessageId(0);
