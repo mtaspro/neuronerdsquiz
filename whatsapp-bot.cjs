@@ -59,21 +59,63 @@ async function startWhatsAppBot() {
                 const messageText = message.message?.conversation || 
                                    message.message?.extendedTextMessage?.text || '';
                 const sender = message.pushName || 'Unknown';
+                const chatId = message.key.remoteJid;
+                const isGroup = chatId.endsWith('@g.us');
+                
+                console.log(`💬 Message from ${sender}: ${messageText}`);
                 
                 // Check for @prvt command
                 if (messageText.startsWith('@prvt ')) {
                     const privateMessage = messageText.substring(6).trim();
-                    
-                    // Forward to notepad API
                     try {
                         const axios = require('axios');
-                        await axios.post('http://localhost:5000/api/notepad/receive', {
+                        const apiUrl = process.env.API_URL || 'http://localhost:5000';
+                        await axios.post(`${apiUrl}/api/notepad/receive`, {
                             message: privateMessage,
                             sender: sender
                         });
                         console.log(`📨 Private message forwarded from ${sender}`);
                     } catch (error) {
                         console.error('Failed to forward private message:', error.message);
+                    }
+                    return;
+                }
+                
+                // Handle group messages with @n mention
+                if (isGroup && messageText.includes('@n')) {
+                    const query = messageText.replace('@n', '').trim();
+                    if (query) {
+                        try {
+                            const axios = require('axios');
+                            const apiUrl = process.env.API_URL || 'http://localhost:5000';
+                            const response = await axios.post(`${apiUrl}/api/ai-chat`, {
+                                message: query,
+                                conversationHistory: []
+                            });
+                            await socket.sendMessage(chatId, { text: response.data.response });
+                            console.log(`🤖 AI responded in group`);
+                        } catch (error) {
+                            console.error('AI chat error:', error.message);
+                            await socket.sendMessage(chatId, { text: 'Sorry, I encountered an error.' });
+                        }
+                    }
+                    return;
+                }
+                
+                // Handle personal messages
+                if (!isGroup && messageText.trim()) {
+                    try {
+                        const axios = require('axios');
+                        const apiUrl = process.env.API_URL || 'http://localhost:5000';
+                        const response = await axios.post(`${apiUrl}/api/ai-chat`, {
+                            message: messageText,
+                            conversationHistory: []
+                        });
+                        await socket.sendMessage(chatId, { text: response.data.response });
+                        console.log(`🤖 AI responded to ${sender}`);
+                    } catch (error) {
+                        console.error('AI chat error:', error.message);
+                        await socket.sendMessage(chatId, { text: 'Sorry, I encountered an error.' });
                     }
                 }
             }
