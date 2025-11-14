@@ -8,7 +8,7 @@ const router = express.Router();
 // Get all groups with their IDs
 router.get('/groups', sessionMiddleware, async (req, res) => {
   try {
-    if (!req.user.isAdmin) {
+    if (!req.user.isAdmin && !req.user.isSuperAdmin) {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
