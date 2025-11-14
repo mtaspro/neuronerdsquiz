@@ -52,6 +52,33 @@ async function startWhatsAppBot() {
 
         socket.ev.on('creds.update', saveCreds);
 
+        // Listen for incoming messages
+        socket.ev.on('messages.upsert', async (m) => {
+            const message = m.messages[0];
+            if (!message.key.fromMe && m.type === 'notify') {
+                const messageText = message.message?.conversation || 
+                                   message.message?.extendedTextMessage?.text || '';
+                const sender = message.pushName || 'Unknown';
+                
+                // Check for @prvt command
+                if (messageText.startsWith('@prvt ')) {
+                    const privateMessage = messageText.substring(6).trim();
+                    
+                    // Forward to notepad API
+                    try {
+                        const axios = require('axios');
+                        await axios.post('http://localhost:5000/api/notepad/receive', {
+                            message: privateMessage,
+                            sender: sender
+                        });
+                        console.log(`📨 Private message forwarded from ${sender}`);
+                    } catch (error) {
+                        console.error('Failed to forward private message:', error.message);
+                    }
+                }
+            }
+        });
+
         sock = socket;
         return socket;
     } catch (error) {

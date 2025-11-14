@@ -27,6 +27,7 @@ const UserProfile = lazy(() => import("./pages/UserProfile"));
 
 import UserWhatsApp from './pages/UserWhatsApp';
 import UserInbox from './pages/UserInbox';
+import Notepad from './pages/Notepad';
 import NotFound from './pages/NotFound';
 import Badges from './pages/Badges';
 import About from './pages/About';
@@ -454,6 +455,14 @@ function AnimatedRoutes() {
             element={
               <ProtectedRoute>
                 <UserInbox />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notepad"
+            element={
+              <ProtectedRoute>
+                <Notepad />
               </ProtectedRoute>
             }
           />
