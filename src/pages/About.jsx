@@ -818,10 +818,10 @@ const About = () => {
     },
     {
       name: 'Md. Tanvir Mahtab',
-      role: 'Co-founder & Managing Director',
+      role: 'Co-founder & Former Managing Director',
       avatar: '📊',
-      description: 'Handles planning, developing, organization, and strategic operations',
-      message: 'Every great platform needs solid planning and execution. My role is to ensure that our vision translates into actionable plans and that our operations run smoothly to lead our growing community.',
+      description: 'Handled planning, developing, organization, and strategic operations',
+      message: 'Every great platform needs solid planning and execution. My role was to ensure that our vision translates into actionable plans and that our operations run smoothly to lead our growing community.',
       contributions: [
         'Project planning and coordination',
         'Strategic operations management',
@@ -833,6 +833,22 @@ const About = () => {
         { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/Tanvir-007-ctg', color: 'text-gray-800 dark:text-gray-200' },
         { platform: 'wikipedia', icon: FaWikipediaW, url: 'https://bn.m.wikipedia.org/wiki/%E0%A6%AC%E0%A7%8D%E0%A6%AF%E0%A6%AC%E0%A6%B9%E0%A6%BE%E0%A6%B0%E0%A6%95%E0%A6%BE%E0%A6%B0%E0%A7%80:Md._T_Mahtab', color: 'text-gray-800 dark:text-gray-200' }
       ]
+    },
+    {
+      name: 'Zahin Ushrut Parsa',
+      role: 'Managing Director',
+      avatar: '👩‍💼',
+      description: 'Manages operations, schedules exams, hosts battles, and oversees group activities',
+      message: 'Managing Neuronerds is about creating an environment where everyone can thrive. From scheduling exams to hosting battles, every task is an opportunity to make learning more engaging and organized for our community.',
+      contributions: [
+        'Exam scheduling and coordination',
+        'Battle hosting and management',
+        'Group activity oversight',
+        'Community engagement',
+        'Operational excellence'
+      ],
+      socials: [
+              ]
     }
   ];
 
