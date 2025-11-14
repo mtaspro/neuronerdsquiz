@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { authHeader } from '../utils/auth';
+import { secureStorage } from '../utils/secureStorage';
 
 const Notepad = () => {
   const [content, setContent] = useState('');
@@ -14,7 +14,7 @@ const Notepad = () => {
     const fetchGroups = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        const token = localStorage.getItem('token');
+        const token = secureStorage.getToken();
         const response = await axios.get(`${apiUrl}/api/whatsapp/groups`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -35,7 +35,7 @@ const Notepad = () => {
     const pollMessages = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        const token = localStorage.getItem('token');
+        const token = secureStorage.getToken();
         if (!token) return;
         
         const response = await axios.get(`${apiUrl}/api/notepad/poll?lastId=${lastMessageId}`, {
@@ -90,7 +90,7 @@ const Notepad = () => {
       if (message && groupId) {
         try {
           const apiUrl = import.meta.env.VITE_API_URL || '';
-          const token = localStorage.getItem('token');
+          const token = secureStorage.getToken();
           await axios.post(`${apiUrl}/api/notepad/send`, {
             groupId,
             message
@@ -114,7 +114,7 @@ const Notepad = () => {
     else if (lastLine.trim() === '::Hist') {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        const token = localStorage.getItem('token');
+        const token = secureStorage.getToken();
         const response = await axios.get(`${apiUrl}/api/notepad/history`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -136,7 +136,7 @@ const Notepad = () => {
     else if (lastLine.trim() === '::clear') {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        const token = localStorage.getItem('token');
+        const token = secureStorage.getToken();
         await axios.post(`${apiUrl}/api/notepad/clear`, {}, {
           headers: {
             'Authorization': `Bearer ${token}`,
