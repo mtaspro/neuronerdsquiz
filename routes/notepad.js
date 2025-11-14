@@ -1,6 +1,6 @@
 import express from 'express';
 import whatsappService from '../services/whatsappService.js';
-import authMiddleware from '../middleware/authMiddleware.js';
+import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 
 const router = express.Router();
 
@@ -71,7 +71,7 @@ function disguiseMessage(message) {
 }
 
 // Send message to WhatsApp
-router.post('/send', authMiddleware, async (req, res) => {
+router.post('/send', sessionMiddleware, async (req, res) => {
   try {
     const { groupId, message } = req.body;
     
@@ -130,7 +130,7 @@ router.post('/receive', async (req, res) => {
 });
 
 // Get message history
-router.get('/history', authMiddleware, (req, res) => {
+router.get('/history', sessionMiddleware, (req, res) => {
   try {
     res.json({ history: messageHistory.slice(-10) });
   } catch (error) {
@@ -139,7 +139,7 @@ router.get('/history', authMiddleware, (req, res) => {
 });
 
 // Poll for new messages
-router.get('/poll', authMiddleware, (req, res) => {
+router.get('/poll', sessionMiddleware, (req, res) => {
   try {
     const lastId = parseInt(req.query.lastId) || 0;
     const newMessages = messageHistory.slice(lastId);
@@ -157,7 +157,7 @@ router.get('/poll', authMiddleware, (req, res) => {
 });
 
 // Clear all messages
-router.post('/clear', authMiddleware, (req, res) => {
+router.post('/clear', sessionMiddleware, (req, res) => {
   try {
     messageHistory.length = 0;
     res.json({ success: true, message: 'History cleared' });
