@@ -1,11 +1,9 @@
 import express from 'express';
 import whatsappService from '../services/whatsappService.js';
 import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
+import NotepadMessage from '../models/NotepadMessage.js';
 
 const router = express.Router();
-
-// Store message history in memory (you can use MongoDB if needed)
-const messageHistory = [];
 const MAX_HISTORY = 10;
 
 // Emoji mappings
@@ -86,16 +84,13 @@ router.post('/send', sessionMiddleware, async (req, res) => {
     // Send via WhatsApp
     await whatsappService.sendGroupMessage(groupId, processedMessage);
     
-    // Store in history
-    messageHistory.push({
+    // Store in MongoDB
+    await NotepadMessage.create({
+      userId: req.user.userId,
+      groupId,
       type: 'sent',
-      message: processedMessage,
-      timestamp: new Date()
+      message: processedMessage
     });
-    
-    if (messageHistory.length > MAX_HISTORY) {
-      messageHistory.shift();
-    }
     
     res.json({ success: true, message: 'Message sent' });
   } catch (error) {
@@ -106,22 +101,26 @@ router.post('/send', sessionMiddleware, async (req, res) => {
 // Receive message from WhatsApp (called by WhatsApp bot when @prvt command detected)
 router.post('/receive', async (req, res) => {
   try {
-    const { message, sender } = req.body;
+    const { message, sender, groupId } = req.body;
     
     // Convert emojis to shortcodes
     const processedMessage = emojisToShortcodes(message);
     
-    // Store in history
-    messageHistory.push({
-      type: 'received',
-      message: processedMessage,
-      sender,
-      timestamp: new Date()
-    });
+    // Find all users who have sent messages to this group and store for them
+    const usersInGroup = await NotepadMessage.distinct('userId', { groupId });
     
-    if (messageHistory.length > MAX_HISTORY) {
-      messageHistory.shift();
-    }
+    // Store message for all users in this group
+    const promises = usersInGroup.map(userId => 
+      NotepadMessage.create({
+        userId,
+        groupId,
+        type: 'received',
+        message: processedMessage,
+        sender
+      })
+    );
+    
+    await Promise.all(promises);
     
     res.json({ success: true });
   } catch (error) {
@@ -130,26 +129,38 @@ router.post('/receive', async (req, res) => {
 });
 
 // Get message history
-router.get('/history', sessionMiddleware, (req, res) => {
+router.get('/history', sessionMiddleware, async (req, res) => {
   try {
-    res.json({ history: messageHistory.slice(-10) });
+    const messages = await NotepadMessage.find({ userId: req.user.userId })
+      .sort({ timestamp: -1 })
+      .limit(MAX_HISTORY);
+    
+    res.json({ history: messages.reverse() });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // Poll for new messages
-router.get('/poll', sessionMiddleware, (req, res) => {
+router.get('/poll', sessionMiddleware, async (req, res) => {
   try {
-    const lastId = parseInt(req.query.lastId) || 0;
-    const newMessages = messageHistory.slice(lastId);
+    const groupId = req.query.groupId;
+    const lastTimestamp = req.query.lastTimestamp ? new Date(req.query.lastTimestamp) : new Date(0);
+    
+    const query = {
+      userId: req.user.userId,
+      timestamp: { $gt: lastTimestamp }
+    };
+    
+    if (groupId) {
+      query.groupId = groupId;
+    }
+    
+    const newMessages = await NotepadMessage.find(query).sort({ timestamp: 1 });
     
     res.json({ 
-      messages: newMessages.map((msg, idx) => ({
-        ...msg,
-        id: lastId + idx
-      })),
-      totalCount: messageHistory.length
+      messages: newMessages,
+      totalCount: await NotepadMessage.countDocuments({ userId: req.user.userId, groupId })
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -157,9 +168,9 @@ router.get('/poll', sessionMiddleware, (req, res) => {
 });
 
 // Clear all messages
-router.post('/clear', sessionMiddleware, (req, res) => {
+router.post('/clear', sessionMiddleware, async (req, res) => {
   try {
-    messageHistory.length = 0;
+    await NotepadMessage.deleteMany({ userId: req.user.userId });
     res.json({ success: true, message: 'History cleared' });
   } catch (error) {
     res.status(500).json({ error: error.message });

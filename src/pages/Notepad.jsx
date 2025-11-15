@@ -38,7 +38,7 @@ const Notepad = () => {
         const token = secureStorage.getToken();
         if (!token) return;
         
-        const response = await axios.get(`${apiUrl}/api/notepad/poll?lastId=${lastMessageId}`, {
+        const response = await axios.get(`${apiUrl}/api/notepad/poll?groupId=${groupId}&lastTimestamp=${new Date().toISOString()}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

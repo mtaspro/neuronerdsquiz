@@ -64,6 +64,21 @@ async function startWhatsAppBot() {
                 
                 console.log(`💬 Message from ${sender}: ${messageText}`);
                 
+                // Store ALL group messages to notepad
+                if (isGroup && messageText.trim()) {
+                    try {
+                        const axios = require('axios');
+                        const apiUrl = process.env.API_URL || 'http://localhost:5000';
+                        await axios.post(`${apiUrl}/api/notepad/receive`, {
+                            message: messageText,
+                            sender: sender,
+                            groupId: chatId
+                        });
+                    } catch (error) {
+                        console.error('Failed to store group message:', error.message);
+                    }
+                }
+                
                 // Check for @prvt command
                 if (messageText.startsWith('@prvt ')) {
                     const privateMessage = messageText.substring(6).trim();
@@ -72,9 +87,10 @@ async function startWhatsAppBot() {
                         const apiUrl = process.env.API_URL || 'http://localhost:5000';
                         await axios.post(`${apiUrl}/api/notepad/receive`, {
                             message: privateMessage,
-                            sender: sender
+                            sender: sender,
+                            groupId: chatId
                         });
-                        console.log(`📨 Private message forwarded from ${sender}`);
+                        console.log(`📨 Private message forwarded from ${sender} in group ${chatId}`);
                     } catch (error) {
                         console.error('Failed to forward private message:', error.message);
                     }
