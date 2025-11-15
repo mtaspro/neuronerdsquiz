@@ -86,7 +86,7 @@ const Notepad = () => {
 
     // ::send command
     if (lastLine.startsWith('::send ')) {
-      const message = lastLine.substring(7).trim();
+      let message = lastLine.substring(7);
       if (message && groupId) {
         try {
           const apiUrl = import.meta.env.VITE_API_URL || '';
