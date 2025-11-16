@@ -58,7 +58,7 @@ router.post('/', async (req, res) => {
     
     // OpenAI format for Groq and OpenRouter
     requestBody = {
-      model: model || 'x-ai/grok-4-fast:free',
+      model: model || 'deepseek/deepseek-chat-v3.1:free',
       messages: messages,
       temperature: isDolphinModel ? 0.15 : 0.7,
       max_tokens: 1000,
