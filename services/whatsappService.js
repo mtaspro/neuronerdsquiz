@@ -12,12 +12,22 @@ class WhatsAppService {
     }
   }
 
-  async sendGroupMessage(groupId, message) {
+  async sendGroupMessage(groupId, message, options = {}) {
     try {
-      await whatsappBot.sendGroupMessage(groupId, message);
+      await whatsappBot.sendGroupMessage(groupId, message, options);
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
+    }
+  }
+
+  async getGroupMembers(groupId) {
+    try {
+      const members = await whatsappBot.getGroupMembers(groupId);
+      return members;
+    } catch (error) {
+      console.error('Error getting group members:', error);
+      return [];
     }
   }
 
@@ -58,6 +68,10 @@ class WhatsAppService {
 
   getConnectionStatus() {
     return { isConnected: whatsappBot.getConnectionStatus() };
+  }
+
+  get sock() {
+    return whatsappBot.getSock();
   }
 
   async initialize() {

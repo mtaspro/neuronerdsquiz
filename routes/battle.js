@@ -302,39 +302,30 @@ async function createBattleNotificationWithMentions(roomId, chapter, battleUrl) 
     const setting = await WhatsAppSettings.findOne({ settingKey: 'battleNotificationGroup' });
     
     if (setting?.settingValue) {
-      // Get group members
       const groupMembers = await whatsappService.getGroupMembers(setting.settingValue);
       
-      // Create mentions string with proper usernames
-      let mentions = '';
       if (groupMembers && groupMembers.length > 0) {
-        try {
-          const groupMetadata = await whatsappService.sock.groupMetadata(setting.settingValue);
-          mentions = groupMembers.map(member => {
-            const participant = groupMetadata.participants.find(p => p.id === member.id);
-            const username = participant?.notify || participant?.name || member.id.split('@')[0];
-            return `@${username}`;
-          }).join(' ');
-        } catch (error) {
-          // Fallback to phone numbers
-          mentions = groupMembers.map(member => `@${member.id.split('@')[0]}`).join(' ');
-        }
+        const sock = whatsappService.sock;
+        const metadata = await sock.groupMetadata(setting.settingValue);
+        
+        const mentionTexts = metadata.participants.map(p => {
+          const name = p.notify || p.name || p.id.split('@')[0];
+          return `@${name}`;
+        }).join(' ');
+        
+        const message = `🔥 *BATTLE ROOM CREATED!* 🔥\n\n⚔️ Room ID: ${roomId}\n📚 Chapter: *${chapter}*\n\n🚀 *Quick Join:* ${battleUrl}\n\n📱 Or visit Dashboard → Join Battle\n\n🎯 *Calling all warriors!* 🎯\n${mentionTexts}\n\n⏰ *Join now to test your skills!*\n\n_(যদি কেউ কোনো কারণে Battle থেকে Disconnected হয়ে বের হয়ে যায়, সে উপোরোক্ত Link দিয়ে পুনরায় JOIN করতে পারবে এবং Last Progress থেকে Continue করতে পাবে)_`;
+        
+        return {
+          message,
+          mentions: metadata.participants.map(p => p.id)
+        };
       }
-      
-      const message = `🔥 *BATTLE ROOM CREATED!* 🔥\n\n⚔️ Room ID: ${roomId}\n📚 Chapter: *${chapter}*\n\n🚀 *Quick Join:* ${battleUrl}\n\n📱 Or visit Dashboard → Join Battle\n\n🎯 *Calling all warriors!* 🎯\n${mentions}\n\n⏰ *Join now to test your skills!*\n\n_(যদি কেউ কোনো কারণে Battle থেকে Disconnected হয়ে বের হয়ে যায়, সে উপোরোক্ত Link দিয়ে পুনরায় JOIN করতে পারবে এবং Last Progress থেকে Continue করতে পাবে)_`;
-      
-      return {
-        message,
-        mentions: groupMembers.map(member => member.id)
-      };
     }
     
-    // Fallback without mentions
-    return `🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\n🚀 Quick Join: ${battleUrl}\n\nOr visit dashboard and join now to test your skills!`;
+    return { message: `🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\n🚀 Quick Join: ${battleUrl}\n\nOr visit dashboard and join now to test your skills!` };
   } catch (error) {
     console.error('Error creating mention message:', error);
-    // Fallback without mentions
-    return `🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\n🚀 Quick Join: ${battleUrl}\n\nOr visit dashboard and join now to test your skills!`;
+    return { message: `🔥 Battle Room Created! 🔥\n\nRoom ID: ${roomId}\nChapter: ${chapter}\n\n🚀 Quick Join: ${battleUrl}\n\nOr visit dashboard and join now to test your skills!` };
   }
 }
 

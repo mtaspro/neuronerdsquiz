@@ -151,9 +151,22 @@ async function sendMessage(phoneNumber, message) {
     await sock.sendMessage(jid, { text: message });
 }
 
-async function sendGroupMessage(groupId, message) {
+async function sendGroupMessage(groupId, message, options = {}) {
     if (!isConnected || !sock) throw new Error('WhatsApp not connected');
-    await sock.sendMessage(groupId, { text: message });
+    const messageOptions = { text: message };
+    if (options.mentions && options.mentions.length > 0) {
+        messageOptions.mentions = options.mentions;
+    }
+    await sock.sendMessage(groupId, messageOptions);
+}
+
+async function getGroupMembers(groupId) {
+    if (!isConnected || !sock) throw new Error('WhatsApp not connected');
+    const metadata = await sock.groupMetadata(groupId);
+    return metadata.participants.map(p => ({
+        id: p.id,
+        isAdmin: p.admin === 'admin' || p.admin === 'superadmin'
+    }));
 }
 
 async function getGroups() {
@@ -175,5 +188,7 @@ module.exports = {
     sendMessage,
     sendGroupMessage,
     getGroups,
-    getConnectionStatus
+    getGroupMembers,
+    getConnectionStatus,
+    getSock: () => sock
 };
