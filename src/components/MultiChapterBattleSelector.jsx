@@ -67,39 +67,44 @@ const MultiChapterBattleSelector = ({ chapters, onSelectionChange, disabled }) =
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-600 p-3 rounded"
+                  className="bg-gray-50 dark:bg-gray-600 p-3 rounded space-y-2"
                 >
-                  <select
-                    value={item.chapter}
-                    onChange={(e) => updateChapter(index, 'chapter', e.target.value)}
-                    className="flex-1 px-2 py-1 text-sm rounded bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500"
-                    disabled={disabled}
-                  >
-                    <option value="">Select Chapter</option>
-                    {chapters.map(chapter => (
-                      <option key={chapter._id || chapter.name} value={chapter.name}>
-                        {chapter.name}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={item.questions}
-                    onChange={(e) => updateChapter(index, 'questions', parseInt(e.target.value) || 0)}
-                    className="w-16 px-2 py-1 text-sm rounded bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500"
-                    placeholder="Qs"
-                    disabled={disabled}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeChapter(index)}
-                    className="text-red-500 hover:text-red-700 p-1"
-                    disabled={disabled}
-                  >
-                    <FaTrash className="text-xs" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={item.chapter}
+                      onChange={(e) => updateChapter(index, 'chapter', e.target.value)}
+                      className="flex-1 min-w-0 px-3 py-2 text-sm rounded bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500"
+                      disabled={disabled}
+                    >
+                      <option value="">Select Chapter</option>
+                      {chapters.map(chapter => (
+                        <option key={chapter._id || chapter.name} value={chapter.name}>
+                          {chapter.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => removeChapter(index)}
+                      className="text-red-500 hover:text-red-700 p-2 flex-shrink-0"
+                      disabled={disabled}
+                    >
+                      <FaTrash className="text-sm" />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-gray-600 dark:text-gray-300 flex-shrink-0">Questions:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={item.questions}
+                      onChange={(e) => updateChapter(index, 'questions', parseInt(e.target.value) || 0)}
+                      className="w-20 px-3 py-2 text-sm rounded bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500"
+                      placeholder="Qs"
+                      disabled={disabled}
+                    />
+                  </div>
                 </motion.div>
               ))}
             </div>
