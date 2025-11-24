@@ -164,7 +164,7 @@ export default function ProgressTracking() {
           if (subject && syl.chapters?.length) {
             totalChapters += syl.chapters.length;
             completedChapters += progress?.completedChapters.filter(c =>
-              c.subjectId._id === syl.subjectId && syl.chapters.includes(c.chapter)
+              c.subjectId._id.toString() === syl.subjectId.toString() && syl.chapters.includes(c.chapter)
             ).length || 0;
           }
         });
@@ -192,7 +192,7 @@ export default function ProgressTracking() {
           if (syl.chapters?.length) {
             totalChapters += syl.chapters.length;
             completedChapters += progress?.completedChapters.filter(c =>
-              c.subjectId._id === syl.subjectId && syl.chapters.includes(c.chapter)
+              c.subjectId._id.toString() === syl.subjectId.toString() && syl.chapters.includes(c.chapter)
             ).length || 0;
           }
         });
