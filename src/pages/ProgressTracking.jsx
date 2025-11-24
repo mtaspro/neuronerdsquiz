@@ -15,10 +15,44 @@ export default function ProgressTracking() {
   const [loading, setLoading] = useState(true);
   const [whatsappReminder, setWhatsappReminder] = useState(false);
   const [insightMode, setInsightMode] = useState('hsc');
+  const [showScrollButton, setShowScrollButton] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const chaptersSection = document.getElementById('chapters-section');
+      if (chaptersSection) {
+        const rect = chaptersSection.getBoundingClientRect();
+        setShowScrollButton(rect.top > window.innerHeight);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToChapters = () => {
+    document.getElementById('chapters-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const fetchInsights = async () => {
+      try {
+        const token = secureStorage.getToken();
+        const examId = insightMode === 'test' && exams[0] ? exams[0]._id : null;
+        const res = await axios.get(`${API_URL}/api/progress/insights?examId=${examId || ''}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setInsights(res.data.insights);
+      } catch (error) {
+        console.error('Failed to fetch insights:', error);
+      }
+    };
+    if (exams.length > 0) fetchInsights();
+  }, [insightMode, exams]);
 
   const fetchData = async () => {
     try {
@@ -49,6 +83,17 @@ export default function ProgressTracking() {
       c => c.subjectId._id === subjectId && c.chapter === chapter
     );
 
+    // Optimistic update
+    const newProgress = { ...progress };
+    if (!isCompleted) {
+      newProgress.completedChapters = [...progress.completedChapters, { subjectId: { _id: subjectId }, chapter }];
+    } else {
+      newProgress.completedChapters = progress.completedChapters.filter(
+        c => !(c.subjectId._id === subjectId && c.chapter === chapter)
+      );
+    }
+    setProgress(newProgress);
+
     try {
       const token = secureStorage.getToken();
       const res = await axios.post(`${API_URL}/api/progress/update`, 
@@ -66,6 +111,7 @@ export default function ProgressTracking() {
       setInsights(insightsRes.data.insights);
     } catch (error) {
       console.error('Failed to update progress:', error);
+      setProgress(progress); // Revert on error
     }
   };
 
@@ -402,6 +448,29 @@ export default function ProgressTracking() {
           </div>
         </motion.div>
       </div>
+
+      {/* Floating Scroll Button */}
+      {showScrollButton && (
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          onClick={scrollToChapters}
+          className="fixed bottom-8 right-8 bg-gradient-to-r from-cyan-500 to-purple-500 text-white px-6 py-3 rounded-full shadow-2xl shadow-cyan-500/50 flex items-center gap-2 font-semibold z-50 hover:scale-110 transition-transform"
+          style={{ animation: 'bounce 2s infinite' }}
+        >
+          Select Completed Chapters
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </motion.button>
+      )}
+
+      <style>{`
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+      `}</style>
     </div>
   );
 }

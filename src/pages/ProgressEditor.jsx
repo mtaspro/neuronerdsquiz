@@ -78,7 +78,7 @@ export default function ProgressEditor() {
       id: editingExam?._id,
       name: formData.get('name'),
       date: formData.get('date'),
-      syllabus: examSyllabus
+      syllabus: examSyllabus.filter(s => s.chapters.length > 0)
     };
 
     try {
@@ -100,7 +100,8 @@ export default function ProgressEditor() {
     if (exists) {
       setExamSyllabus(examSyllabus.filter(s => s.subjectId !== subjectId));
     } else {
-      setExamSyllabus([...examSyllabus, { subjectId, chapters: [] }]);
+      const subject = subjects.find(s => s._id === subjectId);
+      setExamSyllabus([...examSyllabus, { subjectId, chapters: subject.chapters }]);
     }
   };
 
@@ -240,7 +241,7 @@ export default function ProgressEditor() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-white">Exams</h2>
             <button
-              onClick={() => { setShowExamForm(true); setEditingExam(null); }}
+              onClick={() => { setShowExamForm(true); setEditingExam(null); setExamSyllabus([]); }}
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
             >
               + Add Exam
@@ -338,7 +339,7 @@ export default function ProgressEditor() {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => { setEditingExam(exam); setShowExamForm(true); }}
+                    onClick={() => { setEditingExam(exam); setExamSyllabus(exam.syllabus || []); setShowExamForm(true); }}
                     className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
                   >
                     Edit

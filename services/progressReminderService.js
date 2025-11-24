@@ -63,10 +63,10 @@ async function sendProgressReminders(timeOfDay) {
       try {
         const axios = (await import('axios')).default;
         const aiResponse = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-          model: 'deepseek/deepseek-chat-v3.1:free',
+          model: 'qwen/qwen3-235b-a22b:free',
           messages: [{
             role: 'user',
-            content: `Generate a motivational WhatsApp progress reminder message (max 150 words) based on:\n${progressSummary}\n${examInfo}\n\nInclude: greeting, HSC & Test progress percentages, streak, exam reminder if any, and motivation. Use emojis. End with "Track at neuronerdsquiz.vercel.app"`
+            content: `Generate a motivational WhatsApp progress reminder message (max 150 words) based on:\n${progressSummary}\n${examInfo}\n\nInclude: greeting, HSC & Test progress percentages, streak, exam reminder if any, and motivation. Use emojis. End with "Track at https://neuronerdsquiz.vercel.app/progress"`
           }]
         }, {
           headers: {
