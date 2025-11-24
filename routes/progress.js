@@ -284,19 +284,20 @@ router.get('/insights', sessionMiddleware, async (req, res) => {
 
     // Subject-specific insights
     let relevantSubjects = subjects;
+    let examData = null;
+    
     if (examId) {
-      const exam = await ProgressExam.findById(examId);
-      if (exam?.syllabus?.length) {
-        relevantSubjects = subjects.filter(s => exam.syllabus.some(syl => syl.subjectId.toString() === s._id.toString()));
+      examData = await ProgressExam.findById(examId);
+      if (examData?.syllabus?.length) {
+        relevantSubjects = subjects.filter(s => examData.syllabus.some(syl => syl.subjectId.toString() === s._id.toString()));
       }
     }
     
-    relevantSubjects.forEach(subject => {
+    for (const subject of relevantSubjects) {
       let completed, totalChapters, percentage;
       
-      if (examId) {
-        const exam = await ProgressExam.findById(examId);
-        const sylSubject = exam?.syllabus?.find(syl => syl.subjectId.toString() === subject._id.toString());
+      if (examData) {
+        const sylSubject = examData.syllabus?.find(syl => syl.subjectId.toString() === subject._id.toString());
         if (sylSubject?.chapters?.length) {
           totalChapters = sylSubject.chapters.length;
           completed = progress.completedChapters.filter(
@@ -304,7 +305,7 @@ router.get('/insights', sessionMiddleware, async (req, res) => {
           ).length;
           percentage = Math.round((completed / totalChapters) * 100);
         } else {
-          return;
+          continue;
         }
       } else {
         completed = progress.completedChapters.filter(
@@ -318,7 +319,7 @@ router.get('/insights', sessionMiddleware, async (req, res) => {
       } else if (percentage < 30) {
         insights.push({ type: 'warning', text: `${subject.name} needs attention. Only <span class="text-yellow-400 font-bold">${percentage}%</span> complete.` });
       }
-    });
+    }
 
     // Exam reminders
     const now = new Date();
