@@ -124,6 +124,10 @@ router.post('/update', sessionMiddleware, async (req, res) => {
     });
 
     await progress.save();
+    
+    // Populate subjectId before sending response
+    await progress.populate('completedChapters.subjectId');
+    
     res.json({ success: true, progress, newBadges });
   } catch (error) {
     console.error('Progress update error:', error);
