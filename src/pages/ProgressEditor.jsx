@@ -20,7 +20,7 @@ export default function ProgressEditor() {
 
   const fetchData = async () => {
     try {
-      const token = secureStorage.getItem('token');
+      const token = secureStorage.getToken();
       const headers = { Authorization: `Bearer ${token}` };
       const [subjectsRes, examsRes] = await Promise.all([
         axios.get(`${API_URL}/api/progress/subjects`, { headers }),
@@ -45,7 +45,7 @@ export default function ProgressEditor() {
     };
 
     try {
-      const token = secureStorage.getItem('token');
+      const token = secureStorage.getToken();
       await axios.post(`${API_URL}/api/progress/admin/subject`, data, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -60,7 +60,7 @@ export default function ProgressEditor() {
   const deleteSubject = async (id) => {
     if (!confirm('Delete this subject?')) return;
     try {
-      const token = secureStorage.getItem('token');
+      const token = secureStorage.getToken();
       await axios.delete(`${API_URL}/api/progress/admin/subject/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -81,7 +81,7 @@ export default function ProgressEditor() {
     };
 
     try {
-      const token = secureStorage.getItem('token');
+      const token = secureStorage.getToken();
       await axios.post(`${API_URL}/api/progress/admin/exam`, data, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -96,7 +96,7 @@ export default function ProgressEditor() {
   const deleteExam = async (id) => {
     if (!confirm('Delete this exam?')) return;
     try {
-      const token = secureStorage.getItem('token');
+      const token = secureStorage.getToken();
       await axios.delete(`${API_URL}/api/progress/admin/exam/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });

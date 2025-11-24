@@ -21,7 +21,7 @@ export default function ProgressTracking() {
 
   const fetchData = async () => {
     try {
-      const token = secureStorage.getItem('token');
+      const token = secureStorage.getToken();
       const headers = { Authorization: `Bearer ${token}` };
       
       const [subjectsRes, examsRes, progressRes, insightsRes] = await Promise.all([
@@ -49,7 +49,7 @@ export default function ProgressTracking() {
     );
 
     try {
-      const token = secureStorage.getItem('token');
+      const token = secureStorage.getToken();
       const res = await axios.post(`${API_URL}/api/progress/update`, 
         { subjectId, chapter, completed: !isCompleted },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -66,7 +66,7 @@ export default function ProgressTracking() {
 
   const toggleReminder = async () => {
     try {
-      const token = secureStorage.getItem('token');
+      const token = secureStorage.getToken();
       await axios.post(`${API_URL}/api/progress/reminder-toggle`, 
         { enabled: !whatsappReminder },
         { headers: { Authorization: `Bearer ${token}` } }

@@ -498,6 +498,23 @@ const SuperAdminDashboard = () => {
           )}
         </div>
 
+        {/* Progress Tracking Editor */}
+        <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="text-cyan-600 text-xl">📊</div>
+            <h2 className="text-xl font-semibold">Progress Tracking System</h2>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Manage subjects, chapters, and exams for the progress tracking system.
+          </p>
+          <a
+            href="/progress-editor"
+            className="inline-block bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+          >
+            Open Progress Editor
+          </a>
+        </div>
+
         {/* Battle Reminder Management */}
         <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-700">
           <BattleReminderManager />
