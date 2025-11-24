@@ -56,9 +56,12 @@ export default function ProgressTracking() {
       );
       
       setProgress(res.data.progress);
-      if (res.data.newBadges?.length > 0) {
-        fetchData(); // Refresh insights
-      }
+      
+      // Refresh insights immediately
+      const insightsRes = await axios.get(`${API_URL}/api/progress/insights`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setInsights(insightsRes.data.insights);
     } catch (error) {
       console.error('Failed to update progress:', error);
     }
