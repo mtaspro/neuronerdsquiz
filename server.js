@@ -36,6 +36,8 @@ import BadgeService from './services/badgeService.js';
 import whatsappService from './services/whatsappService.js';
 import DailyCalendarScheduler from './services/dailyCalendarScheduler.js';
 import battleReminderService from './services/battleReminderService.js';
+import { startProgressReminderService } from './services/progressReminderService.js';
+import progressRouter from './routes/progress.js';
 import WhatsAppSettings from './models/WhatsAppSettings.js';
 import UserScore from './models/UserScore.js';
 
@@ -201,6 +203,8 @@ mongoose.connect(process.env.MONGO_URI, {
     dailyCalendarScheduler.start();
     // Start battle reminder service
     battleReminderService.start();
+    // Start progress reminder service
+    startProgressReminderService();
   })
   .catch((err) => {
     console.error('❌ MongoDB connection error:', err);
@@ -894,6 +898,8 @@ console.log('Mounting messenger router...');
 app.use('/api/messenger', messengerRouter);
 console.log('Mounting notepad router...');
 app.use('/api/notepad', notepadRouter);
+console.log('Mounting progress router...');
+app.use('/api/progress', progressRouter);
 console.log('All routers mounted successfully');
 
 // Test route for API connectivity
