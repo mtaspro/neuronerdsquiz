@@ -142,38 +142,43 @@ export default function ProgressTracking() {
           </div>
         </motion.div>
 
-        {/* Insights */}
-        {insights.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
-            <h2 className="text-2xl font-bold text-white mb-4">NeuraX AI Insights</h2>
-            <div className="space-y-3">
-              {insights.map((insight, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className={`p-4 rounded-lg ${
-                    insight.type === 'success' ? 'bg-green-500/20 border-green-500' :
-                    insight.type === 'warning' ? 'bg-yellow-500/20 border-yellow-500' :
-                    insight.type === 'urgent' ? 'bg-red-500/20 border-red-500' :
-                    'bg-blue-500/20 border-blue-500'
-                  } border`}
-                >
-                  <p className="text-white">{insight.text}</p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Overall Progress */}
+        {/* Insights & Overall Progress */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Overall Progress</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ProgressCard title="BEI Progress" progress={calculateCategoryProgress('BEI')} color="blue" />
-            <ProgressCard title="Science Progress" progress={calculateCategoryProgress('Science')} color="purple" />
-            <ProgressCard title="Total Progress" progress={calculateTotalProgress()} color="green" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Insights */}
+            {insights.length > 0 && (
+              <div className="lg:col-span-2">
+                <h2 className="text-2xl font-bold text-white mb-4">NeuraX AI Insights</h2>
+                <div className="space-y-2">
+                  {insights.map((insight, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className={`p-3 rounded-lg text-sm ${
+                        insight.type === 'success' ? 'bg-green-500/20 border-green-500' :
+                        insight.type === 'warning' ? 'bg-yellow-500/20 border-yellow-500' :
+                        insight.type === 'urgent' ? 'bg-red-500/20 border-red-500' :
+                        'bg-blue-500/20 border-blue-500'
+                      } border`}
+                    >
+                      <p className="text-white">{insight.text}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Overall Progress */}
+            <div className={insights.length > 0 ? '' : 'lg:col-span-3'}>
+              <h2 className="text-2xl font-bold text-white mb-4">Overall Progress</h2>
+              <div className="grid grid-cols-1 gap-4">
+                <ProgressCard title="BEI Progress" progress={calculateCategoryProgress('BEI')} color="blue" />
+                <ProgressCard title="Science Progress" progress={calculateCategoryProgress('Science')} color="purple" />
+                <ProgressCard title="Total Progress" progress={calculateTotalProgress()} color="green" />
+              </div>
+            </div>
           </div>
         </motion.div>
 
@@ -274,7 +279,7 @@ export default function ProgressTracking() {
                           type="checkbox"
                           checked={isCompleted}
                           onChange={() => toggleChapter(subject._id, chapter)}
-                          className="w-5 h-5 rounded border-2 border-blue-500 bg-transparent checked:bg-blue-500 cursor-pointer"
+                          className="w-5 h-5 rounded border-2 border-blue-500 cursor-pointer accent-blue-500"
                         />
                         <span className={`text-sm ${isCompleted ? 'text-gray-400 line-through' : 'text-white'} group-hover:text-blue-300 transition-colors`}>
                           {chapter}
@@ -294,37 +299,31 @@ export default function ProgressTracking() {
 
 function ProgressCard({ title, progress, color }) {
   const colors = {
-    blue: 'from-blue-500 to-cyan-500',
-    purple: 'from-purple-500 to-pink-500',
-    green: 'from-green-500 to-emerald-500'
+    blue: { from: '#3b82f6', to: '#06b6d4' },
+    purple: { from: '#a855f7', to: '#ec4899' },
+    green: { from: '#10b981', to: '#059669' }
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-      <h3 className="text-lg font-semibold text-white mb-3">{title}</h3>
-      <div className="relative w-32 h-32 mx-auto">
-        <svg className="transform -rotate-90 w-32 h-32">
-          <circle cx="64" cy="64" r="56" stroke="#ffffff20" strokeWidth="8" fill="none" />
+    <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
+      <h3 className="text-base font-semibold text-white mb-2">{title}</h3>
+      <div className="relative w-24 h-24 mx-auto">
+        <svg className="transform -rotate-90 w-24 h-24">
+          <circle cx="48" cy="48" r="40" stroke="#ffffff20" strokeWidth="6" fill="none" />
           <circle
-            cx="64"
-            cy="64"
-            r="56"
-            stroke="url(#gradient)"
-            strokeWidth="8"
+            cx="48"
+            cy="48"
+            r="40"
+            stroke={colors[color].from}
+            strokeWidth="6"
             fill="none"
-            strokeDasharray={`${2 * Math.PI * 56}`}
-            strokeDashoffset={`${2 * Math.PI * 56 * (1 - progress / 100)}`}
+            strokeDasharray={`${2 * Math.PI * 40}`}
+            strokeDashoffset={`${2 * Math.PI * 40 * (1 - progress / 100)}`}
             className="transition-all duration-1000"
           />
-          <defs>
-            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" className={`text-${color}-500`} stopColor="currentColor" />
-              <stop offset="100%" className={`text-${color}-300`} stopColor="currentColor" />
-            </linearGradient>
-          </defs>
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-3xl font-bold text-white">{progress}%</span>
+          <span className="text-2xl font-bold text-white">{progress}%</span>
         </div>
       </div>
     </div>
