@@ -1,11 +1,11 @@
 import express from 'express';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import axios from 'axios';
 import multer from 'multer';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-const GOOGLE_AI_API_KEY = process.env.GOOGLE_AI_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 // Vision analysis endpoint
 router.post('/analyze', upload.single('image'), async (req, res) => {
@@ -16,37 +16,47 @@ router.post('/analyze', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'No image provided' });
     }
 
-    if (!GOOGLE_AI_API_KEY) {
-      return res.status(500).json({ error: 'Google AI API key not configured' });
+    if (!GROQ_API_KEY) {
+      return res.status(500).json({ error: 'Groq API key not configured' });
     }
 
-    console.log('Using Google Gemini for vision analysis...');
-    
-    const genAI = new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    console.log('Using Groq Llama Vision for analysis...');
     
     const base64Image = req.file.buffer.toString('base64');
     const mimeType = req.file.mimetype;
     
-    const result = await model.generateContent([
+    const response = await axios.post(
+      'https://api.groq.com/openai/v1/chat/completions',
       {
-        inlineData: {
-          mimeType: mimeType,
-          data: base64Image
-        }
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Image}` } }
+            ]
+          }
+        ],
+        max_tokens: 1024
       },
-      { text: prompt }
-    ]);
+      {
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
     
-    const analysis = result.response.text();
-    console.log('✅ Vision analysis successful with Gemini');
+    const analysis = response.data.choices[0].message.content;
+    console.log('✅ Vision analysis successful with Groq Llama');
     
     res.json({ analysis });
 
   } catch (error) {
-    console.error('Vision error:', error.message);
+    console.error('Vision error:', error.response?.data || error.message);
     res.status(500).json({ 
-      error: error.message || 'Failed to analyze image'
+      error: error.response?.data?.error?.message || error.message || 'Failed to analyze image'
     });
   }
 });
