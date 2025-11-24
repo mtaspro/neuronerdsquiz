@@ -28,7 +28,14 @@ export default function ProgressEditor() {
         axios.get(`${API_URL}/api/progress/exams`, { headers })
       ]);
       setSubjects(subjectsRes.data.subjects);
-      setExams(examsRes.data.exams);
+      const examsData = examsRes.data.exams.map(exam => ({
+        ...exam,
+        syllabus: exam.syllabus?.map(syl => ({
+          subjectId: syl.subjectId?._id || syl.subjectId,
+          chapters: syl.chapters
+        }))
+      }));
+      setExams(examsData);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     }

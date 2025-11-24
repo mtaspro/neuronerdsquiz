@@ -283,11 +283,35 @@ router.get('/insights', sessionMiddleware, async (req, res) => {
     }
 
     // Subject-specific insights
-    subjects.forEach(subject => {
-      const completed = progress.completedChapters.filter(
-        c => c.subjectId._id.toString() === subject._id.toString()
-      ).length;
-      const percentage = Math.round((completed / subject.chapters.length) * 100);
+    let relevantSubjects = subjects;
+    if (examId) {
+      const exam = await ProgressExam.findById(examId);
+      if (exam?.syllabus?.length) {
+        relevantSubjects = subjects.filter(s => exam.syllabus.some(syl => syl.subjectId.toString() === s._id.toString()));
+      }
+    }
+    
+    relevantSubjects.forEach(subject => {
+      let completed, totalChapters, percentage;
+      
+      if (examId) {
+        const exam = await ProgressExam.findById(examId);
+        const sylSubject = exam?.syllabus?.find(syl => syl.subjectId.toString() === subject._id.toString());
+        if (sylSubject?.chapters?.length) {
+          totalChapters = sylSubject.chapters.length;
+          completed = progress.completedChapters.filter(
+            c => c.subjectId._id.toString() === subject._id.toString() && sylSubject.chapters.includes(c.chapter)
+          ).length;
+          percentage = Math.round((completed / totalChapters) * 100);
+        } else {
+          return;
+        }
+      } else {
+        completed = progress.completedChapters.filter(
+          c => c.subjectId._id.toString() === subject._id.toString()
+        ).length;
+        percentage = Math.round((completed / subject.chapters.length) * 100);
+      }
       
       if (percentage === 100) {
         insights.push({ type: 'success', text: `${subject.name} mastered! <span class="text-green-400 font-bold">100%</span> complete! 🏆` });
