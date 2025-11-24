@@ -95,9 +95,20 @@ export default function ProgressTracking() {
     if (examId) {
       const exam = exams.find(e => e._id === examId);
       if (exam?.syllabus?.length) {
-        relevantSubjects = relevantSubjects.filter(s => 
-          exam.syllabus.some(syl => syl.subjectId === s._id)
-        );
+        let totalChapters = 0;
+        let completedChapters = 0;
+        
+        exam.syllabus.forEach(syl => {
+          const subject = subjects.find(s => s._id === syl.subjectId && s.category === category);
+          if (subject && syl.chapters?.length) {
+            totalChapters += syl.chapters.length;
+            completedChapters += progress?.completedChapters.filter(c =>
+              c.subjectId._id === syl.subjectId && syl.chapters.includes(c.chapter)
+            ).length || 0;
+          }
+        });
+        
+        return totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0;
       }
     }
     
@@ -110,20 +121,28 @@ export default function ProgressTracking() {
   };
 
   const calculateTotalProgress = (examId = null) => {
-    let relevantSubjects = subjects;
-    
     if (examId) {
       const exam = exams.find(e => e._id === examId);
       if (exam?.syllabus?.length) {
-        relevantSubjects = subjects.filter(s => 
-          exam.syllabus.some(syl => syl.subjectId === s._id)
-        );
+        let totalChapters = 0;
+        let completedChapters = 0;
+        
+        exam.syllabus.forEach(syl => {
+          if (syl.chapters?.length) {
+            totalChapters += syl.chapters.length;
+            completedChapters += progress?.completedChapters.filter(c =>
+              c.subjectId._id === syl.subjectId && syl.chapters.includes(c.chapter)
+            ).length || 0;
+          }
+        });
+        
+        return totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0;
       }
     }
     
-    const totalChapters = relevantSubjects.reduce((sum, s) => sum + s.chapters.length, 0);
+    const totalChapters = subjects.reduce((sum, s) => sum + s.chapters.length, 0);
     const completed = progress?.completedChapters.filter(c =>
-      relevantSubjects.some(s => s._id === c.subjectId._id)
+      subjects.some(s => s._id === c.subjectId._id)
     ).length || 0;
     return Math.round((completed / totalChapters) * 100);
   };

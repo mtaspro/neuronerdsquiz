@@ -100,9 +100,23 @@ export default function ProgressEditor() {
     if (exists) {
       setExamSyllabus(examSyllabus.filter(s => s.subjectId !== subjectId));
     } else {
-      const subject = subjects.find(s => s._id === subjectId);
-      setExamSyllabus([...examSyllabus, { subjectId, chapters: subject.chapters }]);
+      setExamSyllabus([...examSyllabus, { subjectId, chapters: [] }]);
     }
+  };
+
+  const toggleChapterInSyllabus = (subjectId, chapter) => {
+    setExamSyllabus(examSyllabus.map(s => {
+      if (s.subjectId === subjectId) {
+        const hasChapter = s.chapters.includes(chapter);
+        return {
+          ...s,
+          chapters: hasChapter 
+            ? s.chapters.filter(c => c !== chapter)
+            : [...s.chapters, chapter]
+        };
+      }
+      return s;
+    }));
   };
 
   const deleteExam = async (id) => {
@@ -253,19 +267,42 @@ export default function ProgressEditor() {
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-white mb-2 font-medium">Syllabus (Select Subjects)</label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto p-2 bg-black/20 rounded-lg">
-                    {subjects.map(subject => (
-                      <label key={subject._id} className="flex items-center space-x-2 cursor-pointer p-2 hover:bg-white/10 rounded">
-                        <input
-                          type="checkbox"
-                          checked={examSyllabus.some(s => s.subjectId === subject._id)}
-                          onChange={() => toggleSubjectInSyllabus(subject._id)}
-                          className="w-4 h-4 rounded accent-blue-500"
-                        />
-                        <span className="text-white text-sm">{subject.name}</span>
-                      </label>
-                    ))}
+                  <label className="block text-white mb-2 font-medium">Syllabus (Select Subjects & Chapters)</label>
+                  <div className="space-y-3 max-h-96 overflow-y-auto p-3 bg-black/20 rounded-lg">
+                    {subjects.map(subject => {
+                      const isSelected = examSyllabus.some(s => s.subjectId === subject._id);
+                      const selectedChapters = examSyllabus.find(s => s.subjectId === subject._id)?.chapters || [];
+                      
+                      return (
+                        <div key={subject._id} className="bg-white/5 rounded-lg p-3">
+                          <label className="flex items-center space-x-2 cursor-pointer mb-2">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSubjectInSyllabus(subject._id)}
+                              className="w-4 h-4 rounded accent-blue-500"
+                            />
+                            <span className="text-white font-semibold">{subject.name}</span>
+                          </label>
+                          
+                          {isSelected && (
+                            <div className="ml-6 grid grid-cols-2 gap-2 mt-2">
+                              {subject.chapters.map((chapter, i) => (
+                                <label key={i} className="flex items-center space-x-2 cursor-pointer text-sm">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedChapters.includes(chapter)}
+                                    onChange={() => toggleChapterInSyllabus(subject._id, chapter)}
+                                    className="w-3 h-3 rounded accent-cyan-500"
+                                  />
+                                  <span className="text-gray-300">{chapter}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
                 <div className="flex gap-2">
