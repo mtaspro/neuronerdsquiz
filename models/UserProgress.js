@@ -10,7 +10,8 @@ const userProgressSchema = new mongoose.Schema({
     date: { type: Date, default: Date.now },
     totalProgress: { type: Number },
     beiProgress: { type: Number },
-    scienceProgress: { type: Number }
+    scienceProgress: { type: Number },
+    testProgress: { type: Number, default: 0 }
   }],
   badges: [{ type: String }],
   streakDays: { type: Number, default: 0 },
