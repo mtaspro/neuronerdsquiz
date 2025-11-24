@@ -14,6 +14,7 @@ export default function ProgressTracking() {
   const [insights, setInsights] = useState([]);
   const [loading, setLoading] = useState(true);
   const [whatsappReminder, setWhatsappReminder] = useState(false);
+  const [insightMode, setInsightMode] = useState('hsc');
 
   useEffect(() => {
     fetchData();
@@ -58,7 +59,8 @@ export default function ProgressTracking() {
       setProgress(res.data.progress);
       
       // Refresh insights immediately
-      const insightsRes = await axios.get(`${API_URL}/api/progress/insights`, {
+      const examId = insightMode === 'test' && exams[0] ? exams[0]._id : null;
+      const insightsRes = await axios.get(`${API_URL}/api/progress/insights?examId=${examId || ''}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setInsights(insightsRes.data.insights);
@@ -77,6 +79,19 @@ export default function ProgressTracking() {
       setWhatsappReminder(!whatsappReminder);
     } catch (error) {
       console.error('Failed to toggle reminder:', error);
+    }
+  };
+
+  const testReminder = async () => {
+    try {
+      const token = secureStorage.getToken();
+      await axios.post(`${API_URL}/api/progress/test-reminder`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Test reminder sent to your WhatsApp!');
+    } catch (error) {
+      console.error('Failed to send test reminder:', error);
+      alert('Failed to send test reminder');
     }
   };
 
@@ -161,7 +176,7 @@ export default function ProgressTracking() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 p-4 md:p-8">
+    <div className="min-h-screen bg-black p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
@@ -171,7 +186,7 @@ export default function ProgressTracking() {
 
         {/* Exam Timeline */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Upcoming Exams</h2>
+          <h2 className="text-2xl font-bold text-cyan-400 mb-4">Upcoming Exams</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {exams.map((exam, i) => (
               <motion.div
@@ -179,7 +194,7 @@ export default function ProgressTracking() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20"
+                className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-4 border border-cyan-500/30 shadow-lg shadow-cyan-500/10"
               >
                 <h3 className="text-xl font-bold text-white mb-2">{exam.name}</h3>
                 <p className="text-blue-300 text-sm mb-2">{new Date(exam.date).toLocaleDateString()}</p>
@@ -195,7 +210,31 @@ export default function ProgressTracking() {
             {/* Insights */}
             {insights.length > 0 && (
               <div className="lg:col-span-2">
-                <h2 className="text-2xl font-bold text-white mb-4">NeuraX AI Insights</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-cyan-400">NeuraX AI Insights</h2>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setInsightMode('hsc')}
+                      className={`px-4 py-1 rounded-lg text-sm font-semibold transition-all ${
+                        insightMode === 'hsc' 
+                          ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/50' 
+                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                      }`}
+                    >
+                      HSC
+                    </button>
+                    <button
+                      onClick={() => setInsightMode('test')}
+                      className={`px-4 py-1 rounded-lg text-sm font-semibold transition-all ${
+                        insightMode === 'test' 
+                          ? 'bg-purple-500 text-black shadow-lg shadow-purple-500/50' 
+                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                      }`}
+                    >
+                      Test
+                    </button>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   {insights.map((insight, i) => (
                     <motion.div
@@ -203,14 +242,14 @@ export default function ProgressTracking() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.1 }}
-                      className={`p-3 rounded-lg text-sm ${
-                        insight.type === 'success' ? 'bg-green-500/20 border-green-500' :
-                        insight.type === 'warning' ? 'bg-yellow-500/20 border-yellow-500' :
-                        insight.type === 'urgent' ? 'bg-red-500/20 border-red-500' :
-                        'bg-blue-500/20 border-blue-500'
-                      } border`}
+                      className={`p-3 rounded-lg text-sm border backdrop-blur-sm ${
+                        insight.type === 'success' ? 'bg-green-500/10 border-green-500/50' :
+                        insight.type === 'warning' ? 'bg-yellow-500/10 border-yellow-500/50' :
+                        insight.type === 'urgent' ? 'bg-red-500/10 border-red-500/50' :
+                        'bg-blue-500/10 border-blue-500/50'
+                      }`}
                     >
-                      <p className="text-white">{insight.text}</p>
+                      <p className="text-gray-200" dangerouslySetInnerHTML={{ __html: insight.text }} />
                     </motion.div>
                   ))}
                 </div>
@@ -219,7 +258,7 @@ export default function ProgressTracking() {
 
             {/* Overall Progress */}
             <div className={insights.length > 0 ? '' : 'lg:col-span-3'}>
-              <h2 className="text-2xl font-bold text-white mb-4">Overall Progress</h2>
+              <h2 className="text-2xl font-bold text-cyan-400 mb-4">Overall Progress</h2>
               <div className="grid grid-cols-1 gap-4">
                 <ProgressCard 
                   title="BEI Progress" 
@@ -247,8 +286,8 @@ export default function ProgressTracking() {
         {/* Progress Graph */}
         {progress?.progressHistory?.length > 1 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Progress History</h2>
-            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+            <h2 className="text-2xl font-bold text-cyan-400 mb-4">Progress History</h2>
+            <div className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-6 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={progress.progressHistory.slice(-30)}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
@@ -267,7 +306,7 @@ export default function ProgressTracking() {
         {/* Badges */}
         {progress?.badges?.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Achievements</h2>
+            <h2 className="text-2xl font-bold text-cyan-400 mb-4">Achievements</h2>
             <div className="flex flex-wrap gap-3">
               {progress.badges.map((badge, i) => (
                 <motion.div
@@ -288,29 +327,37 @@ export default function ProgressTracking() {
 
         {/* WhatsApp Reminder Toggle */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-bold text-white mb-1">WhatsApp Reminders</h3>
-              <p className="text-gray-300 text-sm">Get daily progress updates via WhatsApp</p>
+          <div className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-6 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-cyan-400 mb-1">WhatsApp Reminders</h3>
+                <p className="text-gray-400 text-sm">Get daily progress updates via WhatsApp</p>
+              </div>
+              <button
+                onClick={toggleReminder}
+                className={`relative w-16 h-8 rounded-full transition-colors ${
+                  whatsappReminder ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-gray-700'
+                }`}
+              >
+                <span
+                  className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                    whatsappReminder ? 'translate-x-8' : ''
+                  }`}
+                />
+              </button>
             </div>
             <button
-              onClick={toggleReminder}
-              className={`relative w-16 h-8 rounded-full transition-colors ${
-                whatsappReminder ? 'bg-green-500' : 'bg-gray-600'
-              }`}
+              onClick={testReminder}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-purple-600/50 transition-all"
             >
-              <span
-                className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                  whatsappReminder ? 'translate-x-8' : ''
-                }`}
-              />
+              🧪 Test Reminder
             </button>
           </div>
         </motion.div>
 
         {/* Subjects & Chapters */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <h2 className="text-2xl font-bold text-white mb-4">Subjects & Chapters</h2>
+          <h2 className="text-2xl font-bold text-cyan-400 mb-4">Subjects & Chapters</h2>
           <div className="space-y-6">
             {subjects.map((subject, i) => (
               <motion.div
@@ -318,7 +365,7 @@ export default function ProgressTracking() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20"
+                className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-6 border border-cyan-500/30 shadow-lg shadow-cyan-500/10"
               >
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-bold text-white">{subject.name}</h3>
@@ -367,8 +414,8 @@ function ProgressCard({ title, hscProgress, testProgress, color }) {
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
-      <h3 className="text-base font-semibold text-white mb-3">{title}</h3>
+    <div className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-4 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+      <h3 className="text-base font-semibold text-cyan-400 mb-3">{title}</h3>
       <div className="flex items-center justify-around">
         {/* HSC Progress */}
         <div className="text-center">

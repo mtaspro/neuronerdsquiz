@@ -16,7 +16,7 @@ const NeuraflowAIChat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('meta-llama/llama-4-maverick:free');
+  const [selectedModel, setSelectedModel] = useState('qwen/qwen3-235b-a22b:free');
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isProcessingVision, setIsProcessingVision] = useState(false);
@@ -44,7 +44,7 @@ const NeuraflowAIChat = () => {
   const synthRef = useRef(null);
 
   const models = [
-    { id: 'meta-llama/llama-4-maverick:free', name: 'Llama 4 Maverick', description: 'Best for general chat & reasoning (Recommended)' },
+    { id: 'qwen/qwen3-235b-a22b:free', name: 'Qwen 3.2 235B', description: 'Best for general chat & reasoning (Recommended)' },
     { id: 'deepseek/deepseek-chat-v3.1:free', name: 'DeepSeek V3.1', description: 'Advanced reasoning & multilingual' },
     { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B', description: 'Large model with excellent performance' },
     { id: 'qwen/qwen-2.5-72b-instruct:free', name: 'Qwen 2.5 72B', description: 'Perfect for Bengali & multilingual support' }

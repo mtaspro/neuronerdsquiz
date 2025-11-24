@@ -246,6 +246,7 @@ router.get('/init-subjects', async (req, res) => {
 // Get insights
 router.get('/insights', sessionMiddleware, async (req, res) => {
   try {
+    const { examId } = req.query;
     const progress = await UserProgress.findOne({ userId: req.user.userId }).populate('completedChapters.subjectId');
     const subjects = await ProgressSubject.find({ isActive: true });
     const exams = await ProgressExam.find({ isActive: true }).sort('date');
@@ -253,16 +254,32 @@ router.get('/insights', sessionMiddleware, async (req, res) => {
     if (!progress) return res.json({ insights: [] });
 
     const insights = [];
-    const totalChapters = subjects.reduce((sum, s) => sum + s.chapters.length, 0);
-    const totalProgress = Math.round((progress.completedChapters.length / totalChapters) * 100);
+    let totalChapters, totalProgress;
+    
+    if (examId) {
+      const exam = await ProgressExam.findById(examId);
+      if (exam?.syllabus?.length) {
+        totalChapters = exam.syllabus.reduce((sum, syl) => sum + (syl.chapters?.length || 0), 0);
+        const completed = progress.completedChapters.filter(c =>
+          exam.syllabus.some(syl => syl.subjectId.toString() === c.subjectId._id.toString() && syl.chapters.includes(c.chapter))
+        ).length;
+        totalProgress = Math.round((completed / totalChapters) * 100);
+      } else {
+        totalChapters = subjects.reduce((sum, s) => sum + s.chapters.length, 0);
+        totalProgress = Math.round((progress.completedChapters.length / totalChapters) * 100);
+      }
+    } else {
+      totalChapters = subjects.reduce((sum, s) => sum + s.chapters.length, 0);
+      totalProgress = Math.round((progress.completedChapters.length / totalChapters) * 100);
+    }
 
     // Overall progress insight
     if (totalProgress >= 70) {
-      insights.push({ type: 'success', text: `Amazing! You've completed ${totalProgress}% of your syllabus. Keep it up! 🎉` });
+      insights.push({ type: 'success', text: `Amazing! You've completed <span class="text-green-400 font-bold">${totalProgress}%</span> of your syllabus. Keep it up! 🎉` });
     } else if (totalProgress >= 40) {
-      insights.push({ type: 'info', text: `You've completed ${totalProgress}% of your syllabus. Great progress! 📚` });
+      insights.push({ type: 'info', text: `You've completed <span class="text-cyan-400 font-bold">${totalProgress}%</span> of your syllabus. Great progress! 📚` });
     } else {
-      insights.push({ type: 'warning', text: `You've completed ${totalProgress}% of your syllabus. Time to accelerate! 🚀` });
+      insights.push({ type: 'warning', text: `You've completed <span class="text-yellow-400 font-bold">${totalProgress}%</span> of your syllabus. Time to accelerate! 🚀` });
     }
 
     // Subject-specific insights
@@ -273,9 +290,9 @@ router.get('/insights', sessionMiddleware, async (req, res) => {
       const percentage = Math.round((completed / subject.chapters.length) * 100);
       
       if (percentage === 100) {
-        insights.push({ type: 'success', text: `${subject.name} mastered! 100% complete! 🏆` });
+        insights.push({ type: 'success', text: `${subject.name} mastered! <span class="text-green-400 font-bold">100%</span> complete! 🏆` });
       } else if (percentage < 30) {
-        insights.push({ type: 'warning', text: `${subject.name} needs attention. Only ${percentage}% complete.` });
+        insights.push({ type: 'warning', text: `${subject.name} needs attention. Only <span class="text-yellow-400 font-bold">${percentage}%</span> complete.` });
       }
     });
 
@@ -298,6 +315,52 @@ router.get('/insights', sessionMiddleware, async (req, res) => {
     res.json({ insights });
   } catch (error) {
     res.status(500).json({ error: 'Failed to generate insights' });
+  }
+});
+
+// Test reminder (SuperAdmin only)
+router.post('/test-reminder', sessionMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user?.phone) return res.status(400).json({ error: 'No phone number found' });
+
+    const progress = await UserProgress.findOne({ userId: req.user.userId });
+    const subjects = await ProgressSubject.find({ isActive: true });
+    const exams = await ProgressExam.find({ isActive: true }).sort('date');
+    
+    const totalChapters = subjects.reduce((sum, s) => sum + s.chapters.length, 0);
+    const totalProgress = Math.round(((progress?.completedChapters.length || 0) / totalChapters) * 100);
+
+    let message = `🌅 Good Morning ${user.name}!\n\n`;
+    message += `📊 *Your Progress Update*\n\n`;
+    message += `✅ Overall Progress: *${totalProgress}%*\n`;
+    message += `🔥 Study Streak: *${progress?.streakDays || 0} days*\n\n`;
+
+    const upcomingExam = exams.find(exam => new Date(exam.date) > new Date());
+    if (upcomingExam) {
+      const daysLeft = Math.ceil((new Date(upcomingExam.date) - new Date()) / (1000 * 60 * 60 * 24));
+      if (daysLeft <= 30) {
+        message += `⚠️ *${upcomingExam.name}* in ${daysLeft} days!\n\n`;
+      }
+    }
+
+    if (totalProgress < 50) {
+      message += `💪 Keep pushing! Every chapter counts.\n`;
+    } else if (totalProgress < 80) {
+      message += `🎯 Great progress! You're more than halfway there!\n`;
+    } else {
+      message += `🏆 Outstanding! You're almost at the finish line!\n`;
+    }
+
+    message += `\n_Track your progress at neuronerdsquiz.vercel.app_`;
+
+    const whatsappService = (await import('../services/whatsappService.js')).default;
+    await whatsappService.sendMessage(user.phone, message);
+
+    res.json({ success: true, message: 'Test reminder sent' });
+  } catch (error) {
+    console.error('Test reminder error:', error);
+    res.status(500).json({ error: 'Failed to send test reminder' });
   }
 });
 

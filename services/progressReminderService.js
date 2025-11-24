@@ -31,40 +31,54 @@ async function sendProgressReminders(timeOfDay) {
       const subjects = await ProgressSubject.find({ isActive: true });
       const exams = await ProgressExam.find({ isActive: true }).sort('date');
       
+      // Calculate HSC progress
       const totalChapters = subjects.reduce((sum, s) => sum + s.chapters.length, 0);
-      const totalProgress = Math.round((userProgress.completedChapters.length / totalChapters) * 100);
+      const hscProgress = Math.round((userProgress.completedChapters.length / totalChapters) * 100);
+      
+      // Calculate Test exam progress
+      let testProgress = 0;
+      const testExam = exams[0];
+      if (testExam?.syllabus?.length) {
+        const testTotal = testExam.syllabus.reduce((sum, syl) => sum + (syl.chapters?.length || 0), 0);
+        const testCompleted = userProgress.completedChapters.filter(c =>
+          testExam.syllabus.some(syl => syl.subjectId.toString() === c.subjectId.toString() && syl.chapters.includes(c.chapter))
+        ).length;
+        testProgress = Math.round((testCompleted / testTotal) * 100);
+      }
 
-      let message = timeOfDay === 'morning' 
-        ? `🌅 Good Morning ${user.name}!\n\n`
-        : `🌙 Good Evening ${user.name}!\n\n`;
-
-      message += `📊 *Your Progress Update*\n\n`;
-      message += `✅ Overall Progress: *${totalProgress}%*\n`;
-      message += `🔥 Study Streak: *${userProgress.streakDays} days*\n\n`;
-
-      // Add exam reminders
+      // Create progress summary for AI
+      const progressSummary = `User: ${user.name}\nHSC Progress: ${hscProgress}%\nTest Exam Progress: ${testProgress}%\nStudy Streak: ${userProgress.streakDays} days\nTime: ${timeOfDay}`;
+      
+      // Get upcoming exam info
+      let examInfo = '';
       const upcomingExam = exams.find(exam => new Date(exam.date) > new Date());
       if (upcomingExam) {
         const daysLeft = Math.ceil((new Date(upcomingExam.date) - new Date()) / (1000 * 60 * 60 * 24));
         if (daysLeft <= 30) {
-          message += `⚠️ *${upcomingExam.name}* in ${daysLeft} days!\n\n`;
+          examInfo = `Upcoming: ${upcomingExam.name} in ${daysLeft} days`;
         }
       }
 
-      // Add motivation
-      if (totalProgress < 50) {
-        message += `💪 Keep pushing! Every chapter counts.\n`;
-      } else if (totalProgress < 80) {
-        message += `🎯 Great progress! You're more than halfway there!\n`;
-      } else {
-        message += `🏆 Outstanding! You're almost at the finish line!\n`;
-      }
-
-      message += `\n_Track your progress at neuronerdsquiz.vercel.app_`;
-
+      // Generate AI message
       try {
-        await whatsappService.sendMessage(user.phone, message);
-        console.log(`✅ Reminder sent to ${user.name}`);
+        const axios = (await import('axios')).default;
+        const aiResponse = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+          model: 'deepseek/deepseek-chat-v3.1:free',
+          messages: [{
+            role: 'user',
+            content: `Generate a motivational WhatsApp progress reminder message (max 150 words) based on:\n${progressSummary}\n${examInfo}\n\nInclude: greeting, HSC & Test progress percentages, streak, exam reminder if any, and motivation. Use emojis. End with "Track at neuronerdsquiz.vercel.app"`
+          }]
+        }, {
+          headers: {
+            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const aiMessage = aiResponse.data.choices[0].message.content.trim();
+        
+        await whatsappService.sendMessage(user.phone, aiMessage);
+        console.log(`✅ AI reminder sent to ${user.name}`);
       } catch (error) {
         console.error(`Failed to send reminder to ${user.name}:`, error.message);
       }
