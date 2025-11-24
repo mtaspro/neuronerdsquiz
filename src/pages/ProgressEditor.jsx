@@ -13,6 +13,7 @@ export default function ProgressEditor() {
   const [editingExam, setEditingExam] = useState(null);
   const [showSubjectForm, setShowSubjectForm] = useState(false);
   const [showExamForm, setShowExamForm] = useState(false);
+  const [examSyllabus, setExamSyllabus] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -77,7 +78,7 @@ export default function ProgressEditor() {
       id: editingExam?._id,
       name: formData.get('name'),
       date: formData.get('date'),
-      syllabus: []
+      syllabus: examSyllabus
     };
 
     try {
@@ -87,9 +88,20 @@ export default function ProgressEditor() {
       });
       setShowExamForm(false);
       setEditingExam(null);
+      setExamSyllabus([]);
       fetchData();
     } catch (error) {
       console.error('Failed to save exam:', error);
+    }
+  };
+
+  const toggleSubjectInSyllabus = (subjectId) => {
+    const exists = examSyllabus.find(s => s.subjectId === subjectId);
+    if (exists) {
+      setExamSyllabus(examSyllabus.filter(s => s.subjectId !== subjectId));
+    } else {
+      const subject = subjects.find(s => s._id === subjectId);
+      setExamSyllabus([...examSyllabus, { subjectId, chapters: subject.chapters }]);
     }
   };
 
@@ -240,13 +252,29 @@ export default function ProgressEditor() {
                     required
                   />
                 </div>
+                <div className="mb-4">
+                  <label className="block text-white mb-2 font-medium">Syllabus (Select Subjects)</label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto p-2 bg-black/20 rounded-lg">
+                    {subjects.map(subject => (
+                      <label key={subject._id} className="flex items-center space-x-2 cursor-pointer p-2 hover:bg-white/10 rounded">
+                        <input
+                          type="checkbox"
+                          checked={examSyllabus.some(s => s.subjectId === subject._id)}
+                          onChange={() => toggleSubjectInSyllabus(subject._id)}
+                          className="w-4 h-4 rounded accent-blue-500"
+                        />
+                        <span className="text-white text-sm">{subject.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
                 <div className="flex gap-2">
                   <button type="submit" className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
                     Save
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setShowExamForm(false); setEditingExam(null); }}
+                    onClick={() => { setShowExamForm(false); setEditingExam(null); setExamSyllabus([]); }}
                     className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
                   >
                     Cancel
@@ -267,6 +295,9 @@ export default function ProgressEditor() {
                 <div>
                   <h3 className="text-white font-semibold">{exam.name}</h3>
                   <p className="text-gray-300 text-sm">{new Date(exam.date).toLocaleDateString()}</p>
+                  {exam.syllabus?.length > 0 && (
+                    <p className="text-gray-400 text-xs mt-1">{exam.syllabus.length} subjects in syllabus</p>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <button

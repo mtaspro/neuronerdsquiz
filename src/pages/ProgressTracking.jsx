@@ -89,18 +89,43 @@ export default function ProgressTracking() {
     return Math.round((completed / subject.chapters.length) * 100);
   };
 
-  const calculateCategoryProgress = (category) => {
-    const categorySubjects = subjects.filter(s => s.category === category);
-    const totalChapters = categorySubjects.reduce((sum, s) => sum + s.chapters.length, 0);
+  const calculateCategoryProgress = (category, examId = null) => {
+    let relevantSubjects = subjects.filter(s => s.category === category);
+    
+    if (examId) {
+      const exam = exams.find(e => e._id === examId);
+      if (exam?.syllabus?.length) {
+        relevantSubjects = relevantSubjects.filter(s => 
+          exam.syllabus.some(syl => syl.subjectId === s._id)
+        );
+      }
+    }
+    
+    if (!relevantSubjects.length) return 0;
+    const totalChapters = relevantSubjects.reduce((sum, s) => sum + s.chapters.length, 0);
     const completed = progress?.completedChapters.filter(c =>
-      categorySubjects.some(s => s._id === c.subjectId._id)
+      relevantSubjects.some(s => s._id === c.subjectId._id)
     ).length || 0;
     return Math.round((completed / totalChapters) * 100);
   };
 
-  const calculateTotalProgress = () => {
-    const totalChapters = subjects.reduce((sum, s) => sum + s.chapters.length, 0);
-    return Math.round(((progress?.completedChapters.length || 0) / totalChapters) * 100);
+  const calculateTotalProgress = (examId = null) => {
+    let relevantSubjects = subjects;
+    
+    if (examId) {
+      const exam = exams.find(e => e._id === examId);
+      if (exam?.syllabus?.length) {
+        relevantSubjects = subjects.filter(s => 
+          exam.syllabus.some(syl => syl.subjectId === s._id)
+        );
+      }
+    }
+    
+    const totalChapters = relevantSubjects.reduce((sum, s) => sum + s.chapters.length, 0);
+    const completed = progress?.completedChapters.filter(c =>
+      relevantSubjects.some(s => s._id === c.subjectId._id)
+    ).length || 0;
+    return Math.round((completed / totalChapters) * 100);
   };
 
   const getCountdown = (examDate) => {
@@ -177,9 +202,24 @@ export default function ProgressTracking() {
             <div className={insights.length > 0 ? '' : 'lg:col-span-3'}>
               <h2 className="text-2xl font-bold text-white mb-4">Overall Progress</h2>
               <div className="grid grid-cols-1 gap-4">
-                <ProgressCard title="BEI Progress" progress={calculateCategoryProgress('BEI')} color="blue" />
-                <ProgressCard title="Science Progress" progress={calculateCategoryProgress('Science')} color="purple" />
-                <ProgressCard title="Total Progress" progress={calculateTotalProgress()} color="green" />
+                <ProgressCard 
+                  title="BEI Progress" 
+                  hscProgress={calculateCategoryProgress('BEI')} 
+                  testProgress={exams[0] ? calculateCategoryProgress('BEI', exams[0]._id) : null}
+                  color="blue" 
+                />
+                <ProgressCard 
+                  title="Science Progress" 
+                  hscProgress={calculateCategoryProgress('Science')} 
+                  testProgress={exams[0] ? calculateCategoryProgress('Science', exams[0]._id) : null}
+                  color="purple" 
+                />
+                <ProgressCard 
+                  title="Total Progress" 
+                  hscProgress={calculateTotalProgress()} 
+                  testProgress={exams[0] ? calculateTotalProgress(exams[0]._id) : null}
+                  color="green" 
+                />
               </div>
             </div>
           </div>
@@ -300,7 +340,7 @@ export default function ProgressTracking() {
   );
 }
 
-function ProgressCard({ title, progress, color }) {
+function ProgressCard({ title, hscProgress, testProgress, color }) {
   const colors = {
     blue: { from: '#3b82f6', to: '#06b6d4' },
     purple: { from: '#a855f7', to: '#ec4899' },
@@ -309,25 +349,57 @@ function ProgressCard({ title, progress, color }) {
 
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
-      <h3 className="text-base font-semibold text-white mb-2">{title}</h3>
-      <div className="relative w-24 h-24 mx-auto">
-        <svg className="transform -rotate-90 w-24 h-24">
-          <circle cx="48" cy="48" r="40" stroke="#ffffff20" strokeWidth="6" fill="none" />
-          <circle
-            cx="48"
-            cy="48"
-            r="40"
-            stroke={colors[color].from}
-            strokeWidth="6"
-            fill="none"
-            strokeDasharray={`${2 * Math.PI * 40}`}
-            strokeDashoffset={`${2 * Math.PI * 40 * (1 - progress / 100)}`}
-            className="transition-all duration-1000"
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-2xl font-bold text-white">{progress}%</span>
+      <h3 className="text-base font-semibold text-white mb-3">{title}</h3>
+      <div className="flex items-center justify-around">
+        {/* HSC Progress */}
+        <div className="text-center">
+          <p className="text-xs text-gray-300 mb-2">HSC</p>
+          <div className="relative w-20 h-20">
+            <svg className="transform -rotate-90 w-20 h-20">
+              <circle cx="40" cy="40" r="32" stroke="#ffffff20" strokeWidth="5" fill="none" />
+              <circle
+                cx="40"
+                cy="40"
+                r="32"
+                stroke={colors[color].from}
+                strokeWidth="5"
+                fill="none"
+                strokeDasharray={`${2 * Math.PI * 32}`}
+                strokeDashoffset={`${2 * Math.PI * 32 * (1 - hscProgress / 100)}`}
+                className="transition-all duration-1000"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-lg font-bold text-white">{hscProgress}%</span>
+            </div>
+          </div>
         </div>
+        
+        {/* Test Progress */}
+        {testProgress !== null && (
+          <div className="text-center">
+            <p className="text-xs text-gray-300 mb-2">Test</p>
+            <div className="relative w-20 h-20">
+              <svg className="transform -rotate-90 w-20 h-20">
+                <circle cx="40" cy="40" r="32" stroke="#ffffff20" strokeWidth="5" fill="none" />
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="32"
+                  stroke={colors[color].to}
+                  strokeWidth="5"
+                  fill="none"
+                  strokeDasharray={`${2 * Math.PI * 32}`}
+                  strokeDashoffset={`${2 * Math.PI * 32 * (1 - testProgress / 100)}`}
+                  className="transition-all duration-1000"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-lg font-bold text-white">{testProgress}%</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
