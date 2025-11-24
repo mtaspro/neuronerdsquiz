@@ -62,6 +62,7 @@ router.post('/update', sessionMiddleware, async (req, res) => {
 
     // Calculate progress percentages
     const subjects = await ProgressSubject.find({ isActive: true });
+    const exams = await ProgressExam.find({ isActive: true }).sort('date');
     const totalChapters = subjects.reduce((sum, s) => sum + s.chapters.length, 0);
     const totalProgress = (progress.completedChapters.length / totalChapters) * 100;
 
@@ -79,6 +80,17 @@ router.post('/update', sessionMiddleware, async (req, res) => {
     ).length;
     const scienceProgress = (scienceCompleted / scienceTotal) * 100;
 
+    // Calculate Test exam progress
+    let testProgress = 0;
+    const testExam = exams[0];
+    if (testExam?.syllabus?.length) {
+      const testTotal = testExam.syllabus.reduce((sum, syl) => sum + (syl.chapters?.length || 0), 0);
+      const testCompleted = progress.completedChapters.filter(c =>
+        testExam.syllabus.some(syl => syl.subjectId.toString() === c.subjectId.toString() && syl.chapters.includes(c.chapter))
+      ).length;
+      testProgress = testTotal > 0 ? (testCompleted / testTotal) * 100 : 0;
+    }
+
     // Update streak
     const today = new Date().setHours(0, 0, 0, 0);
     const lastActive = progress.lastActiveDate ? new Date(progress.lastActiveDate).setHours(0, 0, 0, 0) : null;
@@ -95,10 +107,10 @@ router.post('/update', sessionMiddleware, async (req, res) => {
     const lastHistoryDate = lastHistory ? new Date(lastHistory.date).setHours(0, 0, 0, 0) : null;
     
     if (!lastHistoryDate || today !== lastHistoryDate) {
-      progress.progressHistory.push({ totalProgress, beiProgress, scienceProgress });
+      progress.progressHistory.push({ totalProgress, beiProgress, scienceProgress, testProgress });
     } else {
       progress.progressHistory[progress.progressHistory.length - 1] = { 
-        date: new Date(), totalProgress, beiProgress, scienceProgress 
+        date: new Date(), totalProgress, beiProgress, scienceProgress, testProgress 
       };
     }
 

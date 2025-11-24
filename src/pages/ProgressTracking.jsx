@@ -340,9 +340,10 @@ export default function ProgressTracking() {
                   <XAxis dataKey="date" stroke="#fff" tickFormatter={(date) => new Date(date).toLocaleDateString()} />
                   <YAxis stroke="#fff" />
                   <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: 'none' }} />
-                  <Line type="monotone" dataKey="totalProgress" stroke="#00ff88" strokeWidth={2} name="Total" />
-                  <Line type="monotone" dataKey="beiProgress" stroke="#00aaff" strokeWidth={2} name="BEI" />
-                  <Line type="monotone" dataKey="scienceProgress" stroke="#aa00ff" strokeWidth={2} name="Science" />
+                  <Line type="monotone" dataKey="totalProgress" stroke="#00ff88" strokeWidth={2} name="HSC Total" />
+                  <Line type="monotone" dataKey="beiProgress" stroke="#00aaff" strokeWidth={2} name="HSC BEI" />
+                  <Line type="monotone" dataKey="scienceProgress" stroke="#aa00ff" strokeWidth={2} name="HSC Science" />
+                  <Line type="monotone" dataKey="testProgress" stroke="#ff00ff" strokeWidth={2} name="Test" strokeDasharray="5 5" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -455,7 +456,7 @@ export default function ProgressTracking() {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           onClick={scrollToChapters}
-          className="fixed bottom-8 right-8 bg-gradient-to-r from-cyan-500 to-purple-500 text-white px-6 py-3 rounded-full shadow-2xl shadow-cyan-500/50 flex items-center gap-2 font-semibold z-50 hover:scale-110 transition-transform"
+          className="fixed top-24 right-8 bg-gradient-to-r from-cyan-500 to-purple-500 text-white px-6 py-3 rounded-full shadow-2xl shadow-cyan-500/50 flex items-center gap-2 font-semibold z-50 hover:scale-110 transition-transform"
           style={{ animation: 'bounce 2s infinite' }}
         >
           Select Completed Chapters
