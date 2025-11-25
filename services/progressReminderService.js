@@ -26,7 +26,7 @@ async function sendProgressReminders(timeOfDay) {
     
     for (const userProgress of usersWithReminders) {
       const user = await User.findById(userProgress.userId);
-      if (!user?.phone) continue;
+      if (!user?.phoneNumber) continue;
 
       const subjects = await ProgressSubject.find({ isActive: true });
       const exams = await ProgressExam.find({ isActive: true }).sort('date');
@@ -46,8 +46,8 @@ async function sendProgressReminders(timeOfDay) {
         testProgress = Math.round((testCompleted / testTotal) * 100);
       }
 
-      // Create progress summary for AI
-      const progressSummary = `User: ${user.name}\nHSC Progress: ${hscProgress}%\nTest Exam Progress: ${testProgress}%\nStudy Streak: ${userProgress.streakDays} days\nTime: ${timeOfDay}`;
+      // Use AI summary if available, otherwise create basic summary
+      const progressSummary = userProgress.aiSummary || `HSC Progress: ${hscProgress}%\nTest Exam Progress: ${testProgress}%\nStudy Streak: ${userProgress.streakDays} days`;
       
       // Get upcoming exam info
       let examInfo = '';
@@ -61,26 +61,21 @@ async function sendProgressReminders(timeOfDay) {
 
       // Generate AI message
       try {
-        const axios = (await import('axios')).default;
-        const aiResponse = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-          model: 'qwen/qwen3-235b-a22b:free',
-          messages: [{
-            role: 'user',
-            content: `Generate a motivational WhatsApp progress reminder message (max 150 words) based on:\n${progressSummary}\n${examInfo}\n\nInclude: greeting, HSC & Test progress percentages, streak, exam reminder if any, and motivation. Use emojis. End with "Track at https://neuronerdsquiz.vercel.app/progress"`
-          }]
-        }, {
-          headers: {
-            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        const aiMessage = aiResponse.data.choices[0].message.content.trim();
+        const greeting = timeOfDay === 'morning' ? '🌅 Good Morning' : '🌆 Good Evening';
+        let message = `${greeting} ${user.username}!\n\n📊 *Your Progress Update*\n\n`;
+        message += progressSummary + '\n\n';
+        message += `🔥 Study Streak: *${userProgress.streakDays} days*\n\n`;
         
-        await whatsappService.sendMessage(user.phone, aiMessage);
-        console.log(`✅ AI reminder sent to ${user.name}`);
+        if (examInfo) {
+          message += `⚠️ ${examInfo}\n\n`;
+        }
+        
+        message += `📚 Keep up the great work!\n\n_Track your progress at neuronerdsquiz.vercel.app/progress_`;
+        
+        await whatsappService.sendMessage(user.phoneNumber, message);
+        console.log(`✅ Reminder sent to ${user.username}`);
       } catch (error) {
-        console.error(`Failed to send reminder to ${user.name}:`, error.message);
+        console.error(`Failed to send reminder to ${user.username}:`, error.message);
       }
     }
   } catch (error) {

@@ -163,6 +163,29 @@ router.post('/update', sessionMiddleware, async (req, res) => {
       }
     });
 
+    // Generate AI summary
+    const axios = require('axios');
+    const apiUrl = process.env.VITE_API_URL || 'http://localhost:5000';
+    const summaryPrompt = `Generate a brief progress summary for a student with:
+- Overall Progress: ${totalProgress.toFixed(1)}%
+- BEI Progress: ${beiProgress.toFixed(1)}%
+- Science Progress: ${scienceProgress.toFixed(1)}%
+- Test Exam Progress: ${testProgress.toFixed(1)}%
+- Streak: ${progress.streakDays} days
+
+Provide 2-3 sentences highlighting strengths and areas needing attention.`;
+    
+    try {
+      const aiResponse = await axios.post(`${apiUrl}/api/ai-chat`, {
+        message: summaryPrompt,
+        model: 'deepseek/deepseek-chat-v3.1:free'
+      });
+      progress.aiSummary = aiResponse.data.response;
+      console.log('🤖 AI Summary generated:', progress.aiSummary);
+    } catch (error) {
+      console.error('Failed to generate AI summary:', error.message);
+    }
+    
     await progress.save();
     console.log('✅ Progress saved to database');
     
@@ -399,15 +422,16 @@ router.post('/test-reminder', sessionMiddleware, async (req, res) => {
     }
 
     const progress = await UserProgress.findOne({ userId: req.user.userId });
-    const subjects = await ProgressSubject.find({ isActive: true });
     const exams = await ProgressExam.find({ isActive: true }).sort('date');
-    
-    const totalChapters = subjects.reduce((sum, s) => sum + s.chapters.length, 0);
-    const totalProgress = Math.round(((progress?.completedChapters.length || 0) / totalChapters) * 100);
 
-    let message = `🌅 Good Morning ${user.name}!\n\n`;
+    let message = `🌅 Good Morning ${user.username}!\n\n`;
     message += `📊 *Your Progress Update*\n\n`;
-    message += `✅ Overall Progress: *${totalProgress}%*\n`;
+    
+    // Use AI-generated summary if available
+    if (progress?.aiSummary) {
+      message += progress.aiSummary + '\n\n';
+    }
+    
     message += `🔥 Study Streak: *${progress?.streakDays || 0} days*\n\n`;
 
     const upcomingExam = exams.find(exam => new Date(exam.date) > new Date());
@@ -418,15 +442,8 @@ router.post('/test-reminder', sessionMiddleware, async (req, res) => {
       }
     }
 
-    if (totalProgress < 50) {
-      message += `💪 Keep pushing! Every chapter counts.\n`;
-    } else if (totalProgress < 80) {
-      message += `🎯 Great progress! You're more than halfway there!\n`;
-    } else {
-      message += `🏆 Outstanding! You're almost at the finish line!\n`;
-    }
-
-    message += `\n_Track your progress at neuronerdsquiz.vercel.app_`;
+    message += `📚 Keep up the great work, ${user.username}!`;
+    message += `\n\n_Track your progress at neuronerdsquiz.vercel.app_`;
 
     console.log('💬 Sending WhatsApp message to:', user.phoneNumber);
     const whatsappService = (await import('../services/whatsappService.js')).default;

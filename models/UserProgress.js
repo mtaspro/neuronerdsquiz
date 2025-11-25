@@ -16,7 +16,9 @@ const userProgressSchema = new mongoose.Schema({
   badges: [{ type: String }],
   streakDays: { type: Number, default: 0 },
   lastActiveDate: { type: Date },
-  whatsappReminder: { type: Boolean, default: false }
+  whatsappReminder: { type: Boolean, default: false },
+  reminderTime: { type: String, default: '09:00' },
+  aiSummary: { type: String, default: '' }
 }, { timestamps: true });
 
 export default mongoose.model('UserProgress', userProgressSchema);
