@@ -68,6 +68,7 @@ export default function ProgressTracking() {
 
       console.log('📊 Progress History from API:', progressRes.data.progress?.progressHistory);
       console.log('📊 Latest History Entry:', progressRes.data.progress?.progressHistory?.[progressRes.data.progress.progressHistory.length - 1]);
+      console.log('📊 Full History JSON:', JSON.stringify(progressRes.data.progress?.progressHistory, null, 2));
 
       setSubjects(subjectsRes.data.subjects);
       setExams(examsRes.data.exams);
@@ -106,7 +107,7 @@ export default function ProgressTracking() {
       
       console.log('📊 Updated Progress History:', res.data.progress?.progressHistory);
       console.log('📊 Latest Entry After Update:', res.data.progress?.progressHistory?.[res.data.progress.progressHistory.length - 1]);
-      console.log('📊 Graph Data (last 5):', res.data.progress?.progressHistory?.slice(-5));
+      console.log('📊 Graph Data (last 5):', JSON.stringify(res.data.progress?.progressHistory?.slice(-5), null, 2));
       
       setProgress(res.data.progress);
       
