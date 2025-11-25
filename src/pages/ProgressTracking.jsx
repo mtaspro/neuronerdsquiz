@@ -16,6 +16,7 @@ export default function ProgressTracking() {
   const [whatsappReminder, setWhatsappReminder] = useState(false);
   const [insightMode, setInsightMode] = useState('hsc');
   const [showScrollButton, setShowScrollButton] = useState(true);
+  const [graphMode, setGraphMode] = useState('timeline');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -341,30 +342,98 @@ export default function ProgressTracking() {
         {/* Progress Graph */}
         {progress?.progressHistory?.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
-            <h2 className="text-2xl font-bold text-cyan-400 mb-4">Progress History</h2>
-            <div className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-6 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={progress.progressHistory.slice(-30).map(entry => ({
-                  ...entry,
-                  date: new Date(entry.date).toLocaleDateString(),
-                  totalProgress: Math.round(entry.totalProgress || 0),
-                  beiProgress: Math.round(entry.beiProgress || 0),
-                  scienceProgress: Math.round(entry.scienceProgress || 0),
-                  testProgress: Math.round(entry.testProgress || 0)
-                }))}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
-                  <XAxis dataKey="date" stroke="#fff" />
-                  <YAxis stroke="#fff" domain={[0, 100]} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #0ff', borderRadius: '8px' }}
-                    formatter={(value) => `${value}%`}
-                  />
-                  <Line type="monotone" dataKey="totalProgress" stroke="#00ff88" strokeWidth={2} name="HSC Total" dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="beiProgress" stroke="#00aaff" strokeWidth={2} name="HSC BEI" dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="scienceProgress" stroke="#aa00ff" strokeWidth={2} name="HSC Science" dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="testProgress" stroke="#ff00ff" strokeWidth={3} name="Test" strokeDasharray="5 5" dot={{ r: 5 }} />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-cyan-400">Progress History</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setGraphMode('timeline')}
+                  className={`px-3 py-1 rounded-lg text-xs md:text-sm font-semibold transition-all ${
+                    graphMode === 'timeline' 
+                      ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/50' 
+                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  Timeline
+                </button>
+                <button
+                  onClick={() => setGraphMode('subjects')}
+                  className={`px-3 py-1 rounded-lg text-xs md:text-sm font-semibold transition-all ${
+                    graphMode === 'subjects' 
+                      ? 'bg-purple-500 text-black shadow-lg shadow-purple-500/50' 
+                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  Subjects
+                </button>
+              </div>
+            </div>
+            <div className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-3 md:p-6 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+              {graphMode === 'timeline' ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={progress.progressHistory.slice(-30).map(entry => ({
+                    ...entry,
+                    date: new Date(entry.date).toLocaleDateString(),
+                    totalProgress: Math.round(entry.totalProgress || 0),
+                    beiProgress: Math.round(entry.beiProgress || 0),
+                    scienceProgress: Math.round(entry.scienceProgress || 0),
+                    testProgress: Math.round(entry.testProgress || 0)
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
+                    <XAxis dataKey="date" stroke="#fff" />
+                    <YAxis stroke="#fff" domain={[0, 100]} />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #0ff', borderRadius: '8px' }}
+                      formatter={(value) => `${value}%`}
+                    />
+                    <Line type="monotone" dataKey="totalProgress" stroke="#00ff88" strokeWidth={2} name="HSC Total" dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="beiProgress" stroke="#00aaff" strokeWidth={2} name="HSC BEI" dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="scienceProgress" stroke="#aa00ff" strokeWidth={2} name="HSC Science" dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="testProgress" stroke="#ff00ff" strokeWidth={3} name="Test" strokeDasharray="5 5" dot={{ r: 5 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+                  {subjects.map((subject) => {
+                    const percentage = calculateProgress(subject._id);
+                    return (
+                      <div key={subject._id} className="flex flex-col items-center">
+                        <div className="relative w-16 h-16 md:w-20 md:h-20">
+                          <svg className="transform -rotate-90 w-16 h-16 md:w-20 md:h-20">
+                            <circle cx="32" cy="32" r="28" stroke="#ffffff20" strokeWidth="4" fill="none" className="md:hidden" />
+                            <circle cx="40" cy="40" r="32" stroke="#ffffff20" strokeWidth="5" fill="none" className="hidden md:block" />
+                            <circle
+                              cx="32"
+                              cy="32"
+                              r="28"
+                              stroke={subject.category === 'BEI' ? '#00aaff' : '#aa00ff'}
+                              strokeWidth="4"
+                              fill="none"
+                              strokeDasharray={`${2 * Math.PI * 28}`}
+                              strokeDashoffset={`${2 * Math.PI * 28 * (1 - percentage / 100)}`}
+                              className="transition-all duration-1000 md:hidden"
+                            />
+                            <circle
+                              cx="40"
+                              cy="40"
+                              r="32"
+                              stroke={subject.category === 'BEI' ? '#00aaff' : '#aa00ff'}
+                              strokeWidth="5"
+                              fill="none"
+                              strokeDasharray={`${2 * Math.PI * 32}`}
+                              strokeDashoffset={`${2 * Math.PI * 32 * (1 - percentage / 100)}`}
+                              className="transition-all duration-1000 hidden md:block"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-xs md:text-sm font-bold text-white">{percentage}%</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-center text-gray-300 mt-1 line-clamp-2">{subject.name}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </motion.div>
         )}

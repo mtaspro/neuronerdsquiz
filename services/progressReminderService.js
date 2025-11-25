@@ -66,8 +66,7 @@ async function sendProgressReminders(timeOfDay) {
 
       // Generate AI message
       try {
-        const greeting = timeOfDay === 'morning' ? '🌅 Good Morning' : '🌆 Good Evening';
-        let message = `${greeting} ${user.username}!\n\n📊 *Your Progress Update*\n\n`;
+        let message = `👋 Hello ${user.username}!\n\n📊 *Your Progress Update*\n\n`;
         message += progressSummary + '\n\n';
         message += `🔥 Study Streak: *${userProgress.streakDays} days*\n\n`;
         
