@@ -168,6 +168,7 @@ router.post('/update', sessionMiddleware, async (req, res) => {
     
     // Generate AI summary asynchronously (non-blocking)
     const progressId = progress._id;
+    console.log('🚀 Starting AI summary generation...');
     (async () => {
       try {
         const { default: axios } = await import('axios');
@@ -175,15 +176,18 @@ router.post('/update', sessionMiddleware, async (req, res) => {
         const summaryPrompt = `Brief progress summary (2 sentences max):
 HSC: ${totalProgress.toFixed(1)}%, BEI: ${beiProgress.toFixed(1)}%, Science: ${scienceProgress.toFixed(1)}%, Test: ${testProgress.toFixed(1)}%, Streak: ${progress.streakDays} days. Highlight key strength and main area to focus.`;
         
+        console.log('🤖 Calling AI API...');
         const aiResponse = await axios.post(`${apiUrl}/api/ai-chat`, {
           message: summaryPrompt,
           model: 'x-ai/grok-beta'
         });
         
+        console.log('🤖 AI Response:', aiResponse.data.response);
         await UserProgress.findByIdAndUpdate(progressId, { aiSummary: aiResponse.data.response });
-        console.log('🤖 AI Summary generated in background');
+        console.log('✅ AI Summary saved to database');
       } catch (error) {
-        console.error('Failed to generate AI summary:', error.message);
+        console.error('❌ Failed to generate AI summary:', error.message);
+        console.error('❌ Error details:', error.response?.data || error);
       }
     })();
     
@@ -420,14 +424,36 @@ router.post('/test-reminder', sessionMiddleware, async (req, res) => {
     }
 
     const progress = await UserProgress.findOne({ userId: req.user.userId });
+    const subjects = await ProgressSubject.find({ isActive: true });
     const exams = await ProgressExam.find({ isActive: true }).sort('date');
+    
+    // Dynamic greeting based on time
+    const hour = new Date().getHours();
+    let greeting = '🌅 Good Morning';
+    if (hour >= 12 && hour < 17) greeting = '☀️ Good Afternoon';
+    else if (hour >= 17) greeting = '🌆 Good Evening';
 
-    let message = `🌅 Good Morning ${user.username}!\n\n`;
+    let message = `${greeting} ${user.username}!\n\n`;
     message += `📊 *Your Progress Update*\n\n`;
     
-    // Use AI-generated summary if available
+    // Use AI-generated summary if available, otherwise calculate progress
     if (progress?.aiSummary) {
       message += progress.aiSummary + '\n\n';
+    } else {
+      const totalChapters = subjects.reduce((sum, s) => sum + s.chapters.length, 0);
+      const hscProgress = Math.round(((progress?.completedChapters.length || 0) / totalChapters) * 100);
+      
+      let testProgress = 0;
+      const testExam = exams[0];
+      if (testExam?.syllabus?.length) {
+        const testTotal = testExam.syllabus.reduce((sum, syl) => sum + (syl.chapters?.length || 0), 0);
+        const testCompleted = progress?.completedChapters.filter(c =>
+          testExam.syllabus.some(syl => syl.subjectId.toString() === c.subjectId.toString() && syl.chapters.includes(c.chapter))
+        ).length || 0;
+        testProgress = Math.round((testCompleted / testTotal) * 100);
+      }
+      
+      message += `✅ HSC Progress: *${hscProgress}%*\n🎯 Test Exam Progress: *${testProgress}%*\n\n`;
     }
     
     message += `🔥 Study Streak: *${progress?.streakDays || 0} days*\n\n`;
