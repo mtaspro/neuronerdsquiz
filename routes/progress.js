@@ -391,9 +391,9 @@ router.post('/test-reminder', sessionMiddleware, async (req, res) => {
   try {
     console.log('📨 Test reminder requested by user:', req.user.userId);
     const user = await User.findById(req.user.userId);
-    console.log('👤 User found:', !!user, 'Phone:', user?.phone);
+    console.log('👤 User found:', !!user, 'Phone:', user?.phoneNumber);
     
-    if (!user?.phone) {
+    if (!user?.phoneNumber) {
       console.log('❌ No phone number found for user');
       return res.status(400).json({ error: 'No phone number found. Please add your phone number in profile.' });
     }
@@ -428,9 +428,9 @@ router.post('/test-reminder', sessionMiddleware, async (req, res) => {
 
     message += `\n_Track your progress at neuronerdsquiz.vercel.app_`;
 
-    console.log('💬 Sending WhatsApp message to:', user.phone);
+    console.log('💬 Sending WhatsApp message to:', user.phoneNumber);
     const whatsappService = (await import('../services/whatsappService.js')).default;
-    await whatsappService.sendMessage(user.phone, message);
+    await whatsappService.sendMessage(user.phoneNumber, message);
     console.log('✅ Test reminder sent successfully');
 
     res.json({ success: true, message: 'Test reminder sent' });
