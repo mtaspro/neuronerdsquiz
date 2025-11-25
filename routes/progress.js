@@ -386,11 +386,17 @@ router.get('/insights', sessionMiddleware, async (req, res) => {
   }
 });
 
-// Test reminder (SuperAdmin only)
+// Test reminder
 router.post('/test-reminder', sessionMiddleware, async (req, res) => {
   try {
+    console.log('📨 Test reminder requested by user:', req.user.userId);
     const user = await User.findById(req.user.userId);
-    if (!user?.phone) return res.status(400).json({ error: 'No phone number found' });
+    console.log('👤 User found:', !!user, 'Phone:', user?.phone);
+    
+    if (!user?.phone) {
+      console.log('❌ No phone number found for user');
+      return res.status(400).json({ error: 'No phone number found. Please add your phone number in profile.' });
+    }
 
     const progress = await UserProgress.findOne({ userId: req.user.userId });
     const subjects = await ProgressSubject.find({ isActive: true });
@@ -422,14 +428,19 @@ router.post('/test-reminder', sessionMiddleware, async (req, res) => {
 
     message += `\n_Track your progress at neuronerdsquiz.vercel.app_`;
 
+    console.log('💬 Sending WhatsApp message to:', user.phone);
     const whatsappService = (await import('../services/whatsappService.js')).default;
     await whatsappService.sendMessage(user.phone, message);
+    console.log('✅ Test reminder sent successfully');
 
     res.json({ success: true, message: 'Test reminder sent' });
   } catch (error) {
-    console.error('Test reminder error:', error);
+    console.error('❌ Test reminder error:', error);
     res.status(500).json({ error: 'Failed to send test reminder' });
   }
 });
+
+
+
 
 export default router;

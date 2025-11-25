@@ -431,7 +431,7 @@ export default function ProgressTracking() {
         </motion.div>
 
         {/* Subjects & Chapters */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <motion.div id="chapters-section" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <h2 className="text-2xl font-bold text-cyan-400 mb-4">Subjects & Chapters</h2>
           <div className="space-y-6">
             {subjects.map((subject, i) => (
