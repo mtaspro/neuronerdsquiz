@@ -83,12 +83,32 @@ router.post('/update', sessionMiddleware, async (req, res) => {
     // Calculate Test exam progress
     let testProgress = 0;
     const testExam = exams[0];
+    console.log('📊 Test Exam Calculation:');
+    console.log('  - Test Exam Found:', !!testExam);
+    console.log('  - Test Exam ID:', testExam?._id);
+    console.log('  - Test Exam Name:', testExam?.name);
+    console.log('  - Syllabus Length:', testExam?.syllabus?.length);
+    
     if (testExam?.syllabus?.length) {
       const testTotal = testExam.syllabus.reduce((sum, syl) => sum + (syl.chapters?.length || 0), 0);
-      const testCompleted = progress.completedChapters.filter(c =>
-        testExam.syllabus.some(syl => syl.subjectId.toString() === c.subjectId.toString() && syl.chapters.includes(c.chapter))
-      ).length;
-      testProgress = testTotal > 0 ? (testCompleted / testTotal) * 100 : 0;
+      console.log('  - Total Test Chapters:', testTotal);
+      
+      const testCompleted = progress.completedChapters.filter(c => {
+        const match = testExam.syllabus.some(syl => {
+          const subjectMatch = syl.subjectId.toString() === c.subjectId.toString();
+          const chapterMatch = syl.chapters.includes(c.chapter);
+          return subjectMatch && chapterMatch;
+        });
+        return match;
+      });
+      
+      console.log('  - Completed Test Chapters:', testCompleted.length);
+      console.log('  - Completed Chapters Details:', testCompleted.map(c => ({ subject: c.subjectId.toString(), chapter: c.chapter })));
+      
+      testProgress = testTotal > 0 ? (testCompleted.length / testTotal) * 100 : 0;
+      console.log('  - Test Progress:', testProgress + '%');
+    } else {
+      console.log('  - No test exam syllabus found');
     }
 
     // Update streak
@@ -106,12 +126,20 @@ router.post('/update', sessionMiddleware, async (req, res) => {
     const lastHistory = progress.progressHistory[progress.progressHistory.length - 1];
     const lastHistoryDate = lastHistory ? new Date(lastHistory.date).setHours(0, 0, 0, 0) : null;
     
+    console.log('📈 Saving to History:');
+    console.log('  - Total Progress:', totalProgress);
+    console.log('  - BEI Progress:', beiProgress);
+    console.log('  - Science Progress:', scienceProgress);
+    console.log('  - Test Progress:', testProgress);
+    
     if (!lastHistoryDate || today !== lastHistoryDate) {
       progress.progressHistory.push({ totalProgress, beiProgress, scienceProgress, testProgress });
+      console.log('  - Added new history entry');
     } else {
       progress.progressHistory[progress.progressHistory.length - 1] = { 
         date: new Date(), totalProgress, beiProgress, scienceProgress, testProgress 
       };
+      console.log('  - Updated today\'s history entry');
     }
 
     // Award badges
@@ -136,9 +164,12 @@ router.post('/update', sessionMiddleware, async (req, res) => {
     });
 
     await progress.save();
+    console.log('✅ Progress saved to database');
     
     // Populate subjectId before sending response
     await progress.populate('completedChapters.subjectId');
+    console.log('📤 Sending response with', progress.progressHistory.length, 'history entries');
+    console.log('📤 Latest history entry:', progress.progressHistory[progress.progressHistory.length - 1]);
     
     res.json({ success: true, progress, newBadges });
   } catch (error) {
