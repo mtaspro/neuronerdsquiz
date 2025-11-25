@@ -289,23 +289,24 @@ export default function ProgressTracking() {
                     </button>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  {insights.map((insight, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                      className={`p-3 rounded-lg text-sm border backdrop-blur-sm ${
-                        insight.type === 'success' ? 'bg-green-500/10 border-green-500/50' :
-                        insight.type === 'warning' ? 'bg-yellow-500/10 border-yellow-500/50' :
-                        insight.type === 'urgent' ? 'bg-red-500/10 border-red-500/50' :
-                        'bg-blue-500/10 border-blue-500/50'
-                      }`}
-                    >
-                      <p className="text-gray-200" dangerouslySetInnerHTML={{ __html: insight.text }} />
-                    </motion.div>
-                  ))}
+                <div className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-3 border border-cyan-500/30 max-h-64 overflow-y-auto">
+                  <div className="space-y-1.5">
+                    {insights.map((insight, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <span className={`text-lg flex-shrink-0 ${
+                          insight.type === 'success' ? 'text-green-400' :
+                          insight.type === 'warning' ? 'text-yellow-400' :
+                          insight.type === 'urgent' ? 'text-red-400' :
+                          'text-blue-400'
+                        }`}>
+                          {insight.type === 'success' ? '✓' :
+                           insight.type === 'warning' ? '⚠' :
+                           insight.type === 'urgent' ? '⚡' : '•'}
+                        </span>
+                        <p className="text-gray-200 text-xs md:text-sm leading-tight" dangerouslySetInnerHTML={{ __html: insight.text }} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -474,11 +475,12 @@ export default function ProgressTracking() {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           onClick={scrollToChapters}
-          className="fixed top-24 right-8 bg-gradient-to-r from-cyan-500 to-purple-500 text-white px-6 py-3 rounded-full shadow-2xl shadow-cyan-500/50 flex items-center gap-2 font-semibold z-50 hover:scale-110 transition-transform"
+          className="fixed top-20 right-2 md:top-24 md:right-8 bg-gradient-to-r from-cyan-500 to-purple-500 text-white px-2 py-1.5 md:px-6 md:py-3 rounded-full shadow-2xl shadow-cyan-500/50 flex items-center gap-1 md:gap-2 text-xs md:text-base font-semibold z-50 hover:scale-110 transition-transform"
           style={{ animation: 'bounce 2s infinite' }}
         >
-          Select Completed Chapters
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <span className="hidden md:inline">Select Completed Chapters</span>
+          <span className="md:hidden">Chapters</span>
+          <svg className="w-3 h-3 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </motion.button>

@@ -427,11 +427,13 @@ router.post('/test-reminder', sessionMiddleware, async (req, res) => {
     const subjects = await ProgressSubject.find({ isActive: true });
     const exams = await ProgressExam.find({ isActive: true }).sort('date');
     
-    // Dynamic greeting based on time
-    const hour = new Date().getHours();
+    // Dynamic greeting based on Bangladesh time (UTC+6)
+    const bdTime = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+    const hour = bdTime.getHours();
     let greeting = '🌅 Good Morning';
     if (hour >= 12 && hour < 17) greeting = '☀️ Good Afternoon';
     else if (hour >= 17) greeting = '🌆 Good Evening';
+    console.log('🕒 Bangladesh Time:', bdTime.toLocaleString(), 'Hour:', hour, 'Greeting:', greeting);
 
     let message = `${greeting} ${user.username}!\n\n`;
     message += `📊 *Your Progress Update*\n\n`;
