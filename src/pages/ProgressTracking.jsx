@@ -106,6 +106,7 @@ export default function ProgressTracking() {
       
       console.log('📊 Updated Progress History:', res.data.progress?.progressHistory);
       console.log('📊 Latest Entry After Update:', res.data.progress?.progressHistory?.[res.data.progress.progressHistory.length - 1]);
+      console.log('📊 Graph Data (last 5):', res.data.progress?.progressHistory?.slice(-5));
       
       setProgress(res.data.progress);
       
@@ -336,7 +337,7 @@ export default function ProgressTracking() {
         </motion.div>
 
         {/* Progress Graph */}
-        {progress?.progressHistory?.length > 1 && (
+        {progress?.progressHistory?.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
             <h2 className="text-2xl font-bold text-cyan-400 mb-4">Progress History</h2>
             <div className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-6 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
