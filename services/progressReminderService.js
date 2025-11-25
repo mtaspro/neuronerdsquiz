@@ -47,7 +47,12 @@ async function sendProgressReminders(timeOfDay) {
       }
 
       // Use AI summary if available, otherwise create basic summary
-      const progressSummary = userProgress.aiSummary || `HSC Progress: ${hscProgress}%\nTest Exam Progress: ${testProgress}%\nStudy Streak: ${userProgress.streakDays} days`;
+      let progressSummary = '';
+      if (userProgress.aiSummary) {
+        progressSummary = userProgress.aiSummary;
+      } else {
+        progressSummary = `✅ HSC Progress: *${hscProgress}%*\n🎯 Test Exam Progress: *${testProgress}%*`;
+      }
       
       // Get upcoming exam info
       let examInfo = '';
@@ -70,7 +75,15 @@ async function sendProgressReminders(timeOfDay) {
           message += `⚠️ ${examInfo}\n\n`;
         }
         
-        message += `📚 Keep up the great work!\n\n_Track your progress at neuronerdsquiz.vercel.app/progress_`;
+        if (hscProgress < 50) {
+          message += `💪 Keep pushing! Every chapter counts.\n`;
+        } else if (hscProgress < 80) {
+          message += `🎯 Great progress! You're more than halfway there!\n`;
+        } else {
+          message += `🏆 Outstanding! You're almost at the finish line!\n`;
+        }
+        
+        message += `\n📚 Keep up the great work, ${user.username}!\n\n_Track your progress at neuronerdsquiz.vercel.app/progress_`;
         
         await whatsappService.sendMessage(user.phoneNumber, message);
         console.log(`✅ Reminder sent to ${user.username}`);

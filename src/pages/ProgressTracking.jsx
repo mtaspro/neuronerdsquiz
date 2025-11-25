@@ -87,17 +87,6 @@ export default function ProgressTracking() {
       c => c.subjectId._id === subjectId && c.chapter === chapter
     );
 
-    // Optimistic update
-    const newProgress = { ...progress };
-    if (!isCompleted) {
-      newProgress.completedChapters = [...progress.completedChapters, { subjectId: { _id: subjectId }, chapter }];
-    } else {
-      newProgress.completedChapters = progress.completedChapters.filter(
-        c => !(c.subjectId._id === subjectId && c.chapter === chapter)
-      );
-    }
-    setProgress(newProgress);
-
     try {
       const token = secureStorage.getToken();
       const res = await axios.post(`${API_URL}/api/progress/update`, 
@@ -105,13 +94,8 @@ export default function ProgressTracking() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      const historyData = res.data.progress?.progressHistory?.slice(-30).map(entry => ({
-        ...entry,
-        testProgress: entry.testProgress || 0
-      }));
       console.log('📊 Updated Progress History:', res.data.progress?.progressHistory);
       console.log('📊 Latest Entry After Update:', res.data.progress?.progressHistory?.[res.data.progress.progressHistory.length - 1]);
-      console.log('📊 Graph Data Mapped:', JSON.stringify(historyData, null, 2));
       
       setProgress(res.data.progress);
       
@@ -123,7 +107,6 @@ export default function ProgressTracking() {
       setInsights(insightsRes.data.insights);
     } catch (error) {
       console.error('Failed to update progress:', error);
-      setProgress(progress); // Revert on error
     }
   };
 
@@ -362,16 +345,23 @@ export default function ProgressTracking() {
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={progress.progressHistory.slice(-30).map(entry => ({
                   ...entry,
-                  testProgress: entry.testProgress || 0
+                  date: new Date(entry.date).toLocaleDateString(),
+                  totalProgress: Math.round(entry.totalProgress || 0),
+                  beiProgress: Math.round(entry.beiProgress || 0),
+                  scienceProgress: Math.round(entry.scienceProgress || 0),
+                  testProgress: Math.round(entry.testProgress || 0)
                 }))}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
-                  <XAxis dataKey="date" stroke="#fff" tickFormatter={(date) => new Date(date).toLocaleDateString()} />
-                  <YAxis stroke="#fff" />
-                  <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: 'none' }} />
-                  <Line type="monotone" dataKey="totalProgress" stroke="#00ff88" strokeWidth={2} name="HSC Total" />
-                  <Line type="monotone" dataKey="beiProgress" stroke="#00aaff" strokeWidth={2} name="HSC BEI" />
-                  <Line type="monotone" dataKey="scienceProgress" stroke="#aa00ff" strokeWidth={2} name="HSC Science" />
-                  <Line type="monotone" dataKey="testProgress" stroke="#ff00ff" strokeWidth={3} name="Test" strokeDasharray="5 5" />
+                  <XAxis dataKey="date" stroke="#fff" />
+                  <YAxis stroke="#fff" domain={[0, 100]} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #0ff', borderRadius: '8px' }}
+                    formatter={(value) => `${value}%`}
+                  />
+                  <Line type="monotone" dataKey="totalProgress" stroke="#00ff88" strokeWidth={2} name="HSC Total" dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="beiProgress" stroke="#00aaff" strokeWidth={2} name="HSC BEI" dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="scienceProgress" stroke="#aa00ff" strokeWidth={2} name="HSC Science" dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="testProgress" stroke="#ff00ff" strokeWidth={3} name="Test" strokeDasharray="5 5" dot={{ r: 5 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

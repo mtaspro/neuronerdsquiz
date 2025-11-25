@@ -163,31 +163,28 @@ router.post('/update', sessionMiddleware, async (req, res) => {
       }
     });
 
-    // Generate AI summary
-    const axios = require('axios');
-    const apiUrl = process.env.VITE_API_URL || 'http://localhost:5000';
-    const summaryPrompt = `Generate a brief progress summary for a student with:
-- Overall Progress: ${totalProgress.toFixed(1)}%
-- BEI Progress: ${beiProgress.toFixed(1)}%
-- Science Progress: ${scienceProgress.toFixed(1)}%
-- Test Exam Progress: ${testProgress.toFixed(1)}%
-- Streak: ${progress.streakDays} days
-
-Provide 2-3 sentences highlighting strengths and areas needing attention.`;
-    
-    try {
-      const aiResponse = await axios.post(`${apiUrl}/api/ai-chat`, {
-        message: summaryPrompt,
-        model: 'deepseek/deepseek-chat-v3.1:free'
-      });
-      progress.aiSummary = aiResponse.data.response;
-      console.log('🤖 AI Summary generated:', progress.aiSummary);
-    } catch (error) {
-      console.error('Failed to generate AI summary:', error.message);
-    }
-    
     await progress.save();
     console.log('✅ Progress saved to database');
+    
+    // Generate AI summary asynchronously (non-blocking)
+    (async () => {
+      try {
+        const axios = require('axios');
+        const apiUrl = process.env.VITE_API_URL || 'http://localhost:5000';
+        const summaryPrompt = `Brief progress summary (2 sentences max):
+HSC: ${totalProgress.toFixed(1)}%, BEI: ${beiProgress.toFixed(1)}%, Science: ${scienceProgress.toFixed(1)}%, Test: ${testProgress.toFixed(1)}%, Streak: ${progress.streakDays} days. Highlight key strength and main area to focus.`;
+        
+        const aiResponse = await axios.post(`${apiUrl}/api/ai-chat`, {
+          message: summaryPrompt,
+          model: 'x-ai/grok-4.1-fast'
+        });
+        
+        await UserProgress.findByIdAndUpdate(progress._id, { aiSummary: aiResponse.data.response });
+        console.log('🤖 AI Summary generated in background');
+      } catch (error) {
+        console.error('Failed to generate AI summary:', error.message);
+      }
+    })();
     
     // Populate subjectId before sending response
     await progress.populate('completedChapters.subjectId');
