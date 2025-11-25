@@ -105,9 +105,13 @@ export default function ProgressTracking() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      const historyData = res.data.progress?.progressHistory?.slice(-30).map(entry => ({
+        ...entry,
+        testProgress: entry.testProgress || 0
+      }));
       console.log('📊 Updated Progress History:', res.data.progress?.progressHistory);
       console.log('📊 Latest Entry After Update:', res.data.progress?.progressHistory?.[res.data.progress.progressHistory.length - 1]);
-      console.log('📊 Graph Data (last 5):', JSON.stringify(res.data.progress?.progressHistory?.slice(-5), null, 2));
+      console.log('📊 Graph Data Mapped:', JSON.stringify(historyData, null, 2));
       
       setProgress(res.data.progress);
       
@@ -343,7 +347,10 @@ export default function ProgressTracking() {
             <h2 className="text-2xl font-bold text-cyan-400 mb-4">Progress History</h2>
             <div className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-6 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={progress.progressHistory.slice(-30)}>
+                <LineChart data={progress.progressHistory.slice(-30).map(entry => ({
+                  ...entry,
+                  testProgress: entry.testProgress || 0
+                }))}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
                   <XAxis dataKey="date" stroke="#fff" tickFormatter={(date) => new Date(date).toLocaleDateString()} />
                   <YAxis stroke="#fff" />
@@ -351,7 +358,7 @@ export default function ProgressTracking() {
                   <Line type="monotone" dataKey="totalProgress" stroke="#00ff88" strokeWidth={2} name="HSC Total" />
                   <Line type="monotone" dataKey="beiProgress" stroke="#00aaff" strokeWidth={2} name="HSC BEI" />
                   <Line type="monotone" dataKey="scienceProgress" stroke="#aa00ff" strokeWidth={2} name="HSC Science" />
-                  <Line type="monotone" dataKey="testProgress" stroke="#ff00ff" strokeWidth={2} name="Test" strokeDasharray="5 5" />
+                  <Line type="monotone" dataKey="testProgress" stroke="#ff00ff" strokeWidth={3} name="Test" strokeDasharray="5 5" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
