@@ -172,11 +172,12 @@ export default function ProgressTracking() {
         let completedChapters = 0;
         
         exam.syllabus.forEach(syl => {
-          const subject = subjects.find(s => s._id === syl.subjectId && s.category === category);
+          const subjectId = syl.subjectId?._id || syl.subjectId;
+          const subject = subjects.find(s => s._id.toString() === subjectId.toString() && s.category === category);
           if (subject && syl.chapters?.length) {
             totalChapters += syl.chapters.length;
             completedChapters += progress?.completedChapters.filter(c =>
-              c.subjectId._id.toString() === syl.subjectId.toString() && syl.chapters.includes(c.chapter)
+              c.subjectId._id.toString() === subjectId.toString() && syl.chapters.includes(c.chapter)
             ).length || 0;
           }
         });
