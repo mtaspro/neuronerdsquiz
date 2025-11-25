@@ -66,6 +66,9 @@ export default function ProgressTracking() {
         axios.get(`${API_URL}/api/progress/insights`, { headers })
       ]);
 
+      console.log('📊 Progress History from API:', progressRes.data.progress?.progressHistory);
+      console.log('📊 Latest History Entry:', progressRes.data.progress?.progressHistory?.[progressRes.data.progress.progressHistory.length - 1]);
+
       setSubjects(subjectsRes.data.subjects);
       setExams(examsRes.data.exams);
       setProgress(progressRes.data.progress);
@@ -100,6 +103,9 @@ export default function ProgressTracking() {
         { subjectId, chapter, completed: !isCompleted },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
+      console.log('📊 Updated Progress History:', res.data.progress?.progressHistory);
+      console.log('📊 Latest Entry After Update:', res.data.progress?.progressHistory?.[res.data.progress.progressHistory.length - 1]);
       
       setProgress(res.data.progress);
       
