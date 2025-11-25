@@ -196,20 +196,32 @@ export default function ProgressTracking() {
   const calculateTotalProgress = (examId = null) => {
     if (examId) {
       const exam = exams.find(e => e._id === examId);
+      console.log('🔍 Calculate Total Progress for Exam:', examId);
+      console.log('  - Exam found:', !!exam);
+      console.log('  - Exam syllabus:', exam?.syllabus);
+      
       if (exam?.syllabus?.length) {
         let totalChapters = 0;
         let completedChapters = 0;
         
         exam.syllabus.forEach(syl => {
+          const subjectId = syl.subjectId?._id || syl.subjectId;
+          console.log('  - Syllabus subject:', subjectId, 'chapters:', syl.chapters?.length);
+          
           if (syl.chapters?.length) {
             totalChapters += syl.chapters.length;
-            completedChapters += progress?.completedChapters.filter(c =>
-              c.subjectId._id.toString() === syl.subjectId.toString() && syl.chapters.includes(c.chapter)
-            ).length || 0;
+            const completed = progress?.completedChapters.filter(c => {
+              const match = c.subjectId._id.toString() === subjectId.toString() && syl.chapters.includes(c.chapter);
+              return match;
+            }).length || 0;
+            completedChapters += completed;
+            console.log('    - Completed:', completed);
           }
         });
         
-        return totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0;
+        const percentage = totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0;
+        console.log('  - Total:', totalChapters, 'Completed:', completedChapters, 'Percentage:', percentage);
+        return percentage;
       }
     }
     
