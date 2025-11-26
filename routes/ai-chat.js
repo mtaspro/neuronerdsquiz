@@ -127,7 +127,7 @@ router.post('/', async (req, res) => {
         });
         
         requestBody = {
-          model: model || 'qwen/qwen3-235b-a22b:free',
+          model: model || 'qwen/qwen3-32b-a3b:free',
           messages: messages,
           temperature: isDolphinModel ? 0.15 : 0.7,
           max_tokens: 1000,

@@ -142,26 +142,47 @@ router.post('/update', sessionMiddleware, async (req, res) => {
       console.log('  - Updated today\'s history entry');
     }
 
-    // Award badges
+    // Update badges (add and remove based on current progress)
     const newBadges = [];
+    const removedBadges = [];
+    
+    // 50% completion badge
     if (totalProgress >= 50 && !progress.badges.includes('50_complete')) {
       progress.badges.push('50_complete');
       newBadges.push('50_complete');
+    } else if (totalProgress < 50 && progress.badges.includes('50_complete')) {
+      progress.badges = progress.badges.filter(b => b !== '50_complete');
+      removedBadges.push('50_complete');
     }
+    
+    // 7 day streak badge
     if (progress.streakDays >= 7 && !progress.badges.includes('7_day_streak')) {
       progress.badges.push('7_day_streak');
       newBadges.push('7_day_streak');
+    } else if (progress.streakDays < 7 && progress.badges.includes('7_day_streak')) {
+      progress.badges = progress.badges.filter(b => b !== '7_day_streak');
+      removedBadges.push('7_day_streak');
     }
     
+    // Subject master badges
     subjects.forEach(subject => {
       const subjectCompleted = progress.completedChapters.filter(
         c => c.subjectId.toString() === subject._id.toString()
       ).length;
-      if (subjectCompleted === subject.chapters.length && !progress.badges.includes(`master_${subject._id}`)) {
-        progress.badges.push(`master_${subject._id}`);
-        newBadges.push(`master_${subject._id}`);
+      const badgeName = `master_${subject._id}`;
+      
+      if (subjectCompleted === subject.chapters.length && !progress.badges.includes(badgeName)) {
+        progress.badges.push(badgeName);
+        newBadges.push(badgeName);
+      } else if (subjectCompleted < subject.chapters.length && progress.badges.includes(badgeName)) {
+        progress.badges = progress.badges.filter(b => b !== badgeName);
+        removedBadges.push(badgeName);
       }
     });
+    
+    if (removedBadges.length > 0) {
+      console.log('🗑️ Badges removed:', removedBadges);
+    }
 
     await progress.save();
     console.log('✅ Progress saved to database');
