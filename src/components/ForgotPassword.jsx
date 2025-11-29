@@ -35,9 +35,9 @@ const ForgotPassword = ({ onBack }) => {
         secureStorage.setToken(data.token);
         secureStorage.setUserData(data.user);
         
-        // Redirect to dashboard after 1 second
+        // Force full page reload to dashboard
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          window.location.replace('/dashboard');
         }, 1000);
       } else {
         setMessage(data.message || 'Email not found');
