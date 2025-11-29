@@ -28,9 +28,12 @@ const ForgotPassword = ({ onBack }) => {
         setIsSuccess(true);
         setMessage('Login successful! Redirecting...');
         
-        // Store token and user data
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        // Import secureStorage dynamically
+        const { secureStorage } = await import('../utils/secureStorage');
+        
+        // Store token and user data using secureStorage
+        secureStorage.setToken(data.token);
+        secureStorage.setUserData(data.user);
         
         // Redirect to dashboard after 1 second
         setTimeout(() => {
