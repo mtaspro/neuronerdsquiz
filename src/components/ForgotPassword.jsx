@@ -26,9 +26,18 @@ const ForgotPassword = ({ onBack }) => {
       
       if (response.ok) {
         setIsSuccess(true);
-        setMessage('Password reset link sent to your email!');
+        setMessage('Login successful! Redirecting...');
+        
+        // Store token and user data
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Redirect to dashboard after 1 second
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1000);
       } else {
-        setMessage(data.message || 'Failed to send reset email');
+        setMessage(data.message || 'Email not found');
       }
     } catch (error) {
       setMessage('Network error. Please try again.');
@@ -55,7 +64,7 @@ const ForgotPassword = ({ onBack }) => {
         <FaEnvelope className="text-4xl text-blue-500 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Forgot Password?</h2>
         <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Enter your email to receive a password reset link
+          Enter your email to login without password
         </p>
       </div>
 
