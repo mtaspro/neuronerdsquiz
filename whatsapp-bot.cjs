@@ -10,6 +10,8 @@ const path = require('path');
 
 let sock = null;
 let isConnected = false;
+const conversationHistory = new Map(); // Store last 10 messages per chat
+const MAX_HISTORY = 10;
 
 const sessionPath = path.join(__dirname, 'session');
 console.log('📁 Using session folder:', sessionPath);
@@ -64,6 +66,37 @@ async function startWhatsAppBot() {
                 
                 console.log(`💬 Message from ${sender}: ${messageText}`);
                 
+                // Smart reaction to user-user messages (10% chance to avoid spam)
+                if (isGroup && !messageText.includes('@n') && messageText.trim() && Math.random() < 0.1) {
+                    try {
+                        const axios = require('axios');
+                        const recentMsgs = conversationHistory.get(chatId) || [];
+                        const context = recentMsgs.slice(-3).map(m => m.content).join(' | ');
+                        
+                        const reactionResponse = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+                            model: 'meta-llama/llama-3.2-3b-instruct:free',
+                            messages: [{
+                                role: 'user',
+                                content: `Context: ${context}\nMessage: ${messageText}\n\nReply with ONE emoji that best reacts to this message. Only the emoji, nothing else.`
+                            }],
+                            max_tokens: 10
+                        }, {
+                            headers: {
+                                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                                'Content-Type': 'application/json',
+                                'HTTP-Referer': 'https://github.com/mtaspro/neuronerds-quiz',
+                                'X-Title': 'NeuraX WhatsApp Bot'
+                            }
+                        });
+                        
+                        const emoji = reactionResponse.data.choices?.[0]?.message?.content?.trim() || '👍';
+                        await socket.sendMessage(chatId, { react: { text: emoji, key: message.key } });
+                        console.log(`😊 Reacted with ${emoji} to user message`);
+                    } catch (error) {
+                        console.error('Reaction error:', error.message);
+                    }
+                }
+                
                 // Store ALL group messages to notepad
                 if (isGroup && messageText.trim()) {
                     try {
@@ -104,12 +137,52 @@ async function startWhatsAppBot() {
                         try {
                             const axios = require('axios');
                             const apiUrl = process.env.API_URL || 'http://localhost:5000';
+                            
+                            // Prompt safety check using Llama Guard
+                            try {
+                                const guardResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                                    model: 'meta-llama/llama-prompt-guard-2-22m',
+                                    messages: [{ role: 'user', content: query }]
+                                }, {
+                                    headers: {
+                                        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+                                        'Content-Type': 'application/json'
+                                    }
+                                });
+                                
+                                const guardResult = guardResponse.data.choices?.[0]?.message?.content?.toLowerCase();
+                                if (guardResult && guardResult.includes('unsafe')) {
+                                    await socket.sendMessage(chatId, { text: 'Sorry, your message contains unsafe content. Please rephrase your question.' });
+                                    return;
+                                }
+                            } catch (guardError) {
+                                console.error('Prompt guard error:', guardError.message);
+                            }
+                            
+                            // Get conversation history for this chat
+                            const history = conversationHistory.get(chatId) || [];
+                            
+                            // Show typing and react
+                            await socket.sendPresenceUpdate('composing', chatId);
+                            await socket.sendMessage(chatId, { react: { text: '🤔', key: message.key } });
+                            
                             const response = await axios.post(`${apiUrl}/api/ai-chat`, {
                                 message: query,
                                 model: 'x-ai/grok-4.1-fast:free',
-                                conversationHistory: []
+                                conversationHistory: history
                             });
+                            
+                            await socket.sendPresenceUpdate('paused', chatId);
                             await socket.sendMessage(chatId, { text: response.data.response });
+                            await socket.sendMessage(chatId, { react: { text: '✅', key: message.key } });
+                            
+                            // Update conversation history
+                            if (!conversationHistory.has(chatId)) conversationHistory.set(chatId, []);
+                            const chatHistory = conversationHistory.get(chatId);
+                            chatHistory.push({ role: 'user', content: query });
+                            chatHistory.push({ role: 'assistant', content: response.data.response });
+                            if (chatHistory.length > MAX_HISTORY * 2) chatHistory.splice(0, 2);
+                            
                             console.log(`🤖 AI responded in group`);
                         } catch (error) {
                             console.error('AI chat error:', error.message);
@@ -124,12 +197,52 @@ async function startWhatsAppBot() {
                     try {
                         const axios = require('axios');
                         const apiUrl = process.env.API_URL || 'http://localhost:5000';
+                        
+                        // Prompt safety check using Llama Guard
+                        try {
+                            const guardResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                                model: 'meta-llama/llama-prompt-guard-2-22m',
+                                messages: [{ role: 'user', content: messageText }]
+                            }, {
+                                headers: {
+                                    'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            
+                            const guardResult = guardResponse.data.choices?.[0]?.message?.content?.toLowerCase();
+                            if (guardResult && guardResult.includes('unsafe')) {
+                                await socket.sendMessage(chatId, { text: 'Sorry, your message contains unsafe content. Please rephrase your question.' });
+                                return;
+                            }
+                        } catch (guardError) {
+                            console.error('Prompt guard error:', guardError.message);
+                        }
+                        
+                        // Get conversation history for this chat
+                        const history = conversationHistory.get(chatId) || [];
+                        
+                        // Show typing and react
+                        await socket.sendPresenceUpdate('composing', chatId);
+                        await socket.sendMessage(chatId, { react: { text: '🤔', key: message.key } });
+                        
                         const response = await axios.post(`${apiUrl}/api/ai-chat`, {
                             message: messageText,
                             model: 'x-ai/grok-4.1-fast:free',
-                            conversationHistory: []
+                            conversationHistory: history
                         });
+                        
+                        await socket.sendPresenceUpdate('paused', chatId);
                         await socket.sendMessage(chatId, { text: response.data.response });
+                        await socket.sendMessage(chatId, { react: { text: '✅', key: message.key } });
+                        
+                        // Update conversation history
+                        if (!conversationHistory.has(chatId)) conversationHistory.set(chatId, []);
+                        const chatHistory = conversationHistory.get(chatId);
+                        chatHistory.push({ role: 'user', content: messageText });
+                        chatHistory.push({ role: 'assistant', content: response.data.response });
+                        if (chatHistory.length > MAX_HISTORY * 2) chatHistory.splice(0, 2);
+                        
                         console.log(`🤖 AI responded to ${sender}`);
                     } catch (error) {
                         console.error('AI chat error:', error.message);
