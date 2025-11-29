@@ -67,22 +67,16 @@ class DailyCalendarScheduler {
       // Create prompt for NeuraX
       const examInfo = examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `${e.examName} - TODAY` : `${e.examName} in ${e.daysLeft} days`).join(', ') : 'None';
       
-      const prompt = `Generate a SHORT daily calendar message for students.
+      const prompt = `Create a short, witty daily message for students.
 
-Data:
 Day: ${calendarData.dayName}
-English Date: ${calendarData.englishDate}
+Date: ${calendarData.englishDate}
 Holidays: ${calendarData.hasHolidays ? calendarData.holidays.join(', ') : 'None'}
 Exams: ${examInfo}
 
-Format:
+Write EXACTLY in this format (no extra lines):
 Today: *${calendarData.dayName}, ${calendarData.englishDate}*
-
-${calendarData.hasHolidays ? '🎉 Special: ' + calendarData.holidays.join(', ') + ' - Enjoy responsibly!' : ''}
-
-${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `📚 Exam Alert\n*${e.examName}* - *TODAY*! 💪` : `📚 Exam Alert\n*${e.examName}* in *${e.daysLeft}* days 📖`).join('\n\n') : ''}
-
-💡 [Add a very brief motivational message at the end - one line only]`;
+${calendarData.hasHolidays ? '🎉 ' + calendarData.holidays.join(', ') + ' - Enjoy responsibly!\n' : ''}${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? '📚 *' + e.examName + '* - TODAY! 💪\n' : '📚 *' + e.examName + '* in ' + e.daysLeft + ' days\n').join('') : ''}💡 [Add ONE short, clever line with light humor that motivates students - max 15-20 words]`;
       // Send to NeuraX AI
       const axios = (await import('axios')).default;
       const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
