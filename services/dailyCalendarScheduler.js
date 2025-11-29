@@ -89,7 +89,7 @@ ${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `📚 Exam Alert\n*
       
       const aiResponse = await axios.post(`${apiUrl}/api/ai-chat`, {
         message: prompt,
-        model: 'qwen/qwen3-30b-a3b:free',
+        model: 'x-ai/grok-4.1-fast:free',
         systemPrompt: 'You are NeuraX. Generate concise calendar messages following the exact format provided. NEVER include reasoning tags like <think> or any meta-commentary in your response. Keep the message clean and direct.',
         conversationHistory: []
       });

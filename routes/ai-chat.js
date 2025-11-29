@@ -58,7 +58,7 @@ router.post('/', async (req, res) => {
     
     // OpenAI format for Groq and OpenRouter
     requestBody = {
-      model: model || 'x-ai/grok-4.1-fast',
+      model: model || 'x-ai/grok-4.1-fast:free',
       messages: messages,
       temperature: isDolphinModel ? 0.15 : 0.7,
       max_tokens: 1000,
@@ -127,7 +127,7 @@ router.post('/', async (req, res) => {
         });
         
         requestBody = {
-          model: model || 'qwen/qwen3-32b-a3b:free',
+          model: model || 'meta-llama/llama-3.3-70b-instruct:free',
           messages: messages,
           temperature: isDolphinModel ? 0.15 : 0.7,
           max_tokens: 1000,

@@ -106,7 +106,7 @@ async function startWhatsAppBot() {
                             const apiUrl = process.env.API_URL || 'http://localhost:5000';
                             const response = await axios.post(`${apiUrl}/api/ai-chat`, {
                                 message: query,
-                                model: 'deepseek/deepseek-chat-v3.1:free',
+                                model: 'x-ai/grok-4.1-fast:free',
                                 conversationHistory: []
                             });
                             await socket.sendMessage(chatId, { text: response.data.response });
@@ -126,7 +126,7 @@ async function startWhatsAppBot() {
                         const apiUrl = process.env.API_URL || 'http://localhost:5000';
                         const response = await axios.post(`${apiUrl}/api/ai-chat`, {
                             message: messageText,
-                            model: 'deepseek/deepseek-chat-v3.1:free',
+                            model: 'x-ai/grok-4.1-fast:free',
                             conversationHistory: []
                         });
                         await socket.sendMessage(chatId, { text: response.data.response });
