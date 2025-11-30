@@ -193,7 +193,8 @@ async function startWhatsAppBot() {
 *The NeuroNERDS* - Student community from *Chattogram College, Bangladesh*
 - **Akhyar Fardin** – CEO & Admin
 - **Ahmed Azmain Mahtab** – Developer & Management Lead  
-- **Md. Tanvir Mahtab** – Co-founder & Managing Director
+- **Md. Tanvir Mahtab** – Co-founder &  Former Managing Director
+- **Zahin Ushrut Parsa** – Managing Director
 - Students from Intermediate (11-12) classes
 
 🚀Response Style:
