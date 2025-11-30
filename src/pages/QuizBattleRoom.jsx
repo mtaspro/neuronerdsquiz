@@ -57,6 +57,7 @@ const QuizBattleRoom = () => {
   const [isOffline, setIsOffline] = useState(false);
   const [offlineAnswers, setOfflineAnswers] = useState([]);
   const [lastSyncedQuestion, setLastSyncedQuestion] = useState(-1);
+  const [countdown, setCountdown] = useState(null);
 
   // Security system state
   const [showSecurityModal, setShowSecurityModal] = useState(false);
@@ -265,9 +266,23 @@ const QuizBattleRoom = () => {
           }
         });
 
+        socket.addListener('startCountdown', () => {
+          setCountdown(3);
+          const countdownInterval = setInterval(() => {
+            setCountdown(prev => {
+              if (prev === 1) {
+                clearInterval(countdownInterval);
+                return null;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+        });
+        
         socket.addListener('battleStarted', async (data) => {
           console.log('🎯 Battle started event received:', data);
           setBattleStarted(true);
+          setCountdown(null);
           setQuestions(data.questions || []);
           setCurrentQuestion(0);
           setQuestionStartTime(Date.now());
@@ -562,11 +577,32 @@ const QuizBattleRoom = () => {
       }
       
       console.log('🚀 Starting battle with questions:', questionsToUse.length);
-      socket.emit('startBattle', {
-        roomId,
-        questions: questionsToUse,
-        creatorUserId: userData._id
-      });
+      
+      // Immediately hide start button and show countdown
+      setBattleStarted(true);
+      setCountdown(3);
+      
+      // Emit countdown to all users
+      socket.emit('startCountdown', { roomId });
+      
+      // Start countdown timer
+      let count = 3;
+      const countdownInterval = setInterval(() => {
+        count--;
+        setCountdown(count);
+        
+        if (count === 0) {
+          clearInterval(countdownInterval);
+          setCountdown(null);
+          
+          // Start battle after countdown
+          socket.emit('startBattle', {
+            roomId,
+            questions: questionsToUse,
+            creatorUserId: userData._id
+          });
+        }
+      }, 1000);
     } catch (error) {
       console.error('Error starting battle:', error);
       showError('Failed to start battle. Please try again.');
@@ -1202,8 +1238,19 @@ const QuizBattleRoom = () => {
               </button>
             </div>
 
-            {/* Start Battle Button (Room Creator Only) */}
-            {isRoomCreator && users?.length >= 2 && users?.every(user => user.isReady) && (
+            {/* Countdown or Start Battle Button */}
+            {countdown !== null ? (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="text-center"
+              >
+                <div className="text-8xl font-bold text-yellow-400 animate-pulse">
+                  {countdown}
+                </div>
+                <p className="text-xl text-gray-300 mt-4">Battle starting...</p>
+              </motion.div>
+            ) : isRoomCreator && users?.length >= 2 && users?.every(user => user.isReady) && !battleStarted && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
