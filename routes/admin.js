@@ -53,6 +53,74 @@ router.get('/check-blocked/:phone', async (req, res) => {
   }
 });
 
+// Block phone number from WhatsApp bot
+router.post('/block-phone', sessionMiddleware, requireAdmin, async (req, res) => {
+  try {
+    let { phoneNumber } = req.body;
+    
+    if (!phoneNumber) {
+      return res.status(400).json({ error: 'Phone number is required' });
+    }
+    
+    // Format phone number
+    phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
+    if (phoneNumber.startsWith('01')) {
+      phoneNumber = '880' + phoneNumber.substring(1);
+    }
+    
+    const user = await User.findOne({ phoneNumber });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found with this phone number' });
+    }
+    
+    if (user.blockedFromBot) {
+      return res.json({ message: 'User is already blocked from WhatsApp bot' });
+    }
+    
+    user.blockedFromBot = true;
+    await user.save();
+    
+    res.json({ message: `${user.username} (${phoneNumber}) blocked from WhatsApp bot` });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to block phone number' });
+  }
+});
+
+// Unblock phone number from WhatsApp bot
+router.post('/unblock-phone', sessionMiddleware, requireAdmin, async (req, res) => {
+  try {
+    let { phoneNumber } = req.body;
+    
+    if (!phoneNumber) {
+      return res.status(400).json({ error: 'Phone number is required' });
+    }
+    
+    // Format phone number
+    phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
+    if (phoneNumber.startsWith('01')) {
+      phoneNumber = '880' + phoneNumber.substring(1);
+    }
+    
+    const user = await User.findOne({ phoneNumber });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found with this phone number' });
+    }
+    
+    if (!user.blockedFromBot) {
+      return res.json({ message: 'User is not blocked from WhatsApp bot' });
+    }
+    
+    user.blockedFromBot = false;
+    await user.save();
+    
+    res.json({ message: `${user.username} (${phoneNumber}) unblocked from WhatsApp bot` });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to unblock phone number' });
+  }
+});
+
 // Update user WhatsApp info (admin only)
 router.put('/users/:id/whatsapp', sessionMiddleware, requireAdmin, async (req, res) => {
   try {

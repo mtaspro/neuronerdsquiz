@@ -19,6 +19,7 @@ const SuperAdminDashboard = () => {
   const [newExam, setNewExam] = useState({ examName: '', examDate: '' });
   const [users, setUsers] = useState([]);
   const [showUserManager, setShowUserManager] = useState(false);
+  const [blockPhone, setBlockPhone] = useState('');
   const { success, error: showError } = useNotification();
 
   const themes = [
@@ -354,6 +355,72 @@ const SuperAdminDashboard = () => {
               className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
             >
               ✅ Disable Maintenance Mode
+            </button>
+          </div>
+        </div>
+
+        {/* WhatsApp Bot Blocking */}
+        <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="text-red-600 text-xl">🚫</div>
+            <h2 className="text-xl font-semibold">WhatsApp Bot Blocking</h2>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Block WhatsApp numbers from receiving bot responses. Enter phone number (e.g., 8801712345678 or 01712345678)
+          </p>
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              placeholder="Enter WhatsApp number"
+              value={blockPhone}
+              onChange={(e) => setBlockPhone(e.target.value)}
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+            <button
+              onClick={async () => {
+                if (!blockPhone.trim()) {
+                  showError('Please enter a phone number');
+                  return;
+                }
+                try {
+                  const apiUrl = import.meta.env.VITE_API_URL || '';
+                  const token = secureStorage.getToken();
+                  const response = await axios.post(`${apiUrl}/api/admin/block-phone`, 
+                    { phoneNumber: blockPhone.trim() },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                  );
+                  success(response.data.message);
+                  setBlockPhone('');
+                } catch (error) {
+                  showError(error.response?.data?.error || 'Failed to block number');
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
+            >
+              🚫 Block
+            </button>
+            <button
+              onClick={async () => {
+                if (!blockPhone.trim()) {
+                  showError('Please enter a phone number');
+                  return;
+                }
+                try {
+                  const apiUrl = import.meta.env.VITE_API_URL || '';
+                  const token = secureStorage.getToken();
+                  const response = await axios.post(`${apiUrl}/api/admin/unblock-phone`, 
+                    { phoneNumber: blockPhone.trim() },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                  );
+                  success(response.data.message);
+                  setBlockPhone('');
+                } catch (error) {
+                  showError(error.response?.data?.error || 'Failed to unblock number');
+                }
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
+            >
+              🔓 Unblock
             </button>
           </div>
         </div>
