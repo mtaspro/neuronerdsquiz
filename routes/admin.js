@@ -18,8 +18,39 @@ const router = express.Router();
 
 // List all users with caching
 router.get('/users', sessionMiddleware, requireAdmin, cacheMiddleware('short'), async (req, res) => {
-  const users = await User.find({}, '-password').select('+phoneNumber +whatsappNotifications').limit(100).lean();
+  const users = await User.find({}, '-password').select('+phoneNumber +whatsappNotifications +blockedFromBot').limit(100).lean();
   res.json(users);
+});
+
+// Block/Unblock user from WhatsApp bot
+router.put('/users/:id/block-bot', sessionMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const { blocked } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { blockedFromBot: blocked },
+      { new: true }
+    ).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json({ message: `User ${blocked ? 'blocked from' : 'unblocked from'} WhatsApp bot`, user });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update user bot access' });
+  }
+});
+
+// Check if user is blocked from bot
+router.get('/check-blocked/:phone', async (req, res) => {
+  try {
+    const phone = req.params.phone;
+    const user = await User.findOne({ phoneNumber: { $regex: phone, $options: 'i' } });
+    res.json({ blocked: user?.blockedFromBot || false });
+  } catch (error) {
+    res.json({ blocked: false });
+  }
 });
 
 // Update user WhatsApp info (admin only)

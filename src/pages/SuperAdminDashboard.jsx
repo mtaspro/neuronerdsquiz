@@ -388,6 +388,25 @@ const SuperAdminDashboard = () => {
                     </div>
                   </div>
                   <div className="flex space-x-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          const apiUrl = import.meta.env.VITE_API_URL || '';
+                          const token = secureStorage.getToken();
+                          await axios.put(`${apiUrl}/api/admin/users/${user._id}/block-bot`, 
+                            { blocked: !user.blockedFromBot },
+                            { headers: { Authorization: `Bearer ${token}` } }
+                          );
+                          success(`User ${!user.blockedFromBot ? 'blocked from' : 'unblocked from'} WhatsApp bot`);
+                          loadUsers();
+                        } catch (error) {
+                          showError('Failed to update bot access');
+                        }
+                      }}
+                      className={`${user.blockedFromBot ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'} text-white px-3 py-1 rounded text-sm transition-colors`}
+                    >
+                      {user.blockedFromBot ? '🔓 Unblock Bot' : '🚫 Block Bot'}
+                    </button>
                     {!user.isExaminer && (
                       <button
                         onClick={() => promoteUser(user._id, 'examiner')}

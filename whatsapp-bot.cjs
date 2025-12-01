@@ -234,6 +234,18 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`,
                         const axios = require('axios');
                         const apiUrl = process.env.API_URL || 'http://localhost:5000';
                         
+                        // Check if user is blocked
+                        try {
+                            const userPhone = chatId.replace('@s.whatsapp.net', '');
+                            const checkResponse = await axios.get(`${apiUrl}/api/admin/check-blocked/${userPhone}`);
+                            if (checkResponse.data.blocked) {
+                                console.log(`🚫 User ${sender} is blocked from bot`);
+                                return;
+                            }
+                        } catch (blockCheckError) {
+                            console.error('Block check error:', blockCheckError.message);
+                        }
+                        
                         // Prompt safety check using Llama Guard
                         try {
                             const guardResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {

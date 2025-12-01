@@ -28,7 +28,8 @@ const userSchema = new mongoose.Schema({
   selectedTheme: { type: String, default: null }, // null means use global default
   phoneNumber: { type: String, default: '' },
   whatsappNotifications: { type: Boolean, default: false },
-  gender: { type: String, enum: ['male', 'female'], default: null }
+  gender: { type: String, enum: ['male', 'female'], default: null },
+  blockedFromBot: { type: Boolean, default: false }
 });
 
 // Hash password before saving
