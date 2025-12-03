@@ -27,7 +27,9 @@ export const useMaintenance = () => {
     const checkMaintenanceStatus = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        const response = await axios.get(`${apiUrl}/api/superadmin/maintenance/status`);
+        const response = await axios.get(`${apiUrl}/api/superadmin/maintenance/status`, {
+          timeout: 5000
+        });
         const { isActive, countdownStartTime, countdownDuration } = response.data;
         
         if (countdownStartTime) {
@@ -44,7 +46,11 @@ export const useMaintenance = () => {
           setIsMaintenanceMode(true);
         }
       } catch (error) {
-        console.error('Failed to check maintenance status:', error);
+        // If backend is unreachable (suspended), show maintenance
+        if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK' || !error.response) {
+          console.log('Backend unreachable - showing maintenance mode');
+          setIsMaintenanceMode(true);
+        }
       }
     };
     
