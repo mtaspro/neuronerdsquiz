@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useSocket } from '../utils/socketManager';
 import { secureStorage } from '../utils/secureStorage';
+import axios from 'axios';
 
 export const useMaintenance = () => {
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [countdownData, setCountdownData] = useState(null);
   const socket = useSocket('maintenance');
 
   useEffect(() => {
@@ -21,9 +23,37 @@ export const useMaintenance = () => {
     
     checkSuperAdmin();
 
+    // Check maintenance status on mount
+    const checkMaintenanceStatus = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await axios.get(`${apiUrl}/api/superadmin/maintenance/status`);
+        const { isActive, countdownStartTime, countdownDuration } = response.data;
+        
+        if (countdownStartTime) {
+          const elapsed = Date.now() - countdownStartTime;
+          if (elapsed < countdownDuration) {
+            // Countdown still active
+            setShowNotification(true);
+            setCountdownData({ countdownStartTime, countdownDuration });
+          } else if (isActive) {
+            // Countdown finished, show maintenance
+            setIsMaintenanceMode(true);
+          }
+        } else if (isActive) {
+          setIsMaintenanceMode(true);
+        }
+      } catch (error) {
+        console.error('Failed to check maintenance status:', error);
+      }
+    };
+    
+    checkMaintenanceStatus();
+
     // Listen for maintenance mode events
-    socket.addListener('maintenanceEnabled', () => {
+    socket.addListener('maintenanceEnabled', (data) => {
       setShowNotification(true);
+      setCountdownData(data);
     });
 
     socket.addListener('maintenanceActivated', () => {
@@ -34,6 +64,7 @@ export const useMaintenance = () => {
     socket.addListener('maintenanceDisabled', () => {
       setIsMaintenanceMode(false);
       setShowNotification(false);
+      setCountdownData(null);
     });
 
     // Connect socket
@@ -50,8 +81,9 @@ export const useMaintenance = () => {
   };
 
   return {
-    isMaintenanceMode: isMaintenanceMode && !isSuperAdmin, // SuperAdmin bypasses maintenance
-    showNotification: showNotification && !isSuperAdmin, // SuperAdmin doesn't see notifications
+    isMaintenanceMode: isMaintenanceMode && !isSuperAdmin,
+    showNotification: showNotification && !isSuperAdmin,
+    countdownData,
     handleNotificationComplete,
     isSuperAdmin
   };

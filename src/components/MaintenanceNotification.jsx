@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const MaintenanceNotification = ({ isVisible, onComplete }) => {
+const MaintenanceNotification = ({ isVisible, onComplete, countdownData }) => {
   const [countdown, setCountdown] = useState(60);
 
   useEffect(() => {
     if (!isVisible) return;
+
+    // Calculate initial countdown from server data
+    if (countdownData) {
+      const elapsed = Date.now() - countdownData.countdownStartTime;
+      const remaining = Math.max(0, Math.ceil((countdownData.countdownDuration - elapsed) / 1000));
+      setCountdown(remaining);
+    }
 
     const timer = setInterval(() => {
       setCountdown(prev => {
@@ -19,7 +26,7 @@ const MaintenanceNotification = ({ isVisible, onComplete }) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isVisible, onComplete]);
+  }, [isVisible, onComplete, countdownData]);
 
   return (
     <AnimatePresence>

@@ -513,6 +513,7 @@ function AppContent() {
   const {
     isMaintenanceMode,
     showNotification,
+    countdownData,
     handleNotificationComplete,
     isSuperAdmin
   } = useMaintenance();
@@ -576,6 +577,7 @@ function AppContent() {
       {/* Maintenance System */}
       <MaintenanceNotification
         isVisible={showNotification}
+        countdownData={countdownData}
         onComplete={handleNotificationComplete}
       />
       <MaintenanceOverlay isActive={isMaintenanceMode} isSuperAdmin={isSuperAdmin} />

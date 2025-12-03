@@ -1035,4 +1035,12 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, async () => {
+  console.log(`Server running on port ${PORT}`);
+  
+  // Auto-disable maintenance mode after deployment completes
+  setTimeout(() => {
+    console.log('🔓 Auto-disabling maintenance mode after deployment');
+    io.emit('maintenanceDisabled');
+  }, 5000); // Wait 5 seconds after server starts
+});
