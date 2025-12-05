@@ -138,27 +138,6 @@ async function startWhatsAppBot() {
                             const axios = require('axios');
                             const apiUrl = process.env.API_URL || 'http://localhost:5000';
                             
-                            // Prompt safety check using Llama Guard
-                            try {
-                                const guardResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                                    model: 'meta-llama/llama-prompt-guard-2-22m',
-                                    messages: [{ role: 'user', content: query }]
-                                }, {
-                                    headers: {
-                                        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-                                        'Content-Type': 'application/json'
-                                    }
-                                });
-                                
-                                const guardResult = guardResponse.data.choices?.[0]?.message?.content?.toLowerCase();
-                                if (guardResult && guardResult.includes('unsafe')) {
-                                    await socket.sendMessage(chatId, { text: 'Sorry, your message contains unsafe content. Please rephrase your question.' });
-                                    return;
-                                }
-                            } catch (guardError) {
-                                console.error('Prompt guard error:', guardError.message);
-                            }
-                            
                             // Get conversation history for this chat
                             const history = conversationHistory.get(chatId) || [];
                             
@@ -244,27 +223,6 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`,
                             }
                         } catch (blockCheckError) {
                             console.error('Block check error:', blockCheckError.message);
-                        }
-                        
-                        // Prompt safety check using Llama Guard
-                        try {
-                            const guardResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                                model: 'meta-llama/llama-prompt-guard-2-22m',
-                                messages: [{ role: 'user', content: messageText }]
-                            }, {
-                                headers: {
-                                    'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-                                    'Content-Type': 'application/json'
-                                }
-                            });
-                            
-                            const guardResult = guardResponse.data.choices?.[0]?.message?.content?.toLowerCase();
-                            if (guardResult && guardResult.includes('unsafe')) {
-                                await socket.sendMessage(chatId, { text: 'Sorry, your message contains unsafe content. Please rephrase your question.' });
-                                return;
-                            }
-                        } catch (guardError) {
-                            console.error('Prompt guard error:', guardError.message);
                         }
                         
                         // Get conversation history for this chat

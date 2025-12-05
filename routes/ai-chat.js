@@ -22,33 +22,6 @@ router.post('/', async (req, res) => {
       return res.status(500).json({ error: 'AI API keys not configured' });
     }
 
-    // Prompt safety check using Llama Guard
-    if (GROQ_API_KEY) {
-      try {
-        const guardResponse = await axios.post(
-          'https://api.groq.com/openai/v1/chat/completions',
-          {
-            model: 'meta-llama/llama-prompt-guard-2-86m',
-            messages: [{ role: 'user', content: message.trim() }]
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${GROQ_API_KEY}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        
-        const guardResult = guardResponse.data.choices?.[0]?.message?.content?.toLowerCase();
-        if (guardResult && guardResult.includes('unsafe')) {
-          return res.status(400).json({ error: 'Message contains unsafe content. Please rephrase your question.' });
-        }
-      } catch (guardError) {
-        console.error('Prompt guard error:', guardError.message);
-        // Continue if guard fails
-      }
-    }
-
     // Determine API endpoint and headers based on model
     const isGroqModel = model === 'qwen/qwen3-32b';
     const isDolphinModel = model === 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free';
