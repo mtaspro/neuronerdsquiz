@@ -83,7 +83,7 @@ ${calendarData.hasHolidays ? '🎉 ' + calendarData.holidays.join(', ') + ' - En
       
       const aiResponse = await axios.post(`${apiUrl}/api/ai-chat`, {
         message: prompt,
-        model: 'x-ai/grok-4.1-fast:free',
+        model: 'mistralai/mistral-7b-instruct:free',
         systemPrompt: 'You are NeuraX. Generate concise calendar messages following the exact format provided. NEVER include reasoning tags like <think> or any meta-commentary in your response. Keep the message clean and direct.',
         conversationHistory: []
       });

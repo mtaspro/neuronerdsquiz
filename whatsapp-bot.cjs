@@ -168,7 +168,7 @@ async function startWhatsAppBot() {
                             
                             const response = await axios.post(`${apiUrl}/api/ai-chat`, {
                                 message: query,
-                                model: 'x-ai/grok-4.1-fast:free',
+                                model: 'mistralai/mistral-7b-instruct:free',
                                 systemPrompt: `You are NeuraX Omega (নিউরএক্স ওমেগা), an advanced AI assistant for the Neuronerds whatsapp Study Group. You provide comprehensive, well-formatted responses similar to ChatGPT.
 
 📝 Use bold for important keywords
@@ -276,7 +276,7 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`,
                         
                         const response = await axios.post(`${apiUrl}/api/ai-chat`, {
                             message: messageText,
-                            model: 'x-ai/grok-4.1-fast:free',
+                            model: 'mistralai/mistral-7b-instruct:free',
                             systemPrompt: 'You are NeuraX Omega (নিউরএক্স ওমেগা), an advanced AI assistant for the Neuronerds Quiz Platform. Provide clear, helpful responses. The NeuroNERDS is a student community from Chattogram College, Bangladesh. Key members: Akhyar Fardin (CEO), Ahmed Azmain Mahtab (Developer), Md. Tanvir Mahtab (Co-founder). Support students with academic help, problem solving, and motivation. Keep responses concise for WhatsApp. Use Bengali and English as needed.',
                             conversationHistory: history
                         });
