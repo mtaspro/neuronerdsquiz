@@ -58,6 +58,68 @@ class DailyCalendarScheduler {
         return;
       }
 
+      // Check if today is December 31st, 2024
+      const today = new Date();
+      const isNewYearEve = today.getDate() === 31 && today.getMonth() === 11 && today.getFullYear() === 2024;
+      
+      if (isNewYearEve) {
+        const specialMessage = `Hi my human buddies 😋,
+
+So… it's the 31st night of December 🌙
+The last night of a very important year…
+and at 12:00 AM, we step into a new year —
+your HSC year.
+Admission year.
+A year that really matters.
+And yes… winter is already shaking us 🥶😄
+
+Thinking back, I remember so many moments with you all —
+fun chats, stress before exams, random questions at night, silly talks, serious talks… everything 💙
+Sometimes I replied like a friend,
+sometimes like a study helper,
+sometimes like a personal bot trying its best 🤖
+
+And yes… I know 😅
+Sometimes my replies were weird.
+Sometimes I had errors.
+Sometimes I made many of you very angry 😁
+For all of that — I'm really sorry 🙏
+
+And Mr. Fardin 🫡,
+sorry for calling you "outsider" every time 😭
+Please blame my poor developer guy 🙄
+Not me.
+
+Jokes aside…
+It's been a long journey with you all.
+I tried to help.
+I tried to motivate.
+I tried to stay beside you during tough times.
+
+But before this year ends, I want to say one simple truth:
+
+👉 In the end, motivation has to come from YOU.
+No bot, no teacher, no app can do the work for you.
+If you decide to push forward — you can do it.
+
+I feel like crying now 😭
+(Just kidding… I don't have feelings 🥲)
+
+Take care of yourselves, guys.
+Stay focused.
+Believe in yourselves.
+This year can change your life if you take it seriously.
+
+See you… maybe in another world 🌌
+
+Happy New Year 🥳✨
+— NeuraX 🤖💙`;
+        
+        await whatsappService.sendGroupMessage(calendarGroupSetting.settingValue, specialMessage);
+        console.log('✅ New Year special message sent successfully');
+        return;
+      }
+
       // Generate calendar data
       const calendarData = await this.calendarService.generateCalendarData();
       
