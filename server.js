@@ -1035,21 +1035,4 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
-  
-  // Trigger maintenance mode on deployment start
-  if (process.env.DEPLOYMENT_SECRET) {
-    console.log('🔧 New deployment detected - triggering maintenance mode');
-    io.emit('maintenanceEnabled', {
-      countdownStartTime: Date.now(),
-      countdownDuration: 60000
-    });
-    
-    // Auto-disable after 60 seconds
-    setTimeout(() => {
-      console.log('🔓 Auto-disabling maintenance mode');
-      io.emit('maintenanceDisabled');
-    }, 60000);
-  }
-});
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
