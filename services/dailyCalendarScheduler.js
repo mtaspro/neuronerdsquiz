@@ -45,24 +45,23 @@ class DailyCalendarScheduler {
 
   // Send daily calendar update via NeuraX
   async sendDailyCalendarUpdate() {
-    try {
-      console.log('📅 Generating daily calendar update via NeuraX...');
-      
-      // Get the calendar group setting
-      const calendarGroupSetting = await WhatsAppSettings.findOne({ 
-        settingKey: 'dailyCalendarGroup' 
-      });
+    // Check if today is December 31st
+    const today = new Date();
+    const isNewYearEve = today.getDate() === 31 && today.getMonth() === 11;
+    
+    if (isNewYearEve) {
+      try {
+        console.log('🎉 Sending New Year special message...');
+        
+        const calendarGroupSetting = await WhatsAppSettings.findOne({ 
+          settingKey: 'dailyCalendarGroup' 
+        });
 
-      if (!calendarGroupSetting || !calendarGroupSetting.settingValue) {
-        console.log('⚠️ No calendar group configured for daily updates');
-        return;
-      }
+        if (!calendarGroupSetting || !calendarGroupSetting.settingValue) {
+          console.log('⚠️ No calendar group configured');
+          return;
+        }
 
-      // Check if today is December 31st, 2024
-      const today = new Date();
-      const isNewYearEve = today.getDate() === 31 && today.getMonth() === 11 && today.getFullYear() === 2024;
-      
-      if (isNewYearEve) {
         const specialMessage = `Hi my human buddies 😋,
 
 So… it's the 31st night of December 🌙
@@ -118,10 +117,24 @@ Happy New Year 🥳✨
         await whatsappService.sendGroupMessage(calendarGroupSetting.settingValue, specialMessage);
         console.log('✅ New Year special message sent successfully');
         return;
+      } catch (error) {
+        console.error('❌ Error sending New Year message:', error);
+        return;
       }
+    }
+    
+    try {
+      console.log('📅 Generating daily calendar update via NeuraX...');
+      
+      // Get the calendar group setting
+      const calendarGroupSetting = await WhatsAppSettings.findOne({ 
+        settingKey: 'dailyCalendarGroup' 
+      });
 
-      // Generate calendar data
-      const calendarData = await this.calendarService.generateCalendarData();
+      if (!calendarGroupSetting || !calendarGroupSetting.settingValue) {
+        console.log('⚠️ No calendar group configured for daily updates');
+        return;
+      }
       
       // Get upcoming exams
       const examData = await this.getUpcomingExams();
