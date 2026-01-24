@@ -188,6 +188,17 @@ app.use('/uploads', (req, res, next) => {
   }
 });
 
+// Serve ads.txt for Google AdSense
+app.get('/ads.txt', (req, res) => {
+  const adsPath = path.join(process.cwd(), 'public', 'ads.txt');
+  if (fs.existsSync(adsPath)) {
+    res.type('text/plain');
+    res.sendFile(adsPath);
+  } else {
+    res.status(404).send('ads.txt not found');
+  }
+});
+
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
