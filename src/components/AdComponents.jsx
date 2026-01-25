@@ -3,16 +3,21 @@ import { useEffect } from 'react';
 // Native Banner Ad Component
 export const NativeBannerAd = () => {
   useEffect(() => {
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (e) {
-      console.error('Ad error:', e);
-    }
+    const script = document.createElement('script');
+    script.src = 'https://pl28563623.effectivegatecpm.com/6dda8a9bc7243e49e44794daaccd490c/invoke.js';
+    script.async = true;
+    script.setAttribute('data-cfasync', 'false');
+    document.body.appendChild(script);
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
   }, []);
 
   return (
     <div className="my-4">
-      <script async="async" data-cfasync="false" src="https://pl28563623.effectivegatecpm.com/6dda8a9bc7243e49e44794daaccd490c/invoke.js"></script>
       <div id="container-6dda8a9bc7243e49e44794daaccd490c"></div>
     </div>
   );
