@@ -4,6 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import axios from 'axios';
 import getEnvironmentConfig from '../config/environment';
 import { secureStorage } from '../utils/secureStorage';
+import { NativeBannerAd, DesktopBannerAd, MobileBannerAd } from '../components/AdComponents';
 
 const { apiUrl: API_URL } = getEnvironmentConfig();
 
@@ -238,6 +239,9 @@ export default function ProgressTracking() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">Progress Tracking</h1>
           <p className="text-gray-300">Track your study progress and stay motivated</p>
         </motion.div>
+
+        {/* Native Banner Ad */}
+        <NativeBannerAd />
 
         {/* Exam Timeline */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">

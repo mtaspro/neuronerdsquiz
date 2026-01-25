@@ -8,6 +8,7 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
 import LoadingAnimation from '../components/LoadingAnimation';
 import { useNotification } from '../components/NotificationSystem';
+import { NativeBannerAd } from '../components/AdComponents';
 
 import SoundToggle from '../components/SoundToggle';
 import soundManager from '../utils/soundUtils';
@@ -509,6 +510,9 @@ const Dashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.3 }}
       >
+        {/* Native Banner Ad */}
+        <NativeBannerAd />
+        
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
           <motion.div 
