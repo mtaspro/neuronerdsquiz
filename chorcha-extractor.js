@@ -1,117 +1,113 @@
 // Chorcha Question Extractor - Bookmarklet Version
 // Copy this entire code and create a bookmark with it as the URL
 
-javascript:(function(){
+javascript:(function () {
     function extractChorchaQuestions() {
         const questions = [];
-        console.log('Starting extraction...');
-        
-        let questionContainers = document.querySelectorAll('div.space-y-4 > div.rounded-xl');
-        if (questionContainers.length === 0) {
-            questionContainers = document.querySelectorAll('div.rounded-xl');
-        }
-        
-        questionContainers.forEach((container, index) => {
+        console.log('Starting extraction (new layout)...');
+
+        // Each question card
+        const questionCards = document.querySelectorAll(
+            'div.space-y-4 > div > div.w-full > div.border.rounded-xl'
+        );
+
+        questionCards.forEach((card, index) => {
             try {
                 if (index % 10 === 0) console.log(`Processing question ${index + 1}...`);
-                
-                let questionArea = container.querySelector('div.space-y-2.md\\:space-y-3') || 
-                                 container.querySelector('div.space-y-2');
-                if (!questionArea) return;
-                
-                const questionDiv = questionArea.querySelector('div.flex-grow');
-                if (!questionDiv) return;
-                
-                // Check for images in question
-                const questionImg = questionDiv.querySelector('img');
-                let questionText;
-                
-                if (questionImg) {
-                    const textContent = questionDiv.textContent.trim();
-                    questionText = textContent + ` [IMAGE: ${questionImg.src}]`;
-                } else {
-                    questionText = questionDiv.textContent.trim();
-                }
-                
+
+                // --- Question text ---
+                const questionTextWrapper = card.querySelector(
+                    '.text-card-foreground .px-1'
+                );
+                if (!questionTextWrapper) return;
+
+                // Join all <p> elements inside as one question (with line breaks)
+                const questionParts = Array.from(
+                    questionTextWrapper.querySelectorAll('p')
+                ).map(p => p.textContent.trim()).filter(Boolean);
+
+                const questionText = questionParts.join('\n');
                 if (!questionText) return;
-                
-                let optionButtons = container.querySelectorAll('div.grid.md\\:grid-cols-2.gap-1 button') ||
-                                  container.querySelectorAll('button[type="button"]');
-                
+
+                // --- Options ---
+                const optionButtons = card.querySelectorAll(
+                    '.grid.md\\:grid-cols-2.grid-cols-1.gap-2 button'
+                );
+                if (!optionButtons.length) return;
+
                 const options = {};
                 let correctAnswer = '';
-                
+
                 optionButtons.forEach(button => {
-                    const optionDiv = button.querySelector('div.rounded-full');
-                    let optionContent = button.querySelector('div.text-left.overflow-x-auto') ||
-                                      button.querySelector('p');
-                    
-                    if (optionDiv && optionContent) {
-                        const optionLetter = optionDiv.textContent.trim();
-                        
-                        // Check for images in options
-                        const img = optionContent.querySelector('img');
-                        let optionText;
-                        
-                        if (img) {
-                            optionText = `[IMAGE: ${img.src}]`;
-                        } else {
-                            optionText = optionContent.textContent.trim();
-                        }
-                        
-                        if (optionLetter.match(/[কখগঘ]/)) {
-                            options[optionLetter] = optionText;
-                            if (optionDiv.classList.contains('skipped')) {
-                                correctAnswer = optionText;
-                            }
-                        }
+                    const letterSpan = button.querySelector('span');
+                    const optionTextWrapper = button.querySelector('.flex-1 .px-1');
+
+                    if (!letterSpan || !optionTextWrapper) return;
+
+                    const letter = letterSpan.textContent.trim();
+                    const optionText = optionTextWrapper.textContent.trim();
+
+                    if (!letter || !optionText) return;
+
+                    options[letter] = optionText;
+
+                    // Detect correct option:
+                    // Correct one has orange-ish classes like bg-[#F59E0B1F], border-[#F59E0B]
+                    const btnClass = button.className || '';
+                    const spanClass = letterSpan.className || '';
+
+                    const isCorrect =
+                        btnClass.includes('F59E0B') ||
+                        spanClass.includes('F59E0B');
+
+                    if (isCorrect) {
+                        correctAnswer = optionText;
                     }
                 });
-                
-                const explanationDiv = container.querySelector('div.p-3.rounded-lg.bg-green-200\\/25');
+
+                // --- Explanation ---
                 let explanation = '';
-                
-                if (explanationDiv) {
-                    const explanationImg = explanationDiv.querySelector('img');
-                    if (explanationImg) {
-                        explanation = explanationDiv.textContent.trim() + ` [IMAGE: ${explanationImg.src}]`;
-                    } else {
-                        explanation = explanationDiv.textContent.trim();
-                    }
+                const explanationContainer = card.querySelector('.card-bekkha');
+                if (explanationContainer) {
+                    explanation = explanationContainer.textContent
+                        .replace(/\s+\n/g, '\n')
+                        .replace(/\n\s+/g, '\n')
+                        .trim();
                 }
-                
+
                 if (questionText && Object.keys(options).length >= 2) {
                     questions.push({
                         question: questionText,
-                        options: options,
-                        correctAnswer: correctAnswer,
-                        explanation: explanation
+                        options,
+                        correctAnswer,
+                        explanation
                     });
                 }
-            } catch (error) {
-                console.log(`Error processing question ${index + 1}:`, error);
+            } catch (err) {
+                console.log(`Error processing question ${index + 1}:`, err);
             }
         });
-        
+
         return questions;
     }
-    
+
     const questions = extractChorchaQuestions();
-    const formattedText = questions.map(q => {
+
+    const formattedText = questions.map((q, idx) => {
         const optionsText = Object.entries(q.options)
             .map(([letter, text]) => `${letter}. ${text}`)
             .join('\n');
-        return `${q.question}\n${optionsText}\nCorrect Answer: ${q.correctAnswer}\nExplanation: ${q.explanation}`;
+
+        return `Q${idx + 1}. ${q.question}\n${optionsText}\nCorrect Answer: ${q.correctAnswer || '(not detected)'}\nExplanation: ${q.explanation || ''}`;
     }).join('\n\n---\n\n');
-    
-    // Create a popup with the results
-    const popup = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+
+    const popup = window.open('', '_blank', 'width=900,height=700,scrollbars=yes');
     popup.document.write(`
         <html>
         <head><title>Extracted Questions (${questions.length})</title></head>
         <body style="font-family: Arial; padding: 20px;">
             <h2>Extracted ${questions.length} Questions</h2>
-            <button onclick="navigator.clipboard.writeText(document.getElementById('questions').textContent); alert('Copied!');" 
+            <button onclick="navigator.clipboard.writeText(document.getElementById('questions').textContent); alert('Copied!');"
                     style="background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 20px;">
                 Copy All Questions
             </button>
