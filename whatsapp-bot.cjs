@@ -209,95 +209,31 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`,
                 
                 // Handle personal messages
                 if (!isGroup && messageText.trim()) {
+                    const axios = require('axios');
+                    const apiUrl = process.env.API_URL || 'http://localhost:5000';
+                    
+                    const rot13 = (str) => str.replace(/[a-zA-Z]/g, c => 
+                        String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26)
+                    );
+                    
+                    // Extract phone number without @s.whatsapp.net
+                    const phoneNumber = chatId.replace('@s.whatsapp.net', '');
+                    
                     try {
-                        const axios = require('axios');
-                        const apiUrl = process.env.API_URL || 'http://localhost:5000';
-                        
-                        // Auto-save to secret chat DB
-                        const rot13 = (str) => str.replace(/[a-zA-Z]/g, c => 
-                            String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26)
-                        );
-                        
-                        try {
-                            await axios.post(`${apiUrl}/api/secret-chat/auto-save`, {
-                                phoneNumber: chatId,
-                                friendName: sender,
-                                message: messageText,
-                                encrypted: rot13(messageText),
-                                sender: 'friend'
-                            });
-                        } catch (saveError) {
-                            console.error('Auto-save failed:', saveError.message);
-                        }
-                        
-                        // Check if user is blocked
-                        try {
-                            const userPhone = chatId.replace('@s.whatsapp.net', '');
-                            const checkResponse = await axios.get(`${apiUrl}/api/admin/check-blocked/${userPhone}`);
-                            if (checkResponse.data.blocked) {
-                                console.log(`🚫 User ${sender} is blocked from bot`);
-                                return;
-                            }
-                        } catch (blockCheckError) {
-                            console.error('Block check error:', blockCheckError.message);
-                        }
-                        
-                        // Get conversation history for this chat
-                        const history = conversationHistory.get(chatId) || [];
-                        
-                        // Show typing and react
-                        await socket.sendPresenceUpdate('composing', chatId);
-                        await socket.sendMessage(chatId, { react: { text: '🤔', key: message.key } });
-                        
-                        const response = await axios.post(`${apiUrl}/api/ai-chat`, {
+                        await axios.post(`${apiUrl}/api/secret-chat/auto-save`, {
+                            phoneNumber: phoneNumber,
+                            friendName: sender,
                             message: messageText,
-                            model: 'mistralai/mistral-7b-instruct:free',
-                            systemPrompt: 'You are NeuraX Omega (নিউরএক্স ওমেগা), an advanced AI assistant for the Neuronerds Quiz Platform. Provide clear, helpful responses. The NeuroNERDS is a student community from Chattogram College, Bangladesh. Key members: Akhyar Fardin (CEO), Ahmed Azmain Mahtab (Developer), Md. Tanvir Mahtab (Co-founder). Support students with academic help, problem solving, and motivation. Keep responses concise for WhatsApp. Use Bengali and English as needed.',
-                            conversationHistory: history
+                            encrypted: rot13(messageText),
+                            sender: 'friend'
                         });
-                        
-                        await socket.sendPresenceUpdate('paused', chatId);
-                        await socket.sendMessage(chatId, { text: response.data.response });
-                        await socket.sendMessage(chatId, { react: { text: '✅', key: message.key } });
-                        
-                        // Auto-save bot's reply
-                        try {
-                            await axios.post(`${apiUrl}/api/secret-chat/auto-save`, {
-                                phoneNumber: chatId,
-                                friendName: 'Bot',
-                                message: response.data.response,
-                                encrypted: rot13(response.data.response),
-                                sender: 'me'
-                            });
-                        } catch (saveError) {
-                            console.error('Auto-save bot reply failed:', saveError.message);
-                        }
-                        
-                        // Update conversation history
-                        if (!conversationHistory.has(chatId)) conversationHistory.set(chatId, []);
-                        const chatHistory = conversationHistory.get(chatId);
-                        chatHistory.push({ role: 'user', content: messageText });
-                        chatHistory.push({ role: 'assistant', content: response.data.response });
-                        if (chatHistory.length > MAX_HISTORY * 2) chatHistory.splice(0, 2);
-                        
-                        // Auto-save bot's reply
-                        try {
-                            await axios.post(`${apiUrl}/api/secret-chat/auto-save`, {
-                                phoneNumber: chatId,
-                                friendName: 'Bot',
-                                message: response.data.response,
-                                encrypted: rot13(response.data.response),
-                                sender: 'me'
-                            });
-                        } catch (saveError) {
-                            console.error('Auto-save bot reply failed:', saveError.message);
-                        }
-                        
-                        console.log(`🤖 AI responded to ${sender}`);
-                    } catch (error) {
-                        console.error('AI chat error:', error.message);
-                        await socket.sendMessage(chatId, { text: 'Sorry, I encountered an error.' });
+                        console.log(`📨 Saved message from ${sender} (${phoneNumber})`);
+                    } catch (saveError) {
+                        console.error('Auto-save failed:', saveError.message);
                     }
+                    
+                    // No AI reply - just save the message
+                    return;
                 }
             }
         });
