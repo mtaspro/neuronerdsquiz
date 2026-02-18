@@ -45,31 +45,25 @@ router.get('/history/:phoneNumber', sessionMiddleware, async (req, res) => {
 // Send encrypted message
 router.post('/send', sessionMiddleware, async (req, res) => {
   try {
-    let { phoneNumber, encryptedMessage } = req.body;
+    let { phoneNumber, realNumber, encryptedMessage } = req.body;
     
-    // Normalize phone number
+    // Normalize phone number for saving
     phoneNumber = phoneNumber.split('@')[0];
     
     const decrypted = rot13(encryptedMessage);
     
-    // Save to DB with the LID format
+    // Save to DB with LID format
     await SecretChat.create({
-      phoneNumber,
+      phoneNumber, // LID format
       message: decrypted,
       encrypted: encryptedMessage,
       sender: 'me'
     });
     
-    // Convert LID to real phone for sending
-    let sendToPhone = phoneNumber;
-    if (phoneNumber === '88182888733655139') {
-      sendToPhone = '8801714595090'; // Your friend's real number
-    }
+    console.log(`📤 Sending to: ${realNumber} (saved as: ${phoneNumber})`);
     
-    console.log(`📤 Sending to: ${sendToPhone} (saved as: ${phoneNumber})`);
-    
-    // Send via WhatsApp
-    const jid = sendToPhone.includes('@') ? sendToPhone : `${sendToPhone}@s.whatsapp.net`;
+    // Send via WhatsApp using real number
+    const jid = realNumber.includes('@') ? realNumber : `${realNumber}@s.whatsapp.net`;
     await whatsappService.sendMessage(jid, decrypted);
     
     res.json({ success: true });

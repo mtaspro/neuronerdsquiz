@@ -10,6 +10,7 @@ export default function SecretChat() {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [realNumber, setRealNumber] = useState('');
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [showDecrypted, setShowDecrypted] = useState({});
@@ -98,14 +99,18 @@ export default function SecretChat() {
     if (e.shiftKey && e.key === 'Enter') {
       e.preventDefault();
       
-      if (!inputText.trim()) return;
+      if (!inputText.trim() || !realNumber.trim()) {
+        alert('Enter both Target ID and Real number');
+        return;
+      }
       
       const encrypted = rot13(inputText);
       
       try {
         const token = secureStorage.getToken();
         await axios.post(`${API_URL}/api/secret-chat/send`, {
-          phoneNumber,
+          phoneNumber, // LID for saving
+          realNumber,  // Real number for sending
           encryptedMessage: encrypted
         }, {
           headers: { Authorization: `Bearer ${token}` }
@@ -156,17 +161,26 @@ export default function SecretChat() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-4">🔐 X-Protocol</h1>
         
-        <div className="bg-gray-800 p-4 rounded mb-4 flex gap-2">
+        <div className="bg-gray-800 p-4 rounded mb-4">
+          <div className="flex gap-2 mb-2">
+            <input
+              type="text"
+              placeholder="Target ID (LID for fetch)"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="flex-1 bg-gray-700 px-3 py-2 rounded text-sm"
+            />
+            <button onClick={fetchFromWhatsApp} className="bg-green-600 px-4 py-2 rounded">
+              📥 Sync
+            </button>
+          </div>
           <input
             type="text"
-            placeholder="Target ID (check logs for LID)"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            className="flex-1 bg-gray-700 px-3 py-2 rounded text-sm"
+            placeholder="Real number (for sending)"
+            value={realNumber}
+            onChange={(e) => setRealNumber(e.target.value)}
+            className="w-full bg-gray-700 px-3 py-2 rounded text-sm"
           />
-          <button onClick={fetchFromWhatsApp} className="bg-green-600 px-4 py-2 rounded">
-            📥 Sync
-          </button>
         </div>
 
         <div className="bg-gray-800 p-4 rounded mb-4 h-96 overflow-y-auto">
