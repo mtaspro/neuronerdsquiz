@@ -121,18 +121,18 @@ export default function SecretChat() {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">🔐 Secret Chat</h1>
+        <h1 className="text-3xl font-bold mb-4">🔐 X-Protocol</h1>
         
         <div className="bg-gray-800 p-4 rounded mb-4 flex gap-2">
           <input
             type="text"
-            placeholder="Friend's phone (e.g., 8801234567890)"
+            placeholder="Target ID"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
             className="flex-1 bg-gray-700 px-3 py-2 rounded"
           />
           <button onClick={fetchFromWhatsApp} className="bg-green-600 px-4 py-2 rounded">
-            📥 Fetch Last 10
+            📥 Sync
           </button>
         </div>
 
@@ -152,7 +152,7 @@ export default function SecretChat() {
                   onClick={() => toggleDecrypt(msg._id)}
                   className="text-xs text-gray-400 mt-1"
                 >
-                  {showDecrypted[msg._id] ? '🔒 Hide' : '🔓 Decrypt'}
+                  {showDecrypted[msg._id] ? '🔒' : '🔓'}
                 </button>
               </div>
               <div className="text-xs text-gray-500 mt-1">
@@ -165,22 +165,22 @@ export default function SecretChat() {
 
         <div className="bg-gray-800 p-4 rounded">
           <textarea
-            placeholder="Type your message..."
+            placeholder="Raw data..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             className="w-full bg-gray-700 px-3 py-2 rounded mb-2"
             rows="2"
           />
           <button onClick={handleEncrypt} className="bg-yellow-600 px-4 py-2 rounded mr-2">
-            🔐 Encrypt
+            🔐 Encode
           </button>
           
           {encryptedInput && (
             <div className="mt-3 bg-gray-700 p-3 rounded">
-              <div className="text-sm text-gray-400 mb-1">Encrypted:</div>
+              <div className="text-sm text-gray-400 mb-1">Encoded:</div>
               <div className="font-mono mb-2">{encryptedInput}</div>
               <button onClick={sendMessage} className="bg-green-600 px-4 py-2 rounded">
-                📤 Send
+                📤 Deploy
               </button>
             </div>
           )}

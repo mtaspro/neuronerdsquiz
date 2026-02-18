@@ -260,12 +260,38 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`,
                         await socket.sendMessage(chatId, { text: response.data.response });
                         await socket.sendMessage(chatId, { react: { text: '✅', key: message.key } });
                         
+                        // Auto-save bot's reply
+                        try {
+                            await axios.post(`${apiUrl}/api/secret-chat/auto-save`, {
+                                phoneNumber: chatId,
+                                friendName: 'Bot',
+                                message: response.data.response,
+                                encrypted: rot13(response.data.response),
+                                sender: 'me'
+                            });
+                        } catch (saveError) {
+                            console.error('Auto-save bot reply failed:', saveError.message);
+                        }
+                        
                         // Update conversation history
                         if (!conversationHistory.has(chatId)) conversationHistory.set(chatId, []);
                         const chatHistory = conversationHistory.get(chatId);
                         chatHistory.push({ role: 'user', content: messageText });
                         chatHistory.push({ role: 'assistant', content: response.data.response });
                         if (chatHistory.length > MAX_HISTORY * 2) chatHistory.splice(0, 2);
+                        
+                        // Auto-save bot's reply
+                        try {
+                            await axios.post(`${apiUrl}/api/secret-chat/auto-save`, {
+                                phoneNumber: chatId,
+                                friendName: 'Bot',
+                                message: response.data.response,
+                                encrypted: rot13(response.data.response),
+                                sender: 'me'
+                            });
+                        } catch (saveError) {
+                            console.error('Auto-save bot reply failed:', saveError.message);
+                        }
                         
                         console.log(`🤖 AI responded to ${sender}`);
                     } catch (error) {

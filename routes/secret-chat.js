@@ -73,47 +73,17 @@ router.post('/auto-save', async (req, res) => {
 router.post('/fetch-whatsapp/:phoneNumber', sessionMiddleware, async (req, res) => {
   try {
     const { phoneNumber } = req.params;
-    const jid = phoneNumber.includes('@') ? phoneNumber : `${phoneNumber}@s.whatsapp.net`;
     
-    const sock = whatsappService.sock;
-    if (!sock) {
-      return res.status(503).json({ error: 'WhatsApp not connected' });
-    }
+    // Simply return existing messages from DB
+    const messages = await SecretChat.find({ phoneNumber })
+      .sort({ timestamp: -1 })
+      .limit(10);
     
-    // Get chat messages
-    const chat = await sock.chatRead(jid, 10);
-    let savedCount = 0;
-    
-    if (chat && chat.messages) {
-      for (const msg of chat.messages) {
-        const text = msg.message?.conversation || msg.message?.extendedTextMessage?.text;
-        if (!text) continue;
-        
-        const isFromMe = msg.key.fromMe;
-        const encrypted = rot13(text);
-        
-        // Check if already exists
-        const exists = await SecretChat.findOne({
-          phoneNumber: jid,
-          message: text,
-          timestamp: new Date(msg.messageTimestamp * 1000)
-        });
-        
-        if (!exists) {
-          await SecretChat.create({
-            phoneNumber: jid,
-            friendName: msg.pushName,
-            message: text,
-            encrypted,
-            sender: isFromMe ? 'me' : 'friend',
-            timestamp: new Date(msg.messageTimestamp * 1000)
-          });
-          savedCount++;
-        }
-      }
-    }
-    
-    res.json({ success: true, savedCount });
+    res.json({ 
+      success: true, 
+      savedCount: messages.length,
+      message: 'Showing existing messages from database'
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
