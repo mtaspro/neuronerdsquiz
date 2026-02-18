@@ -138,25 +138,25 @@ export default function SecretChat() {
 
         <div className="bg-gray-800 p-4 rounded mb-4 h-96 overflow-y-auto">
           {messages.map((msg) => (
-            <div key={msg._id} className={`mb-3 ${msg.sender === 'me' ? 'text-right' : 'text-left'}`}>
-              <div className={`inline-block max-w-xs p-3 rounded ${
-                msg.sender === 'me' ? 'bg-blue-600' : 'bg-gray-700'
-              }`}>
-                <div className="font-mono text-sm mb-1">{msg.encrypted}</div>
+            <div key={msg._id} className="mb-2 text-left">
+              <div className="font-mono text-sm text-gray-300">
+                {msg.encrypted}
                 {showDecrypted[msg._id] && (
-                  <div className="text-xs bg-black/30 p-2 rounded mt-2">
-                    🔓 {msg.message}
-                  </div>
+                  <span className="ml-2 text-green-400">→ {msg.message}</span>
                 )}
                 <button 
-                  onClick={() => toggleDecrypt(msg._id)}
-                  className="text-xs text-gray-400 mt-1"
+                  onClick={() => {
+                    const pwd = prompt('Code?');
+                    if (pwd === '2BorNot2B') {
+                      toggleDecrypt(msg._id);
+                    } else {
+                      alert('Wrong!');
+                    }
+                  }}
+                  className="ml-2 text-xs text-gray-500 hover:text-gray-300"
                 >
                   {showDecrypted[msg._id] ? '🔒' : '🔓'}
                 </button>
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                {new Date(msg.timestamp).toLocaleTimeString()}
               </div>
             </div>
           ))}
