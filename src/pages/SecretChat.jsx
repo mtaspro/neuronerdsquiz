@@ -14,12 +14,18 @@ export default function SecretChat() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [showDecrypted, setShowDecrypted] = useState({});
+  const [showFields, setShowFields] = useState(false);
   const messagesEndRef = useRef(null);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   useEffect(() => {
-    if (authenticated && phoneNumber) loadHistory();
+    if (authenticated && phoneNumber) {
+      loadHistory();
+      // Auto-refresh every 3 seconds
+      const interval = setInterval(loadHistory, 2000);
+      return () => clearInterval(interval);
+    }
   }, [phoneNumber, authenticated]);
 
   useEffect(() => {
@@ -163,30 +169,42 @@ export default function SecretChat() {
         
         <div className="bg-gray-800 p-4 rounded mb-4">
           <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              placeholder="Target ID (LID for fetch)"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              className="flex-1 bg-gray-700 px-3 py-2 rounded text-sm"
-            />
-            <button onClick={fetchFromWhatsApp} className="bg-green-600 px-4 py-2 rounded">
+            <button 
+              onClick={() => setShowFields(!showFields)}
+              className="bg-gray-600 px-3 py-2 rounded text-sm"
+            >
+              ⚙️ Config
+            </button>
+            <button onClick={fetchFromWhatsApp} className="bg-gray-600 px-4 py-2 rounded">
               📥 Sync
             </button>
           </div>
-          <input
-            type="text"
-            placeholder="Real number (for sending)"
-            value={realNumber}
-            onChange={(e) => setRealNumber(e.target.value)}
-            className="w-full bg-gray-700 px-3 py-2 rounded text-sm"
-          />
+          {showFields && (
+            <div className="space-y-2">
+              <input
+                type="text"
+                placeholder="Target ID (LID)"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="w-full bg-gray-700 px-3 py-2 rounded text-sm"
+              />
+              <input
+                type="text"
+                placeholder="Real number"
+                value={realNumber}
+                onChange={(e) => setRealNumber(e.target.value)}
+                className="w-full bg-gray-700 px-3 py-2 rounded text-sm"
+              />
+            </div>
+          )}
         </div>
 
         <div className="bg-gray-800 p-4 rounded mb-4 h-96 overflow-y-auto">
           {messages.map((msg, index) => (
             <div key={msg._id} className="mb-2 text-left">
-              <span className="text-gray-500 mr-2">{index + 1}.</span>
+              <span className="text-gray-500 mr-2">
+                {index + 1}{msg.sender === 'friend' ? "'" : ''}.
+              </span>
               <span className="font-mono text-sm text-gray-300">
                 {showDecrypted[msg._id] ? msg.message : msg.encrypted}
               </span>
