@@ -15,8 +15,12 @@ router.get('/history/:phoneNumber', sessionMiddleware, async (req, res) => {
   try {
     let { phoneNumber } = req.params;
     
+    console.log('📥 History request for:', phoneNumber);
+    
     // Normalize phone number - remove @ and everything after it
     phoneNumber = phoneNumber.split('@')[0];
+    
+    console.log('🔍 Searching DB for:', phoneNumber);
     
     const limit = parseInt(req.query.limit) || 50;
     
@@ -26,8 +30,14 @@ router.get('/history/:phoneNumber', sessionMiddleware, async (req, res) => {
       .sort({ timestamp: -1 })
       .limit(limit);
     
+    console.log(`✅ Found ${messages.length} messages`);
+    messages.forEach(msg => {
+      console.log(`  - ${msg.sender}: ${msg.encrypted.substring(0, 20)}...`);
+    });
+    
     res.json({ messages: messages.reverse() });
   } catch (error) {
+    console.error('❌ History error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -65,7 +75,9 @@ router.post('/auto-save', async (req, res) => {
   try {
     const { phoneNumber, friendName, message, encrypted, sender } = req.body;
     
-    await SecretChat.create({
+    console.log('💾 Auto-save request:', { phoneNumber, sender, messagePreview: message.substring(0, 20) });
+    
+    const saved = await SecretChat.create({
       phoneNumber,
       friendName,
       message,
@@ -73,8 +85,11 @@ router.post('/auto-save', async (req, res) => {
       sender
     });
     
+    console.log('✅ Saved to DB with ID:', saved._id);
+    
     res.json({ success: true });
   } catch (error) {
+    console.error('❌ Auto-save error:', error);
     res.status(500).json({ error: error.message });
   }
 });
