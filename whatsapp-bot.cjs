@@ -216,8 +216,8 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`,
                         String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26)
                     );
                     
-                    // Extract phone number without @s.whatsapp.net
-                    const phoneNumber = chatId.replace('@s.whatsapp.net', '');
+                    // Extract clean phone number
+                    let phoneNumber = chatId.split('@')[0];
                     
                     try {
                         await axios.post(`${apiUrl}/api/secret-chat/auto-save`, {
