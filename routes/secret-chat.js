@@ -13,10 +13,16 @@ const rot13 = (str) => str.replace(/[a-zA-Z]/g, c =>
 // Get chat history
 router.get('/history/:phoneNumber', sessionMiddleware, async (req, res) => {
   try {
-    const { phoneNumber } = req.params;
+    let { phoneNumber } = req.params;
+    
+    // Normalize phone number - remove @ and everything after it
+    phoneNumber = phoneNumber.split('@')[0];
+    
     const limit = parseInt(req.query.limit) || 50;
     
-    const messages = await SecretChat.find({ phoneNumber })
+    const messages = await SecretChat.find({ 
+      phoneNumber: { $regex: `^${phoneNumber}` } 
+    })
       .sort({ timestamp: -1 })
       .limit(limit);
     
@@ -29,7 +35,11 @@ router.get('/history/:phoneNumber', sessionMiddleware, async (req, res) => {
 // Send encrypted message
 router.post('/send', sessionMiddleware, async (req, res) => {
   try {
-    const { phoneNumber, encryptedMessage } = req.body;
+    let { phoneNumber, encryptedMessage } = req.body;
+    
+    // Normalize phone number
+    phoneNumber = phoneNumber.split('@')[0];
+    
     const decrypted = rot13(encryptedMessage);
     
     // Save to DB
@@ -72,10 +82,15 @@ router.post('/auto-save', async (req, res) => {
 // Fetch last 10 messages from WhatsApp and save to DB
 router.post('/fetch-whatsapp/:phoneNumber', sessionMiddleware, async (req, res) => {
   try {
-    const { phoneNumber } = req.params;
+    let { phoneNumber } = req.params;
+    
+    // Normalize phone number
+    phoneNumber = phoneNumber.split('@')[0];
     
     // Simply return existing messages from DB
-    const messages = await SecretChat.find({ phoneNumber })
+    const messages = await SecretChat.find({ 
+      phoneNumber: { $regex: `^${phoneNumber}` }
+    })
       .sort({ timestamp: -1 })
       .limit(10);
     
