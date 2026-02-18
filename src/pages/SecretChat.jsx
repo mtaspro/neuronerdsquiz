@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { secureStorage } from '../utils/secureStorage';
-import { useNavigate } from 'react-router-dom';
 
 const rot13 = (str) => str.replace(/[a-zA-Z]/g, c => 
   String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26)
@@ -16,9 +15,18 @@ export default function SecretChat() {
   const [encryptedInput, setEncryptedInput] = useState('');
   const [showDecrypted, setShowDecrypted] = useState({});
   const messagesEndRef = useRef(null);
-  const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+  useEffect(() => {
+    if (authenticated && phoneNumber) loadHistory();
+  }, [phoneNumber, authenticated]);
+
+  useEffect(() => {
+    if (authenticated) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, authenticated]);
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
@@ -29,42 +37,6 @@ export default function SecretChat() {
       setPassword('');
     }
   };
-
-  if (!authenticated) {
-    return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-        <div className="bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full">
-          <h2 className="text-2xl font-bold mb-6 text-center text-red-500">
-            You are in the wrong way dude, what's your code?
-          </h2>
-          <form onSubmit={handlePasswordSubmit}>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter code..."
-              className="w-full bg-gray-700 px-4 py-3 rounded mb-4 text-center text-lg"
-              autoFocus
-            />
-            <button
-              type="submit"
-              className="w-full bg-red-600 hover:bg-red-700 px-4 py-3 rounded font-bold"
-            >
-              🔓 Unlock
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  useEffect(() => {
-    if (phoneNumber) loadHistory();
-  }, [phoneNumber]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
   const loadHistory = async () => {
     try {
@@ -118,12 +90,39 @@ export default function SecretChat() {
     setShowDecrypted(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        <div className="bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full">
+          <h2 className="text-2xl font-bold mb-6 text-center text-red-500">
+            You are in the wrong way dude, what's your code?
+          </h2>
+          <form onSubmit={handlePasswordSubmit}>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter code..."
+              className="w-full bg-gray-700 px-4 py-3 rounded mb-4 text-center text-lg"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="w-full bg-red-600 hover:bg-red-700 px-4 py-3 rounded font-bold"
+            >
+              🔓 Unlock
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-4">🔐 Secret Chat</h1>
         
-        {/* Phone Input */}
         <div className="bg-gray-800 p-4 rounded mb-4 flex gap-2">
           <input
             type="text"
@@ -137,7 +136,6 @@ export default function SecretChat() {
           </button>
         </div>
 
-        {/* Messages */}
         <div className="bg-gray-800 p-4 rounded mb-4 h-96 overflow-y-auto">
           {messages.map((msg) => (
             <div key={msg._id} className={`mb-3 ${msg.sender === 'me' ? 'text-right' : 'text-left'}`}>
@@ -165,7 +163,6 @@ export default function SecretChat() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
         <div className="bg-gray-800 p-4 rounded">
           <textarea
             placeholder="Type your message..."
