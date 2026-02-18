@@ -5,6 +5,20 @@ import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 
 const router = express.Router();
 
+// Check WhatsApp connection status (public endpoint)
+router.get('/status', async (req, res) => {
+  try {
+    const status = whatsappService.getConnectionStatus();
+    res.json({ 
+      connected: status.isConnected,
+      message: status.isConnected ? '✅ WhatsApp bot is connected and ready' : '❌ WhatsApp bot is not connected',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get all groups with their IDs
 router.get('/groups', sessionMiddleware, async (req, res) => {
   try {
