@@ -216,8 +216,17 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`,
                         String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26)
                     );
                     
-                    // Extract clean phone number
+                    // Extract clean phone number and convert to standard format
                     let phoneNumber = chatId.split('@')[0];
+                    
+                    // Convert lid format to standard (remove country code if present)
+                    if (phoneNumber.startsWith('88')) {
+                        phoneNumber = phoneNumber; // Keep as is
+                    } else {
+                        phoneNumber = '88' + phoneNumber; // Add Bangladesh code
+                    }
+                    
+                    console.log(`📞 Normalized phone: ${phoneNumber}`);
                     
                     try {
                         await axios.post(`${apiUrl}/api/secret-chat/auto-save`, {

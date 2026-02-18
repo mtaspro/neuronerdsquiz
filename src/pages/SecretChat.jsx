@@ -140,10 +140,10 @@ export default function SecretChat() {
         <div className="bg-gray-800 p-4 rounded mb-4 flex gap-2">
           <input
             type="text"
-            placeholder="Target ID"
+            placeholder="Target ID (check logs for LID)"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
-            className="flex-1 bg-gray-700 px-3 py-2 rounded"
+            className="flex-1 bg-gray-700 px-3 py-2 rounded text-sm"
           />
           <button onClick={fetchFromWhatsApp} className="bg-green-600 px-4 py-2 rounded">
             📥 Sync
