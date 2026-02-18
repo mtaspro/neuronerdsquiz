@@ -12,7 +12,6 @@ export default function SecretChat() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
-  const [encryptedInput, setEncryptedInput] = useState('');
   const [showDecrypted, setShowDecrypted] = useState({});
   const messagesEndRef = useRef(null);
 
@@ -27,6 +26,20 @@ export default function SecretChat() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, authenticated]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && !isNaN(e.key) && e.key !== '0') {
+        e.preventDefault();
+        const index = parseInt(e.key) - 1;
+        if (messages[index]) {
+          toggleDecrypt(messages[index]._id);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [messages]);
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
@@ -56,33 +69,34 @@ export default function SecretChat() {
       await axios.post(`${API_URL}/api/secret-chat/fetch-whatsapp/${phoneNumber}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      loadHistory();
+      await loadHistory();
     } catch (error) {
       alert('Fetch failed: ' + error.message);
     }
   };
 
-  const handleEncrypt = () => {
-    setEncryptedInput(rot13(inputText));
-  };
-
-  const sendMessage = async () => {
-    if (!encryptedInput.trim()) return;
-    
-    try {
-      const token = secureStorage.getToken();
-      await axios.post(`${API_URL}/api/secret-chat/send`, {
-        phoneNumber,
-        encryptedMessage: encryptedInput
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+  const handleKeyPress = async (e) => {
+    if (e.shiftKey && e.key === 'Enter') {
+      e.preventDefault();
       
-      setInputText('');
-      setEncryptedInput('');
-      loadHistory();
-    } catch (error) {
-      alert('Send failed: ' + error.message);
+      if (!inputText.trim()) return;
+      
+      const encrypted = rot13(inputText);
+      
+      try {
+        const token = secureStorage.getToken();
+        await axios.post(`${API_URL}/api/secret-chat/send`, {
+          phoneNumber,
+          encryptedMessage: encrypted
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setInputText('');
+        await loadHistory();
+      } catch (error) {
+        alert('Send failed: ' + error.message);
+      }
     }
   };
 
@@ -137,27 +151,12 @@ export default function SecretChat() {
         </div>
 
         <div className="bg-gray-800 p-4 rounded mb-4 h-96 overflow-y-auto">
-          {messages.map((msg) => (
+          {messages.map((msg, index) => (
             <div key={msg._id} className="mb-2 text-left">
-              <div className="font-mono text-sm text-gray-300">
-                {msg.encrypted}
-                {showDecrypted[msg._id] && (
-                  <span className="ml-2 text-green-400">→ {msg.message}</span>
-                )}
-                <button 
-                  onClick={() => {
-                    const pwd = prompt('Code?');
-                    if (pwd === '2BorNot2B') {
-                      toggleDecrypt(msg._id);
-                    } else {
-                      alert('Wrong!');
-                    }
-                  }}
-                  className="ml-2 text-xs text-gray-500 hover:text-gray-300"
-                >
-                  {showDecrypted[msg._id] ? '🔒' : '🔓'}
-                </button>
-              </div>
+              <span className="text-gray-500 mr-2">{index + 1}.</span>
+              <span className="font-mono text-sm text-gray-300">
+                {showDecrypted[msg._id] ? msg.message : msg.encrypted}
+              </span>
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -165,25 +164,16 @@ export default function SecretChat() {
 
         <div className="bg-gray-800 p-4 rounded">
           <textarea
-            placeholder="Raw data..."
+            placeholder="Raw data... (Shift+Enter to send)"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            className="w-full bg-gray-700 px-3 py-2 rounded mb-2"
-            rows="2"
+            onKeyDown={handleKeyPress}
+            className="w-full bg-gray-700 px-3 py-2 rounded"
+            rows="3"
           />
-          <button onClick={handleEncrypt} className="bg-yellow-600 px-4 py-2 rounded mr-2">
-            🔐 Encode
-          </button>
-          
-          {encryptedInput && (
-            <div className="mt-3 bg-gray-700 p-3 rounded">
-              <div className="text-sm text-gray-400 mb-1">Encoded:</div>
-              <div className="font-mono mb-2">{encryptedInput}</div>
-              <button onClick={sendMessage} className="bg-green-600 px-4 py-2 rounded">
-                📤 Deploy
-              </button>
-            </div>
-          )}
+          <div className="text-xs text-gray-500 mt-2">
+            Shift+Enter: Send | Ctrl+[1-9]: Toggle decrypt
+          </div>
         </div>
       </div>
     </div>
