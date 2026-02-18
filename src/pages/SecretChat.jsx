@@ -29,11 +29,30 @@ export default function SecretChat() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.ctrlKey && !isNaN(e.key) && e.key !== '0') {
-        e.preventDefault();
-        const index = parseInt(e.key) - 1;
-        if (messages[index]) {
-          toggleDecrypt(messages[index]._id);
+      if (e.ctrlKey) {
+        // Handle Ctrl+1-9 for messages 1-9
+        if (!isNaN(e.key) && e.key !== '0') {
+          e.preventDefault();
+          const index = parseInt(e.key) - 1;
+          if (messages[index]) {
+            toggleDecrypt(messages[index]._id);
+          }
+        }
+        // Handle Ctrl+0 for 10th message
+        else if (e.key === '0') {
+          e.preventDefault();
+          if (messages[9]) {
+            toggleDecrypt(messages[9]._id);
+          }
+        }
+        // Handle Ctrl+Q,W,E,R,T,Y,U,I,O,P for messages 11-20
+        else if ('QWERTYUIOP'.includes(e.key.toUpperCase())) {
+          e.preventDefault();
+          const keyIndex = 'QWERTYUIOP'.indexOf(e.key.toUpperCase());
+          const messageIndex = 10 + keyIndex; // 11th-20th message
+          if (messages[messageIndex]) {
+            toggleDecrypt(messages[messageIndex]._id);
+          }
         }
       }
     };
@@ -172,7 +191,7 @@ export default function SecretChat() {
             rows="3"
           />
           <div className="text-xs text-gray-500 mt-2">
-            Shift+Enter: Send | Ctrl+[1-9]: Toggle decrypt
+            Shift+Enter: Send | Ctrl+[1-9,0]: 1st-10th | Ctrl+[Q-P]: 11th-20th
           </div>
         </div>
       </div>

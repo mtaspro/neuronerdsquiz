@@ -22,7 +22,7 @@ router.get('/history/:phoneNumber', sessionMiddleware, async (req, res) => {
     
     console.log('🔍 Searching DB for:', phoneNumber);
     
-    const limit = parseInt(req.query.limit) || 50;
+    const limit = parseInt(req.query.limit) || 20; // Default to 20
     
     const messages = await SecretChat.find({ 
       phoneNumber: { $regex: `^${phoneNumber}` } 
@@ -30,9 +30,9 @@ router.get('/history/:phoneNumber', sessionMiddleware, async (req, res) => {
       .sort({ timestamp: -1 })
       .limit(limit);
     
-    console.log(`✅ Found ${messages.length} messages`);
-    messages.forEach(msg => {
-      console.log(`  - ${msg.sender}: ${msg.encrypted.substring(0, 20)}...`);
+    console.log(`✅ Found ${messages.length} messages (showing last ${limit})`);
+    messages.forEach((msg, index) => {
+      console.log(`  ${index + 1}. ${msg.sender}: ${msg.encrypted.substring(0, 20)}...`);
     });
     
     res.json({ messages: messages.reverse() });
@@ -52,7 +52,7 @@ router.post('/send', sessionMiddleware, async (req, res) => {
     
     const decrypted = rot13(encryptedMessage);
     
-    // Save to DB
+    // Save to DB with the LID format
     await SecretChat.create({
       phoneNumber,
       message: decrypted,
@@ -60,8 +60,16 @@ router.post('/send', sessionMiddleware, async (req, res) => {
       sender: 'me'
     });
     
+    // Convert LID to real phone for sending
+    let sendToPhone = phoneNumber;
+    if (phoneNumber === '88182888733655139') {
+      sendToPhone = '8801714595090'; // Your friend's real number
+    }
+    
+    console.log(`📤 Sending to: ${sendToPhone} (saved as: ${phoneNumber})`);
+    
     // Send via WhatsApp
-    const jid = phoneNumber.includes('@') ? phoneNumber : `${phoneNumber}@s.whatsapp.net`;
+    const jid = sendToPhone.includes('@') ? sendToPhone : `${sendToPhone}@s.whatsapp.net`;
     await whatsappService.sendMessage(jid, decrypted);
     
     res.json({ success: true });
