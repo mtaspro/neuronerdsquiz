@@ -40,6 +40,7 @@ import { startProgressReminderService } from './services/progressReminderService
 import progressRouter from './routes/progress.js';
 import WhatsAppSettings from './models/WhatsAppSettings.js';
 import UserScore from './models/UserScore.js';
+import secretChatRouter from './routes/secret-chat.js';
 
 console.log('Auth router imported:', !!authRouter);
 console.log('Auth router type:', typeof authRouter);
@@ -911,6 +912,8 @@ console.log('Mounting notepad router...');
 app.use('/api/notepad', notepadRouter);
 console.log('Mounting progress router...');
 app.use('/api/progress', progressRouter);
+console.log('Mounting secret chat router...');
+app.use('/api/secret-chat', secretChatRouter);
 console.log('All routers mounted successfully');
 
 // Test route for API connectivity

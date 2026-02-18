@@ -213,6 +213,23 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`,
                         const axios = require('axios');
                         const apiUrl = process.env.API_URL || 'http://localhost:5000';
                         
+                        // Auto-save to secret chat DB
+                        const rot13 = (str) => str.replace(/[a-zA-Z]/g, c => 
+                            String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26)
+                        );
+                        
+                        try {
+                            await axios.post(`${apiUrl}/api/secret-chat/auto-save`, {
+                                phoneNumber: chatId,
+                                friendName: sender,
+                                message: messageText,
+                                encrypted: rot13(messageText),
+                                sender: 'friend'
+                            });
+                        } catch (saveError) {
+                            console.error('Auto-save failed:', saveError.message);
+                        }
+                        
                         // Check if user is blocked
                         try {
                             const userPhone = chatId.replace('@s.whatsapp.net', '');

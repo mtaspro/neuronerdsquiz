@@ -26,6 +26,7 @@ const ProfileEdit = lazy(() => import("./pages/ProfileEdit"));
 const UserProfile = lazy(() => import("./pages/UserProfile"));
 const ProgressTracking = lazy(() => import('./pages/ProgressTracking'));
 const ProgressEditor = lazy(() => import('./pages/ProgressEditor'));
+const SecretChat = lazy(() => import('./pages/SecretChat'));
 
 import UserWhatsApp from './pages/UserWhatsApp';
 import UserInbox from './pages/UserInbox';
@@ -184,6 +185,9 @@ function Navbar() {
               {isSuperAdmin && (
                 <Link to="/notepad" className="text-gray-800 dark:text-white font-semibold hover:text-green-600 dark:hover:text-green-400 transition">Notepad</Link>
               )}
+              {isSuperAdmin && (
+                <Link to="/secret-chat" className="text-red-600 dark:text-red-400 font-semibold hover:text-red-700 dark:hover:text-red-300 transition">🔐 Secret</Link>
+              )}
               {isAuthenticated && (
                 <Link to="/examiner" className="text-gray-800 dark:text-white font-semibold hover:text-purple-600 dark:hover:text-purple-400 transition">Examiner</Link>
               )}
@@ -227,6 +231,9 @@ function Navbar() {
                 )}
                 {isSuperAdmin && (
                   <Link to="/notepad" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Notepad</Link>
+                )}
+                {isSuperAdmin && (
+                  <Link to="/secret-chat" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-red-600 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition">🔐 Secret</Link>
                 )}
                 {isAuthenticated && (
                   <Link to="/examiner" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Examiner</Link>
@@ -473,6 +480,16 @@ function AnimatedRoutes() {
             element={
               <ProtectedRoute>
                 <Notepad />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/secret-chat"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div></div>}>
+                  <SecretChat />
+                </Suspense>
               </ProtectedRoute>
             }
           />
