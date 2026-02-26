@@ -115,7 +115,7 @@ export default function SecretChat() {
       if (mode === 'encoder') {
         if (!inputText.trim()) return;
         const result = rot13(inputText);
-        setEncodedText(result);
+        setInputText(result); // Replace text in same box
         return;
       }
       
@@ -261,17 +261,11 @@ export default function SecretChat() {
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyPress}
                 className="w-full bg-gray-700 px-3 py-2 rounded mb-3"
-                rows="4"
+                rows="6"
               />
-              <div className="text-xs text-gray-500 mb-3">
-                Shift+Enter: Toggle encode/decode
+              <div className="text-xs text-gray-500">
+                Shift+Enter: Toggle encode/decode in same box
               </div>
-              {encodedText && (
-                <div className="bg-gray-700 p-3 rounded">
-                  <div className="text-sm text-gray-400 mb-1">Result:</div>
-                  <div className="font-mono text-green-400">{encodedText}</div>
-                </div>
-              )}
             </div>
           </>
         )}
