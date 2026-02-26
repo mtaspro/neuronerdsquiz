@@ -2,9 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { secureStorage } from '../utils/secureStorage';
 
-const rot13 = (str) => str.replace(/[a-zA-Z]/g, c => 
-  String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26)
-);
+const rot13 = (str) => {
+  return str.replace(/[a-zA-Z]/g, c => 
+    String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26)
+  ).replace(/[অ-হ]/g, c => {
+    // Bengali vowels and consonants (অ-হ)
+    const code = c.charCodeAt(0);
+    const base = 0x0985; // Start of Bengali block
+    const offset = code - base;
+    const newOffset = (offset + 13) % 53; // 53 Bengali characters
+    return String.fromCharCode(base + newOffset);
+  });
+};
 
 export default function SecretChat() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -15,29 +24,29 @@ export default function SecretChat() {
   const [inputText, setInputText] = useState('');
   const [showDecrypted, setShowDecrypted] = useState({});
   const [showFields, setShowFields] = useState(false);
+  const [mode, setMode] = useState('chat');
+  const [encodedText, setEncodedText] = useState('');
   const messagesEndRef = useRef(null);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   useEffect(() => {
-    if (authenticated && phoneNumber) {
+    if (authenticated && phoneNumber && mode === 'chat') {
       loadHistory();
-      // Auto-refresh every 3 seconds
-      const interval = setInterval(loadHistory, 2000);
+      const interval = setInterval(loadHistory, 3000);
       return () => clearInterval(interval);
     }
-  }, [phoneNumber, authenticated]);
+  }, [phoneNumber, authenticated, mode]);
 
   useEffect(() => {
-    if (authenticated) {
+    if (authenticated && mode === 'chat') {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, authenticated]);
+  }, [messages, authenticated, mode]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.ctrlKey) {
-        // Handle Ctrl+1-9 for messages 1-9
+      if (mode === 'chat' && e.ctrlKey) {
         if (!isNaN(e.key) && e.key !== '0') {
           e.preventDefault();
           const index = parseInt(e.key) - 1;
@@ -45,18 +54,16 @@ export default function SecretChat() {
             toggleDecrypt(messages[index]._id);
           }
         }
-        // Handle Ctrl+0 for 10th message
         else if (e.key === '0') {
           e.preventDefault();
           if (messages[9]) {
             toggleDecrypt(messages[9]._id);
           }
         }
-        // Handle Ctrl+Q,W,E,R,T,Y,U,I,O,P for messages 11-20
         else if ('QWERTYUIOP'.includes(e.key.toUpperCase())) {
           e.preventDefault();
           const keyIndex = 'QWERTYUIOP'.indexOf(e.key.toUpperCase());
-          const messageIndex = 10 + keyIndex; // 11th-20th message
+          const messageIndex = 10 + keyIndex;
           if (messages[messageIndex]) {
             toggleDecrypt(messages[messageIndex]._id);
           }
@@ -65,7 +72,7 @@ export default function SecretChat() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [messages]);
+  }, [messages, mode]);
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
@@ -80,7 +87,7 @@ export default function SecretChat() {
   const loadHistory = async () => {
     try {
       const token = secureStorage.getToken();
-      const res = await axios.get(`${API_URL}/api/secret-chat/history/${phoneNumber}`, {
+      const res = await axios.get(`${API_URL}/api/secret-chat/history/${phoneNumber}?limit=20`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessages(res.data.messages);
@@ -105,6 +112,13 @@ export default function SecretChat() {
     if (e.shiftKey && e.key === 'Enter') {
       e.preventDefault();
       
+      if (mode === 'encoder') {
+        if (!inputText.trim()) return;
+        const result = rot13(inputText);
+        setEncodedText(result);
+        return;
+      }
+      
       if (!inputText.trim() || !realNumber.trim()) {
         alert('Enter both Target ID and Real number');
         return;
@@ -115,8 +129,8 @@ export default function SecretChat() {
       try {
         const token = secureStorage.getToken();
         await axios.post(`${API_URL}/api/secret-chat/send`, {
-          phoneNumber, // LID for saving
-          realNumber,  // Real number for sending
+          phoneNumber,
+          realNumber,
           encryptedMessage: encrypted
         }, {
           headers: { Authorization: `Bearer ${token}` }
@@ -165,67 +179,102 @@ export default function SecretChat() {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">🔐 X-Protocol</h1>
+        <div className="flex items-center gap-4 mb-4">
+          <h1 className="text-3xl font-bold">🔐 X-Protocol</h1>
+          <button
+            onClick={() => setMode(mode === 'chat' ? 'encoder' : 'chat')}
+            className="bg-purple-600 px-4 py-2 rounded text-sm"
+          >
+            {mode === 'chat' ? '💬 Chat' : '🔐 Encoder'}
+          </button>
+        </div>
         
-        <div className="bg-gray-800 p-4 rounded mb-4">
-          <div className="flex gap-2 mb-2">
-            <button 
-              onClick={() => setShowFields(!showFields)}
-              className="bg-gray-600 px-3 py-2 rounded text-sm"
-            >
-              ⚙️ Config
-            </button>
-            <button onClick={fetchFromWhatsApp} className="bg-gray-600 px-4 py-2 rounded">
-              📥 Sync
-            </button>
-          </div>
-          {showFields && (
-            <div className="space-y-2">
-              <input
-                type="text"
-                placeholder="Target ID (LID)"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full bg-gray-700 px-3 py-2 rounded text-sm"
-              />
-              <input
-                type="text"
-                placeholder="Real number"
-                value={realNumber}
-                onChange={(e) => setRealNumber(e.target.value)}
-                className="w-full bg-gray-700 px-3 py-2 rounded text-sm"
-              />
+        {mode === 'chat' ? (
+          <>
+            <div className="bg-gray-800 p-4 rounded mb-4">
+              <div className="flex gap-2 mb-2">
+                <button 
+                  onClick={() => setShowFields(!showFields)}
+                  className="bg-gray-600 px-3 py-2 rounded text-sm"
+                >
+                  ⚙️ Config
+                </button>
+                <button onClick={fetchFromWhatsApp} className="bg-gray-600 px-4 py-2 rounded">
+                  📥 Sync
+                </button>
+              </div>
+              {showFields && (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Target ID (LID)"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="w-full bg-gray-700 px-3 py-2 rounded text-sm"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Real number"
+                    value={realNumber}
+                    onChange={(e) => setRealNumber(e.target.value)}
+                    className="w-full bg-gray-700 px-3 py-2 rounded text-sm"
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        <div className="bg-gray-800 p-4 rounded mb-4 h-96 overflow-y-auto">
-          {messages.map((msg, index) => (
-            <div key={msg._id} className="mb-2 text-left">
-              <span className="text-gray-500 mr-2">
-                {index + 1}{msg.sender === 'friend' ? "'" : ''}.
-              </span>
-              <span className="font-mono text-sm text-gray-300">
-                {showDecrypted[msg._id] ? msg.message : msg.encrypted}
-              </span>
+            <div className="bg-gray-800 p-4 rounded mb-4 h-96 overflow-y-auto">
+              {messages.map((msg, index) => (
+                <div key={msg._id} className="mb-2 text-left">
+                  <span className="text-gray-500 mr-2">
+                    {index + 1}{msg.sender === 'friend' ? "'" : ''}.
+                  </span>
+                  <span className="font-mono text-sm text-gray-300">
+                    {showDecrypted[msg._id] ? msg.message : msg.encrypted}
+                  </span>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
             </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
 
-        <div className="bg-gray-800 p-4 rounded">
-          <textarea
-            placeholder="Raw data... (Shift+Enter to send)"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={handleKeyPress}
-            className="w-full bg-gray-700 px-3 py-2 rounded"
-            rows="3"
-          />
-          <div className="text-xs text-gray-500 mt-2">
-            Shift+Enter: Send | Ctrl+[1-9,0]: 1st-10th | Ctrl+[Q-P]: 11th-20th
-          </div>
-        </div>
+            <div className="bg-gray-800 p-4 rounded">
+              <textarea
+                placeholder="Raw data... (Shift+Enter to send)"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={handleKeyPress}
+                className="w-full bg-gray-700 px-3 py-2 rounded"
+                rows="3"
+              />
+              <div className="text-xs text-gray-500 mt-2">
+                Shift+Enter: Send | Ctrl+[1-9,0]: 1st-10th | Ctrl+[Q-P]: 11th-20th
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="bg-gray-800 p-4 rounded mb-4">
+              <h2 className="text-lg font-bold mb-3">🔐 Text Encoder/Decoder</h2>
+              <textarea
+                placeholder="Enter text... (Shift+Enter to encode/decode)"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={handleKeyPress}
+                className="w-full bg-gray-700 px-3 py-2 rounded mb-3"
+                rows="4"
+              />
+              <div className="text-xs text-gray-500 mb-3">
+                Shift+Enter: Toggle encode/decode
+              </div>
+              {encodedText && (
+                <div className="bg-gray-700 p-3 rounded">
+                  <div className="text-sm text-gray-400 mb-1">Result:</div>
+                  <div className="font-mono text-green-400">{encodedText}</div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
