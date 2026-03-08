@@ -224,7 +224,7 @@ export default function Leaderboard() {
   }
 
   return (
-    <div className="min-h-screen animated-bg py-12 px-4 transition-colors duration-200 overflow-x-auto" style={{
+    <div className="min-h-screen py-12 px-4 transition-colors duration-200 overflow-x-auto" style={{
       background: 'linear-gradient(-45deg, #ff6b35, #f7931e, #00d4ff, #00ff88, #ff6b35)',
       backgroundSize: '400% 400%',
       backgroundAttachment: 'fixed',

@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+body, html {
+  background: transparent !important;
+}
+
 /* Shimmer animation for skeleton loading */
 @keyframes shimmer {
   0% {

@@ -277,7 +277,7 @@ export default function ResultScreen() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center animated-bg px-4 sm:px-6 lg:px-8 transition-colors duration-200" style={{
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 transition-colors duration-200" style={{
       background: 'linear-gradient(-45deg, #ff6b35, #f7931e, #00d4ff, #00ff88, #ff6b35)',
       backgroundSize: '400% 400%',
       backgroundAttachment: 'fixed',

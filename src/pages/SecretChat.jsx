@@ -177,7 +177,7 @@ export default function SecretChat() {
   }
 
   return (
-    <div className="min-h-screen animated-bg text-white p-4 sm:p-8" style={{
+    <div className="min-h-screen text-white p-4 sm:p-8" style={{
       background: 'linear-gradient(-45deg, #ff6b35, #f7931e, #00d4ff, #00ff88, #ff6b35)',
       backgroundSize: '400% 400%',
       backgroundAttachment: 'fixed',
