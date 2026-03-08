@@ -591,6 +591,12 @@ function AppContent() {
   return (
     <motion.div 
       className="flex flex-col min-h-screen animated-bg transition-colors duration-200"
+      style={{
+        background: 'linear-gradient(-45deg, #ff6b35, #f7931e, #00d4ff, #00ff88, #ff6b35)',
+        backgroundSize: '400% 400%',
+        backgroundAttachment: 'fixed',
+        animation: 'gradient-shift 8s ease infinite'
+      }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}

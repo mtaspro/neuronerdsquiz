@@ -1,20 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaSparkles } from 'react-icons/fa';
+import axios from 'axios';
+import { secureStorage } from '../utils/secureStorage';
 
 export default function WhatsNewModal() {
   const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const hasSeenUpdate = localStorage.getItem('whatsNewV1_seen');
-    if (!hasSeenUpdate) {
-      setTimeout(() => setIsOpen(true), 1000);
-    }
+    const checkAndShowModal = async () => {
+      try {
+        const token = secureStorage.getToken();
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await axios.get(`${apiUrl}/api/user/whats-new-status`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!response.data.hasSeenWhatsNew) {
+          setTimeout(() => setIsOpen(true), 1000);
+        }
+      } catch (error) {
+        console.error('Error checking whats-new status:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAndShowModal();
   }, []);
 
-  const handleClose = () => {
+  const handleClose = async () => {
     setIsOpen(false);
-    localStorage.setItem('whatsNewV1_seen', 'true');
+    try {
+      const token = secureStorage.getToken();
+      if (token) {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        await axios.post(`${apiUrl}/api/user/mark-whats-new-seen`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+    } catch (error) {
+      console.error('Error marking whats-new as seen:', error);
+    }
   };
 
   return (

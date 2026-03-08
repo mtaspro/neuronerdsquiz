@@ -29,7 +29,8 @@ const userSchema = new mongoose.Schema({
   phoneNumber: { type: String, default: '' },
   whatsappNotifications: { type: Boolean, default: false },
   gender: { type: String, enum: ['male', 'female'], default: null },
-  blockedFromBot: { type: Boolean, default: false }
+  blockedFromBot: { type: Boolean, default: false },
+  hasSeenWhatsNew: { type: Boolean, default: false }
 });
 
 // Hash password before saving

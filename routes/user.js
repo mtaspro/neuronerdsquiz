@@ -151,4 +151,22 @@ router.get('/profile', sessionMiddleware, async (req, res) => {
   }
 });
 
-export default router;
+// Check if user has seen what's new modal
+router.get('/whats-new-status', sessionMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('hasSeenWhatsNew');
+    res.json({ hasSeenWhatsNew: user?.hasSeenWhatsNew || false });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to check status' });
+  }
+});
+
+// Mark what's new modal as seen
+router.post('/mark-whats-new-seen', sessionMiddleware, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.user.userId, { hasSeenWhatsNew: true });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to mark as seen' });
+  }
+});
