@@ -239,77 +239,122 @@ export default function IntroScreen() {
     <div ref={containerRef} className="relative min-h-screen w-full flex flex-col items-center justify-center bg-gray-900 overflow-hidden">
 
 
-      {/* BASEBORN-Style Preloader */}
+      {/* Enhanced 2026 Preloader */}
       <AnimatePresence>
         {isLoading && (
           <motion.div
-            className="fixed inset-0 flex flex-col items-center justify-center bg-gray-950 z-[1000]"
+            className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950 z-[1000] overflow-hidden"
             initial={{ clipPath: "inset(0% 0% 0% 0%)" }}
             exit={{ 
               clipPath: "inset(0% 0% 100% 0%)",
               transition: { duration: 2, ease: [0.23, 1, 0.32, 1] }
             }}
           >
-            {/* Rotating Logo */}
+            {/* Animated Background Orbs */}
+            <motion.div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <motion.div
+                className="absolute w-96 h-96 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-full blur-3xl"
+                animate={{ x: [0, 100, 0], y: [0, 50, 0] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                style={{ top: '-10%', left: '-10%' }}
+              />
+              <motion.div
+                className="absolute w-96 h-96 bg-gradient-to-r from-pink-500/20 to-cyan-500/20 rounded-full blur-3xl"
+                animate={{ x: [0, -100, 0], y: [0, -50, 0] }}
+                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                style={{ bottom: '-10%', right: '-10%' }}
+              />
+            </motion.div>
+
+            {/* Rotating Rings */}
             <motion.div
-              className="mb-8"
+              className="mb-8 relative w-32 h-32"
               animate={{ rotate: 360 }}
               transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
             >
-              <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full" />
+              <div className="absolute inset-0 border-4 border-transparent border-t-cyan-500 border-r-purple-500 rounded-full" />
+              <motion.div
+                className="absolute inset-2 border-2 border-transparent border-b-pink-500 border-l-cyan-500 rounded-full"
+                animate={{ rotate: -360 }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              />
+              <motion.div
+                className="absolute inset-4 border border-transparent border-t-purple-400 rounded-full"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+              />
             </motion.div>
             
             {/* Text with Character Animation */}
-            <motion.div className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-8">
+            <motion.div className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-8 relative z-10">
               {textSplits.map((item, index) => (
                 <motion.span
                   key={index}
                   className="inline-block"
                   initial={{
                     clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)",
-                    transform: "translate(0%, 20%)"
+                    transform: "translate(0%, 20%)",
+                    opacity: 0
                   }}
                   animate={{
                     clipPath: "polygon(0 0%, 100% 0%, 100% 100%, 0% 100%)",
-                    transform: "translate(0%, 0%)"
+                    transform: "translate(0%, 0%)",
+                    opacity: 1
                   }}
                   transition={{
-                    duration: 2,
-                    delay: index * 0.05,
+                    duration: 0.6,
+                    delay: index * 0.04,
                     ease: [0.23, 1, 0.32, 1]
                   }}
                 >
-                  {item.char}
+                  <motion.span
+                    animate={{ color: ['#06b6d4', '#a855f7', '#ec4899', '#06b6d4'] }}
+                    transition={{ duration: 4, repeat: Infinity }}
+                  >
+                    {item.char}
+                  </motion.span>
                 </motion.span>
               ))}
             </motion.div>
             
-            {/* Progress Bar */}
-            <div className="w-48 sm:w-64 h-1 bg-gray-800 rounded-full overflow-hidden">
+            {/* Enhanced Progress Bar */}
+            <div className="w-48 sm:w-64 relative mb-6">
+              <div className="h-1 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full shadow-lg shadow-cyan-500/50"
+                  initial={{ width: "0%" }}
+                  animate={{ width: `${preloaderProgress}%` }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                />
+              </div>
               <motion.div
-                className="h-full bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full"
-                initial={{ width: "0%" }}
-                animate={{ width: `${preloaderProgress}%` }}
+                className="absolute -top-1 h-3 w-3 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full shadow-lg shadow-cyan-400/50"
+                animate={{ left: `${preloaderProgress}%` }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
+                style={{ marginLeft: '-6px' }}
               />
             </div>
             
-            {/* Progress Number */}
+            {/* Progress Number with Glow */}
             <motion.div
-              className="mt-4 text-2xl font-mono text-cyan-400"
+              className="text-3xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 relative z-10"
               key={Math.floor(preloaderProgress)}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2 }}
             >
               {Math.floor(preloaderProgress)}%
             </motion.div>
             
-            <button
+            {/* Skip Button */}
+            <motion.button
               onClick={() => setIsLoading(false)}
-              className="absolute top-4 right-4 text-cyan-300 text-sm underline hover:text-cyan-100 transition-colors"
+              className="absolute top-4 right-4 text-cyan-300 text-sm underline hover:text-cyan-100 transition-colors relative z-10"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
             >
               Skip
-            </button>
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
