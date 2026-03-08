@@ -575,7 +575,7 @@ export default function QuizPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200">
+    <div className="min-h-screen animated-bg text-gray-900 dark:text-white transition-colors duration-200">
       {/* Division Promotion Modal */}
       <DivisionPromotion
         oldDivision={promotionData?.oldDivision}

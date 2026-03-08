@@ -224,9 +224,19 @@
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* Animated Background */
+/* Animated Background - 2026 Vibes */
 .animated-bg {
-  background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f3460, #1a1a2e);
+  background: linear-gradient(-45deg, #0f172a, #1e3a8a, #7c3aed, #ec4899, #0f172a);
   background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+  position: relative;
+}
+
+.animated-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, rgba(6, 182, 212, 0.1), rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1));
   animation: gradient-shift 20s ease infinite;
+  pointer-events: none;
 }

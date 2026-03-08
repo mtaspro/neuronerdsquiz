@@ -177,7 +177,7 @@ export default function SecretChat() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 animated-bg text-white p-4 sm:p-8">
+    <div className="min-h-screen animated-bg text-white p-4 sm:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-4">
           <h1 className="text-3xl font-bold">🔐 X-Protocol</h1>

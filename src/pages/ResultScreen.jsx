@@ -277,7 +277,7 @@ export default function ResultScreen() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
+    <div className="min-h-screen flex flex-col items-center justify-center animated-bg px-4 sm:px-6 lg:px-8 transition-colors duration-200">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

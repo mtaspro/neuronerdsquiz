@@ -115,7 +115,7 @@ const Badges = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200">
+    <div className="min-h-screen animated-bg text-gray-900 dark:text-white transition-colors duration-200">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-900 to-blue-900 dark:from-gray-800 dark:to-gray-900 p-6">
         <div className="max-w-6xl mx-auto">

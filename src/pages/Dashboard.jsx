@@ -402,7 +402,7 @@ const Dashboard = () => {
 
   return (
     <GlobalLoader isLoading={isGlobalLoading} skeletonType="dashboard">
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-blue-950 dark:to-purple-950 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
+    <div className="min-h-screen animated-bg text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
       {/* Animated Background Particles with Parallax */}
       <ParallaxElement speed={0.2} className="absolute inset-0 overflow-hidden pointer-events-none">
         {particles.map((particle) => (

@@ -224,7 +224,7 @@ export default function Leaderboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 py-12 px-4 transition-colors duration-200 overflow-x-auto">
+    <div className="min-h-screen animated-bg py-12 px-4 transition-colors duration-200 overflow-x-auto">
       <div className="max-w-4xl mx-auto">
         {/* Event Banner */}
         <BattleEventBanner />
