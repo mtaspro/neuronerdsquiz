@@ -170,3 +170,5 @@ router.post('/mark-whats-new-seen', sessionMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Failed to mark as seen' });
   }
 });
+
+export default router;
