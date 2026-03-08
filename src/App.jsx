@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 import './styles/transitions.css';
 import './styles/smooth-scroll.css';
+import './styles/modern-effects.css';
 import { AnimatePresence, motion } from "framer-motion";
 import IntroScreen from "./pages/IntroScreen";
 import QuizPage from "./pages/QuizPage";
@@ -50,6 +51,7 @@ import MaintenanceOverlay from './components/MaintenanceOverlay';
 import MaintenanceNotification from './components/MaintenanceNotification';
 import { useMaintenance } from './hooks/useMaintenance';
 import { SmoothScrollProvider } from './components/SmoothScrollProvider';
+import WhatsNewModal from './components/WhatsNewModal';
 
 // Optional Navbar
 import { useState } from "react";
@@ -281,18 +283,19 @@ function AnimatedRoutes() {
   
   // Different transition variants for different routes
   const getTransitionVariant = (pathname) => {
-    if (pathname === '/') return 'slideUp';
+    if (pathname === '/') return 'zoom';
     if (pathname.includes('/quiz') || pathname.includes('/battle')) return 'slideLeft';
     if (pathname.includes('/profile') || pathname.includes('/admin')) return 'slideRight';
-    if (pathname.includes('/ai-chat')) return 'fadeScale';
+    if (pathname.includes('/ai-chat')) return 'rotate';
+    if (pathname.includes('/leaderboard') || pathname.includes('/badges')) return 'slideLeft';
     return 'fade';
   };
   
   const transitionVariants = {
     fade: {
-      initial: { opacity: 0 },
-      animate: { opacity: 1 },
-      exit: { opacity: 0 }
+      initial: { opacity: 0, filter: 'blur(10px)' },
+      animate: { opacity: 1, filter: 'blur(0px)' },
+      exit: { opacity: 0, filter: 'blur(10px)' }
     },
     slideUp: {
       initial: { opacity: 0, y: 50, scale: 0.95 },
@@ -313,6 +316,16 @@ function AnimatedRoutes() {
       initial: { opacity: 0, scale: 0.8, filter: 'blur(10px)' },
       animate: { opacity: 1, scale: 1, filter: 'blur(0px)' },
       exit: { opacity: 0, scale: 1.2, filter: 'blur(10px)' }
+    },
+    zoom: {
+      initial: { opacity: 0, scale: 0.5 },
+      animate: { opacity: 1, scale: 1 },
+      exit: { opacity: 0, scale: 1.5 }
+    },
+    rotate: {
+      initial: { opacity: 0, rotate: -10, scale: 0.8 },
+      animate: { opacity: 1, rotate: 0, scale: 1 },
+      exit: { opacity: 0, rotate: 10, scale: 0.8 }
     }
   };
   
@@ -327,11 +340,14 @@ function AnimatedRoutes() {
         animate={transition.animate}
         exit={transition.exit}
         transition={{ 
-          duration: 0.5, 
-          ease: [0.25, 0.46, 0.45, 0.94],
-          opacity: { duration: 0.3 },
-          scale: { duration: 0.4 },
-          filter: { duration: 0.3 }
+          duration: 0.6, 
+          ease: [0.34, 1.56, 0.64, 1],
+          opacity: { duration: 0.4 },
+          scale: { duration: 0.5 },
+          filter: { duration: 0.4 },
+          x: { duration: 0.5 },
+          y: { duration: 0.5 },
+          rotate: { duration: 0.5 }
         }}
         className="flex-1 min-h-0 page-transition"
         style={{ transformStyle: 'preserve-3d' }}
@@ -583,6 +599,9 @@ function AppContent() {
       <div className="flex-1 overflow-hidden">
         <AnimatedRoutes />
       </div>
+      
+      {/* What's New Modal */}
+      <WhatsNewModal />
       
       {/* Onboarding Tour */}
       <OnboardingTour
