@@ -594,12 +594,12 @@ function AppContent() {
       style={{
         background: 'linear-gradient(-45deg, #ff6b35, #f7931e, #00d4ff, #00ff88, #ff6b35)',
         backgroundSize: '400% 400%',
-        backgroundAttachment: 'fixed',
-        animation: 'gradient-shift 8s ease infinite'
+        backgroundAttachment: 'fixed'
       }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
+      className="flex flex-col min-h-screen transition-colors duration-200 animated-bg"
     >
       <Navbar />
       <div className="flex-1 overflow-hidden">
