@@ -77,6 +77,18 @@ function Navbar() {
   };
   
   React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (settingsOpen && !event.target.closest('.settings-dropdown')) {
+        console.log('🔒 Closing settings dropdown - clicked outside');
+        setSettingsOpen(false);
+      }
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [settingsOpen]);
+  
+  React.useEffect(() => {
     async function checkAuth() {
       const token = secureStorage.getToken();
       
@@ -135,9 +147,13 @@ function Navbar() {
         <div className="flex justify-between h-14 items-center">
           <div className="flex items-center space-x-4">
             {/* Settings Button - Desktop Only */}
-            <div className="hidden lg:block relative">
+            <div className="hidden lg:block relative settings-dropdown">
               <button
-                onClick={() => setSettingsOpen(!settingsOpen)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log('⚙️ Settings button clicked, current state:', settingsOpen);
+                  setSettingsOpen(!settingsOpen);
+                }}
                 className="inline-flex items-center justify-center p-2 rounded-md text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
                 aria-label="Settings"
               >
