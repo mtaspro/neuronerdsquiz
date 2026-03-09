@@ -17,7 +17,7 @@ export default function WhatsNewModal() {
         const token = secureStorage.getToken();
         if (!token) {
           setChecked(true);
-          return;
+          return; // Don't show modal for non-registered users
         }
 
         const apiUrl = import.meta.env.VITE_API_URL || '';
