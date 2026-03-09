@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaTimes, FaSparkles } from 'react-icons/fa';
+import { FaTimes, FaStar } from 'react-icons/fa';
 import axios from 'axios';
 import { secureStorage } from '../utils/secureStorage';
 
@@ -72,7 +72,7 @@ export default function WhatsNewModal() {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-gradient-to-r from-cyan-500/30 to-purple-500/30 rounded-lg">
-                  <FaSparkles className="text-cyan-400 text-xl" />
+                  <FaStar className="text-cyan-400 text-xl" />
                 </div>
                 <h2 className="text-2xl font-bold gradient-text">What's New</h2>
               </div>
