@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaStar } from 'react-icons/fa';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import axios from 'axios';
 import { secureStorage } from '../utils/secureStorage';
+
+let DotLottieReact = null;
+try {
+  const module = require('@lottiefiles/dotlottie-react');
+  DotLottieReact = module.DotLottieReact;
+} catch (e) {
+  DotLottieReact = null;
+}
 
 export default function WhatsNewModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +24,7 @@ export default function WhatsNewModal() {
         const token = secureStorage.getToken();
         if (!token) {
           setChecked(true);
-          return; // Don't show modal for non-registered users
+          return;
         }
 
         const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -62,7 +69,7 @@ export default function WhatsNewModal() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-md z-40"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-40 pointer-events-none"
             onClick={handleClose}
           />
           
@@ -72,18 +79,29 @@ export default function WhatsNewModal() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="fixed top-1/2 left-1/2 z-50 w-full max-w-md mx-4"
+            className="fixed top-1/2 left-1/2 z-50 w-full max-w-md mx-4 pointer-events-auto"
             style={{ transform: 'translate(-50%, -50%)' }}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="glass rounded-2xl p-8 border border-cyan-500/30 shadow-2xl">
-              {/* Cute Doggy Animation */}
+              {/* Cute Doggy Animation or Fallback */}
               <div className="flex justify-center mb-6 -mx-8 -mt-8 bg-black/40 rounded-t-2xl py-4">
-                <div className="w-32 h-32">
-                  <DotLottieReact
-                    src="https://lottie.host/8fbc7853-f51c-48ca-a55d-44b79e3c4e50/EnNpLry7Oz.json"
-                    loop
-                    autoplay
-                  />
+                <div className="w-32 h-32 flex items-center justify-center">
+                  {DotLottieReact ? (
+                    <DotLottieReact
+                      src="https://lottie.host/8fbc7853-f51c-48ca-a55d-44b79e3c4e50/EnNpLry7Oz.json"
+                      loop
+                      autoplay
+                    />
+                  ) : (
+                    <motion.div
+                      className="text-6xl"
+                      animate={{ y: [0, -10, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      🐕
+                    </motion.div>
+                  )}
                 </div>
               </div>
 
