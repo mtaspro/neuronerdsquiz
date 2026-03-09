@@ -20,24 +20,34 @@ export default function WhatsNewModal() {
     if (checked) return;
     
     const checkAndShowModal = async () => {
+      console.log('🔍 WhatsNewModal: Checking modal status...');
       try {
         const token = secureStorage.getToken();
         if (!token) {
+          console.log('❌ WhatsNewModal: No token found, skipping modal for non-registered user');
           setChecked(true);
           return;
         }
 
+        console.log('✅ WhatsNewModal: Token found, checking backend status');
         const apiUrl = import.meta.env.VITE_API_URL || '';
         const response = await axios.get(`${apiUrl}/api/user/whats-new-status`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
+        console.log('📊 WhatsNewModal: Backend response:', response.data);
         if (!response.data.hasSeenWhatsNew) {
-          setTimeout(() => setIsOpen(true), 1500);
+          console.log('🎉 WhatsNewModal: User hasn\'t seen modal, showing in 1.5s');
+          setTimeout(() => {
+            console.log('🚀 WhatsNewModal: Opening modal now!');
+            setIsOpen(true);
+          }, 1500);
+        } else {
+          console.log('✋ WhatsNewModal: User already seen modal, skipping');
         }
         setChecked(true);
       } catch (error) {
-        console.error('Error checking whats-new status:', error);
+        console.error('❌ WhatsNewModal: Error checking status:', error);
         setChecked(true);
       }
     };
@@ -46,6 +56,7 @@ export default function WhatsNewModal() {
   }, [checked]);
 
   const handleClose = async () => {
+    console.log('🔒 WhatsNewModal: Closing modal and marking as seen');
     setIsOpen(false);
     try {
       const token = secureStorage.getToken();
@@ -54,9 +65,10 @@ export default function WhatsNewModal() {
         await axios.post(`${apiUrl}/api/user/mark-whats-new-seen`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        console.log('✅ WhatsNewModal: Successfully marked as seen in database');
       }
     } catch (error) {
-      console.error('Error marking whats-new as seen:', error);
+      console.error('❌ WhatsNewModal: Error marking as seen:', error);
     }
   };
 
@@ -69,38 +81,44 @@ export default function WhatsNewModal() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-md z-40 pointer-events-none"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-40"
             onClick={handleClose}
           />
           
-          {/* Modal - Fixed Position at Center */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="fixed top-1/2 left-1/2 z-50 w-full max-w-md mx-4 pointer-events-auto"
-            style={{ transform: 'translate(-50%, -50%)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
+          {/* Modal Container - Fixed Position at Center */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+              className="w-full max-w-md"
+              onClick={(e) => e.stopPropagation()}
+            >
             <div className="glass rounded-2xl p-8 border border-cyan-500/30 shadow-2xl">
               {/* Cute Doggy Animation or Fallback */}
               <div className="flex justify-center mb-6 -mx-8 -mt-8 bg-black/40 rounded-t-2xl py-4">
                 <div className="w-32 h-32 flex items-center justify-center">
                   {DotLottieReact ? (
-                    <DotLottieReact
-                      src="https://lottie.host/8fbc7853-f51c-48ca-a55d-44b79e3c4e50/EnNpLry7Oz.json"
-                      loop
-                      autoplay
-                    />
+                    <>
+                      {console.log('🐶 WhatsNewModal: Lottie animation loaded successfully')}
+                      <DotLottieReact
+                        src="https://lottie.host/8fbc7853-f51c-48ca-a55d-44b79e3c4e50/EnNpLry7Oz.json"
+                        loop
+                        autoplay
+                      />
+                    </>
                   ) : (
-                    <motion.div
-                      className="text-6xl"
-                      animate={{ y: [0, -10, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      🐕
-                    </motion.div>
+                    <>
+                      {console.log('🐕 WhatsNewModal: Using fallback emoji animation')}
+                      <motion.div
+                        className="text-6xl"
+                        animate={{ y: [0, -10, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      >
+                        🐕
+                      </motion.div>
+                    </>
                   )}
                 </div>
               </div>
@@ -171,6 +189,7 @@ export default function WhatsNewModal() {
               </button>
             </div>
           </motion.div>
+        </div>
         </>
       )}
     </AnimatePresence>
