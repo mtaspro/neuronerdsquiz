@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaStar } from 'react-icons/fa';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import axios from 'axios';
 import { secureStorage } from '../utils/secureStorage';
 
@@ -71,9 +72,21 @@ export default function WhatsNewModal() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md mx-4"
+            className="fixed top-1/2 left-1/2 z-50 w-full max-w-md mx-4"
+            style={{ transform: 'translate(-50%, -50%)' }}
           >
             <div className="glass rounded-2xl p-8 border border-cyan-500/30 shadow-2xl">
+              {/* Cute Doggy Animation */}
+              <div className="flex justify-center mb-6 -mx-8 -mt-8 bg-black/40 rounded-t-2xl py-4">
+                <div className="w-32 h-32">
+                  <DotLottieReact
+                    src="https://lottie.host/8fbc7853-f51c-48ca-a55d-44b79e3c4e50/EnNpLry7Oz.json"
+                    loop
+                    autoplay
+                  />
+                </div>
+              </div>
+
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
