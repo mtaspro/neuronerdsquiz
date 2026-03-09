@@ -142,7 +142,7 @@ function Navbar() {
   }, []);
 
   return (
-    <nav className="w-full bg-white dark:bg-gray-900 shadow-md z-20 border-b border-gray-200 dark:border-gray-700">
+    <nav className="w-full bg-white dark:bg-gray-900 shadow-md z-[100] border-b border-gray-200 dark:border-gray-700 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-14 items-center">
           <div className="flex items-center space-x-4">
@@ -161,7 +161,7 @@ function Navbar() {
               </button>
               {/* Settings Dropdown */}
               {settingsOpen && (
-                <div className="absolute top-12 left-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-48 z-50">
+                <div className="absolute top-12 left-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-48 z-[9999]">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Dark Mode</span>
@@ -228,7 +228,7 @@ function Navbar() {
       </div>
       {/* Mobile Menu Overlay */}
       {menuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setMenuOpen(false)}>
+        <div className="lg:hidden fixed inset-0 z-[9999] bg-black bg-opacity-50" onClick={() => setMenuOpen(false)}>
           <div className="absolute top-14 right-0 w-80 max-w-sm bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 shadow-lg h-full" onClick={(e) => e.stopPropagation()}>
             <div className="p-4">
               <div className="space-y-2">

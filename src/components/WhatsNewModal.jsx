@@ -86,15 +86,16 @@ export default function WhatsNewModal() {
           />
           
           {/* Modal Container - Fixed Position at Center */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 20 }}
-              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-              className="w-full max-w-md"
-              onClick={(e) => e.stopPropagation()}
-            >
+          <div className="fixed inset-0 z-50 pointer-events-none">
+            <div className="flex items-center justify-center min-h-screen p-4 pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                className="w-full max-w-md pointer-events-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
             <div className="glass rounded-2xl p-8 border border-cyan-500/30 shadow-2xl">
               {/* Cute Doggy Animation or Fallback */}
               <div className="flex justify-center mb-6 -mx-8 -mt-8 bg-black/40 rounded-t-2xl py-4">
@@ -190,6 +191,7 @@ export default function WhatsNewModal() {
             </div>
           </motion.div>
         </div>
+      </div>
         </>
       )}
     </AnimatePresence>
