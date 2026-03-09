@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaStar } from 'react-icons/fa';
 import axios from 'axios';
@@ -72,30 +73,28 @@ export default function WhatsNewModal() {
     }
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Blurred Background - Fixed Position */}
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          {/* Blurred Background */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-md z-40"
+            className="absolute inset-0 bg-black/60 backdrop-blur-md"
             onClick={handleClose}
           />
           
-          {/* Modal Container - Fixed Position at Center */}
-          <div className="fixed inset-0 z-50 pointer-events-none">
-            <div className="flex items-center justify-center min-h-screen p-4 pointer-events-none">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-                className="w-full max-w-md pointer-events-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
+          {/* Modal Content */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            className="relative w-full max-w-md z-10"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="glass rounded-2xl p-8 border border-cyan-500/30 shadow-2xl">
               {/* Cute Doggy Animation or Fallback */}
               <div className="flex justify-center mb-6 -mx-8 -mt-8 bg-black/40 rounded-t-2xl py-4">
@@ -191,9 +190,8 @@ export default function WhatsNewModal() {
             </div>
           </motion.div>
         </div>
-      </div>
-        </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
