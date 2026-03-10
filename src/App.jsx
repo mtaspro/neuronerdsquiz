@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
+import { createPortal } from 'react-dom';
 import './styles/transitions.css';
 import './styles/smooth-scroll.css';
 import './styles/modern-effects.css';
@@ -159,9 +160,15 @@ function Navbar() {
               >
                 <FaCog className="h-5 w-5" />
               </button>
-              {/* Settings Dropdown */}
-              {settingsOpen && (
-                <div className="absolute top-12 left-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-48 z-[99999]">
+              {/* Settings Dropdown - Portal to body */}
+              {settingsOpen && createPortal(
+                <div 
+                  className="fixed bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-48 z-[99999]"
+                  style={{
+                    top: '56px', // Below navbar height
+                    left: '16px' // Align with settings button
+                  }}
+                >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Dark Mode</span>
@@ -180,7 +187,8 @@ function Navbar() {
                       </button>
                     </div>
                   </div>
-                </div>
+                </div>,
+                document.body
               )}
             </div>
             <div className="hidden lg:flex lg:space-x-4">
@@ -226,8 +234,8 @@ function Navbar() {
           </button>
         </div>
       </div>
-      {/* Mobile Menu Overlay */}
-      {menuOpen && (
+      {/* Mobile Menu Overlay - Portal to body */}
+      {menuOpen && createPortal(
         <div className="lg:hidden fixed inset-0 z-[99999] bg-black bg-opacity-50" onClick={() => setMenuOpen(false)}>
           <div className="absolute top-14 right-0 w-80 max-w-sm bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 shadow-lg h-full" onClick={(e) => e.stopPropagation()}>
             <div className="p-4">
@@ -279,7 +287,8 @@ function Navbar() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
       
       {/* Theme Selector Modal */}
