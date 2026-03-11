@@ -56,7 +56,14 @@ async function startWhatsAppBot() {
 
         // Listen for incoming messages
         socket.ev.on('messages.upsert', async (m) => {
+            console.log(`\n📨 [MESSAGE EVENT] Type: ${m.type}, Messages count: ${m.messages.length}`);
+            
             const message = m.messages[0];
+            console.log(`📨 [MESSAGE DETAILS] fromMe: ${message.key.fromMe}, messageType: ${m.type}`);
+            console.log(`📨 [MESSAGE DETAILS] remoteJid: ${message.key.remoteJid}`);
+            console.log(`📨 [MESSAGE DETAILS] hasConversation: ${!!message.message?.conversation}`);
+            console.log(`📨 [MESSAGE DETAILS] hasExtendedText: ${!!message.message?.extendedTextMessage}`);
+            
             if (!message.key.fromMe && m.type === 'notify') {
                 const messageText = message.message?.conversation || 
                                    message.message?.extendedTextMessage?.text || '';
