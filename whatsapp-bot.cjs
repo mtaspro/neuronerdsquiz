@@ -64,7 +64,8 @@ async function startWhatsAppBot() {
             console.log(`📨 [MESSAGE DETAILS] hasConversation: ${!!message.message?.conversation}`);
             console.log(`📨 [MESSAGE DETAILS] hasExtendedText: ${!!message.message?.extendedTextMessage}`);
             
-            if (!message.key.fromMe && m.type === 'notify') {
+            // Process all incoming messages (not from bot) - removed m.type === 'notify' filter
+            if (!message.key.fromMe) {
                 const messageText = message.message?.conversation || 
                                    message.message?.extendedTextMessage?.text || '';
                 const sender = message.pushName || 'Unknown';
