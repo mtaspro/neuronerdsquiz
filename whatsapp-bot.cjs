@@ -216,27 +216,38 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`,
                         String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26)
                     );
                     
-                    // Extract clean phone number and convert to standard format
-                    let phoneNumber = chatId.split('@')[0];
+                    // Extract clean phone number from sender
+                    let senderNumber = chatId.split('@')[0];
                     
-                    // Convert lid format to standard (remove country code if present)
-                    if (phoneNumber.startsWith('88')) {
-                        phoneNumber = phoneNumber; // Keep as is
-                    } else {
-                        phoneNumber = '88' + phoneNumber; // Add Bangladesh code
+                    // Normalize sender number (add 88 if not present)
+                    if (!senderNumber.startsWith('88')) {
+                        senderNumber = '88' + senderNumber;
                     }
                     
-                    console.log(`📞 Normalized phone: ${phoneNumber}`);
+                    console.log(`📞 Sender number: ${senderNumber}`);
                     
                     try {
+                        // Find which LID this sender number belongs to by checking existing conversations
+                        const findLidResponse = await axios.get(`${apiUrl}/api/secret-chat/find-lid/${senderNumber}`);
+                        
+                        let targetLid = null;
+                        if (findLidResponse.data.success && findLidResponse.data.lid) {
+                            targetLid = findLidResponse.data.lid;
+                            console.log(`🎯 Found existing LID: ${targetLid} for sender: ${senderNumber}`);
+                        } else {
+                            // If no existing conversation, use sender's number as LID (fallback)
+                            targetLid = senderNumber;
+                            console.log(`⚠️ No existing LID found, using sender number as LID: ${targetLid}`);
+                        }
+                        
                         await axios.post(`${apiUrl}/api/secret-chat/auto-save`, {
-                            phoneNumber: phoneNumber,
+                            phoneNumber: targetLid, // Use the found LID or sender number
                             friendName: sender,
                             message: messageText,
                             encrypted: rot13(messageText),
                             sender: 'friend'
                         });
-                        console.log(`📨 Saved message from ${sender} (${phoneNumber})`);
+                        console.log(`📨 Saved message from ${sender} (${senderNumber}) under LID: ${targetLid}`);
                     } catch (saveError) {
                         console.error('Auto-save failed:', saveError.message);
                     }

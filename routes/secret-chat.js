@@ -50,11 +50,17 @@ router.post('/send', sessionMiddleware, async (req, res) => {
     // Normalize phone number for saving
     phoneNumber = phoneNumber.split('@')[0];
     
+    // Normalize real number
+    if (!realNumber.startsWith('88')) {
+      realNumber = '88' + realNumber;
+    }
+    
     const decrypted = rot13(encryptedMessage);
     
     // Save to DB with LID format
     await SecretChat.create({
       phoneNumber, // LID format
+      realNumber, // Store real number for mapping
       message: decrypted,
       encrypted: encryptedMessage,
       sender: 'me'
@@ -117,6 +123,33 @@ router.post('/fetch-whatsapp/:phoneNumber', sessionMiddleware, async (req, res) 
       message: 'Showing existing messages from database'
     });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Find LID for a sender number (used by WhatsApp bot)
+router.get('/find-lid/:senderNumber', async (req, res) => {
+  try {
+    const { senderNumber } = req.params;
+    
+    console.log('🔍 Finding LID for sender:', senderNumber);
+    
+    // Look for any message where this sender number was used as realNumber
+    const existingMessage = await SecretChat.findOne({
+      realNumber: senderNumber,
+      sender: 'me'
+    }).sort({ timestamp: -1 });
+    
+    if (existingMessage) {
+      console.log('✅ Found LID mapping:', existingMessage.phoneNumber, 'for real number:', senderNumber);
+      return res.json({ success: true, lid: existingMessage.phoneNumber });
+    }
+    
+    // If no mapping found, return null
+    console.log('❌ No LID mapping found for sender:', senderNumber);
+    res.json({ success: false, lid: null });
+  } catch (error) {
+    console.error('❌ Find LID error:', error);
     res.status(500).json({ error: error.message });
   }
 });
