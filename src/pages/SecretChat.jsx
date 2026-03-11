@@ -33,8 +33,9 @@ export default function SecretChat() {
   useEffect(() => {
     if (authenticated && phoneNumber && mode === 'chat') {
       loadHistory();
-      const interval = setInterval(loadHistory, 3000);
-      return () => clearInterval(interval);
+      // Disabled frequent sync for debugging
+      // const interval = setInterval(loadHistory, 3000);
+      // return () => clearInterval(interval);
     }
   }, [phoneNumber, authenticated, mode]);
 
