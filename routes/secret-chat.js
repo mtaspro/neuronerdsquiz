@@ -15,12 +15,13 @@ router.get('/history/:phoneNumber', sessionMiddleware, async (req, res) => {
   try {
     let { phoneNumber } = req.params;
     
-    console.log('📥 History request for:', phoneNumber);
+    console.log('📥 [HISTORY] Request for phoneNumber:', phoneNumber);
     
     // Normalize phone number - remove @ and everything after it
     phoneNumber = phoneNumber.split('@')[0];
     
-    console.log('🔍 Searching DB for:', phoneNumber);
+    console.log('🔍 [HISTORY] Normalized phoneNumber:', phoneNumber);
+    console.log('🔍 [HISTORY] Searching DB with regex: ^' + phoneNumber);
     
     const limit = parseInt(req.query.limit) || 20; // Default to 20
     
@@ -30,14 +31,31 @@ router.get('/history/:phoneNumber', sessionMiddleware, async (req, res) => {
       .sort({ timestamp: -1 })
       .limit(limit);
     
-    console.log(`✅ Found ${messages.length} messages (showing last ${limit})`);
-    messages.forEach((msg, index) => {
-      console.log(`  ${index + 1}. ${msg.sender}: ${msg.encrypted.substring(0, 20)}...`);
-    });
+    console.log(`✅ [HISTORY] Found ${messages.length} messages (showing last ${limit})`);
+    
+    if (messages.length > 0) {
+      console.log('📊 [HISTORY] Sample messages:');
+      messages.slice(0, 3).forEach((msg, index) => {
+        console.log(`  ${index + 1}. ID: ${msg._id}`);
+        console.log(`     phoneNumber: ${msg.phoneNumber}`);
+        console.log(`     sender: ${msg.sender}`);
+        console.log(`     message: ${msg.message.substring(0, 30)}...`);
+        console.log(`     timestamp: ${msg.timestamp}`);
+      });
+    } else {
+      console.log('⚠️ [HISTORY] No messages found! Checking what exists in DB...');
+      
+      // Debug: Show all messages in DB
+      const allMessages = await SecretChat.find({}).limit(5).sort({ timestamp: -1 });
+      console.log('📊 [HISTORY] Recent messages in DB:');
+      allMessages.forEach((msg, index) => {
+        console.log(`  ${index + 1}. phoneNumber: ${msg.phoneNumber}, sender: ${msg.sender}`);
+      });
+    }
     
     res.json({ messages: messages.reverse() });
   } catch (error) {
-    console.error('❌ History error:', error);
+    console.error('❌ [HISTORY] Error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -83,7 +101,13 @@ router.post('/auto-save', async (req, res) => {
   try {
     const { phoneNumber, friendName, message, encrypted, sender } = req.body;
     
-    console.log('💾 Auto-save request:', { phoneNumber, sender, messagePreview: message.substring(0, 20) });
+    console.log('💾 [AUTO-SAVE] Incoming request:', {
+      phoneNumber,
+      friendName,
+      messagePreview: message.substring(0, 20) + '...',
+      encryptedPreview: encrypted.substring(0, 20) + '...',
+      sender
+    });
     
     const saved = await SecretChat.create({
       phoneNumber,
@@ -93,11 +117,18 @@ router.post('/auto-save', async (req, res) => {
       sender
     });
     
-    console.log('✅ Saved to DB with ID:', saved._id);
+    console.log('✅ [AUTO-SAVE] Successfully saved to DB with ID:', saved._id);
+    console.log('📊 [AUTO-SAVE] Saved document:', {
+      _id: saved._id,
+      phoneNumber: saved.phoneNumber,
+      friendName: saved.friendName,
+      sender: saved.sender,
+      timestamp: saved.timestamp
+    });
     
-    res.json({ success: true });
+    res.json({ success: true, savedId: saved._id });
   } catch (error) {
-    console.error('❌ Auto-save error:', error);
+    console.error('❌ [AUTO-SAVE] Error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -132,7 +163,7 @@ router.get('/find-lid/:senderNumber', async (req, res) => {
   try {
     const { senderNumber } = req.params;
     
-    console.log('🔍 Finding LID for sender:', senderNumber);
+    console.log('🔍 [FIND-LID] Searching for LID with sender number:', senderNumber);
     
     // Look for any message where this sender number was used as realNumber
     const existingMessage = await SecretChat.findOne({
@@ -140,16 +171,35 @@ router.get('/find-lid/:senderNumber', async (req, res) => {
       sender: 'me'
     }).sort({ timestamp: -1 });
     
+    console.log('🔍 [FIND-LID] Database query result:', existingMessage ? 'FOUND' : 'NOT FOUND');
+    
     if (existingMessage) {
-      console.log('✅ Found LID mapping:', existingMessage.phoneNumber, 'for real number:', senderNumber);
+      console.log('✅ [FIND-LID] Found LID mapping:', existingMessage.phoneNumber, 'for real number:', senderNumber);
+      console.log('📊 [FIND-LID] Full message details:', {
+        _id: existingMessage._id,
+        phoneNumber: existingMessage.phoneNumber,
+        realNumber: existingMessage.realNumber,
+        sender: existingMessage.sender,
+        timestamp: existingMessage.timestamp
+      });
       return res.json({ success: true, lid: existingMessage.phoneNumber });
     }
     
     // If no mapping found, return null
-    console.log('❌ No LID mapping found for sender:', senderNumber);
+    console.log('❌ [FIND-LID] No LID mapping found for sender:', senderNumber);
+    console.log('🔍 [FIND-LID] Checking all existing messages with realNumber field...');
+    
+    // Debug: Show all messages with realNumber field
+    const allWithRealNumber = await SecretChat.find({ realNumber: { $exists: true } }).limit(5);
+    console.log('📊 [FIND-LID] Sample messages with realNumber:', allWithRealNumber.map(m => ({
+      phoneNumber: m.phoneNumber,
+      realNumber: m.realNumber,
+      sender: m.sender
+    })));
+    
     res.json({ success: false, lid: null });
   } catch (error) {
-    console.error('❌ Find LID error:', error);
+    console.error('❌ [FIND-LID] Error:', error);
     res.status(500).json({ error: error.message });
   }
 });

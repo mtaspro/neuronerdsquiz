@@ -219,37 +219,59 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`,
                     // Extract clean phone number from sender
                     let senderNumber = chatId.split('@')[0];
                     
+                    console.log(`🔍 RAW CHAT ID: ${chatId}`);
+                    console.log(`🔍 EXTRACTED SENDER: ${senderNumber}`);
+                    
                     // Normalize sender number (add 88 if not present)
                     if (!senderNumber.startsWith('88')) {
                         senderNumber = '88' + senderNumber;
+                        console.log(`➕ ADDED 88 PREFIX: ${senderNumber}`);
+                    } else {
+                        console.log(`✅ ALREADY HAS 88: ${senderNumber}`);
                     }
                     
-                    console.log(`📞 Sender number: ${senderNumber}`);
+                    console.log(`📞 FINAL SENDER NUMBER: ${senderNumber}`);
+                    console.log(`👤 SENDER NAME: ${sender}`);
+                    console.log(`💬 MESSAGE: ${messageText}`);
                     
                     try {
+                        console.log(`🔍 CALLING FIND-LID API FOR: ${senderNumber}`);
+                        
                         // Find which LID this sender number belongs to by checking existing conversations
                         const findLidResponse = await axios.get(`${apiUrl}/api/secret-chat/find-lid/${senderNumber}`);
+                        
+                        console.log(`📊 FIND-LID RESPONSE:`, findLidResponse.data);
                         
                         let targetLid = null;
                         if (findLidResponse.data.success && findLidResponse.data.lid) {
                             targetLid = findLidResponse.data.lid;
-                            console.log(`🎯 Found existing LID: ${targetLid} for sender: ${senderNumber}`);
+                            console.log(`🎯 FOUND EXISTING LID: ${targetLid} for sender: ${senderNumber}`);
                         } else {
                             // If no existing conversation, use sender's number as LID (fallback)
                             targetLid = senderNumber;
-                            console.log(`⚠️ No existing LID found, using sender number as LID: ${targetLid}`);
+                            console.log(`⚠️ NO EXISTING LID FOUND, USING SENDER NUMBER AS LID: ${targetLid}`);
                         }
                         
-                        await axios.post(`${apiUrl}/api/secret-chat/auto-save`, {
-                            phoneNumber: targetLid, // Use the found LID or sender number
+                        const encryptedMessage = rot13(messageText);
+                        console.log(`🔐 ENCRYPTED MESSAGE: ${encryptedMessage}`);
+                        
+                        const savePayload = {
+                            phoneNumber: targetLid,
                             friendName: sender,
                             message: messageText,
-                            encrypted: rot13(messageText),
+                            encrypted: encryptedMessage,
                             sender: 'friend'
-                        });
-                        console.log(`📨 Saved message from ${sender} (${senderNumber}) under LID: ${targetLid}`);
+                        };
+                        
+                        console.log(`💾 SAVING TO DB WITH PAYLOAD:`, savePayload);
+                        
+                        const saveResponse = await axios.post(`${apiUrl}/api/secret-chat/auto-save`, savePayload);
+                        
+                        console.log(`✅ AUTO-SAVE RESPONSE:`, saveResponse.data);
+                        console.log(`📨 SUCCESSFULLY SAVED MESSAGE FROM ${sender} (${senderNumber}) UNDER LID: ${targetLid}`);
                     } catch (saveError) {
-                        console.error('Auto-save failed:', saveError.message);
+                        console.error('❌ AUTO-SAVE FAILED:', saveError.message);
+                        console.error('❌ FULL ERROR:', saveError.response?.data || saveError);
                     }
                     
                     // No AI reply - just save the message
