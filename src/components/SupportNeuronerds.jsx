@@ -1,22 +1,28 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaCopy, FaCheck } from 'react-icons/fa';
 import QRCode from 'qrcode';
-import { useNotification } from '../hooks/useNotification';
 
 export default function SupportNeuronerds() {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [customAmount, setCustomAmount] = useState('');
   const [qrDataUrl, setQrDataUrl] = useState('');
-  const { showNotification } = useNotification();
+  const [mounted, setMounted] = useState(false);
 
   const bkashNumber = '01711279638';
+
+  // Ensure component mounts on client side
+  useEffect(() => {
+    setMounted(true);
+    console.log('✅ SupportNeuronerds component mounted');
+  }, []);
 
   // Generate QR code when modal opens
   useEffect(() => {
     if (isOpen && !qrDataUrl) {
+      console.log('🔄 Generating QR code...');
       QRCode.toDataURL(bkashNumber, {
         errorCorrectionLevel: 'H',
         type: 'image/png',
@@ -28,9 +34,10 @@ export default function SupportNeuronerds() {
           light: '#FFFFFF'
         }
       }).then(url => {
+        console.log('✅ QR code generated successfully');
         setQrDataUrl(url);
       }).catch(err => {
-        console.error('QR Code generation failed:', err);
+        console.error('❌ QR Code generation failed:', err);
       });
     }
   }, [isOpen, qrDataUrl]);
@@ -41,40 +48,30 @@ export default function SupportNeuronerds() {
     { amount: 100, emoji: '🚀', name: 'Legendary Coffee', description: 'Fuel for epic features' },
   ];
 
+  const showToast = (message) => {
+    console.log('📢 Toast:', message);
+    // Simple alert as fallback
+    alert(message);
+  };
+
   const handleCopyNumber = async () => {
     try {
       await navigator.clipboard.writeText(bkashNumber);
       setCopied(true);
-      showNotification({
-        type: 'success',
-        message: '☕ Number copied! You\'re awesome 😎',
-        duration: 2000
-      });
+      showToast('☕ Number copied! You\'re awesome 😎');
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      showNotification({
-        type: 'error',
-        message: 'Failed to copy number',
-        duration: 2000
-      });
+      showToast('Failed to copy number');
     }
   };
 
   const handleDonationClick = (amount, name) => {
-    showNotification({
-      type: 'success',
-      message: `💙 ${name} selected! Coffee delivered, happiness level +1 😁`,
-      duration: 2500
-    });
+    showToast(`💙 ${name} selected! Coffee delivered, happiness level +1 😁`);
   };
 
   const handleCustomDonation = () => {
     if (customAmount && parseInt(customAmount) > 0) {
-      showNotification({
-        type: 'success',
-        message: `🥰 Feeling generous? You're a legend! Happiness level +999 🚀`,
-        duration: 2500
-      });
+      showToast(`🥰 Feeling generous? You're a legend! Happiness level +999 🚀`);
       setCustomAmount('');
     }
   };
@@ -88,6 +85,8 @@ export default function SupportNeuronerds() {
     }
   };
 
+  if (!mounted) return null;
+
   return (
     <>
       {/* Floating Coffee Button */}
@@ -97,8 +96,11 @@ export default function SupportNeuronerds() {
         transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-[9999] w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-2xl flex items-center justify-center text-3xl cursor-pointer transition-all duration-300 hover:shadow-purple-500/50"
+        onClick={() => {
+          console.log('☕ Coffee button clicked');
+          setIsOpen(true);
+        }}
+        className="fixed bottom-6 right-6 z-[9999] w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-2xl flex items-center justify-center text-3xl cursor-pointer transition-all duration-300"
         style={{
           boxShadow: '0 0 30px rgba(139, 92, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3)'
         }}
@@ -114,7 +116,10 @@ export default function SupportNeuronerds() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-md z-[99999] flex items-center justify-center p-4"
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              console.log('🔒 Modal background clicked');
+              setIsOpen(false);
+            }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
