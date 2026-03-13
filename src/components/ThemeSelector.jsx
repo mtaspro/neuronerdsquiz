@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPalette, FaTimes, FaCheck, FaPlay, FaPause } from 'react-icons/fa';
 
@@ -87,8 +88,8 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+  return createPortal(
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[99999] p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.8, y: 50 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -236,7 +237,8 @@ const ThemeSelector = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
           </p>
         </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
