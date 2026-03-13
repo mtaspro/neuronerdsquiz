@@ -53,6 +53,7 @@ import MaintenanceNotification from './components/MaintenanceNotification';
 import { useMaintenance } from './hooks/useMaintenance';
 import { SmoothScrollProvider } from './components/SmoothScrollProvider';
 import WhatsNewModal from './components/WhatsNewModal';
+import SupportNeuronerds from './components/SupportNeuronerds';
 
 // Optional Navbar
 import { useState } from "react";
@@ -649,6 +650,9 @@ function AppContent() {
       
       {/* What's New Modal - Rendered at root level */}
       <WhatsNewModal />
+      
+      {/* Support Neuronerds Button - Floating on every page */}
+      <SupportNeuronerds />
     </>
   );
 }
