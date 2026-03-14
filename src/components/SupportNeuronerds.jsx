@@ -89,7 +89,16 @@ export default function SupportNeuronerds() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/60 backdrop-blur-md z-[999999] flex items-center justify-center p-4"
+      className="fixed inset-0 bg-red-500/90 z-[999999] flex items-center justify-center p-4"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 999999,
+        backgroundColor: 'rgba(255, 0, 0, 0.9)' // Bright red for debugging
+      }}
       onClick={() => {
         console.log('🔒 Modal background clicked');
         setIsOpen(false);
@@ -104,7 +113,15 @@ export default function SupportNeuronerds() {
         className="w-full max-w-2xl max-h-[90vh] overflow-y-auto"
       >
         {/* Glassmorphism Modal */}
-        <div className="bg-gray-900/80 backdrop-blur-xl border border-purple-500/30 rounded-3xl p-8 shadow-2xl">
+        <div 
+          className="bg-yellow-500 border-4 border-red-500 rounded-3xl p-8 shadow-2xl"
+          style={{
+            backgroundColor: 'yellow',
+            border: '4px solid red',
+            minHeight: '200px',
+            minWidth: '300px'
+          }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -289,6 +306,13 @@ export default function SupportNeuronerds() {
       <AnimatePresence>
         {isOpen && createPortal(modalContent, document.body)}
       </AnimatePresence>
+      
+      {/* Debug: Show modal state */}
+      {isOpen && (
+        <div className="fixed top-4 left-4 bg-green-500 text-white p-2 rounded z-[999999]">
+          Modal is OPEN!
+        </div>
+      )}
     </>
   );
 }
