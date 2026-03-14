@@ -85,19 +85,19 @@ export default function SupportNeuronerds() {
   if (!mounted) return null;
 
   const modalContent = (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-red-500/90 z-[999999] flex items-center justify-center p-4"
+    <div
+      className="fixed inset-0 bg-red-500 flex items-center justify-center p-4"
       style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 999999,
-        backgroundColor: 'rgba(255, 0, 0, 0.9)' // Bright red for debugging
+        position: 'fixed !important',
+        top: '0 !important',
+        left: '0 !important',
+        right: '0 !important',
+        bottom: '0 !important',
+        zIndex: '2147483647 !important', // Maximum z-index
+        backgroundColor: 'red !important',
+        display: 'flex !important',
+        alignItems: 'center !important',
+        justifyContent: 'center !important'
       }}
       onClick={() => {
         console.log('🔒 Modal background clicked');
@@ -111,6 +111,10 @@ export default function SupportNeuronerds() {
         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        style={{
+          position: 'relative !important',
+          zIndex: '2147483647 !important'
+        }}
       >
         {/* Glassmorphism Modal */}
         <div 
@@ -278,7 +282,7 @@ export default function SupportNeuronerds() {
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 
   return (
