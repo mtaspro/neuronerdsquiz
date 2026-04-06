@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useInView, useSpring } from 'framer-motion';
+import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   FaArrowLeft, 
@@ -27,7 +27,7 @@ import {
 import ParallaxElement from '../components/ParallaxElement';
 
 // Team Section Component
-const TeamSection = ({ teamMembers, setCursorVariant }) => {
+const TeamSection = ({ teamMembers }) => {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   
@@ -102,8 +102,6 @@ const TeamSection = ({ teamMembers, setCursorVariant }) => {
                 rotateY: index % 2 === 0 ? 2 : -2,
                 transition: { duration: 0.3 }
               }}
-              onMouseEnter={() => setCursorVariant('hover')}
-              onMouseLeave={() => setCursorVariant('default')}
             >
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
@@ -255,7 +253,7 @@ const TeamSection = ({ teamMembers, setCursorVariant }) => {
 };
 
 // Tech Stack Section
-const TechStackSection = ({ setCursorVariant }) => {
+const TechStackSection = () => {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   
@@ -337,8 +335,8 @@ const TechStackSection = ({ setCursorVariant }) => {
                 repeat: Infinity,
                 delay: index * 0.5
               }}
-              onMouseEnter={() => setCursorVariant('hover')}
-              onMouseLeave={() => setCursorVariant('default')}
+              onMouseEnter={() => {}}
+              onMouseLeave={() => {}}
             >
               {/* Animated background */}
               <motion.div
@@ -415,7 +413,7 @@ const TechStackSection = ({ setCursorVariant }) => {
 };
 
 // Journey Section
-const JourneySection = ({ setCursorVariant }) => {
+const JourneySection = () => {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   
@@ -512,8 +510,8 @@ const JourneySection = ({ setCursorVariant }) => {
                   repeat: Infinity,
                   delay: index * 0.7
                 }}
-                onMouseEnter={() => setCursorVariant('hover')}
-                onMouseLeave={() => setCursorVariant('default')}
+                onMouseEnter={() => {}}
+                onMouseLeave={() => {}}
               >
                 {/* Animated background glow */}
                 <motion.div
@@ -590,7 +588,7 @@ const JourneySection = ({ setCursorVariant }) => {
 };
 
 // Future Plans Section
-const FuturePlansSection = ({ setCursorVariant }) => {
+const FuturePlansSection = () => {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   
@@ -638,8 +636,8 @@ const FuturePlansSection = ({ setCursorVariant }) => {
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: isInView ? 1 : 0, x: isInView ? 0 : -50 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            onMouseEnter={() => setCursorVariant('hover')}
-            onMouseLeave={() => setCursorVariant('default')}
+            onMouseEnter={() => {}}
+            onMouseLeave={() => {}}
           >
             <FaBrain className="text-6xl text-purple-500 mx-auto mb-6" />
             <h3 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">
@@ -655,8 +653,8 @@ const FuturePlansSection = ({ setCursorVariant }) => {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: isInView ? 1 : 0, x: isInView ? 0 : 50 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            onMouseEnter={() => setCursorVariant('hover')}
-            onMouseLeave={() => setCursorVariant('default')}
+            onMouseEnter={() => {}}
+            onMouseLeave={() => {}}
           >
             <FaRocket className="text-6xl text-blue-500 mx-auto mb-6" />
             <h3 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">
@@ -676,7 +674,7 @@ const FuturePlansSection = ({ setCursorVariant }) => {
 };
 
 // Final Message Section
-const FinalMessageSection = ({ navigate, setCursorVariant }) => {
+const FinalMessageSection = ({ navigate }) => {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   
@@ -720,8 +718,8 @@ const FinalMessageSection = ({ navigate, setCursorVariant }) => {
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/dashboard')}
             className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-8 sm:py-4 sm:px-12 rounded-full shadow-2xl transition-all duration-500 text-base sm:text-lg w-full sm:w-auto"
-            onMouseEnter={() => setCursorVariant('hover')}
-            onMouseLeave={() => setCursorVariant('default')}
+            onMouseEnter={() => {}}
+            onMouseLeave={() => {}}
           >
             enough reading 😴
           </motion.button>
@@ -734,26 +732,24 @@ const FinalMessageSection = ({ navigate, setCursorVariant }) => {
 const About = () => {
   const navigate = useNavigate();
   const containerRef = useRef(null);
-  const [cursorVariant, setCursorVariant] = useState('default');
   const [particles, setParticles] = useState([]);
   
   const { scrollYProgress } = useScroll({ target: containerRef });
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
-  const backgroundY = useTransform(smoothProgress, [0, 1], [0, -200]);
-  const headerScale = useTransform(smoothProgress, [0, 0.2], [1, 0.8]);
-  const headerOpacity = useTransform(smoothProgress, [0, 0.3], [1, 0]);
+  const backgroundY = useTransform(scrollYProgress, [0, 1], [0, -200]);
+  const headerScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.8]);
+  const headerOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
   
-  // Generate floating particles
+  // Generate floating particles - REDUCED from 50 to 15 for performance
   useEffect(() => {
     const particleArray = [];
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 15; i++) {
       particleArray.push({
         id: i,
         x: Math.random() * 100,
         y: Math.random() * 100,
-        size: Math.random() * 4 + 2,
+        size: Math.random() * 3 + 1,
         speed: Math.random() * 2 + 1,
-        opacity: Math.random() * 0.6 + 0.2,
+        opacity: Math.random() * 0.4 + 0.1,
         color: ['cyan', 'purple', 'blue', 'pink'][Math.floor(Math.random() * 4)]
       });
     }
@@ -769,11 +765,6 @@ const About = () => {
       document.documentElement.style.scrollBehavior = 'auto';
     };
   }, []);
-  
-  // Scroll-triggered animations
-  const scrollY = useTransform(scrollYProgress, [0, 1], [0, -300]);
-  const rotate = useTransform(scrollYProgress, [0, 1], [0, 360]);
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.2, 0.8]);
 
   const teamMembers = [
      {
@@ -856,12 +847,12 @@ const About = () => {
     <div ref={containerRef} className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200 overflow-hidden">
 
       
-      {/* Dynamic Floating Elements with Parallax */}
-      <ParallaxElement speed={0.4} className="fixed inset-0 overflow-hidden pointer-events-none">
+      {/* Dynamic Floating Elements - SIMPLIFIED for performance */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {particles.map((particle) => (
           <motion.div
             key={particle.id}
-            className={`absolute rounded-full bg-${particle.color}-400 parallax-bg`}
+            className={`absolute rounded-full bg-${particle.color}-400`}
             style={{
               left: `${particle.x}%`,
               top: `${particle.y}%`,
@@ -870,10 +861,8 @@ const About = () => {
               opacity: particle.opacity * 0.4,
             }}
             animate={{
-              y: [0, -100, 0],
-              x: [0, 30, -30, 0],
-              scale: [1, 2, 1],
-              rotate: [0, 360, 720]
+              y: [0, -50, 0],
+              scale: [1, 1.5, 1],
             }}
             transition={{
               duration: particle.speed * 4,
@@ -882,27 +871,7 @@ const About = () => {
             }}
           />
         ))}
-      </ParallaxElement>
-        
-        {/* Scroll-reactive geometric shapes with Parallax */}
-        <ParallaxElement speed={0.6}>
-          <motion.div
-            className="absolute top-1/4 right-10 w-20 h-20 border-4 border-cyan-400/30 parallax-bg"
-            style={{ rotate, scale }}
-          />
-        </ParallaxElement>
-        <ParallaxElement speed={0.3}>
-          <motion.div
-            className="absolute bottom-1/4 left-10 w-16 h-16 bg-purple-500/20 rounded-full parallax-bg"
-            style={{ rotate: rotate }}
-          />
-        </ParallaxElement>
-        <ParallaxElement speed={0.8}>
-          <motion.div
-            className="absolute top-1/2 left-1/2 w-24 h-24 border-2 border-pink-400/20 rotate-45 parallax-bg"
-            style={{ scale, rotate: useTransform(scrollYProgress, [0, 1], [0, -360]) }}
-          />
-        </ParallaxElement>
+      </div>
       
       {/* Parallax Header */}
       <motion.div 
@@ -943,8 +912,6 @@ const About = () => {
               onClick={() => navigate('/dashboard')}
               className="flex items-center space-x-2 text-white hover:text-purple-200 transition-colors group"
               whileHover={{ scale: 1.05, x: -5 }}
-              onMouseEnter={() => setCursorVariant('hover')}
-              onMouseLeave={() => setCursorVariant('default')}
             >
               <motion.div
                 animate={{ x: [-2, 2, -2] }}
@@ -1066,28 +1033,27 @@ const About = () => {
         <motion.div style={{ y: useTransform(scrollYProgress, [0, 0.3], [0, -50]) }}>
           <TeamSection 
             teamMembers={teamMembers} 
-            setCursorVariant={setCursorVariant}
           />
         </motion.div>
 
         {/* Tech Stack Section with Parallax */}
         <motion.div style={{ y: useTransform(scrollYProgress, [0.2, 0.5], [50, -50]) }}>
-          <TechStackSection setCursorVariant={setCursorVariant} />
+          <TechStackSection />
         </motion.div>
         
         {/* Journey Section with Parallax */}
         <motion.div style={{ y: useTransform(scrollYProgress, [0.4, 0.7], [100, -100]) }}>
-          <JourneySection setCursorVariant={setCursorVariant} />
+          <JourneySection />
         </motion.div>
         
         {/* Future Plans Section with Parallax */}
         <motion.div style={{ y: useTransform(scrollYProgress, [0.6, 0.9], [150, -150]) }}>
-          <FuturePlansSection setCursorVariant={setCursorVariant} />
+          <FuturePlansSection />
         </motion.div>
         
         {/* Final Message Section with Parallax */}
         <motion.div style={{ y: useTransform(scrollYProgress, [0.8, 1], [200, -200]) }}>
-          <FinalMessageSection navigate={navigate} setCursorVariant={setCursorVariant} />
+          <FinalMessageSection navigate={navigate} />
         </motion.div>
       </motion.div>
       
