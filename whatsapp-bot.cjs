@@ -230,13 +230,26 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`,
                     console.log(`🔍 RAW CHAT ID: ${chatId}`);
                     console.log(`🔍 EXTRACTED SENDER: ${senderNumber}`);
                     
-                    // Normalize sender number (add 88 if not present)
+                    // Normalize sender number - handle various formats
+                    if (senderNumber.startsWith('00')) {
+                        senderNumber = senderNumber.substring(2);
+                        console.log(`🔄 REMOVED 00 PREFIX: ${senderNumber}`);
+                    } else if (senderNumber.startsWith('+')) {
+                        senderNumber = senderNumber.substring(1);
+                        console.log(`🔄 REMOVED + PREFIX: ${senderNumber}`);
+                    }
+                    
+                    // Add 88 prefix if not present (Bangladesh country code)
                     if (!senderNumber.startsWith('88')) {
                         senderNumber = '88' + senderNumber;
                         console.log(`➕ ADDED 88 PREFIX: ${senderNumber}`);
                     } else {
                         console.log(`✅ ALREADY HAS 88: ${senderNumber}`);
                     }
+                    
+                    // Remove any non-digit characters
+                    senderNumber = senderNumber.replace(/\D/g, '');
+                    console.log(`🧹 CLEANED NUMBER: ${senderNumber}`);
                     
                     console.log(`📞 FINAL SENDER NUMBER: ${senderNumber}`);
                     console.log(`👤 SENDER NAME: ${sender}`);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { secureStorage } from '../utils/secureStorage';
 
@@ -25,7 +25,6 @@ export default function SecretChat() {
   const [showDecrypted, setShowDecrypted] = useState({});
   const [showFields, setShowFields] = useState(false);
   const [mode, setMode] = useState('chat');
-  const [encodedText, setEncodedText] = useState('');
   const messagesEndRef = useRef(null);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -33,11 +32,11 @@ export default function SecretChat() {
   useEffect(() => {
     if (authenticated && phoneNumber && mode === 'chat') {
       loadHistory();
-      // Disabled frequent sync for debugging
-      // const interval = setInterval(loadHistory, 3000);
-      // return () => clearInterval(interval);
+      // Enable real-time sync every 3 seconds
+      const interval = setInterval(() => loadHistory(), 3000);
+      return () => clearInterval(interval);
     }
-  }, [phoneNumber, authenticated, mode]);
+  }, [phoneNumber, authenticated, mode, loadHistory]);
 
   useEffect(() => {
     if (authenticated && mode === 'chat') {
@@ -85,7 +84,7 @@ export default function SecretChat() {
     }
   };
 
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     try {
       const token = secureStorage.getToken();
       const res = await axios.get(`${API_URL}/api/secret-chat/history/${phoneNumber}?limit=20`, {
@@ -95,7 +94,7 @@ export default function SecretChat() {
     } catch (error) {
       console.error('Load error:', error);
     }
-  };
+  }, [phoneNumber, API_URL]);
 
   const fetchFromWhatsApp = async () => {
     try {

@@ -21,15 +21,25 @@ router.get('/history/:phoneNumber', sessionMiddleware, async (req, res) => {
     phoneNumber = phoneNumber.split('@')[0];
     
     console.log('🔍 [HISTORY] Normalized phoneNumber:', phoneNumber);
-    console.log('🔍 [HISTORY] Searching DB with regex: ^' + phoneNumber);
     
     const limit = parseInt(req.query.limit) || 20; // Default to 20
     
-    const messages = await SecretChat.find({ 
-      phoneNumber: { $regex: `^${phoneNumber}` } 
+    // Try exact match first, then regex match
+    let messages = await SecretChat.find({ 
+      phoneNumber: phoneNumber 
     })
       .sort({ timestamp: -1 })
       .limit(limit);
+    
+    // If no exact match, try regex match
+    if (messages.length === 0) {
+      console.log('🔍 [HISTORY] No exact match, trying regex for:', phoneNumber);
+      messages = await SecretChat.find({ 
+        phoneNumber: { $regex: `^${phoneNumber}` } 
+      })
+        .sort({ timestamp: -1 })
+        .limit(limit);
+    }
     
     console.log(`✅ [HISTORY] Found ${messages.length} messages (showing last ${limit})`);
     
@@ -65,6 +75,8 @@ router.post('/send', sessionMiddleware, async (req, res) => {
   try {
     let { phoneNumber, realNumber, encryptedMessage } = req.body;
     
+    console.log('📤 [SEND] Request payload:', { phoneNumber, realNumber, encryptedMessage: encryptedMessage.substring(0, 30) + '...' });
+    
     // Normalize phone number for saving
     phoneNumber = phoneNumber.split('@')[0];
     
@@ -74,9 +86,10 @@ router.post('/send', sessionMiddleware, async (req, res) => {
     }
     
     const decrypted = rot13(encryptedMessage);
+    console.log('🔐 [SEND] Decrypted message:', decrypted);
     
     // Save to DB with LID format
-    await SecretChat.create({
+    const savedMessage = await SecretChat.create({
       phoneNumber, // LID format
       realNumber, // Store real number for mapping
       message: decrypted,
@@ -84,14 +97,22 @@ router.post('/send', sessionMiddleware, async (req, res) => {
       sender: 'me'
     });
     
-    console.log(`📤 Sending to: ${realNumber} (saved as: ${phoneNumber})`);
+    console.log('✅ [SEND] Saved to DB with ID:', savedMessage._id);
+    console.log(`📤 [SEND] Sending to: ${realNumber} (saved as: ${phoneNumber})`);
     
     // Send via WhatsApp using real number
     const jid = realNumber.includes('@') ? realNumber : `${realNumber}@s.whatsapp.net`;
     await whatsappService.sendMessage(jid, decrypted);
     
-    res.json({ success: true });
+    console.log('✅ [SEND] WhatsApp message sent successfully');
+    res.json({ success: true, messageId: savedMessage._id });
   } catch (error) {
+    console.error('❌ [SEND] Error:', error);
+    console.error('❌ [SEND] Error details:', {
+      message: error.message,
+      stack: error.stack,
+      body: req.body
+    });
     res.status(500).json({ error: error.message });
   }
 });
@@ -108,6 +129,12 @@ router.post('/auto-save', async (req, res) => {
       encryptedPreview: encrypted.substring(0, 20) + '...',
       sender
     });
+    
+    // Validate required fields
+    if (!phoneNumber || !message || !encrypted || !sender) {
+      console.error('❌ [AUTO-SAVE] Missing required fields:', { phoneNumber, message: !!message, encrypted: !!encrypted, sender });
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
     
     const saved = await SecretChat.create({
       phoneNumber,
@@ -129,6 +156,11 @@ router.post('/auto-save', async (req, res) => {
     res.json({ success: true, savedId: saved._id });
   } catch (error) {
     console.error('❌ [AUTO-SAVE] Error:', error);
+    console.error('❌ [AUTO-SAVE] Error details:', {
+      message: error.message,
+      stack: error.stack,
+      body: req.body
+    });
     res.status(500).json({ error: error.message });
   }
 });
@@ -165,11 +197,36 @@ router.get('/find-lid/:senderNumber', async (req, res) => {
     
     console.log('🔍 [FIND-LID] Searching for LID with sender number:', senderNumber);
     
-    // Look for any message where this sender number was used as realNumber
-    const existingMessage = await SecretChat.findOne({
-      realNumber: senderNumber,
+    // Normalize sender number - remove any non-digit characters
+    const normalizedSender = senderNumber.replace(/\D/g, '');
+    console.log('🔍 [FIND-LID] Normalized sender number:', normalizedSender);
+    
+    // Try multiple search strategies
+    let existingMessage = null;
+    
+    // Strategy 1: Exact match
+    existingMessage = await SecretChat.findOne({
+      realNumber: normalizedSender,
       sender: 'me'
     }).sort({ timestamp: -1 });
+    
+    if (!existingMessage) {
+      // Strategy 2: Try with 88 prefix
+      const withPrefix = normalizedSender.startsWith('88') ? normalizedSender : '88' + normalizedSender;
+      existingMessage = await SecretChat.findOne({
+        realNumber: withPrefix,
+        sender: 'me'
+      }).sort({ timestamp: -1 });
+    }
+    
+    if (!existingMessage) {
+      // Strategy 3: Try without 88 prefix
+      const withoutPrefix = normalizedSender.startsWith('88') ? normalizedSender.substring(2) : normalizedSender;
+      existingMessage = await SecretChat.findOne({
+        realNumber: withoutPrefix,
+        sender: 'me'
+      }).sort({ timestamp: -1 });
+    }
     
     console.log('🔍 [FIND-LID] Database query result:', existingMessage ? 'FOUND' : 'NOT FOUND');
     
