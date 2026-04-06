@@ -947,7 +947,7 @@ const Dashboard = () => {
                 <div className="text-cyan-600 dark:text-cyan-400">Loading quizzes...</div>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
                 {chapters.reduce((acc, chapter) => {
                   const subject = chapter.subject || 'General';
                   if (!acc[subject]) acc[subject] = [];
