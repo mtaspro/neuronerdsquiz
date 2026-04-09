@@ -29,6 +29,18 @@ export default function SecretChat() {
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+  const loadHistory = useCallback(async () => {
+    try {
+      const token = secureStorage.getToken();
+      const res = await axios.get(`${API_URL}/api/secret-chat/history/${phoneNumber}?limit=20`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMessages(res.data.messages);
+    } catch (error) {
+      console.error('Load error:', error);
+    }
+  }, [phoneNumber, API_URL]);
+
   useEffect(() => {
     if (authenticated && phoneNumber && mode === 'chat') {
       loadHistory();
@@ -83,18 +95,6 @@ export default function SecretChat() {
       setPassword('');
     }
   };
-
-  const loadHistory = useCallback(async () => {
-    try {
-      const token = secureStorage.getToken();
-      const res = await axios.get(`${API_URL}/api/secret-chat/history/${phoneNumber}?limit=20`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setMessages(res.data.messages);
-    } catch (error) {
-      console.error('Load error:', error);
-    }
-  }, [phoneNumber, API_URL]);
 
   const fetchFromWhatsApp = async () => {
     try {
