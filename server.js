@@ -55,6 +55,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "http://localhost:5000",
+  "https://neuronerds.eu.cc",
   "https://neuronerdsquiz.vercel.app",
   process.env.CLIENT_URL
 ].filter(Boolean);
@@ -131,6 +132,7 @@ app.use((req, res, next) => {
     // Check if origin is allowed
     const isAllowed = allowedOrigins.includes(origin) || 
                      origin.includes('.vercel.app') || 
+                     origin.includes('neuronerds.eu.cc') ||
                      origin.includes('localhost') || 
                      origin.includes('127.0.0.1');
     

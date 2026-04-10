@@ -14,10 +14,11 @@ const getEnvironmentConfig = () => {
   if (isProduction || (typeof window !== 'undefined' && 
       (window.location.hostname.includes('vercel.app') || 
        window.location.hostname.includes('netlify.app') ||
-       window.location.hostname.includes('neuronerdsquiz')))) {
+       window.location.hostname.includes('neuronerdsquiz') ||
+       window.location.hostname.includes('neuronerds.eu.cc')))) {
     // Production environment
-    apiUrl = 'https://neuronerdsquiz.onrender.com';
-    socketUrl = 'https://neuronerdsquiz.onrender.com';
+    apiUrl = import.meta.env.VITE_API_URL || 'https://neuronerds.eu.cc';
+    socketUrl = import.meta.env.VITE_SOCKET_SERVER_URL || 'https://neuronerds.eu.cc';
   } else {
     // Development environment
     apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
