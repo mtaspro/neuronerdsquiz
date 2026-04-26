@@ -385,35 +385,24 @@ class MotivationalMessageService {
   // Get a motivational message for specific day (based on exam countdown)
   async getMessageForDay(dayNumber) {
     try {
-      // First try to find exact day match
+      // Find exact day match (no 'isUsed' check for exam-based consistency)
       let message = await MotivationalMessage.findOne({ 
-        dayNumber, 
-        isUsed: false 
+        dayNumber 
       });
 
-      // If no exact match, find closest unused message
+      // If no exact match, find closest message
       if (!message) {
         message = await MotivationalMessage.findOne({ 
-          isUsed: false 
-        }).sort({ dayNumber: 1 });
+          dayNumber: { $lte: dayNumber }
+        }).sort({ dayNumber: -1 });
       }
 
-      // If still no message, reset all and get first one
+      // If still no message, find any message
       if (!message) {
-        console.log('🔄 Resetting all motivational messages');
-        await MotivationalMessage.updateMany({}, { isUsed: false, usedDate: null });
-        message = await MotivationalMessage.findOne({ 
-          isUsed: false 
-        }).sort({ dayNumber: 1 });
+        message = await MotivationalMessage.findOne().sort({ dayNumber: 1 });
       }
-
-      // Mark message as used
+      
       if (message) {
-        await MotivationalMessage.findByIdAndUpdate(message._id, {
-          isUsed: true,
-          usedDate: new Date()
-        });
-        
         console.log(`📝 Using motivational message for day ${dayNumber}: ${message.category}`);
         return message.message;
       }
