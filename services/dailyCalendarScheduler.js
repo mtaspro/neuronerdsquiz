@@ -3,15 +3,17 @@ import CalendarService from './calendarService.js';
 import whatsappService from './whatsappService.js';
 import WhatsAppSettings from '../models/WhatsAppSettings.js';
 import Exam from '../models/Exam.js';
+import MotivationalMessageService from './motivationalMessageService.js';
 
 class DailyCalendarScheduler {
   constructor() {
     this.calendarService = new CalendarService();
+    this.motivationalService = new MotivationalMessageService();
     this.isRunning = false;
   }
 
-  // Start the daily calendar scheduler
-  start() {
+  // Start daily calendar scheduler
+  async start() {
     if (this.isRunning) {
       console.log('📅 Daily calendar scheduler is already running');
       return;
@@ -22,6 +24,9 @@ class DailyCalendarScheduler {
     const cronExpression = '0 0 * * *'; // 12:00 AM server time
     
     console.log('📅 Starting daily calendar scheduler...');
+    
+    // Initialize motivational messages
+    await this.motivationalService.initializeMessages();
     
     this.cronJob = cron.schedule(cronExpression, async () => {
       await this.sendDailyCalendarUpdate();
@@ -142,23 +147,28 @@ Happy New Year 🥳✨
       // Create prompt for NeuraX
       const examInfo = examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `${e.examName} - TODAY` : `${e.examName} in ${e.daysLeft} days`).join(', ') : 'None';
       
+      // Get dynamic motivational message for AI prompt
+      const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+      const motivationalMessage = await this.motivationalService.getMessageForDay(dayOfYear);
+      
       const prompt = `Create a short, witty daily message for students.
 
 Day: ${calendarData.dayName}
 Date: ${calendarData.englishDate}
 Holidays: ${calendarData.hasHolidays ? calendarData.holidays.join(', ') : 'None'}
 Exams: ${examInfo}
+Motivational style: Use this tone: "${motivationalMessage.substring(0, 50)}..."
 
 Write EXACTLY in this format (no extra lines):
 Today: *${calendarData.dayName}, ${calendarData.englishDate}*
-${calendarData.hasHolidays ? '🎉 ' + calendarData.holidays.join(', ') + ' - Enjoy responsibly!\n' : ''}${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? '📚 *' + e.examName + '* - TODAY! 💪\n' : '📚 *' + e.examName + '* in ' + e.daysLeft + ' days\n').join('') : ''}💡 [Add ONE short, clever line with light humor that motivates students - max 15-20 words]`;
+${calendarData.hasHolidays ? '🎉 ' + calendarData.holidays.join(', ') + ' - Enjoy responsibly!\n' : ''}${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? '📚 *' + e.examName + '* - TODAY! 💪\n' : '📚 *' + e.examName + '* in ' + e.daysLeft + ' days\n').join('') : ''}${motivationalMessage}`;
       // Send to NeuraX AI
       const axios = (await import('axios')).default;
       const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
       
       const aiResponse = await axios.post(`${apiUrl}/api/ai-chat`, {
         message: prompt,
-        model: 'mistralai/mistral-7b-instruct:free',
+        model: 'meta-llama/llama-3.3-70b-instruct:free',
         systemPrompt: 'You are NeuraX. Generate concise calendar messages following the exact format provided. NEVER include reasoning tags like <think> or any meta-commentary in your response. Keep the message clean and direct.',
         conversationHistory: []
       });
@@ -185,7 +195,11 @@ ${calendarData.hasHolidays ? '🎉 ' + calendarData.holidays.join(', ') + ' - En
         const examData = await this.getUpcomingExams();
         const examMessages = examData.map(e => e.daysLeft === 0 ? `📚 Exam Alert\n*${e.examName}* - *TODAY*! 💪` : `📚 Exam Alert\n*${e.examName}* in *${e.daysLeft}* days 📖`).join('\n\n');
         
-        let fallbackMessage = `Today: *${calendarData.dayName}, ${calendarData.englishDate}*\n\n${calendarData.hasHolidays ? `🎉 Special: ${calendarData.holidays.join(', ')} - Enjoy responsibly!\n\n` : ''}${examMessages ? examMessages + '\n\n' : ''}💡 Stay focused and make today count!`;
+        // Get dynamic motivational message based on day number
+        const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+        const motivationalMessage = await this.motivationalService.getMessageForDay(dayOfYear);
+        
+        let fallbackMessage = `Today: *${calendarData.dayName}, ${calendarData.englishDate}*\n\n${calendarData.hasHolidays ? `🎉 Special: ${calendarData.holidays.join(', ')} - Enjoy responsibly!\n\n` : ''}${examMessages ? examMessages + '\n\n' : ''}${motivationalMessage}`;
         
         // Filter out any reasoning tags or thinking sections
         fallbackMessage = fallbackMessage.replace(/<think>[\s\S]*?<\/think>/g, '');

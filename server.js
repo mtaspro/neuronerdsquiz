@@ -41,6 +41,7 @@ import progressRouter from './routes/progress.js';
 import WhatsAppSettings from './models/WhatsAppSettings.js';
 import UserScore from './models/UserScore.js';
 import secretChatRouter from './routes/secret-chat.js';
+import MotivationalMessage from './models/MotivationalMessage.js';
 
 console.log('Auth router imported:', !!authRouter);
 console.log('Auth router type:', typeof authRouter);
@@ -1012,6 +1013,34 @@ app.post('/api/calendar/trigger', async (req, res) => {
   try {
     await dailyCalendarScheduler.triggerManually();
     res.json({ message: 'Daily calendar update triggered successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Motivational messages management endpoints
+app.get('/api/motivational-messages/stats', async (req, res) => {
+  try {
+    const stats = await dailyCalendarScheduler.motivationalService.getStats();
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/motivational-messages/reset', async (req, res) => {
+  try {
+    await MotivationalMessage.updateMany({}, { isUsed: false, usedDate: null });
+    res.json({ message: 'Motivational messages reset successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/motivational-messages/initialize', async (req, res) => {
+  try {
+    await dailyCalendarScheduler.motivationalService.initializeMessages();
+    res.json({ message: 'Motivational messages initialized successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
