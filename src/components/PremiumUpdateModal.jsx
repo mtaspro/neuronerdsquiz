@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaSparkles } from 'react-icons/fa';
-import '../styles/premium-glass.css';
 
 let DotLottieReact = null;
 try {
@@ -31,13 +30,13 @@ export default function PremiumUpdateModal() {
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           {/* Blurred Background */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+            className="absolute inset-0 bg-black/60 backdrop-blur-md"
             onClick={handleClose}
           />
           
@@ -50,7 +49,7 @@ export default function PremiumUpdateModal() {
             className="relative w-full max-w-md z-10"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="glass-panel p-8 border border-purple-500/30 shadow-2xl">
+            <div className="glass rounded-2xl p-8 border border-cyan-500/30 shadow-2xl">
               {/* Premium Animation */}
               <div className="flex justify-center mb-6 -mx-8 -mt-8 bg-black/40 rounded-t-2xl py-4">
                 <div className="w-32 h-32 flex items-center justify-center">
@@ -83,41 +82,41 @@ export default function PremiumUpdateModal() {
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-purple-500/30 to-cyan-500/30 rounded-lg neon-pulse">
-                    <FaSparkles className="text-purple-400 text-xl" />
+                  <div className="p-2 bg-gradient-to-r from-cyan-500/30 to-purple-500/30 rounded-lg">
+                    <FaSparkles className="text-cyan-400 text-xl" />
                   </div>
-                  <h2 className="premium-font premium-heading text-2xl text-white">Premium Update</h2>
+                  <h2 className="text-2xl font-bold gradient-text">Premium Update</h2>
                 </div>
                 <button
                   onClick={handleClose}
-                  className="p-2 hover:bg-purple-500/20 rounded-lg transition-all"
+                  className="p-2 hover:bg-cyan-500/20 rounded-lg transition-all hover-lift"
                 >
-                  <FaTimes className="text-gray-400 hover:text-purple-400" />
+                  <FaTimes className="text-gray-400 hover:text-cyan-400" />
                 </button>
               </div>
 
               {/* Content */}
               <div className="space-y-4 mb-6">
                 <div className="flex gap-3">
-                  <div className="text-purple-400 text-xl">🌟</div>
+                  <div className="text-cyan-400 text-xl">✨</div>
                   <div>
-                    <h3 className="premium-font premium-heading text-white mb-1">Premium Dark/Glass UI</h3>
-                    <p className="text-sm text-gray-300">Experience the new unified glassmorphism design system</p>
+                    <h3 className="font-semibold text-white mb-1">Premium Dark/Glass UI</h3>
+                    <p className="text-sm text-gray-300">Unified glassmorphism design with mesh gradient backgrounds</p>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="text-cyan-400 text-xl">🔮</div>
+                  <div className="text-purple-400 text-xl">🔮</div>
                   <div>
-                    <h3 className="premium-font premium-heading text-white mb-1">Glass Panels</h3>
-                    <p className="text-sm text-gray-300">Translucent panels with blur effects across all pages</p>
+                    <h3 className="font-semibold text-white mb-1">Glass Panel Styling</h3>
+                    <p className="text-sm text-gray-300">Translucent panels with blur effects across Dashboard, Leaderboard & Secret Chat</p>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="text-green-400 text-xl">✨</div>
+                  <div className="text-green-400 text-xl">🌟</div>
                   <div>
-                    <h3 className="premium-font premium-heading text-white mb-1">Glow Effects</h3>
+                    <h3 className="font-semibold text-white mb-1">Glow Effects</h3>
                     <p className="text-sm text-gray-300">Neon glow animations for top ranks and premium buttons</p>
                   </div>
                 </div>
@@ -125,32 +124,32 @@ export default function PremiumUpdateModal() {
                 <div className="flex gap-3">
                   <div className="text-yellow-400 text-xl">👻</div>
                   <div>
-                    <h3 className="premium-font premium-heading text-white mb-1">Ghostly Styling</h3>
-                    <p className="text-sm text-gray-300">Darker opacity for Secret Chat with subtle transitions</p>
+                    <h3 className="font-semibold text-white mb-1">Ghostly Chat Bubbles</h3>
+                    <p className="text-sm text-gray-300">Darker opacity for Secret Chat with subtle hover transitions</p>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
                   <div className="text-pink-400 text-xl">🎯</div>
                   <div>
-                    <h3 className="premium-font premium-heading text-white mb-1">Premium Typography</h3>
-                    <p className="text-sm text-gray-300">Clean Inter/Geist font with refined spacing</p>
+                    <h3 className="font-semibold text-white mb-1">Premium Typography</h3>
+                    <p className="text-sm text-gray-300">Clean Inter/Geist font with bold headings and refined spacing</p>
                   </div>
                 </div>
               </div>
 
               {/* Divider */}
-              <div className="h-px bg-gradient-to-r from-purple-500/0 via-purple-500/30 to-purple-500/0 mb-6" />
+              <div className="h-px bg-gradient-to-r from-cyan-500/0 via-cyan-500/30 to-cyan-500/0 mb-6" />
 
               {/* Footer */}
-              <p className="text-xs text-gray-400 mb-4">Enjoy the premium experience! 💎</p>
+              <p className="text-xs text-gray-400 mb-4">Enjoy the new look! This message appears only once.</p>
 
               {/* Button */}
               <button
                 onClick={handleClose}
-                className="premium-button-purple w-full py-3 rounded-lg font-semibold text-white transition-all"
+                className="w-full py-3 bg-gradient-to-r from-cyan-500/30 to-purple-500/30 hover:from-cyan-500/50 hover:to-purple-500/50 border border-cyan-500/50 rounded-lg font-semibold text-white transition-all hover-lift neon-border"
               >
-                Explore Now 🚀
+                Let's Go! 🚀
               </button>
             </div>
           </motion.div>
