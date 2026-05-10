@@ -144,32 +144,40 @@ export default function WhatsNewModal() {
                 <div className="flex gap-3">
                   <div className="text-cyan-400 text-xl">✨</div>
                   <div>
-                    <h3 className="font-semibold text-white mb-1">Modern Design Overhaul</h3>
-                    <p className="text-sm text-gray-300">Vibrant orange-cyan-green gradient with smooth animations</p>
+                    <h3 className="font-semibold text-white mb-1">Premium Dark/Glass UI</h3>
+                    <p className="text-sm text-gray-300">Unified glassmorphism design with mesh gradient backgrounds</p>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="text-purple-400 text-xl">⚡</div>
+                  <div className="text-purple-400 text-xl">🔮</div>
                   <div>
-                    <h3 className="font-semibold text-white mb-1">Energetic Transitions</h3>
-                    <p className="text-sm text-gray-300">Dynamic page navigation with zoom, rotate, and blur effects</p>
+                    <h3 className="font-semibold text-white mb-1">Glass Panel Styling</h3>
+                    <p className="text-sm text-gray-300">Translucent panels with blur effects across Dashboard, Leaderboard & Secret Chat</p>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="text-green-400 text-xl">🔐</div>
+                  <div className="text-green-400 text-xl">🌟</div>
                   <div>
-                    <h3 className="font-semibold text-white mb-1">Secret Chat Mode</h3>
-                    <p className="text-sm text-gray-300">Encrypted messaging with ROT13 + Bengali support</p>
+                    <h3 className="font-semibold text-white mb-1">Glow Effects</h3>
+                    <p className="text-sm text-gray-300">Neon glow animations for top ranks and premium buttons</p>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="text-yellow-400 text-xl">🎨</div>
+                  <div className="text-yellow-400 text-xl">👻</div>
                   <div>
-                    <h3 className="font-semibold text-white mb-1">Interactive Elements</h3>
-                    <p className="text-sm text-gray-300">Hover effects, micro-interactions, and smooth feedback</p>
+                    <h3 className="font-semibold text-white mb-1">Ghostly Chat Bubbles</h3>
+                    <p className="text-sm text-gray-300">Darker opacity for Secret Chat with subtle hover transitions</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="text-pink-400 text-xl">🎯</div>
+                  <div>
+                    <h3 className="font-semibold text-white mb-1">Premium Typography</h3>
+                    <p className="text-sm text-gray-300">Clean Inter/Geist font with bold headings and refined spacing</p>
                   </div>
                 </div>
               </div>
