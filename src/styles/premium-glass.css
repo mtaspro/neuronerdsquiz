@@ -1,0 +1,179 @@
+/* Premium Dark/Glass System */
+
+/* Global Background */
+.premium-glass-background {
+  background-color: #050505;
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Mesh Gradient Effect */
+.mesh-gradient-purple {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: #8B5CF6; /* Electric Purple */
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+  top: -100px;
+  left: -100px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mesh-gradient-green {
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  background: #10B981; /* Cyber Green */
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+  bottom: -80px;
+  right: -80px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mesh-gradient-blue {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: #3B82F6; /* Deep Blue */
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Glass Panel Class */
+.glass-panel {
+  background: rgba(15, 15, 15, 0.6);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Typography */
+.premium-font {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.premium-heading {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* Button Styles */
+.premium-button {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.8));
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.premium-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.premium-button-purple {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.8), rgba(109, 40, 217, 0.8));
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.premium-button-purple:hover {
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+.premium-button-blue {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(37, 99, 235, 0.8));
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.premium-button-blue:hover {
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+/* Leaderboard Glow Effects */
+.rank-glow-1 {
+  box-shadow: 0 0 30px rgba(234, 179, 8, 0.4), 0 0 60px rgba(234, 179, 8, 0.2);
+  border-color: rgba(234, 179, 8, 0.3);
+}
+
+.rank-glow-2 {
+  box-shadow: 0 0 25px rgba(156, 163, 175, 0.4), 0 0 50px rgba(156, 163, 175, 0.2);
+  border-color: rgba(156, 163, 175, 0.3);
+}
+
+.rank-glow-3 {
+  box-shadow: 0 0 25px rgba(217, 119, 6, 0.4), 0 0 50px rgba(217, 119, 6, 0.2);
+  border-color: rgba(217, 119, 6, 0.3);
+}
+
+/* Secret Chat Ghostly Styling */
+.ghost-chat-bubble {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.ghost-chat-bubble:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Neon Pulse Animation */
+@keyframes neonPulse {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(16, 185, 129, 0.5), 0 0 10px rgba(16, 185, 129, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.7), 0 0 25px rgba(16, 185, 129, 0.5);
+  }
+}
+
+.neon-pulse {
+  animation: neonPulse 2s ease-in-out infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .mesh-gradient-purple,
+  .mesh-gradient-green,
+  .mesh-gradient-blue {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .glass-panel {
+    border-radius: 16px;
+  }
+  
+  .premium-button {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { secureStorage } from '../utils/secureStorage';
+import '../styles/premium-glass.css';
 
 const rot13 = (str) => {
   return str.replace(/[a-zA-Z]/g, c => 
@@ -150,9 +151,14 @@ export default function SecretChat() {
 
   if (!authenticated) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-        <div className="bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full">
-          <h2 className="text-2xl font-bold mb-6 text-center text-red-500">
+      <div className="premium-glass-background min-h-screen text-white flex items-center justify-center relative">
+        {/* Mesh Gradient Effect */}
+        <div className="mesh-gradient-purple"></div>
+        <div className="mesh-gradient-green"></div>
+        <div className="mesh-gradient-blue"></div>
+        
+        <div className="glass-panel p-8 max-w-md w-full relative z-10">
+          <h2 className="premium-font premium-heading text-2xl mb-6 text-center text-red-500">
             You are in the wrong way dude, what's your code?
           </h2>
           <form onSubmit={handlePasswordSubmit}>
@@ -161,12 +167,13 @@ export default function SecretChat() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter code..."
-              className="w-full bg-gray-700 px-4 py-3 rounded mb-4 text-center text-lg"
+              className="w-full bg-gray-700/50 border border-gray-600/50 px-4 py-3 rounded mb-4 text-center text-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               autoFocus
             />
             <button
               type="submit"
-              className="w-full bg-red-600 hover:bg-red-700 px-4 py-3 rounded font-bold"
+              className="w-full premium-button py-3 rounded font-bold"
+              style={{ background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.8), rgba(153, 27, 27, 0.8))', boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)' }}
             >
               🔓 Unlock
             </button>
@@ -177,17 +184,18 @@ export default function SecretChat() {
   }
 
   return (
-    <div className="min-h-screen text-white p-4 sm:p-8 animated-bg" style={{
-      background: 'linear-gradient(-45deg, #ff6b35, #f7931e, #00d4ff, #00ff88, #ff6b35)',
-      backgroundSize: '400% 400%',
-      backgroundAttachment: 'fixed'
-    }}>
-      <div className="max-w-4xl mx-auto">
+    <div className="premium-glass-background min-h-screen text-white p-4 sm:p-8 relative">
+      {/* Mesh Gradient Effect */}
+      <div className="mesh-gradient-purple"></div>
+      <div className="mesh-gradient-green"></div>
+      <div className="mesh-gradient-blue"></div>
+      
+      <div className="max-w-4xl mx-auto relative z-10">
         <div className="flex items-center gap-4 mb-4">
-          <h1 className="text-3xl font-bold">🔐 X-Protocol</h1>
+          <h1 className="premium-font premium-heading text-3xl">🔐 X-Protocol</h1>
           <button
             onClick={() => setMode(mode === 'chat' ? 'encoder' : 'chat')}
-            className="bg-purple-600 px-4 py-2 rounded text-sm"
+            className="premium-button-purple px-4 py-2 rounded text-sm"
           >
             {mode === 'chat' ? '💬 Chat' : '🔐 Encoder'}
           </button>
@@ -195,15 +203,15 @@ export default function SecretChat() {
         
         {mode === 'chat' ? (
           <>
-            <div className="bg-gray-800 p-4 rounded mb-4">
+            <div className="glass-panel p-4 rounded mb-4">
               <div className="flex gap-2 mb-2">
                 <button 
                   onClick={() => setShowFields(!showFields)}
-                  className="bg-gray-600 px-3 py-2 rounded text-sm"
+                  className="glass-panel px-3 py-2 rounded text-sm"
                 >
                   ⚙️ Config
                 </button>
-                <button onClick={fetchFromWhatsApp} className="bg-gray-600 px-4 py-2 rounded">
+                <button onClick={fetchFromWhatsApp} className="glass-panel px-4 py-2 rounded">
                   📥 Sync
                 </button>
               </div>
@@ -214,20 +222,20 @@ export default function SecretChat() {
                     placeholder="Target ID (LID)"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full bg-gray-700 px-3 py-2 rounded text-sm"
+                    className="w-full bg-gray-700/50 border border-gray-600/50 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   <input
                     type="text"
                     placeholder="Real number"
                     value={realNumber}
                     onChange={(e) => setRealNumber(e.target.value)}
-                    className="w-full bg-gray-700 px-3 py-2 rounded text-sm"
+                    className="w-full bg-gray-700/50 border border-gray-600/50 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
               )}
             </div>
 
-            <div className="bg-gray-800 p-4 rounded mb-4 h-96 overflow-y-auto">
+            <div className="glass-panel p-4 rounded mb-4 h-96 overflow-y-auto">
               {messages.map((msg, index) => (
                 <div key={msg._id} className="mb-2 text-left">
                   <span className="text-gray-500 mr-2">
@@ -241,13 +249,13 @@ export default function SecretChat() {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="bg-gray-800 p-4 rounded">
+            <div className="glass-panel p-4 rounded">
               <textarea
                 placeholder="Raw data... (Shift+Enter to send)"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="w-full bg-gray-700 px-3 py-2 rounded"
+                className="w-full bg-gray-700/50 border border-gray-600/50 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
                 rows="3"
               />
               <div className="text-xs text-gray-500 mt-2">
@@ -257,14 +265,14 @@ export default function SecretChat() {
           </>
         ) : (
           <>
-            <div className="bg-gray-800 p-4 rounded mb-4">
-              <h2 className="text-lg font-bold mb-3">🔐 Text Encoder/Decoder</h2>
+            <div className="glass-panel p-4 rounded mb-4">
+              <h2 className="premium-font premium-heading text-lg mb-3">🔐 Text Encoder/Decoder</h2>
               <textarea
                 placeholder="Enter text... (Shift+Enter to encode/decode)"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="w-full bg-gray-700 px-3 py-2 rounded mb-3"
+                className="w-full bg-gray-700/50 border border-gray-600/50 px-3 py-2 rounded mb-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 rows="6"
               />
               <div className="text-xs text-gray-500">

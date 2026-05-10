@@ -18,6 +18,7 @@ import ParallaxElement from '../components/ParallaxElement';
 import GlobalLoader from '../components/GlobalLoader';
 import { useGlobalLoader } from '../hooks/useGlobalLoader';
 import MultiChapterBattleSelector from '../components/MultiChapterBattleSelector';
+import '../styles/premium-glass.css';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -402,11 +403,12 @@ const Dashboard = () => {
 
   return (
     <GlobalLoader isLoading={isGlobalLoading} skeletonType="dashboard">
-    <div className="min-h-screen text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden animated-bg" style={{
-      background: 'linear-gradient(-45deg, #ff6b35, #f7931e, #00d4ff, #00ff88, #ff6b35)',
-      backgroundSize: '400% 400%',
-      backgroundAttachment: 'fixed'
-    }}>
+    <div className="premium-glass-background min-h-screen text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
+      {/* Mesh Gradient Effect */}
+      <div className="mesh-gradient-purple"></div>
+      <div className="mesh-gradient-green"></div>
+      <div className="mesh-gradient-blue"></div>
+      
       {/* Animated Background Particles with Parallax */}
       <ParallaxElement speed={0.2} className="absolute inset-0 overflow-hidden pointer-events-none">
         {particles.map((particle) => (
@@ -437,14 +439,11 @@ const Dashboard = () => {
 
       {/* Header */}
       <motion.div 
-        className="bg-gradient-to-r from-cyan-900 via-blue-900 to-purple-900 dark:from-gray-800 dark:via-gray-900 dark:to-purple-900 p-8 relative overflow-hidden"
+        className="glass-panel p-8 relative overflow-hidden mx-4 mt-4"
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent transform -skew-y-1"></div>
-        </div>
         <div className="max-w-4xl mx-auto relative z-10">
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8 space-y-4 lg:space-y-0">
             <motion.div 
@@ -454,7 +453,7 @@ const Dashboard = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <motion.h1 
-                className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-purple-200"
+                className="premium-font premium-heading text-2xl sm:text-3xl lg:text-4xl mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-purple-200"
               >
                 Welcome back, {user?.username || 'Student'}! 🎓
               </motion.h1>
@@ -520,12 +519,12 @@ const Dashboard = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
           <motion.div 
-            className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-2xl hover:shadow-3xl transition-all duration-500 relative overflow-hidden group"
+            className="glass-panel p-6 relative overflow-hidden group"
             whileHover={{ scale: 1.02 }}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
             <motion.h4 
-              className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center gap-2 relative z-10"
+              className="premium-font premium-heading text-lg text-gray-800 dark:text-white mb-4 flex items-center gap-2 relative z-10"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
@@ -563,12 +562,11 @@ const Dashboard = () => {
             <motion.button
               whileHover={{ 
                 scale: 1.05, 
-                boxShadow: "0 20px 40px rgba(6, 182, 212, 0.4)"
               }}
               whileTap={{ scale: 0.95 }}
               onClick={handleStartQuiz}
               onMouseEnter={() => soundManager.play('click')}
-              className="start-quiz-btn bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 w-full relative overflow-hidden group"
+              className="premium-button py-4 px-6 w-full relative overflow-hidden group"
             >
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -599,7 +597,7 @@ const Dashboard = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => { soundManager.play('transition'); navigate('/leaderboard'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="leaderboard-link bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 w-full mt-4 relative z-20"
+              className="premium-button-purple py-4 px-6 w-full mt-4 relative z-20"
             >
               <div className="flex items-center justify-center space-x-2">
                 <span className="text-2xl">🏆</span>
@@ -613,7 +611,8 @@ const Dashboard = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => { soundManager.play('transition'); navigate('/badges'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="badges-link bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 w-full mt-4 relative z-20"
+              className="premium-button py-4 px-6 w-full mt-4 relative z-20"
+              style={{ background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.8), rgba(194, 120, 3, 0.8))', boxShadow: '0 4px 15px rgba(234, 179, 8, 0.3)' }}
             >
               <div className="flex items-center justify-center space-x-2">
                 <span className="text-2xl">🎯</span>
@@ -627,7 +626,7 @@ const Dashboard = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => { soundManager.play('transition'); navigate('/profile'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="profile-section bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full mt-4 relative z-20"
+              className="premium-button py-4 px-6 w-full mt-4 relative z-20"
             >
               <div className="flex items-center justify-center space-x-2">
                 <FaUser className="text-lg" />
@@ -641,7 +640,7 @@ const Dashboard = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => { soundManager.play('transition'); navigate('/profile/edit'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full mt-4 relative z-20"
+              className="premium-button-blue py-4 px-6 w-full mt-4 relative z-20"
             >
               <div className="flex items-center justify-center space-x-2">
                 <FaEdit className="text-lg" />
@@ -655,7 +654,7 @@ const Dashboard = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => { soundManager.play('transition'); navigate('/whatsapp'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full mt-4 relative"
+              className="premium-button py-4 px-6 w-full mt-4 relative"
             >
               <div className="flex items-center justify-center space-x-2">
                 <span className="text-2xl">📱</span>
@@ -674,7 +673,7 @@ const Dashboard = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => { soundManager.play('transition'); navigate('/inbox'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full mt-4 relative z-20"
+              className="premium-button-blue py-4 px-6 w-full mt-4 relative z-20"
             >
               <div className="flex items-center justify-center space-x-2">
                 <span className="text-2xl">📬</span>
@@ -688,7 +687,7 @@ const Dashboard = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => { soundManager.play('transition'); navigate('/about'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 w-full mt-4 relative z-20"
+              className="premium-button-purple py-4 px-6 w-full mt-4 relative z-20"
             >
               <div className="flex items-center justify-center space-x-2">
                 <span className="text-2xl">🎬</span>
@@ -698,10 +697,10 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Quiz Battle Section */}
-          <div className="battle-section bg-gradient-to-br from-orange-500/10 to-red-500/10 dark:from-orange-500/20 dark:to-red-500/20 backdrop-blur-sm rounded-xl p-6 border border-orange-200/50 dark:border-orange-700/50 shadow-lg">
+          <div className="glass-panel battle-section p-6">
             <div className="flex items-center mb-4">
               <FaFire className="text-orange-500 text-2xl mr-2" />
-              <h4 className="text-lg font-semibold text-gray-800 dark:text-white">Quiz Battle</h4>
+              <h4 className="premium-font premium-heading text-lg text-gray-800 dark:text-white">Quiz Battle</h4>
             </div>
             <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
               Challenge your friends in real-time multiplayer quiz battles!
@@ -787,9 +786,16 @@ const Dashboard = () => {
                     ((battleMode === 'single' && selectedBattleChapter) || 
                      (battleMode === 'multi' && multiChapterSelection.length > 0 && multiChapterSelection.reduce((total, item) => total + item.questions, 0) >= 5)) &&
                     (!activeBattleRoom || activeBattleRoom.status !== 'waiting')
-                      ? 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white' 
+                      ? 'premium-button' 
                       : 'bg-gray-400 text-gray-600 cursor-not-allowed'
                   }`}
+                  style={
+                    ((battleMode === 'single' && selectedBattleChapter) || 
+                     (battleMode === 'multi' && multiChapterSelection.length > 0 && multiChapterSelection.reduce((total, item) => total + item.questions, 0) >= 5)) &&
+                    (!activeBattleRoom || activeBattleRoom.status !== 'waiting')
+                      ? { background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.8), rgba(220, 38, 38, 0.8))', boxShadow: '0 4px 15px rgba(249, 115, 22, 0.3)' }
+                      : {}
+                  }
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <FaPlus className="text-lg" />
@@ -803,7 +809,8 @@ const Dashboard = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleForceSubmission}
-                    className="w-full py-3 px-4 rounded-lg font-bold shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 bg-gradient-to-r from-orange-500 to-yellow-600 hover:from-orange-600 hover:to-yellow-700 text-white mb-3"
+                    className="w-full py-3 px-4 rounded-lg font-bold shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 mb-3"
+                    style={{ background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.8), rgba(234, 179, 8, 0.8))', boxShadow: '0 4px 15px rgba(249, 115, 22, 0.3)' }}
                   >
                     <div className="flex items-center justify-center space-x-2">
                       <span>⚡</span>
@@ -819,7 +826,8 @@ const Dashboard = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleEndBattle}
-                    className="w-full py-3 px-4 rounded-lg font-bold shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white"
+                    className="w-full py-3 px-4 rounded-lg font-bold shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                    style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(185, 28, 28, 0.8))', boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)' }}
                   >
                     <div className="flex items-center justify-center space-x-2">
                       <span>🛑</span>
@@ -878,11 +886,16 @@ const Dashboard = () => {
                 disabled={!activeBattleRoom || (activeBattleRoom.status === 'ended' || (!userInBattle && activeBattleRoom.status === 'started'))}
                 className={`w-full font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                   activeBattleRoom && (activeBattleRoom.status === 'waiting' || (activeBattleRoom.status === 'started' && userInBattle))
-                    ? userInBattle
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white focus:ring-blue-500 animate-pulse'
-                      : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white focus:ring-green-500 animate-pulse'
+                    ? 'premium-button animate-pulse'
                     : 'bg-gray-400 text-gray-600 cursor-not-allowed'
                 }`}
+                style={
+                  activeBattleRoom && (activeBattleRoom.status === 'waiting' || (activeBattleRoom.status === 'started' && userInBattle))
+                    ? userInBattle
+                      ? { background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(6, 182, 212, 0.8))', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)' }
+                      : { background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.8))', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }
+                    : {}
+                }
               >
                 <div className="flex items-center justify-center space-x-2">
                   <FaPlay className="text-sm" />

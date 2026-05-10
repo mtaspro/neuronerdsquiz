@@ -7,6 +7,7 @@ import BattleLeaderboardCard from "../components/BattleLeaderboardCard";
 import QuizLeaderboardCard from "../components/QuizLeaderboardCard";
 import soundManager from "../utils/soundUtils";
 import '../styles/leaderboard.css';
+import '../styles/premium-glass.css';
 
 const TableView = ({ players, activeTab }) => {
   const getRankIcon = (rank) => {
@@ -34,7 +35,7 @@ const TableView = ({ players, activeTab }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
+      className="glass-panel overflow-hidden"
     >
       <div className="overflow-x-auto">
         <table className="w-full">
@@ -65,8 +66,10 @@ const TableView = ({ players, activeTab }) => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className={`border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                  index < 3 ? 'bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20' : ''
+                className={`border-b border-gray-200/20 dark:border-gray-700/20 hover:bg-white/5 dark:hover:bg-white/5 transition-colors ${
+                  index === 0 ? 'rank-glow-1' : 
+                  index === 1 ? 'rank-glow-2' : 
+                  index === 2 ? 'rank-glow-3' : ''
                 }`}
               >
                 <td className="px-6 py-4">
@@ -224,12 +227,13 @@ export default function Leaderboard() {
   }
 
   return (
-    <div className="min-h-screen py-12 px-4 transition-colors duration-200 overflow-x-auto animated-bg" style={{
-      background: 'linear-gradient(-45deg, #ff6b35, #f7931e, #00d4ff, #00ff88, #ff6b35)',
-      backgroundSize: '400% 400%',
-      backgroundAttachment: 'fixed'
-    }}>
-      <div className="max-w-4xl mx-auto">
+    <div className="premium-glass-background min-h-screen py-12 px-4 transition-colors duration-200 overflow-x-auto relative">
+      {/* Mesh Gradient Effect */}
+      <div className="mesh-gradient-purple"></div>
+      <div className="mesh-gradient-green"></div>
+      <div className="mesh-gradient-blue"></div>
+      
+      <div className="max-w-4xl mx-auto relative z-10">
         {/* Event Banner */}
         <BattleEventBanner />
         
@@ -240,7 +244,7 @@ export default function Leaderboard() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-800 dark:text-white mb-4">
+          <h1 className="premium-font premium-heading text-4xl md:text-6xl text-gray-800 dark:text-white mb-4">
             🏆 Leaderboard
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
@@ -256,8 +260,8 @@ export default function Leaderboard() {
               }}
               className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
                 activeTab === 'general'
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'premium-button-blue'
+                  : 'glass-panel text-gray-700 dark:text-gray-300'
               }`}
             >
               📚 Divisional Ranking
@@ -269,8 +273,8 @@ export default function Leaderboard() {
               }}
               className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
                 activeTab === 'battle'
-                  ? 'bg-red-600 text-white shadow-lg'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'premium-button'
+                  : 'glass-panel text-gray-700 dark:text-gray-300'
               }`}
             >
               ⚔️ Global Ranking
@@ -286,8 +290,8 @@ export default function Leaderboard() {
               }}
               className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 ${
                 viewMode === 'cards'
-                  ? 'bg-cyan-600 text-white shadow-lg'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'premium-button-blue'
+                  : 'glass-panel text-gray-700 dark:text-gray-300'
               }`}
             >
               <FaTh className="text-sm" />
@@ -300,8 +304,8 @@ export default function Leaderboard() {
               }}
               className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 ${
                 viewMode === 'table'
-                  ? 'bg-cyan-600 text-white shadow-lg'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'premium-button-blue'
+                  : 'glass-panel text-gray-700 dark:text-gray-300'
               }`}
             >
               <FaList className="text-sm" />
@@ -310,8 +314,8 @@ export default function Leaderboard() {
           </div>
           
           {/* Info Panel */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-8 text-left max-w-2xl mx-auto">
-            <h3 className="font-semibold text-gray-800 dark:text-white mb-2">
+          <div className="glass-panel p-4 mb-8 text-left max-w-2xl mx-auto">
+            <h3 className="premium-font premium-heading font-semibold text-gray-800 dark:text-white mb-2">
               {activeTab === 'general' ? '🏆 Division System:' : '👑 Global Ranking:'}
             </h3>
             <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
