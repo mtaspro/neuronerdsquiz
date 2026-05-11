@@ -45,8 +45,8 @@ export default function SecretChat() {
   useEffect(() => {
     if (authenticated && phoneNumber && mode === 'chat') {
       loadHistory();
-      // Enable real-time sync every 3 seconds
-      const interval = setInterval(() => loadHistory(), 3000);
+      // Enable real-time sync every 7 seconds
+      const interval = setInterval(() => loadHistory(), 7000);
       return () => clearInterval(interval);
     }
   }, [phoneNumber, authenticated, mode, loadHistory]);
