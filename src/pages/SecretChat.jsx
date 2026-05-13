@@ -27,6 +27,9 @@ export default function SecretChat() {
   const [showFields, setShowFields] = useState(false);
   const [mode, setMode] = useState('chat');
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+  /** When true, message updates scroll to bottom; set false when user scrolls up to read older messages */
+  const stickToBottomRef = useRef(true);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -45,14 +48,26 @@ export default function SecretChat() {
   useEffect(() => {
     if (authenticated && phoneNumber && mode === 'chat') {
       loadHistory();
-      // Enable real-time sync every 7 seconds
       const interval = setInterval(() => loadHistory(), 7000);
       return () => clearInterval(interval);
     }
   }, [phoneNumber, authenticated, mode, loadHistory]);
 
   useEffect(() => {
-    if (authenticated && mode === 'chat') {
+    stickToBottomRef.current = true;
+  }, [phoneNumber]);
+
+  const updateStickToBottom = useCallback(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    stickToBottomRef.current = distanceFromBottom < 100;
+  }, []);
+
+  useEffect(() => {
+    if (!authenticated || mode !== 'chat') return;
+    if (stickToBottomRef.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, authenticated, mode]);
@@ -138,6 +153,7 @@ export default function SecretChat() {
         });
         
         setInputText('');
+        stickToBottomRef.current = true;
         await loadHistory();
       } catch (error) {
         alert('Send failed: ' + error.message);
@@ -222,20 +238,24 @@ export default function SecretChat() {
                     placeholder="Target ID (LID)"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full bg-gray-700/50 border border-gray-600/50 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-white text-black placeholder:text-gray-500 border border-gray-400 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 caret-black"
                   />
                   <input
                     type="text"
                     placeholder="Real number"
                     value={realNumber}
                     onChange={(e) => setRealNumber(e.target.value)}
-                    className="w-full bg-gray-700/50 border border-gray-600/50 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-white text-black placeholder:text-gray-500 border border-gray-400 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 caret-black"
                   />
                 </div>
               )}
             </div>
 
-            <div className="glass-panel p-4 rounded mb-4 h-96 overflow-y-auto">
+            <div
+              ref={messagesContainerRef}
+              onScroll={updateStickToBottom}
+              className="glass-panel p-4 rounded mb-4 h-96 overflow-y-auto"
+            >
               {messages.map((msg, index) => (
                 <div key={msg._id} className="mb-2 text-left">
                   <span className="text-gray-500 mr-2">
@@ -255,8 +275,9 @@ export default function SecretChat() {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="w-full bg-gray-700/50 border border-gray-600/50 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full bg-white text-black placeholder:text-gray-500 border border-gray-400 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 caret-black font-mono text-sm selection:bg-purple-200"
                 rows="3"
+                spellCheck={false}
               />
               <div className="text-xs text-gray-500 mt-2">
                 Shift+Enter: Send | Ctrl+[1-9,0]: 1st-10th | Ctrl+[Q-P]: 11th-20th
@@ -272,8 +293,9 @@ export default function SecretChat() {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="w-full bg-gray-700/50 border border-gray-600/50 px-3 py-2 rounded mb-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full bg-white text-black placeholder:text-gray-500 border border-gray-400 px-3 py-2 rounded mb-3 focus:outline-none focus:ring-2 focus:ring-purple-500 caret-black font-mono text-sm selection:bg-purple-200"
                 rows="6"
+                spellCheck={false}
               />
               <div className="text-xs text-gray-500">
                 Shift+Enter: Toggle encode/decode in same box
