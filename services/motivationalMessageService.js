@@ -135,238 +135,238 @@ class MotivationalMessageService {
         },
         {
           dayNumber: 46,
-          message: "46 days. You compare yourself with toppers.\nThey study. You observe. Big difference.",
-          category: 'insult'
+          message: "46 days. Some of you are finally locking in.\nOthers still negotiating with the syllabus. Interesting strategy.",
+          category: 'balanced'
         },
         {
           dayNumber: 45,
-          message: "45 days. Half panic, half denial.\nVery creative strategy. Never seen before.",
-          category: 'irony_hit'
+          message: "45 days. Progress is showing now.\nEven small daily wins? Very powerful. Very underrated.",
+          category: 'motivation'
         },
         {
           dayNumber: 44,
-          message: "44 days. You feel behind.\nBecause you are. Simple math.",
-          category: 'insult'
+          message: "44 days. If you're behind—start now.\nIf you're ahead—don't get comfortable. Simple rule.",
+          category: 'balanced'
         },
         {
           dayNumber: 43,
-          message: "43 days. You planned a comeback story.\nRight now it's just… a story.",
-          category: 'mock_praise'
+          message: "43 days. Your hard work is starting to look real.\nBeautiful thing. Keep going.",
+          category: 'motivation'
         },
         {
           dayNumber: 42,
-          message: "42 days. You said 'I'll fix everything soon.'\nSoon is doing a lot of work here.",
-          category: 'irony_hit'
+          message: "42 days. Panic won't save you.\nBut consistency? Tremendous results.",
+          category: 'inspiration'
         },
         {
           dayNumber: 41,
-          message: "41 days. Confidence still high.\nEvidence still missing.",
-          category: 'confidence_warning'
+          message: "41 days. Confidence is good now.\nAs long as it's backed by revision. Important detail.",
+          category: 'balanced'
         },
         {
           dayNumber: 40,
-          message: "40 days. Round number. Serious time.\nYou? Still negotiating with yourself.",
-          category: 'insult'
+          message: "40 days. Big number. Big pressure.\nBut also enough time to seriously improve.",
+          category: 'hope'
         },
         {
           dayNumber: 39,
-          message: "39 days. You made another plan.\nThis one will fail… but differently.",
-          category: 'absurd_twist'
+          message: "39 days. Some students are transforming completely.\nVery scary. In a good way.",
+          category: 'motivation'
         },
         {
           dayNumber: 38,
-          message: "38 days. You checked syllabus today.\nVery brave. Didn't study it though.",
-          category: 'mock_praise'
+          message: "38 days. You're not the same student from 2 months ago.\nHopefully better. Much better.",
+          category: 'reflection'
         },
         {
           dayNumber: 37,
-          message: "37 days. Panic starting.\nStill not strong enough to beat laziness.",
-          category: 'confidence_warning'
+          message: "37 days. Effort compounds quietly.\nThen suddenly everyone notices.",
+          category: 'inspiration'
         },
         {
           dayNumber: 36,
-          message: "36 days. You said 'no distractions today.'\nPhone says otherwise.",
-          category: 'insult'
+          message: "36 days. One productive day still matters.\nNever underestimate momentum.",
+          category: 'motivation'
         },
         {
           dayNumber: 35,
-          message: "35 days. You're tired… from not studying.\nVery interesting condition.",
-          category: 'absurd_twist'
+          message: "35 days. Science students surviving chemistry, physics, math together.\nHonestly? Historic resilience.",
+          category: 'science_student'
         },
         {
           dayNumber: 34,
-          message: "34 days. You feel pressure now.\nGood. Took you long enough.",
-          category: 'insult'
+          message: "34 days. You're tired because you're trying.\nThat's a much better problem now.",
+          category: 'motivation'
         },
         {
           dayNumber: 33,
-          message: "33 days. You started something.\nStopped shortly after. Consistency unmatched.",
-          category: 'mock_praise'
+          message: "33 days. Some chapters finally make sense.\nMiracles happening everywhere.",
+          category: 'absurd_twist'
         },
         {
           dayNumber: 32,
-          message: "32 days. You say 'I work best under pressure.'\nPressure says: we'll see.",
-          category: 'irony_hit'
+          message: "32 days. Maybe you're behind.\nMaybe one focused month changes everything.",
+          category: 'hope'
         },
         {
           dayNumber: 31,
-          message: "31 days. One month left.\nStill acting like it's vacation.",
-          category: 'insult'
+          message: "31 days. One month left.\nThis is where serious students are created.",
+          category: 'pressure_motivation'
         },
         {
           dayNumber: 30,
-          message: "30 days. Big moment. Big urgency.\nStill small effort.",
-          category: 'contrast'
+          message: "30 days. The pressure is real now.\nGood. Diamonds, remember?",
+          category: 'callback'
         },
         {
           dayNumber: 29,
-          message: "29 days. You tried studying seriously.\nGot distracted professionally.",
-          category: 'absurd_twist'
+          message: "29 days. Your future self is watching closely.\nVery judgmental person.",
+          category: 'funny_motivation'
         },
         {
           dayNumber: 28,
-          message: "28 days. You feel the fear.\nFinally something real.",
-          category: 'confidence_warning'
+          message: "28 days. At this point, discipline beats motivation.\nEvery single time.",
+          category: 'inspiration'
         },
         {
           dayNumber: 27,
-          message: "27 days. You're rushing now.\nShould've rushed earlier.",
-          category: 'insult'
+          message: "27 days. You're studying topics you once feared.\nLook at that growth. Incredible.",
+          category: 'motivation'
         },
         {
           dayNumber: 26,
-          message: "26 days. You regret wasting time.\nRegret doesn't solve questions.",
-          category: 'insult'
+          message: "26 days. Revision season.\nWhere confidence and confusion fight daily.",
+          category: 'balanced'
         },
         {
           dayNumber: 25,
-          message: "25 days. You started studying properly.\nWhy does it feel so new?",
-          category: 'irony_hit'
+          message: "25 days. Quarter century left.\nStill enough time for a legendary comeback.",
+          category: 'hope'
         },
         {
           dayNumber: 24,
-          message: "24 days. You're trying hard now.\nTime is not impressed.",
-          category: 'insult'
+          message: "24 days. Your consistency is becoming dangerous now.\nVery good sign.",
+          category: 'motivation'
         },
         {
           dayNumber: 23,
-          message: "23 days. Panic mode activated.\nPreparation still loading.",
-          category: 'absurd_twist'
+          message: "23 days. Some of you are finally believing in yourselves.\nAbout time.",
+          category: 'confidence'
         },
         {
           dayNumber: 22,
-          message: "22 days. You believe in miracles.\nExam doesn't.",
-          category: 'insult'
+          message: "22 days. HSC science students running on stress and determination.\nPowerful combination.",
+          category: 'science_student'
         },
         {
           dayNumber: 21,
-          message: "21 days. Three weeks left.\nNow it's real. Very real.",
-          category: 'pressure'
+          message: "21 days. Three weeks left.\nNot time to quit. Time to sharpen.",
+          category: 'pressure_motivation'
         },
         {
           dayNumber: 20,
-          message: "20 days. You study fast now.\nUnderstanding? Optional.",
-          category: 'irony_hit'
+          message: "20 days. You're closer than you think.\nKeep pushing.",
+          category: 'motivation'
         },
         {
           dayNumber: 19,
-          message: "19 days. You skip hard topics.\nThey won't skip you.",
-          category: 'insult'
+          message: "19 days. Hard topics don't look impossible anymore.\nThat's growth.",
+          category: 'reflection'
         },
         {
           dayNumber: 18,
-          message: "18 days. You're exhausted.\nFrom catching up with your past.",
-          category: 'absurd_twist'
+          message: "18 days. Your brain is overloaded.\nMeans it's adapting. Beautiful science.",
+          category: 'science_student'
         },
         {
           dayNumber: 17,
-          message: "17 days. You wish for more time.\nTime wishes you used it better.",
-          category: 'irony_hit'
+          message: "17 days. You're not aiming for perfection now.\nYou're aiming for progress. Smart move.",
+          category: 'balanced'
         },
         {
           dayNumber: 16,
-          message: "16 days. You try everything now.\nExcept going back in time.",
-          category: 'absurd_twist'
+          message: "16 days. Even average days matter now.\nKeep stacking them.",
+          category: 'motivation'
         },
         {
           dayNumber: 15,
-          message: "15 days. Half panic, half studying.\nStill not enough.",
-          category: 'insult'
+          message: "15 days. Half the battle now is mental.\nStay steady.",
+          category: 'inspiration'
         },
         {
           dayNumber: 14,
-          message: "14 days. Two weeks.\nNo more jokes. Only reality.",
-          category: 'pressure'
+          message: "14 days. Two weeks.\nYou've come too far to slow down now.",
+          category: 'pressure_motivation'
         },
         {
           dayNumber: 13,
-          message: "13 days. You are serious now.\nFinally. Very late, but welcome.",
-          category: 'mock_praise'
+          message: "13 days. Imagine giving up after surviving physics numericals.\nCouldn't be you.",
+          category: 'funny_motivation'
         },
         {
           dayNumber: 12,
-          message: "12 days. You revise quickly.\nBrain struggling to keep up.",
-          category: 'irony_hit'
+          message: "12 days. Revision hitting differently now.\nSome answers entering permanent memory.",
+          category: 'motivation'
         },
         {
           dayNumber: 11,
-          message: "11 days. Confidence shaky.\nGood. Means you see reality.",
-          category: 'confidence_warning'
+          message: "11 days. You're stronger than your old excuses.\nVery important development.",
+          category: 'confidence'
         },
         {
           dayNumber: 10,
-          message: "10 days. Single digits.\nNo hiding now.",
-          category: 'pressure'
+          message: "10 days. Single digits tomorrow.\nLock in. Legendary finish possible.",
+          category: 'pressure_motivation'
         },
         {
           dayNumber: 9,
-          message: "9 days. You wish you started earlier.\nClassic move.",
-          category: 'insult'
+          message: "9 days. The students who kept trying? It's starting to show.",
+          category: 'motivation'
         },
         {
           dayNumber: 8,
-          message: "8 days. You study all day.\nRetention says: not so fast.",
-          category: 'irony_hit'
+          message: "8 days. Sleep matters. Revision matters.\nMental stability? Also useful.",
+          category: 'balanced'
         },
         {
           dayNumber: 7,
-          message: "7 days. One week.\nThis is it.",
-          category: 'pressure'
+          message: "7 days. One week left.\nNo fear now. Only execution.",
+          category: 'final_push'
         },
         {
           dayNumber: 6,
-          message: "6 days. You try to stay calm.\nPanic knocking loudly.",
-          category: 'confidence_warning'
+          message: "6 days. You've studied harder than people realize.\nBe proud of that quietly.",
+          category: 'reflection'
         },
         {
           dayNumber: 5,
-          message: "5 days. You revise everything.\nEverything revises you back.",
-          category: 'absurd_twist'
+          message: "5 days. The syllabus once looked impossible.\nNow look at you.",
+          category: 'motivation'
         },
         {
           dayNumber: 4,
-          message: "4 days. Sleep? Optional.\nStress? Mandatory.",
-          category: 'insult'
+          message: "4 days. Keep calm. Revise smart.\nPanic has terrible marks usually.",
+          category: 'funny_motivation'
         },
         {
           dayNumber: 3,
-          message: "3 days. You promise yourself you'll do better.\nBit late for promises.",
-          category: 'insult'
+          message: "3 days. You're entering the final stage now.\nTrust the work you've done.",
+          category: 'final_push'
         },
         {
           dayNumber: 2,
-          message: "2 days. Final preparation.\nReality fully unlocked.",
-          category: 'pressure'
+          message: "2 days. No more overthinking.\nJust focus and finish strong.",
+          category: 'final_push'
         },
         {
           dayNumber: 1,
-          message: "1 day. Tomorrow is the exam.\nNo more 'tomorrow' excuses now.",
-          category: 'final_warning'
+          message: "1 day. Tomorrow changes things.\nWalk in prepared. Walk in proud.",
+          category: 'final_push'
         },
         {
           dayNumber: 0,
-          message: "0 days. This is it.\nHope you brought more than confidence.",
-          category: 'final_hit'
+          message: "0 days. HSC day.\nAfter all the stress, late nights, and effort—you made it here. Now go show them.",
+          category: 'finale'
         }
       ];
 

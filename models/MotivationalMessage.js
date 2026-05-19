@@ -19,7 +19,13 @@ const motivationalMessageSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['insult', 'mock_praise', 'absurd_twist', 'confidence_warning', 'irony_hit', 'denial', 'contrast', 'pressure', 'final_warning', 'final_hit'],
+    enum: [
+      'insult', 'mock_praise', 'absurd_twist', 'confidence_warning', 'irony_hit',
+      'denial', 'contrast', 'pressure', 'final_warning', 'final_hit',
+      'balanced', 'motivation', 'inspiration', 'hope', 'reflection',
+      'science_student', 'pressure_motivation', 'callback', 'funny_motivation',
+      'confidence', 'final_push', 'finale'
+    ],
     required: true
   },
   createdAt: {
