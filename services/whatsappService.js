@@ -78,6 +78,15 @@ class WhatsAppService {
     console.log('🚀 Starting integrated WhatsApp bot...');
     await whatsappBot.startWhatsAppBot();
   }
+
+  async markChatAsRead({ lid, realNumber, messageKeys }) {
+    try {
+      const result = await whatsappBot.markChatAsRead({ lid, realNumber, messageKeys });
+      return result;
+    } catch (error) {
+      return { success: false, markedCount: 0, error: error.message };
+    }
+  }
 }
 
 export default new WhatsAppService();

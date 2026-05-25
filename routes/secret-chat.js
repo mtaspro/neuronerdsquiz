@@ -10,6 +10,10 @@ const rot13 = (str) => str.replace(/[a-zA-Z]/g, c =>
   String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26)
 );
 
+function digitsOnly(value) {
+  return String(value || '').replace(/\D/g, '');
+}
+
 // Get chat history
 router.get('/history/:phoneNumber', sessionMiddleware, async (req, res) => {
   try {
@@ -120,7 +124,7 @@ router.post('/send', sessionMiddleware, async (req, res) => {
 // Auto-save incoming messages (called by WhatsApp bot)
 router.post('/auto-save', async (req, res) => {
   try {
-    const { phoneNumber, friendName, message, encrypted, sender } = req.body;
+    const { phoneNumber, friendName, message, encrypted, sender, waKey } = req.body;
     
     console.log('💾 [AUTO-SAVE] Incoming request:', {
       phoneNumber,
@@ -136,13 +140,22 @@ router.post('/auto-save', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    const saved = await SecretChat.create({
+    const doc = {
       phoneNumber,
       friendName,
       message,
       encrypted,
       sender
-    });
+    };
+    if (waKey?.id && waKey?.remoteJid) {
+      doc.waKey = {
+        remoteJid: waKey.remoteJid,
+        id: waKey.id,
+        fromMe: !!waKey.fromMe,
+        participant: waKey.participant || undefined
+      };
+    }
+    const saved = await SecretChat.create(doc);
     
     console.log('✅ [AUTO-SAVE] Successfully saved to DB with ID:', saved._id);
     console.log('📊 [AUTO-SAVE] Saved document:', {
@@ -186,6 +199,71 @@ router.post('/fetch-whatsapp/:phoneNumber', sessionMiddleware, async (req, res) 
       message: 'Showing existing messages from database'
     });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Mark friend's messages as read on WhatsApp (blue ticks)
+router.post('/mark-read/:phoneNumber', sessionMiddleware, async (req, res) => {
+  try {
+    let { phoneNumber } = req.params;
+    let { realNumber } = req.body;
+
+    phoneNumber = phoneNumber.split('@')[0];
+
+    if (!realNumber) {
+      const mapping = await SecretChat.findOne({
+        phoneNumber: { $regex: `^${phoneNumber}` },
+        sender: 'me',
+        realNumber: { $exists: true, $ne: '' }
+      }).sort({ timestamp: -1 });
+      realNumber = mapping?.realNumber;
+    }
+
+    if (!realNumber) {
+      return res.status(400).json({
+        error: 'Real number required. Set it in Config or send at least one message first.'
+      });
+    }
+
+    if (!realNumber.startsWith('88')) {
+      realNumber = '88' + digitsOnly(realNumber);
+    }
+
+    const friendMessages = await SecretChat.find({
+      phoneNumber: { $regex: `^${phoneNumber}` },
+      sender: 'friend',
+      'waKey.id': { $exists: true, $ne: null }
+    })
+      .sort({ timestamp: -1 })
+      .limit(50);
+
+    const messageKeys = friendMessages.map((m) => m.waKey).filter((k) => k?.id);
+
+    const result = await whatsappService.markChatAsRead({
+      lid: phoneNumber,
+      realNumber,
+      messageKeys
+    });
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.error || 'Failed to mark messages as read' });
+    }
+
+    if (friendMessages.length > 0) {
+      await SecretChat.updateMany(
+        { _id: { $in: friendMessages.map((m) => m._id) } },
+        { waMarkedRead: true }
+      );
+    }
+
+    res.json({
+      success: true,
+      markedCount: result.markedCount,
+      jid: result.jid
+    });
+  } catch (error) {
+    console.error('❌ [MARK-READ] Error:', error);
     res.status(500).json({ error: error.message });
   }
 });

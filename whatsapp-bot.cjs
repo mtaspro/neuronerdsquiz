@@ -12,6 +12,68 @@ let sock = null;
 let isConnected = false;
 const conversationHistory = new Map(); // Store last 10 messages per chat
 const MAX_HISTORY = 10;
+/** Recent incoming message keys per WhatsApp JID (for read receipts) */
+const recentIncomingKeys = new Map();
+const MAX_RECENT_KEYS = 50;
+
+function rememberIncomingKey(chatId, message) {
+    if (!message?.key?.id) return;
+    if (!recentIncomingKeys.has(chatId)) recentIncomingKeys.set(chatId, []);
+    const list = recentIncomingKeys.get(chatId);
+    list.push({
+        key: message.key,
+        messageTimestamp: message.messageTimestamp || Math.floor(Date.now() / 1000)
+    });
+    if (list.length > MAX_RECENT_KEYS) list.splice(0, list.length - MAX_RECENT_KEYS);
+}
+
+function digitsOnly(value) {
+    return String(value || '').replace(/\D/g, '');
+}
+
+function toWhatsAppJid(numberOrJid) {
+    if (!numberOrJid) return null;
+    const raw = String(numberOrJid).trim();
+    if (raw.includes('@')) return raw;
+    const digits = digitsOnly(raw);
+    if (!digits) return null;
+    return `${digits}@s.whatsapp.net`;
+}
+
+function collectJidCandidates(lid, realNumber, remoteJids = []) {
+    const candidates = new Set();
+    for (const jid of remoteJids) {
+        if (jid) candidates.add(jid);
+    }
+    const waJid = toWhatsAppJid(realNumber);
+    if (waJid) candidates.add(waJid);
+    if (lid) {
+        const lidDigits = digitsOnly(lid);
+        if (lidDigits) {
+            candidates.add(`${lidDigits}@lid`);
+            candidates.add(`${lidDigits}@s.whatsapp.net`);
+        }
+    }
+    return [...candidates];
+}
+
+function dedupeMessageKeys(keys) {
+    const seen = new Set();
+    const unique = [];
+    for (const key of keys) {
+        if (!key?.id || !key?.remoteJid) continue;
+        const sig = `${key.remoteJid}:${key.id}`;
+        if (seen.has(sig)) continue;
+        seen.add(sig);
+        unique.push({
+            remoteJid: key.remoteJid,
+            id: key.id,
+            fromMe: key.fromMe === true,
+            ...(key.participant ? { participant: key.participant } : {})
+        });
+    }
+    return unique;
+}
 
 const sessionPath = path.join(__dirname, 'session');
 console.log('📁 Using session folder:', sessionPath);
@@ -217,6 +279,8 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`,
                 
                 // Handle personal messages
                 if (!isGroup && messageText.trim()) {
+                    rememberIncomingKey(chatId, message);
+
                     const axios = require('axios');
                     const apiUrl = process.env.API_URL || 'http://localhost:5000';
                     
@@ -281,7 +345,13 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`,
                             friendName: sender,
                             message: messageText,
                             encrypted: encryptedMessage,
-                            sender: 'friend'
+                            sender: 'friend',
+                            waKey: {
+                                remoteJid: message.key.remoteJid,
+                                id: message.key.id,
+                                fromMe: !!message.key.fromMe,
+                                participant: message.key.participant || undefined
+                            }
                         };
                         
                         console.log(`💾 SAVING TO DB WITH PAYLOAD:`, savePayload);
@@ -347,6 +417,73 @@ function getConnectionStatus() {
     return isConnected;
 }
 
+/**
+ * Send WhatsApp read receipts for a contact (blue ticks for friend).
+ * Uses DB-stored keys plus in-memory keys from recent incoming messages.
+ */
+async function markChatAsRead({ lid, realNumber, messageKeys = [] }) {
+    if (!isConnected || !sock) {
+        throw new Error('WhatsApp not connected');
+    }
+
+    const remoteJidsFromDb = messageKeys.map((k) => k.remoteJid).filter(Boolean);
+    const jidCandidates = collectJidCandidates(lid, realNumber, remoteJidsFromDb);
+
+    const keysToRead = dedupeMessageKeys(
+        messageKeys.map((k) => ({
+            remoteJid: k.remoteJid,
+            id: k.id,
+            fromMe: k.fromMe,
+            participant: k.participant
+        }))
+    );
+
+    for (const jid of jidCandidates) {
+        const cached = recentIncomingKeys.get(jid) || [];
+        for (const item of cached) {
+            if (item?.key?.id) keysToRead.push(item.key);
+        }
+    }
+
+    const uniqueKeys = dedupeMessageKeys(keysToRead);
+    if (uniqueKeys.length === 0) {
+        return { success: false, markedCount: 0, error: 'No message keys found. New messages will work after they arrive.' };
+    }
+
+    await sock.readMessages(uniqueKeys);
+
+    const primaryJid = uniqueKeys[uniqueKeys.length - 1].remoteJid || jidCandidates[0];
+    const lastCached = recentIncomingKeys.get(primaryJid);
+    const lastEntry = lastCached?.[lastCached.length - 1];
+
+    if (primaryJid && lastEntry?.key) {
+        try {
+            await sock.chatModify(
+                {
+                    markRead: true,
+                    lastMessages: [
+                        {
+                            key: lastEntry.key,
+                            messageTimestamp: lastEntry.messageTimestamp
+                        }
+                    ]
+                },
+                primaryJid
+            );
+        } catch (modifyError) {
+            console.warn('chatModify markRead skipped:', modifyError.message);
+        }
+    }
+
+    for (const jid of jidCandidates) {
+        recentIncomingKeys.delete(jid);
+    }
+    if (primaryJid) recentIncomingKeys.delete(primaryJid);
+
+    console.log(`✅ Marked ${uniqueKeys.length} message(s) as read for ${primaryJid}`);
+    return { success: true, markedCount: uniqueKeys.length, jid: primaryJid };
+}
+
 module.exports = {
     startWhatsAppBot,
     sendMessage,
@@ -354,5 +491,6 @@ module.exports = {
     getGroups,
     getGroupMembers,
     getConnectionStatus,
-    getSock: () => sock
+    getSock: () => sock,
+    markChatAsRead
 };

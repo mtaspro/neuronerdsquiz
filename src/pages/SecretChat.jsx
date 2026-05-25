@@ -26,6 +26,7 @@ export default function SecretChat() {
   const [showDecrypted, setShowDecrypted] = useState({});
   const [showFields, setShowFields] = useState(false);
   const [mode, setMode] = useState('chat');
+  const [markingRead, setMarkingRead] = useState(false);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   /** When true, message updates scroll to bottom; set false when user scrolls up to read older messages */
@@ -121,6 +122,27 @@ export default function SecretChat() {
       await loadHistory();
     } catch (error) {
       alert('Fetch failed: ' + error.message);
+    }
+  };
+
+  const markAsReadOnWhatsApp = async () => {
+    if (!phoneNumber.trim()) {
+      alert('Set Target ID (LID) in Config first.');
+      return;
+    }
+    setMarkingRead(true);
+    try {
+      const token = secureStorage.getToken();
+      const res = await axios.post(
+        `${API_URL}/api/secret-chat/mark-read/${encodeURIComponent(phoneNumber)}`,
+        { realNumber: realNumber.trim() || undefined },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert(`Marked ${res.data.markedCount} message(s) as read on WhatsApp.`);
+    } catch (error) {
+      alert(error.response?.data?.error || error.message || 'Failed to mark as read');
+    } finally {
+      setMarkingRead(false);
     }
   };
 
@@ -229,6 +251,16 @@ export default function SecretChat() {
                 </button>
                 <button onClick={fetchFromWhatsApp} className="glass-panel px-4 py-2 rounded">
                   📥 Sync
+                </button>
+                <button
+                  type="button"
+                  onClick={markAsReadOnWhatsApp}
+                  disabled={markingRead}
+                  className="glass-panel px-4 py-2 rounded text-lg font-semibold disabled:opacity-50 leading-none"
+                  title="Mark latest messages as read on WhatsApp (blue ticks for your friend)"
+                  aria-label="Mark as read on WhatsApp"
+                >
+                  {markingRead ? '…' : '✓✓'}
                 </button>
               </div>
               {showFields && (

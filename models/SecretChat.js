@@ -7,7 +7,15 @@ const secretChatSchema = new mongoose.Schema({
   message: { type: String, required: true },
   encrypted: { type: String, required: true },
   sender: { type: String, enum: ['friend', 'me'], required: true },
-  timestamp: { type: Date, default: Date.now, index: true }
+  timestamp: { type: Date, default: Date.now, index: true },
+  /** WhatsApp message key for sending read receipts via Baileys */
+  waKey: {
+    remoteJid: String,
+    id: String,
+    fromMe: { type: Boolean, default: false },
+    participant: String
+  },
+  waMarkedRead: { type: Boolean, default: false }
 });
 
 export default mongoose.model('SecretChat', secretChatSchema);
