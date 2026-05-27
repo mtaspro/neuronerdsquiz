@@ -22,12 +22,15 @@ export const sessionMiddleware = async (req, res, next) => {
     session.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await session.save();
 
+    const populatedUser = session.userId;
+    const userId = populatedUser?._id ?? populatedUser;
+
     req.user = {
-      userId: session.userId._id,
-      email: session.userId.email,
-      isAdmin: session.userId.isAdmin,
-      isSuperAdmin: session.userId.isSuperAdmin,
-      userData: session.userData || session.userId // Fallback to populated user data
+      userId,
+      email: populatedUser?.email,
+      isAdmin: populatedUser?.isAdmin,
+      isSuperAdmin: populatedUser?.isSuperAdmin,
+      userData: session.userData || populatedUser
     };
 
     next();

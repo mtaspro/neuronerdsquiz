@@ -54,7 +54,6 @@ import MaintenanceNotification from './components/MaintenanceNotification';
 import { useMaintenance } from './hooks/useMaintenance';
 import { SmoothScrollProvider } from './components/SmoothScrollProvider';
 import WhatsNewModal from './components/WhatsNewModal';
-import PremiumUpdateModal from './components/PremiumUpdateModal';
 import SupportNeuronerds from './components/SupportNeuronerds';
 
 // Optional Navbar
@@ -665,11 +664,8 @@ function AppContent() {
         <MaintenanceOverlay isActive={isMaintenanceMode} isSuperAdmin={isSuperAdmin} />
       </motion.div>
       
-      {/* What's New Modal - Rendered at root level */}
+      {/* What's New Modal - once per user (MongoDB + local cache) */}
       <WhatsNewModal />
-      
-      {/* Premium Update Modal - Shown to all users for the new UI update */}
-      <PremiumUpdateModal />
       
       {/* Support Neuronerds Button - Floating on every page */}
       <SupportNeuronerds />

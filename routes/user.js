@@ -154,8 +154,11 @@ router.get('/profile', sessionMiddleware, async (req, res) => {
 // Check if user has seen what's new modal
 router.get('/whats-new-status', sessionMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('hasSeenWhatsNew');
-    res.json({ hasSeenWhatsNew: user?.hasSeenWhatsNew || false });
+    const user = await User.findById(req.user.userId).select('hasSeenWhatsNew').lean();
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({ hasSeenWhatsNew: user.hasSeenWhatsNew === true });
   } catch (error) {
     res.status(500).json({ error: 'Failed to check status' });
   }
@@ -164,8 +167,17 @@ router.get('/whats-new-status', sessionMiddleware, async (req, res) => {
 // Mark what's new modal as seen
 router.post('/mark-whats-new-seen', sessionMiddleware, async (req, res) => {
   try {
-    await User.findByIdAndUpdate(req.user.userId, { hasSeenWhatsNew: true });
-    res.json({ success: true });
+    const updated = await User.findByIdAndUpdate(
+      req.user.userId,
+      { $set: { hasSeenWhatsNew: true } },
+      { new: true }
+    ).select('hasSeenWhatsNew');
+
+    if (!updated) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ success: true, hasSeenWhatsNew: updated.hasSeenWhatsNew });
   } catch (error) {
     res.status(500).json({ error: 'Failed to mark as seen' });
   }
