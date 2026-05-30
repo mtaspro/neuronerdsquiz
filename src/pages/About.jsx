@@ -77,7 +77,7 @@ const TeamSection = ({ teamMembers }) => {
           animate={{ opacity: isInView ? 1 : 0 }}
           transition={{ delay: 0.5, duration: 1 }}
         >
-          The brilliant minds behind Neuronerds Quiz and NeuraX AI
+          The brilliant minds behind HSCAura and NeuraX AI
         </motion.p>
       </motion.div>
 
@@ -212,7 +212,7 @@ const TeamSection = ({ teamMembers }) => {
                       animate={{ opacity: isInView ? 1 : 0 }}
                       transition={{ delay: index * 0.3 + 0.6, duration: 0.6 }}
                     >
-                      Neuronerds Study Group
+                      HSCAura Study Group
                     </motion.p>
                   )}
                   
@@ -767,7 +767,7 @@ const About = () => {
       role: 'Lead Developer',
       avatar: '👨💻',
       description: 'Full-stack development, feature planning, design, and deployment',
-      message: 'Building Neuronerds Quiz and NeuraX has been an incredible journey of turning ideas into reality. From simple quizzes to advanced AI capabilities - every line of code represents hours of passion and dedication to create something that truly revolutionizes how students learn.',
+      message: 'Building HSCAura and NeuraX has been an incredible journey of turning ideas into reality. From simple quizzes to advanced AI capabilities - every line of code represents hours of passion and dedication to create something that truly revolutionizes how students learn.',
       contributions: [
         'Complete full-stack architecture',
         'Real-time battle system implementation',
@@ -787,8 +787,8 @@ const About = () => {
       name: 'Akhyar Fardin',
       role: 'Founder & CEO',
       avatar: '🧠',
-      description: 'Visionary behind the Neuronerds movement',
-      message: 'Neuronerds represents our vision of making learning competitive, engaging, and accessible to everyone. We believe that when friends compete in a healthy environment, they push each other to achieve greatness.',
+      description: 'Visionary behind the HSCAura movement',
+      message: 'HSCAura represents our vision of making learning competitive, engaging, and accessible to everyone. We believe that when friends compete in a healthy environment, they push each other to achieve greatness.',
       contributions: [
         'Strategic vision and roadmap',
         'Community growth initiatives',
@@ -825,7 +825,7 @@ const About = () => {
       role: 'Managing Director',
       avatar: '🗓️',
       description: 'Manages operations, schedules exams, hosts battles, and oversees group activities',
-      message: 'Managing Neuronerds is about creating an environment where everyone can thrive. From scheduling exams to hosting battles, every task is an opportunity to make learning more engaging and organized for our community.',
+      message: 'Managing HSCAura is about creating an environment where everyone can thrive. From scheduling exams to hosting battles, every task is an opportunity to make learning more engaging and organized for our community.',
       contributions: [
         'Exam scheduling and coordination',
         'Battle hosting and management',
@@ -958,7 +958,7 @@ const About = () => {
                 transition={{ duration: 2, delay: 1.5, ease: [0.23, 1, 0.32, 1] }}
                 className="aura-subhead text-lg sm:text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed"
               >
-                Meet the passionate team behind Neuronerds Quiz and discover NeuraX - 
+                Meet the passionate team behind HSCAura and discover NeuraX - 
                 our advanced AI assistant that's revolutionizing how we learn and compete.
               </motion.p>
             </motion.div>

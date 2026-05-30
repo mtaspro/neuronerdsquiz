@@ -6,7 +6,7 @@ import axios from 'axios';
 import { secureStorage } from '../utils/secureStorage';
 import getEnvironmentConfig from '../config/environment';
 
-const WHATS_NEW_SEEN_KEY = 'neuronerds_whats_new_seen';
+const WHATS_NEW_SEEN_KEY = 'hscaura_whats_new_seen';
 
 let DotLottieReact = null;
 try {

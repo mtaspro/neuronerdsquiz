@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './EventShowdown.css';
 import soundManager from '../utils/soundUtils';
 // Use Cloudinary URL instead of local file
-const backgroundMusicFile = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1/audio/neuronerds-showdown.mp3';
+const backgroundMusicFile = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1/audio/hscaura-showdown.mp3';
 
 const EventShowdown = ({ eventData }) => {
   const [timeLeft, setTimeLeft] = useState('');
@@ -61,7 +61,7 @@ const EventShowdown = ({ eventData }) => {
       </audio>
       
       <div className="hero-section">
-        <h1 className="event-title">🔥 The NeuroNerds Showdown</h1>
+        <h1 className="event-title">🔥 The HSCAura Showdown</h1>
         <p className="event-subtitle">🏆 Epic Battle Event. Compete for Glory!</p>
         
         <div className="sound-toggle" onClick={toggleSound}>

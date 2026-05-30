@@ -1,6 +1,6 @@
 {
-  "name": "Neuronerds Quiz",
-  "short_name": "Neuronerds",
+  "name": "HSCAura",
+  "short_name": "HSCAura",
   "description": "Competitive learning platform where friends compete in real-time quiz battles",
   "start_url": "/",
   "display": "standalone",

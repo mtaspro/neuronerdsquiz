@@ -240,7 +240,7 @@ export default function IntroScreen() {
           >
             <FuturisticLoader
               progress={preloaderProgress}
-              title="NEURONERDS"
+              title="HSCAura"
               subtitle="Synchronizing quantum learning matrix"
               onSkip={finishLoading}
             />
@@ -364,7 +364,7 @@ export default function IntroScreen() {
           <p className="aura-label mb-4">Next-gen learning platform</p>
           <ParallaxElement speed={0.08}>
             <h1 className="aura-headline text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight">
-              NeuroNerds Quiz
+              HSCAura
             </h1>
           </ParallaxElement>
 

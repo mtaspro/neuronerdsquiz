@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaCopy, FaCheck } from 'react-icons/fa';
 import QRCode from 'qrcode';
 
-export default function SupportNeuronerds() {
+export default function SupportHSCAura() {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [customAmount, setCustomAmount] = useState('');
@@ -71,7 +71,7 @@ export default function SupportNeuronerds() {
     if (qrDataUrl) {
       const link = document.createElement('a');
       link.href = qrDataUrl;
-      link.download = 'neuronerds-support-qr.png';
+      link.download = 'hscaura-support-qr.png';
       link.click();
     }
   };
@@ -127,7 +127,7 @@ export default function SupportNeuronerds() {
                       <span className="text-4xl">☕</span>
                       <div>
                         <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                          Support Neuronerds
+                          Support HSCAura
                         </h2>
                         <p className="text-sm text-gray-400">Fuel the developer's energy ⚡</p>
                       </div>
@@ -143,7 +143,7 @@ export default function SupportNeuronerds() {
                   {/* Description */}
                   <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-purple-500/20 rounded-2xl p-4 mb-6">
                     <p className="text-gray-200 text-sm leading-relaxed">
-                      <span className="text-lg">🥰</span> Hey there! Neuronerds is completely <span className="font-semibold text-blue-400">free</span> and always will be. But you know what keeps developers going? <span className="font-semibold text-purple-400">Coffee</span> ☕ and your love 💙
+                      <span className="text-lg">🥰</span> Hey there! HSCAura is completely <span className="font-semibold text-blue-400">free</span> and always will be. But you know what keeps developers going? <span className="font-semibold text-purple-400">Coffee</span> ☕ and your love 💙
                     </p>
                     <p className="text-gray-300 text-sm mt-3">
                       Every little bit helps us build cooler features, fix bugs faster, and keep the energy flowing! <span className="text-lg">✨</span>
@@ -272,7 +272,7 @@ export default function SupportNeuronerds() {
                   {/* Footer Message */}
                   <div className="text-center text-gray-400 text-sm">
                     <p>
-                      <span className="text-lg">💙</span> Whether you donate or not, thank you for being part of the Neuronerds family! <span className="text-lg">🥰</span>
+                      <span className="text-lg">💙</span> Whether you donate or not, thank you for being part of the HSCAura family! <span className="text-lg">🥰</span>
                     </p>
                   </div>
                 </div>

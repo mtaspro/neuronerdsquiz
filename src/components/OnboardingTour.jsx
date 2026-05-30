@@ -15,7 +15,7 @@ const OnboardingTour = ({
   const getDashboardSteps = () => [
     {
       target: '.welcome-section',
-      title: '🎉 Welcome to NeuroNerds Quiz!',
+      title: '🎉 Welcome to HSCAura!',
       content: 'Let\'s take a quick tour to help you get started with our interactive quiz platform.',
       placement: 'center',
     },
@@ -66,7 +66,7 @@ const OnboardingTour = ({
   const getGeneralSteps = () => [
     {
       target: 'body',
-      title: '🎉 Welcome to NeuroNerds Quiz!',
+      title: '🎉 Welcome to HSCAura!',
       content: 'Navigate to the Dashboard to start your quiz journey and explore all features!',
       placement: 'center',
     },

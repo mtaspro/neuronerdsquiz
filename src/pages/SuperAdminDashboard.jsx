@@ -199,7 +199,7 @@ const SuperAdminDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      success('Neuronerds Showdown event started!');
+      success('HSCAura Showdown event started!');
     } catch (error) {
       console.error('Error starting event:', error);
       showError('Failed to start event');
@@ -215,7 +215,7 @@ const SuperAdminDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      success('Neuronerds Showdown event ended!');
+      success('HSCAura Showdown event ended!');
     } catch (error) {
       console.error('Error ending event:', error);
       showError('Failed to end event');
@@ -610,7 +610,7 @@ const SuperAdminDashboard = () => {
         <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3 mb-4">
             <div className="text-orange-600 text-xl">🔥</div>
-            <h2 className="text-xl font-semibold">Neuronerds Showdown Event</h2>
+            <h2 className="text-xl font-semibold">HSCAura Showdown Event</h2>
           </div>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
             Set custom end date/time for the event countdown.

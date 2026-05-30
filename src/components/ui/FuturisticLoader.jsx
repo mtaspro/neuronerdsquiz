@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 
 export default function FuturisticLoader({
   progress = 0,
-  title = 'NEURONERDS',
+  title = 'HSCAura',
   subtitle = 'Initializing neural interface',
   onSkip,
 }) {

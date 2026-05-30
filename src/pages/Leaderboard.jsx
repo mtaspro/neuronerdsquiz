@@ -240,7 +240,7 @@ export default function Leaderboard() {
             🏆 Leaderboard
           </h1>
           <p className="aura-subhead text-lg mb-6">
-            Top performers in Neuronerds Quiz
+            Top performers in HSCAura
           </p>
           
           {/* Tab Buttons */}

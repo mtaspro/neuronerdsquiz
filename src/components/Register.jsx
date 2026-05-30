@@ -196,7 +196,7 @@ const Register = () => {
             transition={{ delay: 0.3 }}
             className="mt-3 text-center aura-subhead text-sm"
           >
-            Join NeuroNerds and enter the arena
+            Join HSCAura and enter the arena
           </motion.p>
         </div>
 

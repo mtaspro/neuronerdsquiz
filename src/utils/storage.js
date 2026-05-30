@@ -1,7 +1,7 @@
 // Local storage utilities with error handling and type safety
 
 class StorageManager {
-  constructor(prefix = 'neuronerds_') {
+  constructor(prefix = 'hscaura_') {
     this.prefix = prefix;
   }
 

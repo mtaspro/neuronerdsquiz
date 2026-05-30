@@ -14,7 +14,7 @@ const getEnvironmentConfig = () => {
   if (isProduction || (typeof window !== 'undefined' && 
       (window.location.hostname.includes('vercel.app') || 
        window.location.hostname.includes('netlify.app') ||
-       window.location.hostname.includes('neuronerdsquiz') ||
+       window.location.hostname.includes('hscaura') ||
        window.location.hostname.includes('neuronerds.eu.cc')))) {
     // Production environment
     apiUrl = import.meta.env.VITE_API_URL || 'https://neuronerds.eu.cc';

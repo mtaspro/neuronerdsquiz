@@ -115,7 +115,7 @@ const Dashboard = () => {
     const originalTitle = document.title;
     
     if (battleNotification) {
-      document.title = '🔴 Battle Available! - NeuroNerds Quiz';
+      document.title = '🔴 Battle Available! - HSCAura';
       
       // Clear notification when user focuses on tab
       const handleFocus = () => {
