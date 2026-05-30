@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { FaUpload, FaClock, FaFileAlt, FaCheckCircle, FaHourglassHalf, FaTimes } from 'react-icons/fa';
 import { useNotification } from '../components/NotificationSystem';
 import { secureStorage } from '../utils/secureStorage';
+import PageShell from '../components/ui/PageShell';
+import Button from '../components/ui/Button';
 
 const WrittenExams = () => {
   const [exams, setExams] = useState([]);
@@ -235,16 +237,16 @@ const WrittenExams = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white p-6">
+    <PageShell className="min-h-screen text-slate-100 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Written Exams</h1>
-          <button
+          <h1 className="aura-headline text-3xl">Written Exams</h1>
+          <Button
             onClick={() => setShowLeaderboard(!showLeaderboard)}
             className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
           >
             🏆 {showLeaderboard ? 'Hide' : 'Show'} Leaderboard
-          </button>
+          </Button>
         </div>
 
         {/* Leaderboard Section */}
@@ -252,9 +254,9 @@ const WrittenExams = () => {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8 border border-gray-200 dark:border-gray-700"
+            className="aura-glass aura-glass-card rounded-lg shadow-lg p-6 mb-8 border border-cyan-500/10"
           >
-            <h2 className="text-2xl font-bold mb-6 text-center flex items-center justify-center">
+            <h2 className="aura-headline text-2xl mb-6 text-center flex items-center justify-center">
               🏆 Written Exam Leaderboard
             </h2>
             <div className="space-y-4">
@@ -297,7 +299,7 @@ const WrittenExams = () => {
               ))}
             </div>
             {leaderboard.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-slate-500">
                 No submissions yet. Be the first to take an exam!
               </div>
             )}
@@ -305,7 +307,7 @@ const WrittenExams = () => {
         )}
 
         {/* Available Exams */}
-        <h2 className="text-2xl font-bold mb-6">Available Exams</h2>
+        <h2 className="aura-headline text-2xl mb-6">Available Exams</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12">
           {exams.map(exam => {
             const submission = getSubmissionStatus(exam._id);
@@ -314,12 +316,12 @@ const WrittenExams = () => {
                 key={exam._id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700"
+                className="aura-glass aura-glass-card rounded-lg shadow-lg p-6 border border-cyan-500/10"
               >
-                <h3 className="text-xl font-semibold mb-2">{exam.title}</h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">{exam.description}</p>
+                <h3 className="aura-display text-xl mb-2">{exam.title}</h3>
+                <p className="text-slate-300 mb-4">{exam.description}</p>
                 
-                <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
+                <div className="space-y-2 text-sm text-slate-400 mb-4">
                   <div className="flex items-center">
                     <FaFileAlt className="mr-2" />
                     <span>Subject: {exam.subject}</span>
@@ -373,20 +375,20 @@ const WrittenExams = () => {
                         <span className="font-medium">Exam Started</span>
                       </div>
                     </div>
-                    <button
+                    <Button
                       onClick={() => openUploadDialog(exam)}
                       className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors"
                     >
                       Upload Answer
-                    </button>
+                    </Button>
                   </div>
                 ) : (
-                  <button
+                  <Button
                     onClick={() => startExam(exam)}
                     className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded-lg transition-colors"
                   >
                     Start Exam
-                  </button>
+                  </Button>
                 )}
               </motion.div>
             );
@@ -395,15 +397,15 @@ const WrittenExams = () => {
 
         {/* Upload Modal */}
         {selectedExam && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-2 sm:p-4 overflow-y-auto" data-lenis-prevent>
+          <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-2 sm:p-4 overflow-y-auto" data-lenis-prevent>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 max-w-2xl w-full my-4"
+              className="aura-glass aura-glass-card rounded-lg p-4 sm:p-6 max-w-2xl w-full my-4"
               data-lenis-prevent
             >
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 space-y-2 sm:space-y-0">
-                <h2 className="text-lg sm:text-2xl font-bold">Submit Answer: {selectedExam.title}</h2>
+                <h2 className="aura-headline text-lg sm:text-2xl">Submit Answer: {selectedExam.title}</h2>
                 {timeLeft !== null && (
                   <div className={`text-sm sm:text-lg font-bold px-2 sm:px-3 py-1 rounded text-center ${
                     timeLeft <= 300 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
@@ -463,11 +465,11 @@ const WrittenExams = () => {
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 sticky bottom-0 bg-white dark:bg-gray-800 pt-4 -mx-4 sm:-mx-6 px-4 sm:px-6 pb-4 sm:pb-6">
-                <button
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sticky bottom-0 aura-glass pt-4 -mx-4 sm:-mx-6 px-4 sm:px-6 pb-4 sm:pb-6">
+                <Button
                   onClick={() => handleSubmit(selectedExam._id)}
                   disabled={uploading || selectedFiles.length === 0}
-                  className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white py-3 px-4 sm:px-6 rounded-lg transition-colors flex items-center justify-center text-sm sm:text-base"
+                  className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 disabled:bg-slate-400 text-white py-3 px-4 sm:px-6 rounded-lg transition-colors flex items-center justify-center text-sm sm:text-base"
                 >
                   {uploading ? (
                     <>
@@ -480,16 +482,17 @@ const WrittenExams = () => {
                       Submit Answer
                     </>
                   )}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={() => {
                     setSelectedExam(null);
                     setSelectedFiles([]);
                   }}
-                  className="w-full sm:w-auto px-4 sm:px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm sm:text-base"
+                  className="w-full sm:w-auto px-4 sm:px-6 py-3 border border-slate-600 rounded-lg hover:bg-black/20 transition-colors text-sm sm:text-base"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </motion.div>
           </div>
@@ -498,19 +501,19 @@ const WrittenExams = () => {
         {/* My Submissions */}
         {submissions.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold mb-6">My Submissions</h2>
+            <h2 className="aura-headline text-2xl mb-6">My Submissions</h2>
             <div className="space-y-4">
               {submissions.map(submission => (
                 <motion.div
                   key={submission._id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700"
+                  className="aura-glass aura-glass-card rounded-lg shadow p-6 border border-cyan-500/10"
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-lg font-semibold">{submission.examId?.title || 'Deleted Exam'}</h3>
-                      <p className="text-gray-600 dark:text-gray-300">
+                      <h3 className="aura-display text-lg">{submission.examId?.title || 'Deleted Exam'}</h3>
+                      <p className="text-slate-300">
                         Submitted: {new Date(submission.submittedAt).toLocaleDateString()}
                       </p>
                     </div>
@@ -526,7 +529,7 @@ const WrittenExams = () => {
                   </div>
                   
                   {submission.status === 'graded' && (
-                    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="mt-4 p-4 bg-slate-800/50 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-medium">Score:</span>
                         <span className="text-xl font-bold text-green-600 dark:text-green-400">
@@ -536,7 +539,7 @@ const WrittenExams = () => {
                       {submission.examinerComments && (
                         <div>
                           <span className="font-medium">Examiner Comments:</span>
-                          <p className="text-gray-600 dark:text-gray-300 mt-1">{submission.examinerComments}</p>
+                          <p className="text-slate-300 mt-1">{submission.examinerComments}</p>
                         </div>
                       )}
                       
@@ -571,7 +574,7 @@ const WrittenExams = () => {
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 };
 

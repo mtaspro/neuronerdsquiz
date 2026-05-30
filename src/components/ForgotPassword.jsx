@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaArrowLeft, FaEnvelope } from 'react-icons/fa';
 import LoadingAnimation from './LoadingAnimation';
+import Button from './ui/Button';
 
 const ForgotPassword = ({ onBack }) => {
   const [email, setEmail] = useState('');
@@ -53,20 +54,22 @@ const ForgotPassword = ({ onBack }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl"
+      className="max-w-md mx-auto aura-glass p-8"
     >
       <button
         onClick={onBack}
-        className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white mb-6"
+        className="flex items-center gap-2 text-slate-400 hover:text-cyan-400 mb-6 transition-colors"
       >
         <FaArrowLeft />
         <span>Back to Login</span>
       </button>
 
       <div className="text-center mb-8">
-        <FaEnvelope className="text-4xl text-blue-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Forgot Password?</h2>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
+        <div className="w-16 h-16 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center mx-auto mb-4">
+          <FaEnvelope className="text-2xl text-cyan-400" />
+        </div>
+        <h2 className="aura-headline text-2xl">Forgot Password?</h2>
+        <p className="aura-subhead mt-2">
           Enter your email to login without password
         </p>
       </div>
@@ -80,29 +83,25 @@ const ForgotPassword = ({ onBack }) => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="aura-input"
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 px-6 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all disabled:opacity-50"
-          >
+          <Button type="submit" disabled={isLoading} className="w-full">
             {isLoading ? <LoadingAnimation size="small" /> : 'Login with Email'}
-          </button>
+          </Button>
         </form>
       ) : (
         <div className="text-center">
           <div className="text-6xl mb-4">✅</div>
-          <p className="text-green-600 dark:text-green-400 font-semibold">
+          <p className="text-emerald-400 font-semibold">
             Login successful! Redirecting to dashboard...
           </p>
         </div>
       )}
 
       {message && !isSuccess && (
-        <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-400 text-sm">
+        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-sm">
           {message}
         </div>
       )}

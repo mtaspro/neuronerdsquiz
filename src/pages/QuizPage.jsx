@@ -14,6 +14,8 @@ import { calculateDivision } from "../utils/divisionUtils";
 import LifelineTools from "../components/LifelineTools";
 import { useLifelines } from "../hooks/useLifelines";
 import axios from "axios";
+import PageShell from '../components/ui/PageShell';
+import Button from '../components/ui/Button';
 
 export default function QuizPage() {
   const navigate = useNavigate();
@@ -514,54 +516,52 @@ export default function QuizPage() {
       .sort((a, b) => a - b);
 
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center transition-colors duration-200">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 text-center">
+      <PageShell className="flex items-center justify-center">
+        <div className="aura-glass aura-glass-card max-w-md w-full mx-4">
+          <h2 className="aura-headline text-2xl text-center mb-4">
             Select Question Count
           </h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-6 text-center">
+          <p className="aura-subhead mb-6 text-center">
             Choose how many questions you want to solve from {allQuestions.length} available questions in <strong>{chapter}</strong>
           </p>
           <div className="grid grid-cols-2 gap-3 mb-6">
             {questionOptions.map(count => (
-              <motion.button
+              <Button
                 key={count}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
                 onClick={() => handleQuestionCountSelect(count)}
-                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-all"
+                className="w-full"
               >
                 {count} Questions
-              </motion.button>
+              </Button>
             ))}
           </div>
-          <button
+          <Button
+            variant="ghost"
             onClick={() => navigate('/dashboard')}
-            className="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+            className="w-full"
           >
             Back to Dashboard
-          </button>
+          </Button>
         </div>
-      </div>
+      </PageShell>
     );
   }
   
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
+      <PageShell className="flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-500 dark:text-red-400 text-xl mb-4">⚠️</div>
-          <div className="text-gray-800 dark:text-white text-xl mb-4">
+          <div className="text-red-400 text-xl mb-4">⚠️</div>
+          <div className="text-slate-200 text-xl mb-4">
             {error || 'No questions available for this chapter.'}
           </div>
-          <button
+          <Button
             onClick={() => navigate('/dashboard')}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-lg transition-colors"
           >
             Back to Dashboard
-          </button>
+          </Button>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
@@ -575,11 +575,8 @@ export default function QuizPage() {
   };
 
   return (
-    <div className="min-h-screen text-gray-900 dark:text-white transition-colors duration-200 animated-bg" style={{
-      background: 'linear-gradient(-45deg, #ff6b35, #f7931e, #00d4ff, #00ff88, #ff6b35)',
-      backgroundSize: '400% 400%',
-      backgroundAttachment: 'fixed'
-    }}>
+    <PageShell className="min-h-[calc(100vh-3.5rem)] text-slate-100">
+      <div className="relative z-10">
       {/* Division Promotion Modal */}
       <DivisionPromotion
         oldDivision={promotionData?.oldDivision}
@@ -610,7 +607,7 @@ export default function QuizPage() {
       {/* Security Status Indicator */}
       {securityActive && (
         <div className="fixed top-4 right-4 z-40">
-          <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+          <div className="aura-chip">
             🔒 Secure Mode {warnings > 0 && `(${remainingWarnings} warnings left)`}
           </div>
         </div>
@@ -619,37 +616,37 @@ export default function QuizPage() {
       {/* Practice Mode Indicator */}
       {practiceMode && (
         <div className="fixed top-4 left-4 z-40">
-          <div className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+          <div className="aura-chip" style={{ background: 'rgba(249, 115, 22, 0.15)', borderColor: 'rgba(249, 115, 22, 0.3)', color: '#f97316' }}>
             🔄 Practice Mode
           </div>
         </div>
       )}
 
       {/* Header */}
-      <div className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
+      <div className="aura-glass mx-4 mt-4">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+              <h1 className="aura-headline text-2xl">
                 Quiz: {chapter}
               </h1>
               {practiceMode && (
-                <div className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                <div className="text-sm text-orange-400 font-medium">
                   Practice Mode - Results won't affect your stats, leaderboard, or badges
                 </div>
               )}
               {previousAttempt && (
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-slate-400">
                   Previous best: {previousAttempt.score}/{previousAttempt.totalQuestions} on {new Date(previousAttempt.submittedAt).toLocaleDateString()}
                 </div>
               )}
             </div>
             <div className="text-right">
-              <div className={`text-2xl font-bold ${warning ? 'text-red-500 dark:text-red-400' : 'text-gray-800 dark:text-white'}`}>
+              <div className={`text-2xl font-bold ${warning ? 'text-red-400' : 'text-slate-200'}`}>
                 {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')}
               </div>
               {warning && (
-                <div className="text-sm text-red-500 dark:text-red-400 font-semibold">
+                <div className="text-sm text-red-400 font-semibold">
                   Time's running out!
                 </div>
               )}
@@ -657,7 +654,7 @@ export default function QuizPage() {
           </div>
           
           {/* Progress Bar */}
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-slate-800 rounded-full h-2">
             <motion.div
               className={`h-2 rounded-full ${
                 practiceMode 
@@ -669,7 +666,7 @@ export default function QuizPage() {
               transition={{ duration: 0.3 }}
             />
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+          <div className="text-sm text-slate-400 mt-2">
             Question {currentQuestionIndex + 1} of {questions.length}
           </div>
         </div>
@@ -684,7 +681,7 @@ export default function QuizPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3 }}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 md:p-8 border border-gray-200 dark:border-gray-700"
+            className="aura-glass aura-glass-card p-4 sm:p-6 md:p-8"
           >
             {/* Lifeline Tools */}
             {lifelineConfig && Object.keys(lifelineConfig).length > 0 && (
@@ -699,12 +696,12 @@ export default function QuizPage() {
             
             {/* Question */}
             <div className="mb-6">
-              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 dark:text-white mb-4 leading-tight">
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-slate-200 mb-4 leading-tight">
                 <MathText>{currentQuestion.question}</MathText>
               </h2>
               {helpUsed && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 mb-4">
-                  <p className="text-yellow-800 dark:text-yellow-300 text-sm">
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-4">
+                  <p className="text-yellow-300 text-sm">
                     💡 Correct answer revealed! Your score for this question will be reduced by 50%.
                   </p>
                 </div>
@@ -722,8 +719,8 @@ export default function QuizPage() {
                 
                 if (isHidden) {
                   return (
-                    <div key={index} className="w-full p-3 sm:p-4 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-600 opacity-50">
-                      <div className="flex items-center text-gray-500 dark:text-gray-400">
+                    <div key={index} className="w-full p-3 sm:p-4 rounded-lg border-2 border-cyan-500/20 bg-black/30 opacity-50">
+                      <div className="flex items-center text-slate-500">
                         <span className="font-medium">Option removed by 50-50</span>
                       </div>
                     </div>
@@ -739,13 +736,13 @@ export default function QuizPage() {
                     className={`w-full text-left p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 ${
                       selectedOption === index
                         ? isCorrect
-                          ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200'
+                          ? 'border-green-500 bg-green-500/10 text-green-300'
                           : practiceMode
-                            ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200'
-                            : 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-800 dark:text-cyan-200'
+                            ? 'border-orange-500 bg-orange-500/10 text-orange-300'
+                            : 'border-cyan-500 bg-cyan-500/10 text-cyan-300'
                         : isCorrect
-                          ? 'border-green-300 bg-green-50 dark:bg-green-900/10 text-green-700 dark:text-green-300'
-                          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500 text-gray-800 dark:text-white'
+                          ? 'border-green-500/30 bg-green-500/5 text-green-400'
+                          : 'border-cyan-500/20 bg-black/20 hover:border-cyan-500/40 text-slate-200'
                     }`}
                   >
                     <div className="flex items-center">
@@ -753,7 +750,7 @@ export default function QuizPage() {
                         <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
                       )}
                       {isCorrect && (
-                        <span className="text-green-600 dark:text-green-400 mr-2">✓</span>
+                        <span className="text-green-400 mr-2">✓</span>
                       )}
                       <span className="font-medium">
                         <MathText>{option}</MathText>
@@ -766,23 +763,18 @@ export default function QuizPage() {
 
             {/* Navigation */}
             <div className="flex justify-end items-center">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={handleNext}
                 disabled={selectedOption === null}
-                className={`px-6 py-2 text-white rounded-lg transition-colors disabled:cursor-not-allowed ${
-                  practiceMode
-                    ? 'bg-gradient-to-r from-orange-600 to-yellow-600 hover:from-orange-700 hover:to-yellow-700 disabled:from-gray-400 disabled:to-gray-500'
-                    : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500'
-                }`}
+                className={practiceMode ? 'from-orange-600 to-yellow-600' : ''}
               >
                 {currentQuestionIndex === questions.length - 1 ? 'Submit Quiz' : 'Next'}
-              </motion.button>
+              </Button>
             </div>
           </motion.div>
         </AnimatePresence>
       </div>
-    </div>
+      </div>
+    </PageShell>
   );
 }

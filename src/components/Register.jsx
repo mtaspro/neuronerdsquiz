@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { apiHelpers } from '../utils/api';
 import { secureStorage } from '../utils/secureStorage.js';
 import LoadingAnimation from '../components/LoadingAnimation';
+import PageShell from './ui/PageShell';
+import Button from './ui/Button';
 
 const Register = () => {
   // Avatar options from ProfileEdit
@@ -165,34 +167,36 @@ const Register = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-purple-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200"
-    >
+    <PageShell padding="py-12 flex items-center justify-center min-h-[calc(100vh-3.5rem)]">
       <motion.div
-        initial={{ scale: 0.9 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="max-w-md w-full"
+      >
+      <motion.div
+        initial={{ scale: 0.96 }}
         animate={{ scale: 1 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-        className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700"
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="aura-glass p-8 sm:p-10 space-y-8"
       >
         <div>
+          <p className="aura-label text-center mb-2">New member</p>
           <motion.h2
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white"
+            transition={{ delay: 0.2 }}
+            className="text-center aura-headline text-2xl sm:text-3xl"
           >
             Create Account
           </motion.h2>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="mt-2 text-center text-sm text-gray-600 dark:text-gray-300"
+            transition={{ delay: 0.3 }}
+            className="mt-3 text-center aura-subhead text-sm"
           >
-            Join Neuronerds Quiz and start learning
+            Join NeuroNerds and enter the arena
           </motion.p>
         </div>
 
@@ -215,7 +219,7 @@ const Register = () => {
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="username" className="aura-label block mb-2">
                 Username
               </label>
               <input
@@ -226,11 +230,7 @@ const Register = () => {
                 required
                 value={formData.username}
                 onChange={handleInputChange}
-                className={`appearance-none relative block w-full max-w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 text-sm leading-tight transition-colors ${
-                  errors.username 
-                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
-                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-                }`}
+                className={`aura-input ${errors.username ? 'aura-input-error' : ''}`}
                 placeholder="Enter your username"
               />
               {errors.username && (
@@ -239,11 +239,11 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="phoneNumber" className="aura-label block mb-2">
                 WhatsApp Number
               </label>
               <div className="flex">
-                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 text-sm">
+                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-sm">
                   +880
                 </span>
                 <input
@@ -253,11 +253,7 @@ const Register = () => {
                   required
                   value={formData.phoneNumber}
                   onChange={handleInputChange}
-                  className={`appearance-none relative block w-full px-3 py-2 border rounded-r-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 text-sm leading-tight transition-colors ${
-                    errors.phoneNumber 
-                      ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
-                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-                  }`}
+                  className={`flex-1 rounded-r-md aura-input ${errors.phoneNumber ? 'aura-input-error' : ''}`}
                   placeholder="01XXXXXXXXX"
                   maxLength="11"
                 />
@@ -265,13 +261,13 @@ const Register = () => {
               {errors.phoneNumber && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phoneNumber}</p>
               )}
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-xs text-slate-500">
                 Enter your 11-digit mobile number (e.g., 01712345678)
               </p>
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="email" className="aura-label block mb-2">
                 Email Address
               </label>
               <input
@@ -282,11 +278,7 @@ const Register = () => {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`appearance-none relative block w-full max-w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 text-sm leading-tight transition-colors ${
-                  errors.email 
-                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
-                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-                }`}
+                className={`aura-input ${errors.email ? 'aura-input-error' : ''}`}
                 placeholder="Enter your email"
               />
               {errors.email && (
@@ -295,7 +287,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="password" className="aura-label block mb-2">
                 Password
               </label>
               <input
@@ -306,11 +298,7 @@ const Register = () => {
                 required
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`appearance-none relative block w-full max-w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 text-sm leading-tight transition-colors ${
-                  errors.password 
-                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
-                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-                }`}
+                className={`aura-input ${errors.password ? 'aura-input-error' : ''}`}
                 placeholder="Enter your password"
               />
               {errors.password && (
@@ -319,7 +307,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="confirmPassword" className="aura-label block mb-2">
                 Confirm Password
               </label>
               <input
@@ -330,11 +318,7 @@ const Register = () => {
                 required
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className={`appearance-none relative block w-full max-w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 text-sm leading-tight transition-colors ${
-                  errors.confirmPassword 
-                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
-                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-                }`}
+                className={`aura-input ${errors.confirmPassword ? 'aura-input-error' : ''}`}
                 placeholder="Confirm your password"
               />
               {errors.confirmPassword && (
@@ -343,7 +327,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="gender" className="aura-label block mb-2">
                 Gender
               </label>
               <select
@@ -352,11 +336,7 @@ const Register = () => {
                 required
                 value={formData.gender}
                 onChange={handleInputChange}
-                className={`appearance-none relative block w-full px-3 py-2 border rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 text-sm leading-tight transition-colors ${
-                  errors.gender 
-                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
-                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-                }`}
+                className={`aura-input ${errors.gender ? 'aura-input-error' : ''}`}
               >
                 <option value="">Select your gender</option>
                 <option value="male">Male</option>
@@ -369,7 +349,7 @@ const Register = () => {
 
             {/* Avatar Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              <label className="aura-label block mb-3">
                 Choose Your Avatar
               </label>
               
@@ -396,8 +376,8 @@ const Register = () => {
                     onChange={handleFileChange}
                     className="hidden"
                   />
-                  <div className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center cursor-pointer hover:border-cyan-400 transition-colors">
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                  <div className="w-full px-4 py-2 border-2 border-dashed border-cyan-500/30 rounded-lg text-center cursor-pointer hover:border-cyan-400 transition-colors">
+                    <span className="text-sm text-slate-300">
                       📷 Upload Custom Image
                     </span>
                   </div>
@@ -416,8 +396,8 @@ const Register = () => {
                     onClick={() => handleAvatarSelect(avatarUrl)}
                     className={`relative w-12 h-12 rounded-full overflow-hidden border-2 transition-all ${
                       !useCustomImage && formData.avatar === avatarUrl
-                        ? 'border-cyan-500 ring-2 ring-cyan-200 dark:ring-cyan-800'
-                        : 'border-gray-300 dark:border-gray-600 hover:border-cyan-400'
+                        ? 'border-cyan-500 ring-2 ring-cyan-400/30'
+                        : 'border-cyan-500/20 hover:border-cyan-400'
                     }`}
                   >
                     <img
@@ -440,33 +420,25 @@ const Register = () => {
           </div>
 
           <div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
+            <Button type="submit" disabled={isLoading} className="w-full">
               {isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4">
-                    <LoadingAnimation size="small" />
-                  </div>
-                  <span>Creating account...</span>
-                </div>
+                <span className="flex items-center gap-2">
+                  <LoadingAnimation size="small" />
+                  Creating account...
+                </span>
               ) : (
                 'Create Account'
               )}
-            </motion.button>
+            </Button>
           </div>
 
           <div className="text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-300">
+            <p className="text-sm text-slate-500">
               Already have an account?{' '}
               <button
                 type="button"
                 onClick={() => navigate('/login')}
-                className="font-medium text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300 transition-colors"
+                className="font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
               >
                 Sign in here
               </button>
@@ -474,7 +446,8 @@ const Register = () => {
           </div>
         </motion.form>
       </motion.div>
-    </motion.div>
+      </motion.div>
+    </PageShell>
   );
 };
 

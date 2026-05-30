@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaCheck, FaTimes, FaEye, FaArrowLeft, FaArrowRight, FaHome, FaTrophy } from "react-icons/fa";
 import MathText from "../components/MathText";
 import axios from "axios";
+import PageShell from '../components/ui/PageShell';
+import Button from '../components/ui/Button';
 
 export default function ResultScreen() {
   const navigate = useNavigate();
@@ -129,40 +131,43 @@ export default function ResultScreen() {
     const currentItem = reviewData[currentReviewIndex];
     
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200">
+      <PageShell className="min-h-[calc(100vh-3.5rem)]">
         {/* Header */}
-        <div className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 p-4">
+        <div className="aura-glass p-4">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setShowReview(false)}
-              className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+              className="flex items-center gap-2"
             >
               <FaArrowLeft />
               <span>Back to Results</span>
-            </button>
+            </Button>
             
             <div className="text-center">
-              <h1 className="text-xl font-bold">Quiz Review</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <h1 className="aura-headline text-xl">Quiz Review</h1>
+              <p className="aura-subhead text-sm">
                 Question {currentReviewIndex + 1} of {reviewData.length}
               </p>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <button
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => handleReviewNavigation('prev')}
                 disabled={currentReviewIndex === 0}
-                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               >
                 <FaArrowLeft />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => handleReviewNavigation('next')}
                 disabled={currentReviewIndex === reviewData.length - 1}
-                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               >
                 <FaArrowRight />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -174,25 +179,25 @@ export default function ResultScreen() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700"
+            className="aura-glass aura-glass-card p-6"
           >
             {/* Question */}
             <div className="mb-6">
-              <div className="flex items-center space-x-2 mb-3">
+              <div className="flex items-center gap-2 mb-3">
                 {currentItem.isCorrect ? (
-                  <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+                  <div className="flex items-center gap-2 text-green-400">
                     <FaCheck className="text-lg" />
                     <span className="font-semibold">Correct</span>
                   </div>
                 ) : (
-                  <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+                  <div className="flex items-center gap-2 text-red-400">
                     <FaTimes className="text-lg" />
                     <span className="font-semibold">Incorrect</span>
                   </div>
                 )}
               </div>
               
-              <h2 className="text-xl font-semibold mb-4">
+              <h2 className="text-xl font-semibold mb-4 text-slate-200">
                 <MathText>{currentItem.question}</MathText>
               </h2>
             </div>
@@ -206,11 +211,11 @@ export default function ResultScreen() {
                 let optionClass = "p-4 rounded-lg border-2 transition-all duration-200 ";
                 
                 if (isCorrectAnswer) {
-                  optionClass += "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200";
+                  optionClass += "border-green-500 bg-green-500/10 text-green-300";
                 } else if (isUserAnswer && !isCorrectAnswer) {
-                  optionClass += "border-red-500 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200";
+                  optionClass += "border-red-500 bg-red-500/10 text-red-300";
                 } else {
-                  optionClass += "border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200";
+                  optionClass += "border-cyan-500/20 bg-black/20 text-slate-300";
                 }
                 
                 return (
@@ -219,19 +224,19 @@ export default function ResultScreen() {
                       <span className="font-medium">
                         <MathText>{option}</MathText>
                       </span>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2">
                         {isCorrectAnswer && (
-                          <span className="text-green-600 dark:text-green-400 text-sm font-semibold">
+                          <span className="text-green-400 text-sm font-semibold">
                             ✓ Correct Answer
                           </span>
                         )}
                         {isUserAnswer && !isCorrectAnswer && (
-                          <span className="text-red-600 dark:text-red-400 text-sm font-semibold">
+                          <span className="text-red-400 text-sm font-semibold">
                             ✗ Your Answer
                           </span>
                         )}
                         {isUserAnswer && isCorrectAnswer && (
-                          <span className="text-green-600 dark:text-green-400 text-sm font-semibold">
+                          <span className="text-green-400 text-sm font-semibold">
                             ✓ Your Answer
                           </span>
                         )}
@@ -244,11 +249,11 @@ export default function ResultScreen() {
 
             {/* Explanation */}
             {currentItem.explanation && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-300 mb-2">
                   Explanation:
                 </h3>
-                <p className="text-blue-700 dark:text-blue-300">
+                <p className="text-blue-200">
                   {currentItem.explanation}
                 </p>
               </div>
@@ -256,37 +261,33 @@ export default function ResultScreen() {
           </motion.div>
 
           {/* Navigation */}
-          <div className="flex justify-center mt-6 space-x-4">
-            <button
+          <div className="flex justify-center mt-6 gap-4">
+            <Button
+              variant="magenta"
               onClick={() => setCurrentReviewIndex(Math.max(0, wrongAnswers.findIndex(item => reviewData.indexOf(item) > currentReviewIndex)))}
-              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
               disabled={wrongAnswers.length === 0}
             >
               Next Wrong Answer
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => navigate('/dashboard')}
-              className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
             >
               Back to Dashboard
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 transition-colors duration-200 animated-bg" style={{
-      background: 'linear-gradient(-45deg, #ff6b35, #f7931e, #00d4ff, #00ff88, #ff6b35)',
-      backgroundSize: '400% 400%',
-      backgroundAttachment: 'fixed'
-    }}>
+    <PageShell className="min-h-[calc(100vh-3.5rem)] flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 max-w-lg w-full border border-gray-200 dark:border-gray-700"
+        className="aura-glass aura-glass-card p-6 sm:p-8 max-w-lg w-full relative z-10"
       >
         <div className="text-center">
           {/* Header */}
@@ -294,7 +295,7 @@ export default function ResultScreen() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-6"
+            className="aura-headline text-3xl md:text-4xl mb-6"
           >
             {battleResults ? 'Battle Complete! ⚔️' : 'Quiz Complete! 🎯'}
           </motion.h1>
@@ -305,7 +306,8 @@ export default function ResultScreen() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 }}
-              className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 px-4 py-2 rounded-lg mb-4"
+              className="aura-chip mb-4"
+              style={{ background: 'rgba(249, 115, 22, 0.15)', borderColor: 'rgba(249, 115, 22, 0.3)', color: '#f97316' }}
             >
               🔄 Practice Mode - Results don't affect your stats
             </motion.div>
@@ -321,13 +323,13 @@ export default function ResultScreen() {
             <div className={`text-6xl font-bold ${getScoreColor(percentage)} mb-2`}> 
               {percentage}%
             </div>
-            <div className="text-xl text-gray-600 dark:text-gray-300">
+            <div className="text-xl text-slate-300">
               {score} / {total} correct
             </div>
             
             {/* Time spent */}
             {timeSpent > 0 && (
-              <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              <div className="text-sm text-slate-400 mt-2">
                 Time: {Math.floor(timeSpent / 60000)}:{((timeSpent % 60000) / 1000).toFixed(0).padStart(2, '0')}
               </div>
             )}
@@ -351,7 +353,7 @@ export default function ResultScreen() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="text-lg text-gray-700 dark:text-gray-200 mb-6"
+            className="aura-subhead text-lg mb-6"
           >
             {getScoreMessage(percentage)}
           </motion.p>
@@ -362,13 +364,13 @@ export default function ResultScreen() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
-              className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6"
+              className="aura-glass p-4 mb-6"
             >
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <div className="text-sm text-slate-400 mb-2">
                 Previous Best Score: {previousBestScore}/{total}
               </div>
               {improved && (
-                <div className="text-green-600 dark:text-green-400 font-semibold">
+                <div className="text-green-400 font-semibold">
                   🎉 You improved your score!
                 </div>
               )}
@@ -383,17 +385,17 @@ export default function ResultScreen() {
             className="mb-6"
           >
             {!practiceMode && scoreSubmitted && (
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg">
+              <div className="bg-green-500/10 border border-green-500/30 text-green-300 px-4 py-3 rounded-lg">
                 ✅ Score submitted to leaderboard!
               </div>
             )}
             {submissionError && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
+              <div className="bg-red-500/10 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg">
                 ❌ {submissionError}
               </div>
             )}
             {!practiceMode && !scoreSubmitted && !submissionError && score > 0 && (
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300 px-4 py-3 rounded-lg">
+              <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 px-4 py-3 rounded-lg">
                 ⏳ Submitting score...
               </div>
             )}
@@ -407,13 +409,13 @@ export default function ResultScreen() {
               transition={{ delay: 0.9 }}
               className="mb-4"
             >
-              <button
+              <Button
                 onClick={() => setShowReview(true)}
-                className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 flex items-center justify-center space-x-2"
+                className="w-full"
               >
-                <FaEye />
+                <FaEye className="mr-2" />
                 <span>Review Answers ({wrongAnswers.length} wrong)</span>
-              </button>
+              </Button>
             </motion.div>
           )}
 
@@ -424,24 +426,25 @@ export default function ResultScreen() {
             transition={{ delay: 1.0 }}
             className="space-y-3"
           >
-            <button
+            <Button
               onClick={() => navigate("/leaderboard")}
-              className="w-full px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-bold rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 flex items-center justify-center space-x-2"
+              className="w-full"
             >
-              <FaTrophy />
+              <FaTrophy className="mr-2" />
               <span>View Leaderboard</span>
-            </button>
+            </Button>
             
-            <button
+            <Button
+              variant="magenta"
               onClick={() => navigate("/dashboard")}
-              className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 flex items-center justify-center space-x-2"
+              className="w-full"
             >
-              <FaHome />
+              <FaHome className="mr-2" />
               <span>Back to Dashboard</span>
-            </button>
+            </Button>
           </motion.div>
         </div>
       </motion.div>
-    </div>
+    </PageShell>
   );
 }

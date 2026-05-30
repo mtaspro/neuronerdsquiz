@@ -7,6 +7,8 @@ import RichMessageRenderer from '../components/RichMessageRenderer';
 import ShareConversationModal from '../components/ShareConversationModal';
 import ImportConversationModal from '../components/ImportConversationModal';
 import axios from 'axios';
+import PageShell from '../components/ui/PageShell';
+import Button from '../components/ui/Button';
 
 import neuraXAvatar from '../assets/NeuraXOmegaavatar.png';
 
@@ -829,7 +831,7 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
   };
 
   return (
-    <div className="flex min-h-screen bg-black text-white">
+    <PageShell className="flex min-h-screen text-slate-100">
       {/* Animated Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-purple-900/20"></div>
@@ -848,28 +850,30 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
       <motion.div 
         initial={{ x: -300 }}
         animate={{ x: showHistory ? 0 : -300 }}
-        className="fixed left-0 top-0 h-full w-80 md:w-80 sm:w-72 bg-gray-900/95 backdrop-blur-xl border-r border-gray-700/50 z-50 overflow-y-auto"
+        className="fixed left-0 top-0 h-full w-80 md:w-80 sm:w-72 aura-glass border-r border-cyan-500/10 z-50 overflow-y-auto"
       >
         <div className="p-4">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-200">Chat History</h2>
-            <button
+            <h2 className="aura-display text-lg">Chat History</h2>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setShowHistory(false)}
-              className="p-2 hover:bg-gray-800/50 rounded-lg transition-colors"
             >
-              <FaTimes className="text-gray-400" />
-            </button>
+              <FaTimes className="text-slate-400" />
+            </Button>
           </div>
           
-          <button
+          <Button
             onClick={startNewChat}
-            className="w-full mb-3 p-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 flex items-center space-x-2"
+            className="w-full mb-3"
           >
             <span>✨</span>
             <span>New Chat</span>
-          </button>
+          </Button>
           
-          <button
+          <Button
+            variant="ghost"
             onClick={() => {
               if (window.confirm('Delete all conversations? This cannot be undone.')) {
                 const userData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -888,11 +892,11 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                 setShowHistory(false);
               }
             }}
-            className="w-full mb-4 p-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 text-sm"
+            className="w-full mb-4 text-red-400 border border-red-500/30"
           >
             <FaTrash className="text-xs" />
             <span>Delete All</span>
-          </button>
+          </Button>
           
           <div className="space-y-2">
             {chatHistory.map((chat) => (
@@ -901,45 +905,49 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                   onClick={() => loadChat(chat.id)}
                   className={`w-full text-left p-3 rounded-lg transition-colors pr-10 ${
                     currentChatId === chat.id 
-                      ? 'bg-blue-600/20 border border-blue-500/30' 
-                      : 'hover:bg-gray-800/50'
+                      ? 'bg-cyan-500/20 border border-cyan-500/30' 
+                      : 'hover:bg-black/20'
                   }`}
                 >
-                  <div className="text-sm font-medium text-gray-200 truncate">
+                  <div className="text-sm font-medium text-slate-200 truncate">
                     {chat.title || 'Untitled Chat'}
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">
+                  <div className="text-xs text-slate-400 mt-1">
                     {new Date(chat.lastMessage).toLocaleDateString()}
                   </div>
                 </button>
                 
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowChatOptions(showChatOptions === chat.id ? null : chat.id);
                     }}
-                    className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-black/20 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <FaEllipsisV className="text-xs" />
-                  </button>
+                  </Button>
                   
                   {showChatOptions === chat.id && (
-                    <div className="absolute right-0 top-8 bg-gray-800 backdrop-blur-xl rounded-lg border border-gray-600 py-2 min-w-40 shadow-2xl z-50">
-                      <button
+                    <div className="absolute right-0 top-8 aura-glass rounded-lg border border-cyan-500/10 py-2 min-w-40 shadow-2xl z-50">
+                      <Button
+                        variant="ghost"
                         onClick={() => deleteChat(chat.id)}
-                        className="w-full text-left px-4 py-3 text-sm text-red-300 bg-red-500/10 hover:bg-red-500/20 hover:text-red-200 flex items-center space-x-2 transition-colors border border-red-500/20 rounded-md mx-2 mb-1"
+                        className="w-full text-left px-4 py-3 text-sm text-red-300 bg-red-500/10 hover:bg-red-500/20 hover:text-red-200 flex items-center gap-2 transition-colors border border-red-500/20 rounded-md mx-2 mb-1"
                       >
                         <FaTrash className="text-xs" />
                         <span>Delete conversation</span>
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="ghost"
                         onClick={() => archiveChat(chat.id)}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-200 bg-gray-600/30 hover:bg-gray-600/50 hover:text-white flex items-center space-x-2 transition-colors border border-gray-500/30 rounded-md mx-2"
+                        className="w-full text-left px-4 py-3 text-sm text-slate-200 bg-slate-600/30 hover:bg-slate-600/50 hover:text-white flex items-center gap-2 transition-colors border border-cyan-500/10 rounded-md mx-2"
                       >
                         <FaArchive className="text-xs" />
                         <span>Archive</span>
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -975,68 +983,72 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
       {/* Main Content */}
       <div className="flex-1 flex flex-col relative z-10 w-full">
         {/* Header */}
-        <div className="border-b border-gray-800/50 backdrop-blur-xl bg-black/20 px-4 md:px-6 py-4 sticky top-0 z-40">
+        <div className="border-b border-cyan-500/10 backdrop-blur-xl bg-black/20 px-4 md:px-6 py-4 sticky top-0 z-40">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 md:space-x-4">
-              <button
+            <div className="flex items-center gap-2 md:gap-4">
+              <Button
+                variant="ghost"
                 onClick={() => setShowHistory(true)}
-                className="p-2 hover:bg-gray-800/50 rounded-lg transition-colors"
               >
-                <div className="w-5 h-5 flex flex-col justify-center space-y-1">
-                  <div className="w-full h-0.5 bg-gray-400"></div>
-                  <div className="w-full h-0.5 bg-gray-400"></div>
-                  <div className="w-full h-0.5 bg-gray-400"></div>
+                <div className="w-5 h-5 flex flex-col justify-center gap-1">
+                  <div className="w-full h-0.5 bg-slate-400"></div>
+                  <div className="w-full h-0.5 bg-slate-400"></div>
+                  <div className="w-full h-0.5 bg-slate-400"></div>
                 </div>
-              </button>
+              </Button>
               
-              <div className="flex items-center space-x-2 md:space-x-3">
-                <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg overflow-hidden border border-gray-600/30">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg overflow-hidden border border-cyan-500/10">
                   <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h1 className="text-base md:text-lg font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">NeuraX Omega</h1>
+                  <h1 className="aura-headline text-base md:text-lg">NeuraX Omega</h1>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <a
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
                 href="https://wa.me/8801306489861"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3 md:px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 rounded-lg transition-colors text-xs md:text-sm flex items-center space-x-1 md:space-x-2"
+                className="px-3 md:px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 text-xs md:text-sm flex items-center gap-1 md:gap-2"
                 title="Chat with NeuraX on WhatsApp"
               >
                 <span className="text-sm">📱</span>
                 <span className="hidden sm:inline">WhatsApp Bot</span>
                 <span className="sm:hidden">WhatsApp</span>
-              </a>
-              <div className="flex items-center space-x-2">
-                <button
+              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
                   onClick={() => setShowImportModal(true)}
-                  className="px-3 md:px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 rounded-lg transition-colors text-xs md:text-sm flex items-center space-x-1"
+                  className="px-3 md:px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 text-xs md:text-sm flex items-center gap-1"
                   title="Import shared conversation"
                 >
                   <FaDownload className="text-xs" />
                   <span className="hidden sm:inline">Import</span>
-                </button>
+                </Button>
                 {messages.length > 0 && (
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => setShowShareModal(true)}
-                    className="px-3 md:px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-lg transition-colors text-xs md:text-sm flex items-center space-x-1"
+                    className="px-3 md:px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 text-xs md:text-sm flex items-center gap-1"
                     title="Share this conversation"
                   >
                     <FaShare className="text-xs" />
                     <span className="hidden sm:inline">Share</span>
-                  </button>
+                  </Button>
                 )}
-                <button
+                <Button
+                  variant="ghost"
                   onClick={startNewChat}
-                  className="px-3 md:px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors text-xs md:text-sm border border-gray-700/50"
+                  className="px-3 md:px-4 py-2 bg-slate-800/50 hover:bg-slate-700/50 text-xs md:text-sm border border-cyan-500/10"
                 >
                   <span className="hidden sm:inline">New Chat</span>
                   <span className="sm:hidden">New</span>
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -1062,10 +1074,10 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
-                <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4 text-white">
+                <h1 className="aura-headline text-3xl md:text-5xl mb-3 md:mb-4">
                   NeuraX Omega
                 </h1>
-                <p className="text-lg md:text-xl text-gray-400 mb-6 md:mb-8">
+                <p className="aura-subhead text-lg md:text-xl mb-6 md:mb-8">
                   Your AI study companion
                 </p>
               </motion.div>
@@ -1089,11 +1101,11 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
-                    className="p-3 md:p-4 bg-gray-900/30 backdrop-blur-sm rounded-xl border border-gray-700/30 hover:border-gray-600/50 transition-all duration-200"
+                    className="p-3 md:p-4 bg-black/30 backdrop-blur-sm rounded-xl border border-cyan-500/10 hover:border-cyan-500/20 transition-all duration-200"
                   >
                     <div className="text-xl md:text-2xl mb-1 md:mb-2">{capability.icon}</div>
-                    <div className="text-xs md:text-sm font-medium text-gray-200">{capability.title}</div>
-                    <div className="text-xs text-gray-400 hidden md:block">{capability.desc}</div>
+                    <div className="text-xs md:text-sm font-medium text-slate-200">{capability.title}</div>
+                    <div className="text-xs text-slate-400 hidden md:block">{capability.desc}</div>
                   </motion.div>
                 ))}
               </motion.div>
@@ -1105,20 +1117,21 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                 className="grid grid-cols-1 md:grid-cols-2 gap-3"
               >
                 {quickActions.slice(0, 4).map((action, index) => (
-                  <button
+                  <Button
                     key={index}
+                    variant="ghost"
                     onClick={() => handleQuickAction(action)}
-                    className="flex items-center space-x-3 p-3 md:p-4 bg-gray-800/30 hover:bg-gray-700/50 rounded-xl border border-gray-700/30 hover:border-gray-600/50 transition-all duration-200 text-left"
+                    className="flex items-center gap-3 p-3 md:p-4 bg-slate-800/30 hover:bg-slate-700/50 rounded-xl border border-cyan-500/10 hover:border-cyan-500/20 text-left"
                   >
                     <span className="text-lg md:text-xl">{action.icon}</span>
-                    <span className="text-sm font-medium text-gray-200">{action.text}</span>
-                  </button>
+                    <span className="text-sm font-medium text-slate-200">{action.text}</span>
+                  </Button>
                 ))}
               </motion.div>
             </div>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-700">
+          <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-cyan-500/20">
             <div className="max-w-4xl mx-auto space-y-4 md:space-y-6 pb-4">
               <AnimatePresence>
                 {messages.map((message) => (
@@ -1148,7 +1161,7 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                         className={`group relative max-w-[85%] md:max-w-3xl ${
                           message.type === 'user'
                             ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-tr-md px-3 md:px-4 py-2 md:py-3 shadow-lg'
-                            : 'bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 text-gray-100 rounded-2xl rounded-tl-md px-3 md:px-4 py-2 md:py-3'
+                            : 'aura-glass aura-glass-card text-slate-100 rounded-2xl rounded-tl-md px-3 md:px-4 py-2 md:py-3'
                         }`}
                       >
                         {message.image && (
@@ -1165,18 +1178,20 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                           className="text-gray-200"
                         />
                         
-                        <div className="flex items-center justify-between mt-2 md:mt-3 pt-2 border-t border-gray-700/20">
-                          <span className="text-xs text-gray-400">
+                        <div className="flex items-center justify-between mt-2 md:mt-3 pt-2 border-t border-cyan-500/10">
+                          <span className="text-xs text-slate-400">
                             {formatTimestamp(message.timestamp)}
                           </span>
                           {message.type === 'bot' && (
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => isSpeaking ? stopSpeaking() : speakText(message.content)}
-                              className="flex items-center space-x-1 px-2 py-1 text-xs text-gray-400 hover:text-blue-400 transition-colors rounded-md hover:bg-gray-800/30"
+                              className="flex items-center gap-1 px-2 py-1 text-xs text-slate-400 hover:text-blue-400 rounded-md hover:bg-black/20"
                             >
                               <FaVolumeUp className="text-xs" />
                               <span className="hidden sm:inline">{isSpeaking ? 'Stop' : 'Listen'}</span>
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </motion.div>
@@ -1195,7 +1210,7 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                     <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-600/30 mt-1">
                       <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
                     </div>
-                    <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 text-gray-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-3xl">
+                    <div className="aura-glass aura-glass-card text-slate-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-3xl">
                       <div className="flex items-start">
                         <RichMessageRenderer 
                           content={streamingMessage}
@@ -1221,7 +1236,7 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                       <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-600/30 mt-1">
                         <img src={neuraXAvatar} alt="NeuraX" className="w-full h-full object-cover" />
                       </div>
-                      <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700/30 rounded-2xl rounded-tl-md px-4 py-3">
+                      <div className="aura-glass aura-glass-card rounded-2xl rounded-tl-md px-4 py-3">
                         <div className="flex items-center space-x-3">
                           <div className="flex space-x-1">
                             <motion.div 
@@ -1254,20 +1269,20 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
         )}
 
         {/* Input Bar */}
-        <div className="border-t border-gray-800/30 backdrop-blur-xl bg-black/20 px-4 md:px-6 py-4 md:py-6 sticky bottom-0 z-40">
+        <div className="border-t border-cyan-500/10 backdrop-blur-xl bg-black/20 px-4 md:px-6 py-4 md:py-6 sticky bottom-0 z-40">
           <div className="max-w-4xl mx-auto">
             {selectedImage && (
-              <div className="mb-3 md:mb-4 flex items-center space-x-3 bg-gray-900/50 backdrop-blur-sm rounded-xl p-3 border border-gray-700/30">
+              <div className="mb-3 md:mb-4 flex items-center gap-3 aura-glass rounded-xl p-3">
                 <img 
                   src={URL.createObjectURL(selectedImage)} 
                   alt="Selected" 
-                  className="w-10 h-10 md:w-12 md:h-12 object-cover rounded-lg border border-gray-600/30"
+                  className="w-10 h-10 md:w-12 md:h-12 object-cover rounded-lg border border-cyan-500/10"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-200 truncate">{selectedImage.name}</p>
+                  <p className="text-sm font-medium text-slate-200 truncate">{selectedImage.name}</p>
                   {isProcessingVision ? (
-                    <div className="flex items-center space-x-2 mt-1">
-                      <div className="w-24 md:w-32 bg-gray-700 rounded-full h-1.5">
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-24 md:w-32 bg-slate-700 rounded-full h-1.5">
                         <div 
                           className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full transition-all duration-300"
                           style={{ width: `${visionProgress}%` }}
@@ -1276,20 +1291,22 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                       <span className="text-xs text-blue-400">Analyzing...</span>
                     </div>
                   ) : (
-                    <p className="text-xs text-gray-400">Ready for AI analysis</p>
+                    <p className="text-xs text-slate-400">Ready for AI analysis</p>
                   )}
                 </div>
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleRemoveImage}
-                  className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0"
+                  className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg flex-shrink-0"
                 >
                   <FaTimes className="text-sm" />
-                </button>
+                </Button>
               </div>
             )}
             
             {searchStatus && (
-              <div className="mb-3 md:mb-4 flex items-center justify-center space-x-3 bg-gray-900/30 backdrop-blur-sm rounded-xl p-3 border border-gray-700/20">
+              <div className="mb-3 md:mb-4 flex items-center justify-center gap-3 bg-black/30 backdrop-blur-sm rounded-xl p-3 border border-cyan-500/10">
                 <div className="animate-pulse w-2 h-2 bg-blue-400 rounded-full"></div>
                 <span className="text-sm text-blue-300">{searchStatus}</span>
               </div>
@@ -1303,9 +1320,9 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mb-3 p-3 bg-gray-900/30 backdrop-blur-sm rounded-xl border border-gray-700/20"
+                className="mb-3 p-3 bg-black/30 backdrop-blur-sm rounded-xl border border-cyan-500/10"
               >
-                <div className="text-xs text-gray-400 mb-2 flex items-center justify-between">
+                <div className="text-xs text-slate-400 mb-2 flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <span>👁️ Live Preview:</span>
                     <div className="flex space-x-1">
@@ -1317,16 +1334,16 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                   </div>
                   <span className="text-xs text-gray-500">Real-time render</span>
                 </div>
-                <div className="max-h-32 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 bg-gray-800/20 rounded-lg p-2">
+                <div className="max-h-32 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-cyan-500/20 bg-slate-800/20 rounded-lg p-2">
                   <RichMessageRenderer 
                     content={inputText}
-                    className="text-gray-300 text-sm"
+                    className="text-slate-300 text-sm"
                   />
                 </div>
               </motion.div>
             )}
             
-            <div className="flex items-end space-x-2 md:space-x-3">
+            <div className="flex items-end gap-2 md:gap-3">
               <div className="flex-1 relative">
                 <motion.textarea
                   ref={inputRef}
@@ -1339,7 +1356,7 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                     }
                   }}
                   placeholder={isListening ? "🎤 Listening..." : enableWebSearch ? "Ask anything with web search 🌐" : selectedImage ? "What would you like to know about this image?" : "Message NeuraX Omega... (Supports **bold**, `code`, tables, math)"}
-                  className="w-full px-3 md:px-4 py-3 bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 focus:border-blue-500/50 rounded-2xl focus:outline-none text-gray-100 placeholder-gray-400 transition-all duration-200 resize-none scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 text-sm md:text-base"
+                  className="w-full px-3 md:px-4 py-3 bg-black/50 backdrop-blur-sm border border-cyan-500/20 focus:border-cyan-500/50 rounded-2xl focus:outline-none text-slate-100 placeholder-slate-400 transition-all duration-200 resize-none scrollbar-thin scrollbar-track-transparent scrollbar-thumb-cyan-500/20 text-sm md:text-base aura-input"
                   disabled={isTyping || isStreaming || isProcessingVision || isListening || isSending}
                   rows={1}
                   style={{ minHeight: '48px', maxHeight: '120px' }}
@@ -1349,8 +1366,8 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                   }}
                 />
                 {inputText && (
-                  <div className="absolute right-3 bottom-2 flex items-center space-x-2">
-                    <div className="text-xs text-gray-500">
+                  <div className="absolute right-3 bottom-2 flex items-center gap-2">
+                    <div className="text-xs text-slate-500">
                       {inputText.length}
                     </div>
                     {inputText.includes('```') && (
@@ -1372,46 +1389,28 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                 )}
               </div>
               
-              <div className="flex items-center space-x-1 md:space-x-2">
-                <div className="relative group">
-                  <button
-                    onClick={() => setEnableWebSearch(!enableWebSearch)}
-                    className={`flex items-center space-x-1 px-2 md:px-3 py-2 md:py-2.5 rounded-xl transition-all duration-200 ${
-                      enableWebSearch 
-                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
-                        : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
-                    }`}
-                    disabled={isTyping || isStreaming || isProcessingVision}
-                    title={enableWebSearch ? 'Web search ON' : 'Enable web search'}
-                  >
-                    <FaSearch className="text-xs md:text-sm" />
-                    <span className="text-xs hidden sm:inline">{enableWebSearch ? 'ON' : 'Web'}</span>
-                  </button>
-                  
-                  {/* Markdown Help Tooltip */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                    <div className="bg-gray-900/95 backdrop-blur-xl rounded-lg border border-gray-700/50 p-3 text-xs text-gray-300 whitespace-nowrap shadow-2xl">
-                      <div className="font-semibold text-blue-400 mb-1">Markdown Support:</div>
-                      <div>**bold** *italic* `code`</div>
-                      <div>```language for code blocks</div>
-                      <div>| tables | supported |</div>
-                    </div>
-                  </div>
-                </div>
+              <div className="flex items-center gap-1 md:gap-2">
+                <Button
+                  variant={enableWebSearch ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setEnableWebSearch(!enableWebSearch)}
+                  disabled={isTyping || isStreaming || isProcessingVision}
+                  title={enableWebSearch ? 'Web search ON' : 'Enable web search'}
+                >
+                  <FaSearch className="text-xs md:text-sm" />
+                  <span className="text-xs hidden sm:inline">{enableWebSearch ? 'ON' : 'Web'}</span>
+                </Button>
                 
-                <button
+                <Button
+                  variant={isListening ? 'danger' : 'ghost'}
+                  size="sm"
                   onClick={isListening ? stopListening : startListening}
-                  className={`flex items-center space-x-1 px-2 md:px-3 py-2 md:py-2.5 rounded-xl transition-all duration-200 ${
-                    isListening 
-                      ? 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse'
-                      : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
-                  }`}
                   disabled={isTyping || isStreaming || isProcessingVision}
                   title={isListening ? 'Stop recording' : 'Voice input'}
                 >
                   {isListening ? <FaMicrophoneSlash className="text-xs md:text-sm" /> : <FaMicrophone className="text-xs md:text-sm" />}
                   <span className="text-xs hidden sm:inline">{isListening ? 'Stop' : 'Voice'}</span>
-                </button>
+                </Button>
                 
                 <input
                   ref={fileInputRef}
@@ -1420,37 +1419,35 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                   onChange={handleImageUpload}
                   className="hidden"
                 />
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center space-x-1 px-2 md:px-3 py-2 md:py-2.5 bg-gray-800/50 text-gray-400 border border-gray-700/50 rounded-xl hover:bg-gray-700/50 transition-all duration-200"
                   disabled={isTyping || isStreaming || isProcessingVision}
                   title="Upload image"
                 >
                   <FaImage className="text-xs md:text-sm" />
                   <span className="text-xs hidden sm:inline">Image</span>
-                </button>
+                </Button>
                 
                 <div className="relative group">
-                  <button
+                  <Button
+                    variant={isGeneratingImage ? 'magenta' : 'ghost'}
+                    size="sm"
                     onClick={() => {
                       setInputText('Generate an image of ');
                       inputRef.current?.focus();
                     }}
-                    className={`flex items-center space-x-1 px-2 md:px-3 py-2 md:py-2.5 rounded-xl transition-all duration-200 ${
-                      isGeneratingImage 
-                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30 animate-pulse'
-                        : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
-                    }`}
                     disabled={isTyping || isStreaming || isProcessingVision}
                     title="Generate image with AI"
                   >
                     <FaPalette className="text-xs md:text-sm" />
                     <span className="text-xs hidden sm:inline">{isGeneratingImage ? 'Gen...' : 'Generate'}</span>
-                  </button>
+                  </Button>
                   
                   {/* Quick Actions Tooltip */}
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                    <div className="bg-gray-900/95 backdrop-blur-xl rounded-lg border border-gray-700/50 p-3 text-xs text-gray-300 whitespace-nowrap shadow-2xl">
+                    <div className="aura-glass rounded-lg border border-cyan-500/10 p-3 text-xs text-slate-300 whitespace-nowrap shadow-2xl">
                       <div className="font-semibold text-purple-400 mb-1">Quick Actions:</div>
                       <div>🎨 Generate images</div>
                       <div>📷 Analyze images</div>
@@ -1461,13 +1458,14 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                 </div>
                 
                 <div className="relative">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setShowModelSelector(!showModelSelector)}
-                    className="p-2.5 bg-gray-800/50 text-gray-400 border border-gray-700/50 rounded-xl hover:bg-gray-700/50 transition-all duration-200"
                     title="AI Model"
                   >
                     <FaCog className="text-sm" />
-                  </button>
+                  </Button>
                   
                   <AnimatePresence>
                     {showModelSelector && (
@@ -1475,7 +1473,7 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="absolute bottom-full right-0 mb-2 bg-gray-900/95 backdrop-blur-xl rounded-xl border border-gray-700/50 p-2 min-w-64 shadow-2xl"
+                        className="absolute bottom-full right-0 mb-2 aura-glass rounded-xl border border-cyan-500/10 p-2 min-w-64 shadow-2xl"
                       >
                         {models.map(model => (
                           <button
@@ -1486,12 +1484,12 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                             }}
                             className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
                               selectedModel === model.id
-                                ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                                : 'hover:bg-gray-800/50 text-gray-300'
+                                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                                : 'hover:bg-black/20 text-slate-300'
                             }`}
                           >
                             <div className="font-medium text-sm">{model.name}</div>
-                            <div className="text-xs text-gray-400">{model.description}</div>
+                            <div className="text-xs text-slate-400">{model.description}</div>
                           </button>
                         ))}
                       </motion.div>
@@ -1501,39 +1499,34 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
               </div>
               
               {(isTyping || isStreaming) ? (
-                <motion.button
+                <Button
+                  variant="danger"
                   onClick={() => {
                     setIsTyping(false);
                     setIsStreaming(false);
                     setStreamingMessage('');
                   }}
-                  className="p-2.5 md:p-3 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all duration-200 flex-shrink-0"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   title="Stop response"
                 >
                   <div className="w-3 h-3 bg-red-400 rounded-sm"></div>
-                </motion.button>
+                </Button>
               ) : (
-                <motion.button
+                <Button
                   onClick={handleSendMessage}
                   disabled={(!inputText.trim() && !selectedImage) || isProcessingVision || isSending}
-                  className={`p-2.5 md:p-3 rounded-xl transition-all duration-200 flex-shrink-0 ${
-                    (!inputText.trim() && !selectedImage) || isProcessingVision || isSending
-                      ? 'bg-gray-800/50 text-gray-500 border border-gray-700/50 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border border-blue-500/30 shadow-lg hover:shadow-xl'
-                  }`}
                   whileHover={(!inputText.trim() && !selectedImage) || isProcessingVision || isSending ? {} : { scale: 1.05 }}
                   whileTap={(!inputText.trim() && !selectedImage) || isProcessingVision || isSending ? {} : { scale: 0.95 }}
                 >
                   <FaPaperPlane className="text-xs md:text-sm" />
-                </motion.button>
+                </Button>
               )}
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

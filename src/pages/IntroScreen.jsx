@@ -1,10 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useInView, useScroll, useTransform } from "framer-motion";
-import { FaPalette } from "react-icons/fa";
+import { FaPalette, FaRocket, FaBolt, FaBrain } from "react-icons/fa";
 import ThemeSelector from "../components/ThemeSelector";
 import EventShowdown from "../components/EventShowdown";
 import ParallaxElement from "../components/ParallaxElement";
+import FuturisticLoader from "../components/ui/FuturisticLoader";
+import Button from "../components/ui/Button";
+import soundManager from "../utils/soundUtils";
 
 // Cloudinary video URLs
 const techVideo = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021260/tech-bg_w8qhkh.mp4';
@@ -23,7 +26,6 @@ export default function IntroScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isHovering, setIsHovering] = useState(false);
 
-  const [textSplits, setTextSplits] = useState([]);
   const [preloaderProgress, setPreloaderProgress] = useState(0);
 
   const [currentTheme, setCurrentTheme] = useState('tech-bg');
@@ -146,34 +148,25 @@ export default function IntroScreen() {
     setParticles(particleArray);
   }, []);
 
-  // Handle loading animation with progress
-  useEffect(() => {
-    const progressInterval = setInterval(() => {
-      setPreloaderProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          setTimeout(() => {
-            setIsLoading(false);
-            setShowVideo(true);
-            setTimeout(() => setShowContent(true), 300);
-          }, 500);
-          return 100;
-        }
-        return prev + Math.random() * 15;
-      });
-    }, 100);
-    return () => clearInterval(progressInterval);
+  const finishLoading = useCallback(() => {
+    setIsLoading(false);
+    setShowVideo(true);
+    setTimeout(() => setShowContent(true), 400);
   }, []);
 
-  // Text splitting effect
   useEffect(() => {
-    const text = "NeuroNerds Quiz";
-    const splits = text.split('').map((char, index) => ({
-      char: char === ' ' ? '\u00A0' : char,
-      index
-    }));
-    setTextSplits(splits);
-  }, []);
+    const progressInterval = setInterval(() => {
+      setPreloaderProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          setTimeout(finishLoading, 400);
+          return 100;
+        }
+        return Math.min(100, prev + 4 + Math.random() * 8);
+      });
+    }, 90);
+    return () => clearInterval(progressInterval);
+  }, [finishLoading]);
 
 
 
@@ -236,125 +229,21 @@ export default function IntroScreen() {
   };
 
   return (
-    <div ref={containerRef} className="relative min-h-screen w-full flex flex-col items-center justify-center bg-gray-900 overflow-hidden">
+    <div ref={containerRef} className="relative min-h-[100dvh] w-full flex flex-col items-center justify-center bg-[#020208] overflow-hidden">
 
-
-      {/* Enhanced 2026 Preloader */}
       <AnimatePresence>
         {isLoading && (
           <motion.div
-            className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950 z-[1000] overflow-hidden"
-            initial={{ clipPath: "inset(0% 0% 0% 0%)" }}
-            exit={{ 
-              clipPath: "inset(0% 0% 100% 0%)",
-              transition: { duration: 2, ease: [0.23, 1, 0.32, 1] }
-            }}
+            key="aura-loader"
+            exit={{ opacity: 0, scale: 1.02 }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
-            {/* Animated Background Orbs */}
-            <motion.div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <motion.div
-                className="absolute w-96 h-96 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-full blur-3xl"
-                animate={{ x: [0, 100, 0], y: [0, 50, 0] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                style={{ top: '-10%', left: '-10%' }}
-              />
-              <motion.div
-                className="absolute w-96 h-96 bg-gradient-to-r from-pink-500/20 to-cyan-500/20 rounded-full blur-3xl"
-                animate={{ x: [0, -100, 0], y: [0, -50, 0] }}
-                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                style={{ bottom: '-10%', right: '-10%' }}
-              />
-            </motion.div>
-
-            {/* Rotating Rings */}
-            <motion.div
-              className="mb-8 relative w-32 h-32"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-            >
-              <div className="absolute inset-0 border-4 border-transparent border-t-cyan-500 border-r-purple-500 rounded-full" />
-              <motion.div
-                className="absolute inset-2 border-2 border-transparent border-b-pink-500 border-l-cyan-500 rounded-full"
-                animate={{ rotate: -360 }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              />
-              <motion.div
-                className="absolute inset-4 border border-transparent border-t-purple-400 rounded-full"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-              />
-            </motion.div>
-            
-            {/* Text with Character Animation */}
-            <motion.div className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-8 relative z-10">
-              {textSplits.map((item, index) => (
-                <motion.span
-                  key={index}
-                  className="inline-block"
-                  initial={{
-                    clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)",
-                    transform: "translate(0%, 20%)",
-                    opacity: 0
-                  }}
-                  animate={{
-                    clipPath: "polygon(0 0%, 100% 0%, 100% 100%, 0% 100%)",
-                    transform: "translate(0%, 0%)",
-                    opacity: 1
-                  }}
-                  transition={{
-                    duration: 0.6,
-                    delay: index * 0.04,
-                    ease: [0.23, 1, 0.32, 1]
-                  }}
-                >
-                  <motion.span
-                    animate={{ color: ['#06b6d4', '#a855f7', '#ec4899', '#06b6d4'] }}
-                    transition={{ duration: 4, repeat: Infinity }}
-                  >
-                    {item.char}
-                  </motion.span>
-                </motion.span>
-              ))}
-            </motion.div>
-            
-            {/* Enhanced Progress Bar */}
-            <div className="w-48 sm:w-64 relative mb-6">
-              <div className="h-1 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full shadow-lg shadow-cyan-500/50"
-                  initial={{ width: "0%" }}
-                  animate={{ width: `${preloaderProgress}%` }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                />
-              </div>
-              <motion.div
-                className="absolute -top-1 h-3 w-3 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full shadow-lg shadow-cyan-400/50"
-                animate={{ left: `${preloaderProgress}%` }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                style={{ marginLeft: '-6px' }}
-              />
-            </div>
-            
-            {/* Progress Number with Glow */}
-            <motion.div
-              className="text-3xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 relative z-10"
-              key={Math.floor(preloaderProgress)}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.2 }}
-            >
-              {Math.floor(preloaderProgress)}%
-            </motion.div>
-            
-            {/* Skip Button */}
-            <motion.button
-              onClick={() => setIsLoading(false)}
-              className="absolute top-4 right-4 text-cyan-300 text-sm underline hover:text-cyan-100 transition-colors relative z-10"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Skip
-            </motion.button>
+            <FuturisticLoader
+              progress={preloaderProgress}
+              title="NEURONERDS"
+              subtitle="Synchronizing quantum learning matrix"
+              onSkip={finishLoading}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -400,7 +289,7 @@ export default function IntroScreen() {
           className="w-full h-full parallax-bg"
           style={{ opacity }}
           initial={{ opacity: 0, scale: 1.1 }}
-          animate={{ opacity: showVideo ? 0.4 : 0, scale: 1 }}
+          animate={{ opacity: showVideo ? 0.55 : 0, scale: 1 }}
           transition={{ duration: 2, ease: [0.23, 1, 0.32, 1] }}
           key={currentTheme}
         >
@@ -420,7 +309,8 @@ export default function IntroScreen() {
           }}
         />
         {/* Video Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/20 to-gray-900/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020208]/40 via-[#020208]/50 to-[#020208]/90" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#020208_75%)]" />
         </motion.div>
       </ParallaxElement>
 
@@ -434,31 +324,25 @@ export default function IntroScreen() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md mx-auto text-center shadow-2xl border border-gray-200 dark:border-gray-700"
+              className="aura-glass p-8 max-w-md mx-auto text-center"
               initial={{ scale: 0.8, y: 50 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.8, y: 50 }}
             >
               <div className="text-6xl mb-4">🎵</div>
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-                Battle Event Active!
+              <h3 className="aura-display text-lg text-white mb-4">
+                Battle Event Active
               </h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-6">
-                Enable audio to experience the full battle atmosphere with epic background music.
+              <p className="aura-subhead text-sm mb-6">
+                Enable audio for the full battle atmosphere.
               </p>
               <div className="flex gap-3">
-                <button
-                  onClick={handleEnableAudio}
-                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition-all"
-                >
-                  🔊 Enable Audio
-                </button>
-                <button
-                  onClick={() => setShowAudioPrompt(false)}
-                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
-                >
+                <Button onClick={handleEnableAudio} variant="primary" className="flex-1 w-full">
+                  Enable Audio
+                </Button>
+                <Button onClick={() => setShowAudioPrompt(false)} variant="ghost" className="flex-1 w-full">
                   Skip
-                </button>
+                </Button>
               </div>
             </motion.div>
           </motion.div>
@@ -470,193 +354,96 @@ export default function IntroScreen() {
       {/* Content Container */}
       <div
         ref={contentRef}
-        className="relative z-10 text-center px-6 max-w-5xl mx-auto py-12"
+        className="relative z-10 text-center px-4 sm:px-6 max-w-6xl mx-auto py-16 sm:py-20"
       >
-        <ParallaxElement speed={0.1}>
-          <motion.h1
-            initial={{ y: 60, opacity: 0 }}
-            animate={{
-              y: isContentInView ? 0 : 60,
-              opacity: isContentInView ? 1 : 0,
-            }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-extrabold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent tracking-tight parallax-text"
-          >
-            NeuroNerds Quiz
-          </motion.h1>
-        </ParallaxElement>
-
-        <motion.p
-          initial={{ y: 40, opacity: 0 }}
-          animate={{
-            y: isContentInView ? 0 : 40,
-            opacity: isContentInView ? 1 : 0,
-          }}
-          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-          className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-200 font-light mt-4"
-        >
-          Unleash Your Inner Genius
-        </motion.p>
-
-        <motion.p
-          initial={{ y: 40, opacity: 0 }}
-          animate={{
-            y: isContentInView ? 0 : 40,
-            opacity: isContentInView ? 1 : 0,
-          }}
-          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-          className="text-base sm:text-lg text-gray-400 mt-6 max-w-3xl mx-auto leading-relaxed px-4"
-        >
-          Dive into a thrilling universe of interactive quizzes that challenge your mind and spark curiosity. Join a global community of knowledge seekers.
-        </motion.p>
-
         <motion.div
-          initial={{ y: 40, opacity: 0 }}
-          animate={{
-            y: isContentInView ? 0 : 40,
-            opacity: isContentInView ? 1 : 0,
-          }}
-          transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8 px-4"
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseLeave={() => setIsHovering(false)}
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: showContent ? 1 : 0, y: showContent ? 0 : 24 }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
         >
-          {isAuthenticated ? (
-            <motion.button
-              whileHover={{ 
-                scale: 1.05,
-                boxShadow: "0 20px 40px rgba(6, 182, 212, 0.4)"
-              }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/dashboard')}
-              className="relative bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-cyan-300 text-base sm:text-lg overflow-hidden group w-full sm:w-auto"
-            >
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                initial={{ x: '-100%' }}
-                whileHover={{ x: '100%' }}
-                transition={{ duration: 0.6 }}
-              />
-              <span className="relative z-10">🚀 Launch Dashboard</span>
-            </motion.button>
-          ) : (
-            <>
-              <motion.button
-                whileHover={{ 
-                  scale: 1.05,
-                  boxShadow: "0 20px 40px rgba(6, 182, 212, 0.4)"
-                }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/login')}
-                className="relative bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-cyan-300 text-base sm:text-lg overflow-hidden group w-full sm:w-auto"
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  initial={{ x: '-100%' }}
-                  whileHover={{ x: '100%' }}
-                  transition={{ duration: 0.6 }}
-                />
-                <span className="relative z-10">🔐 Sign In</span>
-              </motion.button>
-              <motion.button
-                whileHover={{ 
-                  scale: 1.05,
-                  boxShadow: "0 20px 40px rgba(168, 85, 247, 0.4)"
-                }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/register')}
-                className="relative bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-purple-300 text-base sm:text-lg overflow-hidden group w-full sm:w-auto"
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  initial={{ x: '-100%' }}
-                  whileHover={{ x: '100%' }}
-                  transition={{ duration: 0.6 }}
-                />
-                <span className="relative z-10">✨ Join Now</span>
-              </motion.button>
-            </>
-          )}
-        </motion.div>
+          <p className="aura-label mb-4">Next-gen learning platform</p>
+          <ParallaxElement speed={0.08}>
+            <h1 className="aura-headline text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight">
+              NeuroNerds Quiz
+            </h1>
+          </ParallaxElement>
 
-        {/* Theme Selector with Clip Animation */}
-        <motion.div
-          initial={{ clipPath: "inset(100% 0% 0% 0%)" }}
-          animate={{ clipPath: isContentInView ? "inset(0% 0% 0% 0%)" : "inset(100% 0% 0% 0%)" }}
-          transition={{ duration: 2, delay: 1.8, ease: [0.23, 1, 0.32, 1] }}
-          className="mt-10"
-        >
-          <div 
-            className="inline-flex items-center space-x-3 bg-gray-800/50 backdrop-blur-md rounded-full px-5 py-2 border border-gray-700/50 hover:border-gray-600 transition-colors cursor-pointer"
-          >
-            <FaPalette className="text-lg text-cyan-400" />
-            <span className="text-sm text-gray-300 font-medium">
-              Theme: {getThemeName()}
-            </span>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              onClick={() => setShowThemeSelector(true)}
-              className="text-cyan-400 hover:text-cyan-300 transition-colors"
-            >
-              Change
-            </motion.button>
+          <p className="mt-5 text-xl sm:text-2xl md:text-3xl font-light text-slate-200 tracking-wide">
+            Unleash your inner genius
+          </p>
+
+          <p className="aura-subhead text-base sm:text-lg mt-6 max-w-2xl mx-auto leading-relaxed">
+            Real-time battles, adaptive quizzes, and AI-powered insights — built for students who refuse to learn in slow mode.
+          </p>
+
+          <div className="flex flex-wrap justify-center gap-3 mt-8">
+            <span className="aura-chip">Live Battles</span>
+            <span className="aura-chip">NeuraX AI</span>
+            <span className="aura-chip">Progress Tracking</span>
           </div>
-        </motion.div>
 
-        {/* Feature Cards with Staggered Clip Animation */}
-        <motion.div
-          initial={{ clipPath: "inset(100% 0% 0% 0%)" }}
-          animate={{ clipPath: isContentInView ? "inset(0% 0% 0% 0%)" : "inset(100% 0% 0% 0%)" }}
-          transition={{ duration: 2, delay: 2, ease: [0.23, 1, 0.32, 1] }}
-          className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 px-4"
-        >
-          {[
-            {
-              icon: "🧠",
-              title: "Smart Quizzes",
-              desc: "AI-driven challenges that adapt to your skill level.",
-            },
-            {
-              icon: "🏆",
-              title: "Leaderboard Glory",
-              desc: "Compete globally and track your progress.",
-            },
-            {
-              icon: "⚡",
-              title: "Instant Insights",
-              desc: "Real-time feedback with detailed explanations.",
-            },
-          ].map((feature, index) => (
-            <motion.div
-              key={index}
-              className="relative bg-gray-800/30 backdrop-blur-md rounded-xl p-6 border border-gray-700/50 hover:border-cyan-500/50 transition-all duration-500 cursor-pointer"
-              initial={{ clipPath: "inset(100% 0% 0% 0%)" }}
-              animate={{ clipPath: isContentInView ? "inset(0% 0% 0% 0%)" : "inset(100% 0% 0% 0%)" }}
-              transition={{ duration: 2, delay: 2.2 + (index * 0.2), ease: [0.23, 1, 0.32, 1] }}
-              whileHover={{ 
-                scale: 1.05, 
-                boxShadow: "0 20px 40px rgba(6, 182, 212, 0.3)",
-                transition: { duration: 0.3 }
-              }}
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 justify-center items-stretch sm:items-center mt-10 px-2"
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
+          >
+            {isAuthenticated ? (
+              <Button size="lg" onClick={() => navigate('/dashboard')} className="w-full sm:w-auto min-w-[200px]">
+                <FaRocket className="mr-1" /> Launch Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button size="lg" onClick={() => navigate('/login')} className="w-full sm:w-auto min-w-[180px]">
+                  Sign In
+                </Button>
+                <Button size="lg" variant="magenta" onClick={() => navigate('/register')} className="w-full sm:w-auto min-w-[180px]">
+                  Join Now
+                </Button>
+              </>
+            )}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: showContent ? 1 : 0 }}
+            transition={{ delay: 0.8 }}
+            className="mt-10 inline-flex"
+          >
+            <button
+              type="button"
+              onClick={() => setShowThemeSelector(true)}
+              className="aura-glass inline-flex items-center gap-3 px-5 py-2.5 rounded-full hover:border-cyan-400/40 transition-colors"
             >
-              <motion.div 
-                className="text-4xl mb-4"
-                whileHover={{ scale: 1.2, rotate: 10 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                {feature.icon}
-              </motion.div>
-              <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
-              <p className="text-gray-400">{feature.desc}</p>
-              
-              {/* Hover Effect Overlay */}
+              <FaPalette className="text-cyan-400" />
+              <span className="text-sm text-slate-300">
+                Visual: <span className="text-cyan-400 font-medium">{getThemeName()}</span>
+              </span>
+              <span className="text-xs text-cyan-500/80 uppercase tracking-widest">Change</span>
+            </button>
+          </motion.div>
+
+          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+            {[
+              { Icon: FaBrain, title: 'Smart Quizzes', desc: 'Adaptive challenges tuned to how you think.' },
+              { Icon: FaBolt, title: 'Live Battles', desc: 'Compete in real time with friends and rivals.' },
+              { Icon: FaRocket, title: 'Instant Insights', desc: 'Feedback and analytics the moment you finish.' },
+            ].map(({ Icon, title, desc }, index) => (
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-xl opacity-0"
-                whileHover={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              />
-            </motion.div>
-          ))}
+                key={title}
+                className="aura-glass aura-glass-card text-left group"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: showContent ? 1 : 0, y: showContent ? 0 : 30 }}
+                transition={{ delay: 0.5 + index * 0.12, duration: 0.6 }}
+                whileHover={{ y: -4 }}
+              >
+                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center mb-4 group-hover:shadow-aura-cyan transition-shadow">
+                  <Icon className="text-xl text-cyan-400" />
+                </div>
+                <h3 className="aura-display text-sm text-white mb-2">{title}</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">{desc}</p>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
       </div>
     </div>

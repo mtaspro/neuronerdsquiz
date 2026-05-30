@@ -7,6 +7,8 @@ import soundManager from '../utils/soundUtils';
 import { secureStorage } from '../utils/secureStorage.js';
 import LoadingAnimation from '../components/LoadingAnimation';
 import ForgotPassword from './ForgotPassword';
+import PageShell from './ui/PageShell';
+import Button from './ui/Button';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -98,44 +100,46 @@ const Login = () => {
 
   if (showForgotPassword) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-purple-900 flex items-center justify-center p-4">
+      <PageShell padding="py-12 flex items-center justify-center min-h-[calc(100vh-3.5rem)]">
         <ForgotPassword 
           onBack={() => setShowForgotPassword(false)} 
           onLoginSuccess={handleLoginSuccess}
         />
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-purple-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200"
-    >
+    <PageShell padding="py-12 flex items-center justify-center min-h-[calc(100vh-3.5rem)]">
       <motion.div
-        initial={{ scale: 0.9 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="max-w-md w-full"
+      >
+      <motion.div
+        initial={{ scale: 0.96 }}
         animate={{ scale: 1 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-        className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700"
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="aura-glass p-8 sm:p-10 space-y-8"
       >
         <div>
+          <p className="aura-label text-center mb-2">Secure access</p>
           <motion.h2
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white"
+            transition={{ delay: 0.2 }}
+            className="text-center aura-headline text-2xl sm:text-3xl"
           >
             Welcome Back
           </motion.h2>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="mt-2 text-center text-sm text-gray-600 dark:text-gray-300"
+            transition={{ delay: 0.3 }}
+            className="mt-3 text-center aura-subhead text-sm"
           >
-            Sign in to your account to continue
+            Sign in to continue your learning journey
           </motion.p>
         </div>
 
@@ -150,7 +154,7 @@ const Login = () => {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-md text-sm"
+              className="bg-red-500/10 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg text-sm"
             >
               {serverError}
             </motion.div>
@@ -158,7 +162,7 @@ const Login = () => {
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="email" className="aura-label block mb-2">
                 Email Address
               </label>
               <input
@@ -170,11 +174,7 @@ const Login = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                className={`appearance-none relative block w-full max-w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 text-sm leading-tight transition-colors ${
-                  errors.email 
-                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
-                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-                }`}
+                className={`aura-input ${errors.email ? 'aura-input-error' : ''}`}
                 placeholder="Enter your email"
               />
               {errors.email && (
@@ -183,7 +183,7 @@ const Login = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="password" className="aura-label block mb-2">
                 Password
               </label>
               <input
@@ -195,11 +195,7 @@ const Login = () => {
                 value={formData.password}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                className={`appearance-none relative block w-full max-w-full px-3 py-2 border rounded-md placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 text-sm leading-tight transition-colors ${
-                  errors.password 
-                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
-                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
-                }`}
+                className={`aura-input ${errors.password ? 'aura-input-error' : ''}`}
                 placeholder="Enter your password"
               />
               {errors.password && (
@@ -216,57 +212,50 @@ const Login = () => {
                 type="checkbox"
                 checked={formData.rememberMe}
                 onChange={handleInputChange}
-                className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+                className="h-4 w-4 text-cyan-500 focus:ring-cyan-500/50 border-cyan-500/30 rounded bg-black/40"
               />
-              <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+              <label htmlFor="rememberMe" className="ml-2 block text-sm text-slate-400">
                 Remember me
               </label>
             </div>
           </div>
 
           <div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
+            <Button type="submit" disabled={isLoading} className="w-full">
               {isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4">
-                    <LoadingAnimation size="small" />
-                  </div>
-                  <span>Signing in...</span>
-                </div>
+                <span className="flex items-center gap-2">
+                  <LoadingAnimation size="small" />
+                  Signing in...
+                </span>
               ) : (
                 'Sign in'
               )}
-            </motion.button>
+            </Button>
           </div>
 
           <div className="text-center space-y-2">
             <button
               type="button"
               onClick={() => setShowForgotPassword(true)}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
+              className="text-sm text-cyan-400/90 hover:text-cyan-300 font-medium transition-colors"
             >
               Forgot your password?
             </button>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              Don't have an account?{' '}
+            <p className="text-sm text-slate-500">
+              Don&apos;t have an account?{' '}
               <button
                 type="button"
                 onClick={() => navigate('/register')}
-                className="font-medium text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300 transition-colors"
+                className="font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
               >
-                Sign up here
+                Sign up
               </button>
             </p>
           </div>
         </motion.form>
       </motion.div>
-    </motion.div>
+      </motion.div>
+    </PageShell>
   );
 };
 

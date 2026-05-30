@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import './styles/transitions.css';
 import './styles/smooth-scroll.css';
 import './styles/modern-effects.css';
+import './styles/aura-design.css';
 import { AnimatePresence, motion } from "framer-motion";
 import IntroScreen from "./pages/IntroScreen";
 import QuizPage from "./pages/QuizPage";
@@ -61,6 +62,8 @@ import { useState } from "react";
 import { FaBars, FaTimes, FaCog, FaPalette } from 'react-icons/fa';
 
 function Navbar() {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
   const [isAdmin, setIsAdmin] = React.useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
   const [isExaminer, setIsExaminer] = React.useState(false);
@@ -144,11 +147,17 @@ function Navbar() {
     };
   }, []);
 
+  const navLinkClass = (path) =>
+    `aura-nav-link ${location.pathname === path ? 'aura-nav-link--active' : ''}`;
+
   return (
-    <nav className="w-full bg-white dark:bg-gray-900 shadow-md z-[99999] border-b border-gray-200 dark:border-gray-700 relative">
+    <nav className={`aura-nav w-full z-[99999] relative transition-all duration-300 ${isHome ? 'bg-transparent border-transparent shadow-none' : ''}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-14 items-center">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <Link to="/" className="aura-nav-brand hidden sm:block mr-2 shrink-0">
+              NEURONERDS
+            </Link>
             {/* Settings Button - Desktop Only */}
             <div className="hidden lg:block relative settings-dropdown">
               <button
@@ -157,7 +166,7 @@ function Navbar() {
                   console.log('⚙️ Settings button clicked, current state:', settingsOpen);
                   setSettingsOpen(!settingsOpen);
                 }}
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
+                className="inline-flex items-center justify-center p-2 rounded-lg text-slate-300 hover:text-cyan-400 hover:bg-cyan-500/10 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
                 aria-label="Settings"
               >
                 <FaCog className="h-5 w-5" />
@@ -165,7 +174,7 @@ function Navbar() {
               {/* Settings Dropdown - Portal to body */}
               {settingsOpen && createPortal(
                 <div 
-                  className="fixed bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-48 z-[99999]"
+                  className="fixed aura-glass rounded-xl p-3 min-w-48 z-[99999]"
                   style={{
                     top: '56px', // Below navbar height
                     left: '16px' // Align with settings button
@@ -173,7 +182,7 @@ function Navbar() {
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Dark Mode</span>
+                      <span className="text-sm font-medium text-slate-300">Dark Mode</span>
                       <DarkModeToggle />
                     </div>
                     <div className="border-t border-gray-200 dark:border-gray-600 pt-3">
@@ -193,45 +202,43 @@ function Navbar() {
                 document.body
               )}
             </div>
-            <div className="hidden lg:flex lg:space-x-4">
-              <Link to="/" className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Home</Link>
-              <Link to={isAuthenticated ? "/dashboard" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Dashboard</Link>
-              <Link to={isAuthenticated ? "/leaderboard" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition">Leaderboard</Link>
-              <Link to={isAuthenticated ? "/badges" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-yellow-600 dark:hover:text-yellow-400 transition">Badges</Link>
-              <Link to={isAuthenticated ? "/progress" : "/login"} className="text-gray-800 dark:text-white font-semibold hover:text-cyan-600 dark:hover:text-cyan-400 transition">Progress</Link>
+            <div className="hidden lg:flex lg:items-center lg:gap-0.5">
+              <Link to="/" className={navLinkClass('/')}>Home</Link>
+              <Link to={isAuthenticated ? "/dashboard" : "/login"} className={navLinkClass('/dashboard')}>Dashboard</Link>
+              <Link to={isAuthenticated ? "/leaderboard" : "/login"} className={navLinkClass('/leaderboard')}>Leaderboard</Link>
+              <Link to={isAuthenticated ? "/badges" : "/login"} className={navLinkClass('/badges')}>Badges</Link>
+              <Link to={isAuthenticated ? "/progress" : "/login"} className={navLinkClass('/progress')}>Progress</Link>
               {isAuthenticated && (
-                <Link to="/virtual-lab" className="text-gray-800 dark:text-white font-semibold hover:text-emerald-600 dark:hover:text-emerald-400 transition">Virtual Lab</Link>
+                <Link to="/virtual-lab" className={navLinkClass('/virtual-lab')}>Virtual Lab</Link>
               )}
-              <Link to="/about" className="text-gray-800 dark:text-white font-semibold hover:text-purple-600 dark:hover:text-purple-400 transition">About</Link>
-              <Link to={isAuthenticated ? "/ai-chat" : "/login"} className="relative text-gray-800 dark:text-white font-bold hover:text-green-600 dark:hover:text-green-400 transition-all duration-300 transform hover:scale-105 px-3 py-1 rounded-lg bg-gradient-to-r from-green-400/10 to-blue-500/10 hover:from-green-400/20 hover:to-blue-500/20 border border-green-400/20 hover:border-green-400/40 shadow-sm hover:shadow-md animate-pulse">
-                <span className="relative z-10">NeuraX</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-green-400/5 to-blue-500/5 rounded-lg blur-sm"></div>
+              <Link to="/about" className={navLinkClass('/about')}>About</Link>
+              <Link to={isAuthenticated ? "/ai-chat" : "/login"} className="aura-nav-link aura-nav-featured !px-3 !py-1.5">
+                NeuraX
               </Link>
               {isAdmin && (
-                <Link to="/admin" className="text-gray-800 dark:text-white font-semibold hover:text-pink-600 dark:hover:text-pink-400 transition">Admin</Link>
+                <Link to="/admin" className={navLinkClass('/admin')}>Admin</Link>
               )}
               {isSuperAdmin && (
-                <Link to="/superadmin" className="text-gray-800 dark:text-white font-semibold hover:text-red-600 dark:hover:text-red-400 transition">SuperAdmin</Link>
+                <Link to="/superadmin" className={navLinkClass('/superadmin')}>SuperAdmin</Link>
               )}
               {isSuperAdmin && (
-                <Link to="/notepad" className="text-gray-800 dark:text-white font-semibold hover:text-green-600 dark:hover:text-green-400 transition">Notepad</Link>
+                <Link to="/notepad" className={navLinkClass('/notepad')}>Notepad</Link>
               )}
               {isSuperAdmin && (
-                <Link to="/secret-chat" className="text-red-600 dark:text-red-400 font-semibold hover:text-red-700 dark:hover:text-red-300 transition">🔐 Secret</Link>
+                <Link to="/secret-chat" className="aura-nav-link text-pink-400/90 hover:text-pink-300">Secret</Link>
               )}
               {isAuthenticated && (
-                <Link to="/examiner" className="text-gray-800 dark:text-white font-semibold hover:text-purple-600 dark:hover:text-purple-400 transition">Examiner</Link>
+                <Link to="/examiner" className={navLinkClass('/examiner')}>Examiner</Link>
               )}
               {isAuthenticated && (
-                <Link to="/written-exams" className="text-gray-800 dark:text-white font-semibold hover:text-indigo-600 dark:hover:text-indigo-400 transition">Written Exams</Link>
+                <Link to="/written-exams" className={navLinkClass('/written-exams')}>Written Exams</Link>
               )}
-
             </div>
           </div>
           {/* Mobile Menu Button - Top Right */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="lg:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
+            className="lg:hidden inline-flex items-center justify-center p-2 rounded-lg text-slate-200 hover:bg-cyan-500/10 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
             aria-label="Toggle menu"
             aria-expanded={menuOpen}
           >
@@ -241,43 +248,43 @@ function Navbar() {
       </div>
       {/* Mobile Menu Overlay - Portal to body */}
       {menuOpen && createPortal(
-        <div className="lg:hidden fixed inset-0 z-[99999] bg-black bg-opacity-50" onClick={() => setMenuOpen(false)}>
-          <div className="absolute top-14 right-0 w-80 max-w-sm bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 shadow-lg h-full" onClick={(e) => e.stopPropagation()}>
+        <div className="lg:hidden fixed inset-0 z-[99999] bg-black/70 backdrop-blur-sm" onClick={() => setMenuOpen(false)}>
+          <div className="absolute top-14 right-0 w-80 max-w-sm aura-glass border-l border-cyan-500/20 h-[calc(100vh-3.5rem)] overflow-y-auto aura-scrollbar" onClick={(e) => e.stopPropagation()}>
             <div className="p-4">
-              <div className="space-y-2">
-                <Link to="/" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Home</Link>
-                <Link to={isAuthenticated ? "/dashboard" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Dashboard</Link>
-                <Link to={isAuthenticated ? "/leaderboard" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Leaderboard</Link>
-                <Link to={isAuthenticated ? "/badges" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Badges</Link>
-                <Link to={isAuthenticated ? "/progress" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Progress</Link>
+              <p className="aura-nav-brand text-sm mb-4 px-2">NEURONERDS</p>
+              <div className="space-y-1">
+                <Link to="/" onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Home</Link>
+                <Link to={isAuthenticated ? "/dashboard" : "/login"} onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Dashboard</Link>
+                <Link to={isAuthenticated ? "/leaderboard" : "/login"} onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Leaderboard</Link>
+                <Link to={isAuthenticated ? "/badges" : "/login"} onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Badges</Link>
+                <Link to={isAuthenticated ? "/progress" : "/login"} onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Progress</Link>
                 {isAuthenticated && (
-                  <Link to="/virtual-lab" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Virtual Lab</Link>
+                  <Link to="/virtual-lab" onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Virtual Lab</Link>
                 )}
-                <Link to="/about" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">About</Link>
-                <Link to={isAuthenticated ? "/ai-chat" : "/login"} onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-bold text-gray-800 dark:text-white hover:bg-gradient-to-r hover:from-green-400/20 hover:to-blue-500/20 transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-green-400/10 to-blue-500/10 border border-green-400/20 animate-pulse">
-                  <span className="relative z-10">NeuraX</span>
+                <Link to="/about" onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">About</Link>
+                <Link to={isAuthenticated ? "/ai-chat" : "/login"} onClick={() => setMenuOpen(false)} className="block aura-nav-link aura-nav-featured text-base py-2.5 mt-2">
+                  NeuraX
                 </Link>
                 {isAdmin && (
-                  <Link to="/admin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Admin</Link>
+                  <Link to="/admin" onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Admin</Link>
                 )}
                 {isSuperAdmin && (
-                  <Link to="/superadmin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">SuperAdmin</Link>
+                  <Link to="/superadmin" onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">SuperAdmin</Link>
                 )}
                 {isSuperAdmin && (
-                  <Link to="/notepad" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Notepad</Link>
+                  <Link to="/notepad" onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Notepad</Link>
                 )}
                 {isSuperAdmin && (
-                  <Link to="/secret-chat" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-red-600 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition">🔐 Secret</Link>
+                  <Link to="/secret-chat" onClick={() => setMenuOpen(false)} className="block aura-nav-link text-pink-400 text-base py-2.5">Secret</Link>
                 )}
                 {isAuthenticated && (
-                  <Link to="/examiner" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Examiner</Link>
+                  <Link to="/examiner" onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Examiner</Link>
                 )}
                 {isAuthenticated && (
-                  <Link to="/written-exams" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-semibold text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition">Written Exams</Link>
+                  <Link to="/written-exams" onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Written Exams</Link>
                 )}
-
               </div>
-              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+              <div className="mt-6 pt-4 border-t border-cyan-500/15 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Dark Mode</span>
                   <DarkModeToggle />
@@ -608,6 +615,10 @@ function AppContent() {
     };
   }, []);
 
+  React.useEffect(() => {
+    document.documentElement.classList.add('dark');
+  }, []);
+
   // Page transition enhancements and Lenis setup
   React.useEffect(() => {
     // Add Lenis class for smooth scrolling
@@ -636,13 +647,9 @@ function AppContent() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-col min-h-screen transition-colors duration-200 animated-bg"
-        style={{
-          background: 'linear-gradient(-45deg, #ff6b35, #f7931e, #00d4ff, #00ff88, #ff6b35)',
-          backgroundSize: '400% 400%',
-          backgroundAttachment: 'fixed'
-        }}
+        className="aura-app-shell flex flex-col min-h-screen"
       >
+        <div className="aura-app-content flex flex-col min-h-screen flex-1">
         <Navbar />
         <div className="flex-1 overflow-hidden">
           <AnimatedRoutes />
@@ -662,6 +669,7 @@ function AppContent() {
           onComplete={handleNotificationComplete}
         />
         <MaintenanceOverlay isActive={isMaintenanceMode} isSuperAdmin={isSuperAdmin} />
+        </div>
       </motion.div>
       
       {/* What's New Modal - once per user (MongoDB + local cache) */}

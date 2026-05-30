@@ -6,8 +6,8 @@ import BattleEventBanner from "../components/BattleEventBanner";
 import BattleLeaderboardCard from "../components/BattleLeaderboardCard";
 import QuizLeaderboardCard from "../components/QuizLeaderboardCard";
 import soundManager from "../utils/soundUtils";
-import '../styles/leaderboard.css';
-import '../styles/premium-glass.css';
+import PageShell from '../components/ui/PageShell';
+import Button from '../components/ui/Button';
 
 const TableView = ({ players, activeTab }) => {
   const getRankIcon = (rank) => {
@@ -35,26 +35,26 @@ const TableView = ({ players, activeTab }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass-panel overflow-hidden"
+      className="aura-glass aura-glass-card overflow-hidden"
     >
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white">
             <tr>
-              <th className="px-6 py-4 text-left font-semibold">Rank</th>
-              <th className="px-6 py-4 text-left font-semibold">Player</th>
-              <th className="px-6 py-4 text-center font-semibold">Score</th>
+              <th className="px-6 py-4 text-left font-semibold text-white">Rank</th>
+              <th className="px-6 py-4 text-left font-semibold text-white">Player</th>
+              <th className="px-6 py-4 text-center font-semibold text-white">Score</th>
               {activeTab === 'general' ? (
                 <>
-                  <th className="px-6 py-4 text-center font-semibold">Division</th>
-                  <th className="px-6 py-4 text-center font-semibold">Quizzes</th>
-                  <th className="px-6 py-4 text-center font-semibold">Streak</th>
+                  <th className="px-6 py-4 text-center font-semibold text-white">Division</th>
+                  <th className="px-6 py-4 text-center font-semibold text-white">Quizzes</th>
+                  <th className="px-6 py-4 text-center font-semibold text-white">Streak</th>
                 </>
               ) : (
                 <>
-                  <th className="px-6 py-4 text-center font-semibold">Battles</th>
-                  <th className="px-6 py-4 text-center font-semibold">Win Rate</th>
-                  <th className="px-6 py-4 text-center font-semibold">Badges</th>
+                  <th className="px-6 py-4 text-center font-semibold text-white">Battles</th>
+                  <th className="px-6 py-4 text-center font-semibold text-white">Win Rate</th>
+                  <th className="px-6 py-4 text-center font-semibold text-white">Badges</th>
                 </>
               )}
             </tr>
@@ -66,10 +66,10 @@ const TableView = ({ players, activeTab }) => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className={`border-b border-gray-200/20 dark:border-gray-700/20 hover:bg-white/5 dark:hover:bg-white/5 transition-colors ${
-                  index === 0 ? 'rank-glow-1' : 
-                  index === 1 ? 'rank-glow-2' : 
-                  index === 2 ? 'rank-glow-3' : ''
+                className={`border-b border-cyan-500/10 hover:bg-cyan-500/5 transition-colors ${
+                  index === 0 ? 'bg-cyan-500/10' : 
+                  index === 1 ? 'bg-purple-500/5' : 
+                  index === 2 ? 'bg-violet-500/5' : ''
                 }`}
               >
                 <td className="px-6 py-4">
@@ -88,15 +88,15 @@ const TableView = ({ players, activeTab }) => {
                       }}
                     />
                     <div>
-                      <div className="font-semibold text-gray-900 dark:text-white">{player.username}</div>
+                      <div className="font-semibold text-slate-200">{player.username}</div>
                       {player.badges && player.badges.length > 0 && (
-                        <div className="text-xs text-gray-500">{player.badges.length} badges</div>
+                        <div className="text-xs text-slate-400">{player.badges.length} badges</div>
                       )}
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <div className="font-bold text-lg text-cyan-600 dark:text-cyan-400">
+                  <div className="font-bold text-lg text-cyan-400">
                     {player.score}
                   </div>
                 </td>
@@ -106,17 +106,17 @@ const TableView = ({ players, activeTab }) => {
                       <div className={`font-semibold ${getDivisionInfo(player).color}`}>
                         {getDivisionInfo(player).name}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-slate-400">
                         Stage {getDivisionInfo(player).stage}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <div className="font-semibold text-gray-700 dark:text-gray-300">
+                      <div className="font-semibold text-slate-300">
                         {player.totalQuizzes || 0}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <div className="font-semibold text-orange-600 dark:text-orange-400">
+                      <div className="font-semibold text-orange-400">
                         {player.currentStreak || 0}
                       </div>
                     </td>
@@ -124,24 +124,24 @@ const TableView = ({ players, activeTab }) => {
                 ) : (
                   <>
                     <td className="px-6 py-4 text-center">
-                      <div className="font-semibold text-gray-700 dark:text-gray-300">
+                      <div className="font-semibold text-slate-300">
                         {player.totalBattles || 0}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <div className="font-semibold text-green-600 dark:text-green-400">
+                      <div className="font-semibold text-green-400">
                         {player.winRate ? `${player.winRate}%` : '0%'}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <div className="flex justify-center space-x-1">
+                      <div className="flex justify-center gap-1">
                         {player.badges && player.badges.slice(0, 3).map((badge, i) => (
-                          <span key={i} className="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded">
+                          <span key={i} className="text-xs bg-yellow-500/10 text-yellow-300 px-2 py-1 rounded">
                             {badge.name}
                           </span>
                         ))}
                         {player.badges && player.badges.length > 3 && (
-                          <span className="text-xs text-gray-500">+{player.badges.length - 3}</span>
+                          <span className="text-xs text-slate-400">+{player.badges.length - 3}</span>
                         )}
                       </div>
                     </td>
@@ -203,36 +203,28 @@ export default function Leaderboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center transition-colors duration-200">
-        <div className="text-gray-800 dark:text-white text-xl">Loading leaderboard...</div>
-      </div>
+      <PageShell className="flex items-center justify-center">
+        <div className="text-slate-200 text-xl">Loading leaderboard...</div>
+      </PageShell>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center transition-colors duration-200">
+      <PageShell className="flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-500 dark:text-red-400 text-xl mb-4">⚠️</div>
-          <div className="text-gray-800 dark:text-white text-xl mb-4">{error}</div>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-lg transition-colors"
-          >
+          <div className="text-red-400 text-xl mb-4">⚠️</div>
+          <div className="text-slate-200 text-xl mb-4">{error}</div>
+          <Button onClick={() => window.location.reload()}>
             Try Again
-          </button>
+          </Button>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="premium-glass-background min-h-screen py-12 px-4 transition-colors duration-200 overflow-x-auto relative">
-      {/* Mesh Gradient Effect */}
-      <div className="mesh-gradient-purple"></div>
-      <div className="mesh-gradient-green"></div>
-      <div className="mesh-gradient-blue"></div>
-      
+    <PageShell className="min-h-[calc(100vh-3.5rem)] py-12 px-4 overflow-x-auto text-slate-100">
       <div className="max-w-4xl mx-auto relative z-10">
         {/* Event Banner */}
         <BattleEventBanner />
@@ -244,81 +236,67 @@ export default function Leaderboard() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h1 className="premium-font premium-heading text-4xl md:text-6xl text-gray-800 dark:text-white mb-4">
+          <h1 className="aura-headline text-4xl md:text-6xl mb-4">
             🏆 Leaderboard
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
+          <p className="aura-subhead text-lg mb-6">
             Top performers in Neuronerds Quiz
           </p>
           
           {/* Tab Buttons */}
-          <div className="flex justify-center space-x-4 mb-6">
-            <button
+          <div className="flex justify-center gap-4 mb-6">
+            <Button
+              variant={activeTab === 'general' ? 'secondary' : 'ghost'}
               onClick={() => {
                 setActiveTab('general');
                 soundManager.play('click');
               }}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                activeTab === 'general'
-                  ? 'premium-button-blue'
-                  : 'glass-panel text-gray-700 dark:text-gray-300'
-              }`}
             >
               📚 Divisional Ranking
-            </button>
-            <button
+            </Button>
+            <Button
+              variant={activeTab === 'battle' ? 'primary' : 'ghost'}
               onClick={() => {
                 setActiveTab('battle');
                 soundManager.play('click');
               }}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                activeTab === 'battle'
-                  ? 'premium-button'
-                  : 'glass-panel text-gray-700 dark:text-gray-300'
-              }`}
             >
               ⚔️ Global Ranking
-            </button>
+            </Button>
           </div>
           
           {/* View Toggle */}
-          <div className="flex justify-center space-x-2 mb-8">
-            <button
+          <div className="flex justify-center gap-2 mb-8">
+            <Button
+              variant={viewMode === 'cards' ? 'secondary' : 'ghost'}
+              size="sm"
               onClick={() => {
                 setViewMode('cards');
                 soundManager.play('click');
               }}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 ${
-                viewMode === 'cards'
-                  ? 'premium-button-blue'
-                  : 'glass-panel text-gray-700 dark:text-gray-300'
-              }`}
             >
-              <FaTh className="text-sm" />
+              <FaTh className="text-sm mr-2" />
               <span>Cards</span>
-            </button>
-            <button
+            </Button>
+            <Button
+              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+              size="sm"
               onClick={() => {
                 setViewMode('table');
                 soundManager.play('click');
               }}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 ${
-                viewMode === 'table'
-                  ? 'premium-button-blue'
-                  : 'glass-panel text-gray-700 dark:text-gray-300'
-              }`}
             >
-              <FaList className="text-sm" />
+              <FaList className="text-sm mr-2" />
               <span>Table</span>
-            </button>
+            </Button>
           </div>
           
           {/* Info Panel */}
-          <div className="glass-panel p-4 mb-8 text-left max-w-2xl mx-auto">
-            <h3 className="premium-font premium-heading font-semibold text-gray-800 dark:text-white mb-2">
+          <div className="aura-glass p-4 mb-8 text-left max-w-2xl mx-auto">
+            <h3 className="aura-display font-semibold mb-2">
               {activeTab === 'general' ? '🏆 Division System:' : '👑 Global Ranking:'}
             </h3>
-            <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+            <div className="text-sm text-slate-300 space-y-1">
               {activeTab === 'general' ? (
                 <>
                   <p>• <strong>Amateur → Semi Pro → Pro → World Class → Legendary → Champion</strong></p>
@@ -374,15 +352,15 @@ export default function Leaderboard() {
             className="text-center py-12"
           >
             <div className="text-6xl mb-4">📊</div>
-            <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+            <h3 className="aura-headline text-2xl mb-2">
               No scores yet
             </h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="aura-subhead">
               Be the first to {activeTab === 'general' ? 'take a quiz and earn your division rank' : 'win battles and claim the global throne'}!
             </p>
           </motion.div>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

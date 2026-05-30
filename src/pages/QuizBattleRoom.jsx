@@ -15,6 +15,8 @@ import { useLifelines } from '../hooks/useLifelines';
 import { secureStorage } from '../utils/secureStorage.js';
 import LoadingAnimation from '../components/LoadingAnimation';
 import axios from 'axios';
+import PageShell from '../components/ui/PageShell';
+import Button from '../components/ui/Button';
 
 const QuizBattleRoom = () => {
   const { roomId } = useParams();
@@ -1008,7 +1010,7 @@ const QuizBattleRoom = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
+    <PageShell className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-slate-100">
       {/* Security Initialization Modal */}
       <SecurityInitModal
         isOpen={showSecurityModal}
@@ -1058,37 +1060,37 @@ const QuizBattleRoom = () => {
       />
       
       {/* Header */}
-      <div className="bg-black bg-opacity-30 backdrop-blur-sm border-b border-white border-opacity-20">
+      <div className="aura-glass border-b border-cyan-500/10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+            <div className="flex items-center gap-4">
+              <h1 className="aura-headline text-2xl">
                 🔥 Quiz Battle
               </h1>
-              <div className="flex items-center space-x-2 text-sm">
+              <div className="flex items-center gap-2 text-sm">
                 <FaUsers className="text-blue-400" />
                 <span>{users.length}/30 Players</span>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-4">
               {/* Force Submission Button (Room Creator Only, During Battle) */}
               {isRoomCreator && battleStarted && !battleEnded && (
-                <button
+                <Button
                   onClick={handleForceSubmission}
                   className="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-lg transition-colors font-semibold text-sm"
                   title="Force submit all participants and end battle"
                 >
                   ⚡ Force Submit
-                </button>
+                </Button>
               )}
-              <button
+              <Button
+                variant="danger"
                 onClick={handleLeaveRoom}
-                className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition-colors"
               >
                 Leave Room
-              </button>
+              </Button>
               <div className="text-sm">
-                Room: <span className="font-mono bg-white bg-opacity-20 px-2 py-1 rounded">{roomId}</span>
+                Room: <span className="font-mono bg-black/20 px-2 py-1 rounded">{roomId}</span>
               </div>
             </div>
           </div>
@@ -1104,10 +1106,10 @@ const QuizBattleRoom = () => {
             className="max-w-4xl mx-auto"
           >
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-2">Waiting for Players</h2>
-              <p className="text-gray-300">Get ready for an epic quiz battle!</p>
+              <h2 className="aura-headline text-3xl mb-2">Waiting for Players</h2>
+              <p className="aura-subhead">Get ready for an epic quiz battle!</p>
               {(selectedChapter || selectedChapters) && (
-                <div className="mt-4 inline-block bg-orange-500 bg-opacity-20 border border-orange-400 rounded-lg px-4 py-2">
+                <div className="mt-4 inline-block aura-glass aura-glass-card rounded-lg px-4 py-2">
                   <span className="text-orange-300 text-sm font-semibold">
                     {battleMode === 'multi' ? (
                       <div>
@@ -1133,7 +1135,7 @@ const QuizBattleRoom = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               {/* Players List */}
               <div>
-                <h3 className="text-xl font-semibold mb-4 text-center">Players ({users?.length || 0})</h3>
+                <h3 className="aura-display text-xl mb-4 text-center">Players ({users?.length || 0})</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {users?.map((user, index) => (
                     <motion.div
@@ -1141,37 +1143,38 @@ const QuizBattleRoom = () => {
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.1 }}
-                      className={`bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 border-2 transition-all duration-300 ${
-                        user.isReady ? 'border-green-400 bg-green-400 bg-opacity-20' : 'border-gray-600'
+                      className={`aura-glass aura-glass-card rounded-lg p-4 border-2 transition-all duration-300 ${
+                        user.isReady ? 'border-green-400 bg-green-400/20' : 'border-slate-600'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-3">
                           <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center font-bold text-lg">
                             {user.username.charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1">
                             <h3 className="font-semibold">{user.username}</h3>
-                            <div className="flex items-center space-x-2 text-sm">
+                            <div className="flex items-center gap-2 text-sm">
                               {user.isReady ? (
                                 <>
                                   <FaCheck className="text-green-400" />
                                   <span className="text-green-400">Ready</span>
                                 </>
                               ) : (
-                                <span className="text-gray-400">Waiting...</span>
+                                <span className="text-slate-400">Waiting...</span>
                               )}
                             </div>
                           </div>
                         </div>
                         {isRoomCreator && user.id !== userData?._id && !battleStarted && (
-                          <button
+                          <Button
+                            variant="danger"
+                            size="sm"
                             onClick={() => handleKickUser(user.id, user.username)}
-                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
                             title="Kick user"
                           >
                             Kick
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </motion.div>
@@ -1181,19 +1184,19 @@ const QuizBattleRoom = () => {
 
               {/* Chat Box */}
               <div>
-                <h3 className="text-xl font-semibold mb-4 text-center">Battle Chat</h3>
-                <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg border border-white border-opacity-20 h-80 flex flex-col">
+                <h3 className="aura-display text-xl mb-4 text-center">Battle Chat</h3>
+                <div className="aura-glass aura-glass-card rounded-lg border border-cyan-500/10 h-80 flex flex-col">
                   {/* Chat Messages */}
                   <div className="flex-1 p-4 overflow-y-auto space-y-2" data-lenis-prevent>
                     {chatMessages.length === 0 ? (
-                      <div className="text-center text-gray-400 text-sm mt-8">
+                      <div className="text-center text-slate-400 text-sm mt-8">
                         💬 Start chatting with other players!
                       </div>
                     ) : (
                       chatMessages.map((msg) => (
                         <div key={msg.id} className="text-sm">
                           <span className="font-semibold text-blue-300">{msg.username}:</span>
-                          <span className="ml-2 text-gray-200">{msg.message}</span>
+                          <span className="ml-2 text-slate-200">{msg.message}</span>
                         </div>
                       ))
                     )}
@@ -1201,23 +1204,23 @@ const QuizBattleRoom = () => {
                   </div>
                   
                   {/* Chat Input */}
-                  <form onSubmit={handleSendMessage} className="p-3 border-t border-white border-opacity-20">
-                    <div className="flex space-x-2">
+                  <form onSubmit={handleSendMessage} className="p-3 border-t border-cyan-500/10">
+                    <div className="flex gap-2">
                       <input
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Type a message..."
-                        className="flex-1 bg-white bg-opacity-20 text-white placeholder-gray-300 px-3 py-2 rounded-lg border border-white border-opacity-30 focus:outline-none focus:border-blue-400 text-sm"
+                        className="flex-1 bg-black/20 text-slate-100 placeholder-slate-300 px-3 py-2 rounded-lg border border-cyan-500/20 focus:outline-none focus:border-cyan-500/50 text-sm aura-input"
                         maxLength={100}
                       />
-                      <button
+                      <Button
                         type="submit"
                         disabled={!newMessage.trim()}
-                        className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors text-sm font-semibold"
+                        size="sm"
                       >
                         Send
-                      </button>
+                      </Button>
                     </div>
                   </form>
                 </div>
@@ -1226,16 +1229,13 @@ const QuizBattleRoom = () => {
 
             {/* Ready Button */}
             <div className="text-center mb-8">
-              <button
+              <Button
                 onClick={handleReadyToggle}
-                className={`px-8 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                  isReady
-                    ? 'bg-green-500 hover:bg-green-600 text-white'
-                    : 'bg-gray-600 hover:bg-gray-700 text-white'
-                }`}
+                variant={isReady ? 'success' : 'secondary'}
+                className="px-8 py-3 font-semibold"
               >
                 {isReady ? '✓ Ready' : 'Get Ready'}
-              </button>
+              </Button>
             </div>
 
             {/* Countdown or Start Battle Button */}
@@ -1248,7 +1248,7 @@ const QuizBattleRoom = () => {
                 <div className="text-8xl font-bold text-yellow-400 animate-pulse">
                   {countdown}
                 </div>
-                <p className="text-xl text-gray-300 mt-4">Battle starting...</p>
+                <p className="aura-subhead text-xl mt-4">Battle starting...</p>
               </motion.div>
             ) : isRoomCreator && users?.length >= 2 && users?.every(user => user.isReady) && !battleStarted && (
               <motion.div
@@ -1256,14 +1256,14 @@ const QuizBattleRoom = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center"
               >
-                <button
+                <Button
                   onClick={handleStartBattle}
                   className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl"
                 >
                   <FaPlay className="inline mr-2" />
                   Start Battle!
-                </button>
-                <p className="text-sm text-gray-300 mt-2">
+                </Button>
+                <p className="text-sm text-slate-300 mt-2">
                   All players ready: {users?.filter(u => u.isReady).length}/{users?.length}
                 </p>
               </motion.div>
@@ -1271,7 +1271,7 @@ const QuizBattleRoom = () => {
             
             {/* Debug info for room creator */}
             {isRoomCreator && (
-              <div className="text-center mt-4 text-xs text-gray-400">
+              <div className="text-center mt-4 text-xs text-slate-400">
                 <p>Debug: Creator={isRoomCreator ? '✓' : '✗'} | Players={users?.length}/2 | AllReady={users?.every(user => user.isReady) ? '✓' : '✗'} | Security={securityInitialized ? '✓' : '✗'}</p>
                 {users?.length < 2 && <p className="text-yellow-400">⚠️ Need at least 2 players to start</p>}
                 {!users?.every(user => user.isReady) && <p className="text-yellow-400">⚠️ All players must be ready</p>}
@@ -1288,7 +1288,7 @@ const QuizBattleRoom = () => {
           >
             <div className="text-center mb-8">
               <FaTrophy className="text-6xl text-yellow-400 mx-auto mb-4" />
-              <h2 className="text-3xl font-bold mb-2">Battle Results</h2>
+              <h2 className="aura-headline text-3xl mb-2">Battle Results</h2>
             </div>
 
             <div className="space-y-4">
@@ -1298,27 +1298,27 @@ const QuizBattleRoom = () => {
                   initial={{ opacity: 0, x: -50 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border-2 ${
-                    index === 0 ? 'border-yellow-400 bg-yellow-400 bg-opacity-20' : 'border-gray-600'
+                  className={`aura-glass aura-glass-card rounded-lg p-6 border-2 ${
+                    index === 0 ? 'border-yellow-400 bg-yellow-400/20' : 'border-slate-600'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center gap-4">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
-                        index === 0 ? 'bg-yellow-400 text-black' : 'bg-gray-600'
+                        index === 0 ? 'bg-yellow-400 text-black' : 'bg-slate-600'
                       }`}>
                         {index + 1}
                       </div>
                       <div>
                         <h3 className="font-semibold text-lg">{result.username}</h3>
-                        <p className="text-gray-300">
+                        <p className="text-slate-300">
                           {result.correctAnswers}/{result.totalQuestions} correct
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold text-yellow-400">{result.score}</div>
-                      <div className="text-sm text-gray-300">
+                      <div className="text-sm text-slate-300">
                         Time: {formatTime(result.totalTime)}
                       </div>
                     </div>
@@ -1329,24 +1329,25 @@ const QuizBattleRoom = () => {
 
             <div className="text-center mt-8 space-y-4">
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
+                <Button
                   onClick={() => navigate('/battle-review', { state: { questions, results, roomId } })}
                   className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 px-8 py-3 rounded-lg font-semibold transition-colors text-white shadow-lg"
                 >
                   📝 Review Battle Questions
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => navigate('/leaderboard')}
                   className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 px-8 py-3 rounded-lg font-semibold transition-colors text-white shadow-lg"
                 >
                   🏆 View Global Battle Leaderboard
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => navigate('/dashboard')}
-                  className="bg-blue-500 hover:bg-blue-600 px-8 py-3 rounded-lg font-semibold transition-colors text-white"
+                  variant="secondary"
+                  className="px-8 py-3 rounded-lg font-semibold"
                 >
                   Back to Dashboard
-                </button>
+                </Button>
               </div>
             </div>
           </motion.div>
@@ -1355,7 +1356,7 @@ const QuizBattleRoom = () => {
           <div className="max-w-6xl mx-auto">
             {/* Progress Track */}
             <div className="mb-8">
-              <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full h-4 relative overflow-hidden">
+              <div className="aura-glass rounded-full h-4 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-30"></div>
                 {users?.sort((a, b) => (b.score || 0) - (a.score || 0)).map((user, index) => {
                   const isFirst = index === 0 && (user.score || 0) > 0;
@@ -1382,7 +1383,7 @@ const QuizBattleRoom = () => {
                         )}
                         <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
                           <div className={`text-xs font-semibold ${isFirst ? 'text-yellow-300' : ''}`}>{user.username}</div>
-                          <div className={`text-xs ${isFirst ? 'text-yellow-200' : 'text-gray-300'}`}>{user.score} pts</div>
+                          <div className={`text-xs ${isFirst ? 'text-yellow-200' : 'text-slate-300'}`}>{user.score} pts</div>
                         </div>
                       </div>
                     </motion.div>
@@ -1399,13 +1400,13 @@ const QuizBattleRoom = () => {
                   key={currentQuestion}
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-white border-opacity-20"
+                  className="aura-glass aura-glass-card rounded-lg p-6 border border-cyan-500/10"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <div className="text-sm text-gray-300">
+                    <div className="text-sm text-slate-300">
                       Question {currentQuestion + 1} of {questions?.length || 0}
                     </div>
-                    <div className="flex items-center space-x-2 text-sm">
+                    <div className="flex items-center gap-2 text-sm">
                       <FaClock className="text-yellow-400" />
                       <span>{formatTime(timeSpent)}</span>
                     </div>
@@ -1422,13 +1423,13 @@ const QuizBattleRoom = () => {
                     />
                   )}
                   
-                  <h3 className="text-xl font-semibold mb-6">
+                  <h3 className="aura-display text-xl mb-6">
                     <MathText>{questions?.[currentQuestion]?.question || 'Loading question...'}</MathText>
                   </h3>
                   
                   {/* Inappropriate Question Report */}
                   <div className="mb-4">
-                    <label className="flex items-center space-x-2 text-sm text-gray-300 cursor-pointer">
+                    <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={reportedInappropriate}
@@ -1436,7 +1437,7 @@ const QuizBattleRoom = () => {
                         disabled={answered || reportedInappropriate}
                         className="w-4 h-4 text-red-500 bg-transparent border-2 border-red-400 rounded focus:ring-red-500 focus:ring-2"
                       />
-                      <span className={reportedInappropriate ? 'text-red-400' : 'text-gray-300'}>
+                      <span className={reportedInappropriate ? 'text-red-400' : 'text-slate-300'}>
                         🚨 VOTE as inappropriate question!🚨 If majority VOTE, you'll get bonus points
                       </span>
                     </label>
@@ -1448,7 +1449,7 @@ const QuizBattleRoom = () => {
                   </div>
                   
                   {helpUsed && (
-                    <div className="bg-yellow-500 bg-opacity-20 border border-yellow-400 rounded-lg p-3 mb-4">
+                    <div className="bg-yellow-500/20 border border-yellow-400 rounded-lg p-3 mb-4">
                       <p className="text-yellow-300 text-sm">
                         💡 Correct answer revealed! Your score for this question will be reduced by 50%.
                       </p>
@@ -1456,7 +1457,7 @@ const QuizBattleRoom = () => {
                   )}
                   
                   {userData?.isSuperAdmin && !helpUsed && (
-                    <div className="bg-purple-500 bg-opacity-20 border border-purple-400 rounded-lg p-3 mb-4">
+                    <div className="bg-purple-500/20 border border-purple-400 rounded-lg p-3 mb-4">
                       <p className="text-purple-300 text-sm">
                         everything's fine
                       </p>
@@ -1471,8 +1472,8 @@ const QuizBattleRoom = () => {
                       
                       if (isHidden) {
                         return (
-                          <div key={index} className="w-full p-4 rounded-lg bg-gray-600 bg-opacity-50 opacity-50">
-                            <div className="flex items-center text-gray-400">
+                          <div key={index} className="w-full p-4 rounded-lg bg-slate-600/50 opacity-50">
+                            <div className="flex items-center text-slate-400">
                               <span className="font-semibold mr-3">{String.fromCharCode(65 + index)}.</span>
                               <span>Option removed by 50-50</span>
                             </div>
@@ -1495,10 +1496,10 @@ const QuizBattleRoom = () => {
                               : answered && selectedAnswer === index && index !== questions?.[currentQuestion]?.correctAnswer
                               ? 'bg-red-500 text-white'
                               : isCorrect
-                              ? 'bg-green-400 bg-opacity-30 border border-green-400 text-white'
+                              ? 'bg-green-400/30 border border-green-400 text-white'
                               : isSuperAdminCorrect
-                              ? 'bg-yellow-400 bg-opacity-30 border border-yellow-400 text-white'
-                              : 'bg-white bg-opacity-10 hover:bg-opacity-20 text-white'
+                              ? 'bg-yellow-400/30 border border-yellow-400 text-white'
+                              : 'bg-black/10 hover:bg-black/20 text-white'
                           }`}
                           whileHover={{ scale: answered ? 1 : 1.02 }}
                           whileTap={{ scale: answered ? 1 : 0.98 }}
@@ -1540,8 +1541,8 @@ const QuizBattleRoom = () => {
 
               {/* Players Panel */}
               <div className="lg:col-span-1">
-                <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-white border-opacity-20">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center">
+                <div className="aura-glass aura-glass-card rounded-lg p-6 border border-cyan-500/10">
+                  <h3 className="aura-display text-lg mb-4 flex items-center">
                     <FaUsers className="mr-2" />
                     Players
                   </h3>
@@ -1550,17 +1551,17 @@ const QuizBattleRoom = () => {
                       <div
                         key={user.id}
                         className={`flex items-center justify-between p-3 rounded-lg ${
-                          user.disconnected ? 'bg-gray-600 bg-opacity-30' : 'bg-white bg-opacity-5'
+                          user.disconnected ? 'bg-slate-600/30' : 'bg-black/5'
                         }`}
                       >
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-3">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                            user.disconnected ? 'bg-gray-500' : 'bg-gradient-to-br from-blue-400 to-purple-500'
+                            user.disconnected ? 'bg-slate-500' : 'bg-gradient-to-br from-blue-400 to-purple-500'
                           }`}>
                             {user.username.charAt(0).toUpperCase()}
                           </div>
                           <span className={`font-medium ${
-                            user.disconnected ? 'text-gray-400' : ''
+                            user.disconnected ? 'text-slate-400' : ''
                           }`}>
                             {user.username}
                             {user.disconnected && ' (Left)'}
@@ -1568,9 +1569,9 @@ const QuizBattleRoom = () => {
                         </div>
                         <div className="text-right">
                           <div className={`text-sm font-semibold ${
-                            user.disconnected ? 'text-gray-400' : 'text-yellow-400'
+                            user.disconnected ? 'text-slate-400' : 'text-yellow-400'
                           }`}>{user.score || 0}</div>
-                          <div className="text-xs text-gray-300">
+                          <div className="text-xs text-slate-300">
                             Q{(user.currentQuestion || 0) + 1}/{questions?.length || 0}
                           </div>
                         </div>
@@ -1583,7 +1584,7 @@ const QuizBattleRoom = () => {
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 };
 

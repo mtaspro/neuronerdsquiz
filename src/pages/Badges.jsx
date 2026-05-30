@@ -5,6 +5,8 @@ import { FaArrowLeft, FaTrophy, FaUsers, FaClock, FaChartLine } from 'react-icon
 import axios from 'axios';
 import Badge from '../components/Badge';
 import { getAvatarUrl, getFallbackAvatar } from '../utils/avatarUtils';
+import PageShell from '../components/ui/PageShell';
+import Button from '../components/ui/Button';
 
 const Badges = () => {
   const navigate = useNavigate();
@@ -108,32 +110,29 @@ const Badges = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-        <div className="text-gray-800 dark:text-white text-xl">Loading badges...</div>
-      </div>
+      <PageShell className="flex items-center justify-center">
+        <div className="text-slate-200 text-xl">Loading badges...</div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen text-gray-900 dark:text-white transition-colors duration-200 animated-bg" style={{
-      background: 'linear-gradient(-45deg, #ff6b35, #f7931e, #00d4ff, #00ff88, #ff6b35)',
-      backgroundSize: '400% 400%',
-      backgroundAttachment: 'fixed'
-    }}>
+    <PageShell className="min-h-[calc(100vh-3.5rem)] text-slate-100">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-900 to-blue-900 dark:from-gray-800 dark:to-gray-900 p-6">
+      <div className="aura-glass p-6">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center space-x-4 mb-4">
-            <button
+          <div className="flex items-center gap-4 mb-4">
+            <Button
+              variant="ghost"
               onClick={() => navigate('/dashboard')}
-              className="flex items-center space-x-2 text-white hover:text-purple-200 transition-colors"
+              className="flex items-center gap-2"
             >
               <FaArrowLeft />
               <span>Back to Dashboard</span>
-            </button>
+            </Button>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">🏆 Badge System</h1>
-          <p className="text-purple-200">Competitive achievements and rankings</p>
+          <h1 className="aura-headline text-4xl mb-2">🏆 Badge System</h1>
+          <p className="aura-subhead">Competitive achievements and rankings</p>
         </div>
       </div>
 
@@ -141,7 +140,7 @@ const Badges = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* All Badges */}
           <div className="lg:col-span-2">
-            <h2 className="text-2xl font-bold mb-6 flex items-center">
+            <h2 className="aura-headline text-2xl mb-6 flex items-center">
               <FaTrophy className="mr-2 text-yellow-500" />
               Available Badges
             </h2>
@@ -152,18 +151,18 @@ const Badges = () => {
                   key={badge.badgeName}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-xl transition-all duration-200"
+                  className="aura-glass aura-glass-card p-6 cursor-pointer hover:border-cyan-500/50 transition-all duration-200"
                   onClick={() => handleBadgeClick(badge)}
                 >
-                  <div className="flex items-center space-x-4 mb-4">
+                  <div className="flex items-center gap-4 mb-4">
                     <Badge
                       badge={badge}
                       size="lg"
                       showTooltip={false}
                     />
                     <div className="flex-1">
-                      <h3 className="font-bold text-lg">{badge.displayName}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <h3 className="font-bold text-lg text-slate-200">{badge.displayName}</h3>
+                      <p className="text-sm text-slate-400">
                         {badge.description}
                       </p>
                     </div>
@@ -171,26 +170,26 @@ const Badges = () => {
                   
                   {/* Current Holder */}
                   {badge.currentHolderUsername ? (
-                    <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 border border-yellow-200 dark:border-yellow-800">
+                    <div className="bg-yellow-500/10 rounded-lg p-3 border border-yellow-500/30">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-sm font-semibold text-yellow-800 dark:text-yellow-200">
+                          <div className="text-sm font-semibold text-yellow-300">
                             Current Holder
                           </div>
-                          <div className="text-yellow-700 dark:text-yellow-300">
+                          <div className="text-yellow-200">
                             {badge.currentHolderUsername}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm text-yellow-600 dark:text-yellow-400">
+                          <div className="text-sm text-yellow-400">
                             {formatValue(badge.currentValue, badge.badgeName)}
                           </div>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
-                      <div className="text-center text-gray-500 dark:text-gray-400">
+                    <div className="bg-black/20 rounded-lg p-3 border border-cyan-500/10">
+                      <div className="text-center text-slate-500">
                         No current holder
                       </div>
                     </div>
@@ -198,10 +197,10 @@ const Badges = () => {
                   
                   {/* User's Progress */}
                   {userStats && (
-                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <div className="mt-3 pt-3 border-t border-cyan-500/10">
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Your progress:</span>
-                        <span className="font-semibold">
+                        <span className="text-slate-400">Your progress:</span>
+                        <span className="font-semibold text-slate-200">
                           {formatValue(getStatValue(badge.badgeName), badge.badgeName)}
                         </span>
                       </div>
@@ -218,17 +217,17 @@ const Badges = () => {
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700"
+                className="aura-glass aura-glass-card p-6"
               >
-                <div className="flex items-center space-x-3 mb-4">
+                <div className="flex items-center gap-3 mb-4">
                   <Badge
                     badge={selectedBadge}
                     size="lg"
                     showTooltip={false}
                   />
                   <div>
-                    <h3 className="font-bold text-lg">{selectedBadge.displayName}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <h3 className="font-bold text-lg text-slate-200">{selectedBadge.displayName}</h3>
+                    <p className="text-sm text-slate-400">
                       Leaderboard
                     </p>
                   </div>
@@ -236,8 +235,8 @@ const Badges = () => {
 
                 {leaderboardLoading ? (
                   <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
-                    <p className="text-sm text-gray-500 mt-2">Loading leaderboard...</p>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mx-auto"></div>
+                    <p className="text-sm text-slate-400 mt-2">Loading leaderboard...</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -249,10 +248,10 @@ const Badges = () => {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.05 }}
                           className={`
-                            flex items-center space-x-3 p-3 rounded-lg
+                            flex items-center gap-3 p-3 rounded-lg
                             ${index === 0 
-                              ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800' 
-                              : 'bg-gray-50 dark:bg-gray-700'
+                              ? 'bg-yellow-500/10 border border-yellow-500/30' 
+                              : 'bg-black/20'
                             }
                           `}
                         >
@@ -264,7 +263,7 @@ const Badges = () => {
                               ? 'bg-gray-400 text-white'
                               : index === 2
                               ? 'bg-amber-600 text-white'
-                              : 'bg-gray-300 text-gray-700'
+                              : 'bg-slate-600 text-slate-200'
                             }
                           `}>
                             {index + 1}
@@ -278,16 +277,16 @@ const Badges = () => {
                           />
                           
                           <div className="flex-1">
-                            <div className="font-semibold text-sm">{user.username}</div>
+                            <div className="font-semibold text-sm text-slate-200">{user.username}</div>
                           </div>
                           
-                          <div className="text-sm font-bold">
+                          <div className="text-sm font-bold text-slate-200">
                             {formatValue(user.value, selectedBadge.badgeName)}
                           </div>
                         </motion.div>
                       ))
                     ) : (
-                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <div className="text-center py-8 text-slate-400">
                         No data available
                       </div>
                     )}
@@ -295,11 +294,11 @@ const Badges = () => {
                 )}
               </motion.div>
             ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+              <div className="aura-glass aura-glass-card p-6">
                 <div className="text-center py-8">
-                  <FaUsers className="text-4xl text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Select a Badge</h3>
-                  <p className="text-gray-600 dark:text-gray-400">
+                  <FaUsers className="text-4xl text-slate-500 mx-auto mb-4" />
+                  <h3 className="aura-headline text-lg mb-2">Select a Badge</h3>
+                  <p className="aura-subhead">
                     Click on any badge to see its leaderboard and details
                   </p>
                 </div>
@@ -311,40 +310,40 @@ const Badges = () => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 mt-6"
+                className="aura-glass aura-glass-card p-6 mt-6"
               >
-                <h3 className="font-bold text-lg mb-4 flex items-center">
+                <h3 className="aura-display text-lg mb-4 flex items-center">
                   <FaChartLine className="mr-2 text-blue-500" />
                   Your Stats
                 </h3>
                 
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Current Badges:</span>
-                    <span className="font-semibold">{userStats.currentBadges?.length || 0}</span>
+                    <span className="text-slate-400">Current Badges:</span>
+                    <span className="font-semibold text-slate-200">{userStats.currentBadges?.length || 0}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Total Quizzes:</span>
-                    <span className="font-semibold">{userStats.stats?.totalQuizzes || 0}</span>
+                    <span className="text-slate-400">Total Quizzes:</span>
+                    <span className="font-semibold text-slate-200">{userStats.stats?.totalQuizzes || 0}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Correct Answers:</span>
-                    <span className="font-semibold">{userStats.stats?.totalCorrectAnswers || 0}</span>
+                    <span className="text-slate-400">Correct Answers:</span>
+                    <span className="font-semibold text-slate-200">{userStats.stats?.totalCorrectAnswers || 0}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Average Score:</span>
-                    <span className="font-semibold">{userStats.stats?.averageScore?.toFixed(1) || 0}%</span>
+                    <span className="text-slate-400">Average Score:</span>
+                    <span className="font-semibold text-slate-200">{userStats.stats?.averageScore?.toFixed(1) || 0}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Battles Won:</span>
-                    <span className="font-semibold">{userStats.stats?.battlesWon || 0}</span>
+                    <span className="text-slate-400">Battles Won:</span>
+                    <span className="font-semibold text-slate-200">{userStats.stats?.battlesWon || 0}</span>
                   </div>
                 </div>
 
                 {/* Current Badges */}
                 {userStats.currentBadges && userStats.currentBadges.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                    <div className="text-sm font-semibold mb-2">Your Badges:</div>
+                  <div className="mt-4 pt-4 border-t border-cyan-500/10">
+                    <div className="text-sm font-semibold mb-2 text-slate-200">Your Badges:</div>
                     <div className="flex flex-wrap gap-2">
                       {userStats.currentBadges.map((badge) => (
                         <Badge
@@ -362,7 +361,7 @@ const Badges = () => {
           </div>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

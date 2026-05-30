@@ -5,6 +5,8 @@ import axios from 'axios';
 import getEnvironmentConfig from '../config/environment';
 import { secureStorage } from '../utils/secureStorage';
 import { NativeBannerAd, DesktopBannerAd, MobileBannerAd } from '../components/AdComponents';
+import PageShell from '../components/ui/PageShell';
+import Button from '../components/ui/Button';
 
 const { apiUrl: API_URL } = getEnvironmentConfig();
 
@@ -225,19 +227,19 @@ export default function ProgressTracking() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 flex items-center justify-center">
-        <div className="text-white text-2xl">Loading...</div>
-      </div>
+      <PageShell className="flex items-center justify-center">
+        <div className="text-slate-200 text-2xl">Loading...</div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black p-4 md:p-8">
+    <PageShell className="min-h-[calc(100vh-3.5rem)] p-4 md:p-8 text-slate-100">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">Progress Tracking</h1>
-          <p className="text-gray-300">Track your study progress and stay motivated</p>
+          <h1 className="aura-headline text-4xl md:text-5xl mb-2">Progress Tracking</h1>
+          <p className="aura-subhead">Track your study progress and stay motivated</p>
         </motion.div>
 
         {/* Native Banner Ad */}
@@ -245,7 +247,7 @@ export default function ProgressTracking() {
 
         {/* Exam Timeline */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
-          <h2 className="text-2xl font-bold text-cyan-400 mb-4">Upcoming Exams</h2>
+          <h2 className="aura-headline text-2xl mb-4">Upcoming Exams</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {exams.map((exam, i) => (
               <motion.div
@@ -253,9 +255,9 @@ export default function ProgressTracking() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-4 border border-cyan-500/30 shadow-lg shadow-cyan-500/10"
+                className="aura-glass aura-glass-card p-4"
               >
-                <h3 className="text-xl font-bold text-white mb-2">{exam.name}</h3>
+                <h3 className="text-xl font-bold text-slate-200 mb-2">{exam.name}</h3>
                 <p className="text-blue-300 text-sm mb-2">{new Date(exam.date).toLocaleDateString()}</p>
                 <p className="text-yellow-400 font-semibold">{getCountdown(exam.date)}</p>
               </motion.div>
@@ -270,31 +272,25 @@ export default function ProgressTracking() {
             {insights.length > 0 && (
               <div className="lg:col-span-2">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold text-cyan-400">NeuraX AI Insights</h2>
+                  <h2 className="aura-headline text-2xl">NeuraX AI Insights</h2>
                   <div className="flex gap-2">
-                    <button
+                    <Button
+                      variant={insightMode === 'hsc' ? 'secondary' : 'ghost'}
+                      size="sm"
                       onClick={() => setInsightMode('hsc')}
-                      className={`px-4 py-1 rounded-lg text-sm font-semibold transition-all ${
-                        insightMode === 'hsc' 
-                          ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/50' 
-                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                      }`}
                     >
                       HSC
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant={insightMode === 'test' ? 'magenta' : 'ghost'}
+                      size="sm"
                       onClick={() => setInsightMode('test')}
-                      className={`px-4 py-1 rounded-lg text-sm font-semibold transition-all ${
-                        insightMode === 'test' 
-                          ? 'bg-purple-500 text-black shadow-lg shadow-purple-500/50' 
-                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                      }`}
                     >
                       Test
-                    </button>
+                    </Button>
                   </div>
                 </div>
-                <div className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-3 border border-cyan-500/30 max-h-64 overflow-y-auto">
+                <div className="aura-glass p-3 max-h-64 overflow-y-auto">
                   <div className="space-y-1.5">
                     {insights.map((insight, i) => (
                       <div key={i} className="flex items-start gap-2">
@@ -318,7 +314,7 @@ export default function ProgressTracking() {
 
             {/* Overall Progress */}
             <div className={insights.length > 0 ? '' : 'lg:col-span-3'}>
-              <h2 className="text-2xl font-bold text-cyan-400 mb-4">Overall Progress</h2>
+              <h2 className="aura-headline text-2xl mb-4">Overall Progress</h2>
               <div className="grid grid-cols-1 gap-4">
                 <ProgressCard 
                   title="BEI Progress" 
@@ -347,31 +343,25 @@ export default function ProgressTracking() {
         {progress?.progressHistory?.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-cyan-400">Progress History</h2>
+              <h2 className="aura-headline text-2xl">Progress History</h2>
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant={graphMode === 'timeline' ? 'secondary' : 'ghost'}
+                  size="sm"
                   onClick={() => setGraphMode('timeline')}
-                  className={`px-3 py-1 rounded-lg text-xs md:text-sm font-semibold transition-all ${
-                    graphMode === 'timeline' 
-                      ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/50' 
-                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                  }`}
                 >
                   Timeline
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant={graphMode === 'subjects' ? 'magenta' : 'ghost'}
+                  size="sm"
                   onClick={() => setGraphMode('subjects')}
-                  className={`px-3 py-1 rounded-lg text-xs md:text-sm font-semibold transition-all ${
-                    graphMode === 'subjects' 
-                      ? 'bg-purple-500 text-black shadow-lg shadow-purple-500/50' 
-                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                  }`}
                 >
                   Subjects
-                </button>
+                </Button>
               </div>
             </div>
-            <div className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-3 md:p-6 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+            <div className="aura-glass aura-glass-card p-3 md:p-6">
               {graphMode === 'timeline' ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={progress.progressHistory.slice(-30).map(entry => ({
@@ -445,7 +435,7 @@ export default function ProgressTracking() {
         {/* Badges */}
         {progress?.badges?.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
-            <h2 className="text-2xl font-bold text-cyan-400 mb-4">Achievements</h2>
+            <h2 className="aura-headline text-2xl mb-4">Achievements</h2>
             <div className="flex flex-wrap gap-3">
               {progress.badges.map((badge, i) => (
                 <motion.div
@@ -466,11 +456,11 @@ export default function ProgressTracking() {
 
         {/* WhatsApp Reminder Toggle */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
-          <div className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-6 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+          <div className="aura-glass aura-glass-card p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-xl font-bold text-cyan-400 mb-1">WhatsApp Reminders</h3>
-                <p className="text-gray-400 text-sm">Get daily progress updates via WhatsApp</p>
+                <h3 className="aura-display text-xl mb-1">WhatsApp Reminders</h3>
+                <p className="aura-subhead text-sm">Get daily progress updates via WhatsApp</p>
               </div>
               <button
                 onClick={toggleReminder}
@@ -485,18 +475,18 @@ export default function ProgressTracking() {
                 />
               </button>
             </div>
-            <button
+            <Button
+              variant="magenta"
               onClick={testReminder}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-purple-600/50 transition-all"
             >
               🧪 Test Reminder
-            </button>
+            </Button>
           </div>
         </motion.div>
 
         {/* Subjects & Chapters */}
         <motion.div id="chapters-section" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <h2 className="text-2xl font-bold text-cyan-400 mb-4">Subjects & Chapters</h2>
+          <h2 className="aura-headline text-2xl mb-4">Subjects & Chapters</h2>
           <div className="space-y-6">
             {subjects.map((subject, i) => (
               <motion.div
@@ -504,13 +494,13 @@ export default function ProgressTracking() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-6 border border-cyan-500/30 shadow-lg shadow-cyan-500/10"
+                className="aura-glass aura-glass-card p-6"
               >
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-bold text-white">{subject.name}</h3>
+                  <h3 className="text-xl font-bold text-slate-200">{subject.name}</h3>
                   <span className="text-blue-300 font-semibold">{calculateProgress(subject._id)}%</span>
                 </div>
-                <div className="w-full bg-gray-700 rounded-full h-2 mb-4">
+                <div className="w-full bg-slate-800 rounded-full h-2 mb-4">
                   <div
                     className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all"
                     style={{ width: `${calculateProgress(subject._id)}%` }}
@@ -529,7 +519,7 @@ export default function ProgressTracking() {
                           onChange={() => toggleChapter(subject._id, chapter)}
                           className="w-5 h-5 rounded border-2 border-blue-500 cursor-pointer accent-blue-500"
                         />
-                        <span className={`text-sm ${isCompleted ? 'text-gray-400 line-through' : 'text-white'} group-hover:text-blue-300 transition-colors`}>
+                        <span className={`text-sm ${isCompleted ? 'text-slate-500 line-through' : 'text-slate-200'} group-hover:text-blue-300 transition-colors`}>
                           {chapter}
                         </span>
                       </label>
@@ -548,7 +538,7 @@ export default function ProgressTracking() {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           onClick={scrollToChapters}
-          className="fixed top-20 right-2 md:top-24 md:right-8 bg-gradient-to-r from-cyan-500 to-purple-500 text-white px-2 py-1.5 md:px-6 md:py-3 rounded-full shadow-2xl shadow-cyan-500/50 flex items-center gap-1 md:gap-2 text-xs md:text-base font-semibold z-50 hover:scale-110 transition-transform"
+          className="fixed top-20 right-2 md:top-24 md:right-8 aura-btn-primary px-2 py-1.5 md:px-6 md:py-3 rounded-full flex items-center gap-1 md:gap-2 text-xs md:text-base font-semibold z-50 hover:scale-110 transition-transform"
           style={{ animation: 'bounce 2s infinite' }}
         >
           <span className="hidden md:inline">Select Completed Chapters</span>
@@ -565,7 +555,7 @@ export default function ProgressTracking() {
           50% { transform: translateY(-10px); }
         }
       `}</style>
-    </div>
+    </PageShell>
   );
 }
 
@@ -577,8 +567,8 @@ function ProgressCard({ title, hscProgress, testProgress, color }) {
   };
 
   return (
-    <div className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-4 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
-      <h3 className="text-base font-semibold text-cyan-400 mb-3">{title}</h3>
+    <div className="aura-glass aura-glass-card p-4">
+      <h3 className="aura-display text-base mb-3">{title}</h3>
       <div className="flex items-center justify-around">
         {/* HSC Progress */}
         <div className="text-center">

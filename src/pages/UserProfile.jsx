@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { secureStorage } from '../utils/secureStorage.js';
 import { getAvatarUrl, getFallbackAvatar } from '../utils/avatarUtils';
 import LoadingAnimation from '../components/LoadingAnimation';
+import PageShell from '../components/ui/PageShell';
+import Button from '../components/ui/Button';
 
 const UserProfile = () => {
   const [user, setUser] = useState(null);
@@ -55,28 +57,29 @@ const UserProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-blue-950 dark:to-purple-950 flex items-center justify-center">
+      <PageShell className="flex items-center justify-center">
         <LoadingAnimation message="Loading profile..." size="large" />
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-blue-950 dark:to-purple-950 text-gray-900 dark:text-white">
+    <PageShell className="text-slate-100">
       {/* Header */}
-      <div className="bg-gradient-to-r from-cyan-900 via-blue-900 to-purple-900 dark:from-gray-800 dark:via-gray-900 dark:to-purple-900 p-6">
+      <div className="aura-glass p-6">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center space-x-4 mb-4">
-            <button
+          <div className="flex items-center gap-4 mb-4">
+            <Button
+              variant="ghost"
               onClick={() => navigate('/dashboard')}
-              className="flex items-center space-x-2 text-cyan-200 hover:text-white transition-colors"
+              className="flex items-center gap-2"
             >
               <FaArrowLeft />
               <span>Back to Dashboard</span>
-            </button>
+            </Button>
           </div>
-          <h1 className="text-3xl font-bold text-white">My Profile</h1>
-          <p className="text-cyan-200 mt-2">View and manage your account information</p>
+          <h1 className="aura-headline text-3xl">My Profile</h1>
+          <p className="aura-subhead mt-2">View and manage your account information</p>
         </div>
       </div>
 
@@ -85,13 +88,13 @@ const UserProfile = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-gray-200/50 dark:border-gray-700/50"
+          className="aura-glass aura-glass-card p-8"
         >
           {/* Profile Header */}
-          <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8 mb-8">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 mb-8">
             {/* Avatar */}
             <div className="relative">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gradient-to-r from-cyan-500 to-purple-500 shadow-xl">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-cyan-500 shadow-xl">
                 <img
                   src={user?.avatar ? getAvatarUrl(user.avatar) : getFallbackAvatar(user?.username || 'User')}
                   alt={user?.username || 'User'}
@@ -99,31 +102,31 @@ const UserProfile = () => {
                   onError={(e) => { e.target.src = getFallbackAvatar(user?.username || 'User'); }}
                 />
               </div>
-              <div className="absolute -bottom-2 -right-2 bg-green-500 w-8 h-8 rounded-full border-4 border-white dark:border-gray-800 flex items-center justify-center">
+              <div className="absolute -bottom-2 -right-2 bg-green-500 w-8 h-8 rounded-full border-4 border-slate-900 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
             </div>
 
             {/* Basic Info */}
             <div className="flex-1 text-center md:text-left">
-              <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">
+              <h2 className="aura-headline text-3xl mb-2">
                 {user?.username || 'Unknown User'}
               </h2>
-              <p className="text-gray-600 dark:text-gray-300 text-lg mb-4">
+              <p className="aura-subhead text-lg mb-4">
                 {user?.email || 'No email provided'}
               </p>
               <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                 {user?.isAdmin && (
-                  <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 rounded-full text-sm font-semibold">
+                  <span className="aura-chip aura-chip-purple text-sm font-semibold">
                     Admin
                   </span>
                 )}
                 {user?.isSuperAdmin && (
-                  <span className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-full text-sm font-semibold">
+                  <span className="aura-chip aura-chip-red text-sm font-semibold">
                     Super Admin
                   </span>
                 )}
-                <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full text-sm font-semibold">
+                <span className="aura-chip aura-chip-green text-sm font-semibold">
                   Active Member
                 </span>
               </div>
@@ -131,13 +134,12 @@ const UserProfile = () => {
 
             {/* Edit Button */}
             <div>
-              <button
+              <Button
                 onClick={() => navigate('/profile/edit')}
-                className="flex items-center space-x-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                <FaEdit />
+                <FaEdit className="mr-2" />
                 <span>Edit Profile</span>
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -145,44 +147,44 @@ const UserProfile = () => {
           <div className="grid md:grid-cols-2 gap-6">
             {/* Personal Information */}
             <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+              <h3 className="aura-display text-xl border-b border-cyan-500/10 pb-2">
                 Personal Information
               </h3>
 
               {/* Username */}
-              <div className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <div className="flex-shrink-0 w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                  <FaUser className="text-blue-600 dark:text-blue-400" />
+              <div className="flex items-start gap-4 p-4 bg-black/20 rounded-lg">
+                <div className="flex-shrink-0 w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                  <FaUser className="text-blue-400" />
                 </div>
                 <div className="flex-1">
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Username</label>
-                  <p className="text-lg font-semibold text-gray-800 dark:text-white">
+                  <label className="text-sm font-medium text-slate-400">Username</label>
+                  <p className="text-lg font-semibold text-slate-200">
                     {user?.username || 'Not provided'}
                   </p>
                 </div>
               </div>
 
               {/* Email */}
-              <div className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <div className="flex-shrink-0 w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                  <FaEnvelope className="text-green-600 dark:text-green-400" />
+              <div className="flex items-start gap-4 p-4 bg-black/20 rounded-lg">
+                <div className="flex-shrink-0 w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
+                  <FaEnvelope className="text-green-400" />
                 </div>
                 <div className="flex-1">
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Email Address</label>
-                  <p className="text-lg font-semibold text-gray-800 dark:text-white">
+                  <label className="text-sm font-medium text-slate-400">Email Address</label>
+                  <p className="text-lg font-semibold text-slate-200">
                     {user?.email || 'Not provided'}
                   </p>
                 </div>
               </div>
 
               {/* WhatsApp Number */}
-              <div className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <div className="flex-shrink-0 w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                  <FaPhone className="text-green-600 dark:text-green-400" />
+              <div className="flex items-start gap-4 p-4 bg-black/20 rounded-lg">
+                <div className="flex-shrink-0 w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
+                  <FaPhone className="text-green-400" />
                 </div>
                 <div className="flex-1">
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">WhatsApp Number</label>
-                  <p className="text-lg font-semibold text-gray-800 dark:text-white">
+                  <label className="text-sm font-medium text-slate-400">WhatsApp Number</label>
+                  <p className="text-lg font-semibold text-slate-200">
                     {formatPhoneNumber(user?.phoneNumber)}
                   </p>
                   {user?.phoneNumber && (
@@ -190,7 +192,7 @@ const UserProfile = () => {
                       href={`https://wa.me/${user.phoneNumber.replace('+', '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-green-600 dark:text-green-400 hover:underline"
+                      className="text-sm text-green-400 hover:underline"
                     >
                       Open in WhatsApp
                     </a>
@@ -201,26 +203,26 @@ const UserProfile = () => {
 
             {/* Account Information */}
             <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+              <h3 className="aura-display text-xl border-b border-cyan-500/10 pb-2">
                 Account Information
               </h3>
 
               {/* Account Type */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 block mb-2">Account Type</label>
+              <div className="p-4 bg-black/20 rounded-lg">
+                <label className="text-sm font-medium text-slate-400 block mb-2">Account Type</label>
                 <div className="space-y-2">
                   {user?.isSuperAdmin && (
-                    <span className="inline-block px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-full text-sm font-semibold">
+                    <span className="aura-chip aura-chip-red text-sm font-semibold">
                       Super Administrator
                     </span>
                   )}
                   {user?.isAdmin && !user?.isSuperAdmin && (
-                    <span className="inline-block px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 rounded-full text-sm font-semibold">
+                    <span className="aura-chip aura-chip-purple text-sm font-semibold">
                       Administrator
                     </span>
                   )}
                   {!user?.isAdmin && (
-                    <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm font-semibold">
+                    <span className="aura-chip aura-chip-cyan text-sm font-semibold">
                       Student
                     </span>
                   )}
@@ -228,9 +230,9 @@ const UserProfile = () => {
               </div>
 
               {/* Member Since */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 block mb-2">Member Since</label>
-                <p className="text-lg font-semibold text-gray-800 dark:text-white">
+              <div className="p-4 bg-black/20 rounded-lg">
+                <label className="text-sm font-medium text-slate-400 block mb-2">Member Since</label>
+                <p className="text-lg font-semibold text-slate-200">
                   {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
@@ -240,20 +242,20 @@ const UserProfile = () => {
               </div>
 
               {/* WhatsApp Notifications */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 block mb-2">WhatsApp Notifications</label>
-                <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${user?.whatsappNotifications ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                  <span className="text-lg font-semibold text-gray-800 dark:text-white">
+              <div className="p-4 bg-black/20 rounded-lg">
+                <label className="text-sm font-medium text-slate-400 block mb-2">WhatsApp Notifications</label>
+                <div className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${user?.whatsappNotifications ? 'bg-green-500' : 'bg-slate-500'}`}></div>
+                  <span className="text-lg font-semibold text-slate-200">
                     {user?.whatsappNotifications ? 'Enabled' : 'Disabled'}
                   </span>
                 </div>
               </div>
 
               {/* User ID */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 block mb-2">User ID</label>
-                <p className="text-sm font-mono text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 p-2 rounded border">
+              <div className="p-4 bg-black/20 rounded-lg">
+                <label className="text-sm font-medium text-slate-400 block mb-2">User ID</label>
+                <p className="text-sm font-mono text-slate-400 bg-slate-800 p-2 rounded border border-cyan-500/10">
                   {user?._id || 'Unknown'}
                 </p>
               </div>
@@ -261,27 +263,26 @@ const UserProfile = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="mt-8 pt-6 border-t border-cyan-500/10">
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
+              <Button
                 onClick={() => navigate('/profile/edit')}
-                className="flex items-center justify-center space-x-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                <FaEdit />
+                <FaEdit className="mr-2" />
                 <span>Edit Profile</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center justify-center space-x-2 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200"
               >
-                <FaArrowLeft />
+                <FaArrowLeft className="mr-2" />
                 <span>Back to Dashboard</span>
-              </button>
+              </Button>
             </div>
           </div>
         </motion.div>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

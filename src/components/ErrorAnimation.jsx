@@ -53,8 +53,12 @@ const ErrorAnimation = ({
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
-      <div className="text-center max-w-md w-full">
+    <div className="aura-page min-h-[calc(100vh-3.5rem)] flex flex-col items-center justify-center px-4">
+      <div className="aura-page-mesh" aria-hidden>
+        <div className="aura-mesh-orb aura-mesh-orb--cyan" />
+        <div className="aura-mesh-orb aura-mesh-orb--violet" />
+      </div>
+      <div className="aura-glass text-center max-w-md w-full p-8 relative z-10">
         {/* Lottie Animation */}
         <div className="w-64 h-64 mx-auto mb-8">
           {animationData ? (
@@ -72,18 +76,18 @@ const ErrorAnimation = ({
         </div>
 
         {/* Error Text */}
-        <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-4">
+        <h1 className="aura-headline text-2xl sm:text-3xl mb-4">
           {finalTitle}
         </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
+        <p className="aura-subhead text-base mb-8">
           {finalMessage}
         </p>
 
-        {/* Back Button */}
         {showBackButton && (
           <button
+            type="button"
             onClick={handleGoBack}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="aura-btn aura-btn-primary"
           >
             Go Back
           </button>

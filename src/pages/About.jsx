@@ -25,6 +25,8 @@ import {
   FaLaptopCode
 } from 'react-icons/fa';
 import ParallaxElement from '../components/ParallaxElement';
+import PageShell from '../components/ui/PageShell';
+import Button from '../components/ui/Button';
 
 // Team Section Component
 const TeamSection = ({ teamMembers }) => {
@@ -96,7 +98,7 @@ const TeamSection = ({ teamMembers }) => {
             className="group"
           >
             <motion.div
-              className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-3xl transition-all duration-700 relative overflow-hidden"
+              className="aura-glass aura-glass-card p-8 hover:shadow-3xl transition-all duration-700 relative overflow-hidden"
               whileHover={{ 
                 scale: 1.02,
                 rotateY: index % 2 === 0 ? 2 : -2,
@@ -113,7 +115,7 @@ const TeamSection = ({ teamMembers }) => {
               <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8 text-center lg:text-left relative z-10">
                 <div className="flex-1">
                   <motion.p 
-                    className="text-gray-600 dark:text-gray-300 mb-4 text-lg leading-relaxed"
+                    className="text-slate-300 mb-4 text-lg leading-relaxed"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
                     transition={{ delay: index * 0.3 + 0.2, duration: 0.8 }}
@@ -122,13 +124,13 @@ const TeamSection = ({ teamMembers }) => {
                   </motion.p>
                   
                   <motion.div 
-                    className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-2xl p-6 mb-6 border border-purple-200/30 dark:border-purple-700/30"
+                    className="bg-purple-500/10 rounded-2xl p-6 mb-6 border border-purple-500/30"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: isInView ? 1 : 0, scale: isInView ? 1 : 0.9 }}
                     transition={{ delay: index * 0.3 + 0.4, duration: 0.8 }}
                   >
                     <motion.p 
-                      className="italic text-gray-700 dark:text-gray-300 relative"
+                      className="italic text-slate-300 relative"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: isInView ? 1 : 0 }}
                       transition={{ delay: index * 0.3 + 0.6, duration: 1 }}
@@ -144,7 +146,7 @@ const TeamSection = ({ teamMembers }) => {
                     animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
                     transition={{ delay: index * 0.3 + 0.8, duration: 0.8 }}
                   >
-                    <h4 className="font-semibold text-gray-800 dark:text-white mb-4 text-lg">Key Contributions:</h4>
+                    <h4 className="font-semibold text-slate-200 mb-4 text-lg">Key Contributions:</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {member.contributions.map((contribution, idx) => (
                         <motion.div 
@@ -162,7 +164,7 @@ const TeamSection = ({ teamMembers }) => {
                           >
                             ✓
                           </motion.span>
-                          <span className="text-sm text-gray-600 dark:text-gray-300 group-hover/item:text-gray-800 dark:group-hover/item:text-white transition-colors">
+                          <span className="text-sm text-slate-400 group-hover/item:text-slate-200 transition-colors">
                             {contribution}
                           </span>
                         </motion.div>
@@ -188,7 +190,7 @@ const TeamSection = ({ teamMembers }) => {
                     {member.avatar}
                   </motion.div>
                   <motion.h3 
-                    className="text-2xl font-bold text-gray-800 dark:text-white mb-2"
+                    className="text-2xl font-bold text-slate-200 mb-2"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 10 }}
                     transition={{ delay: index * 0.3 + 0.4, duration: 0.6 }}
@@ -196,7 +198,7 @@ const TeamSection = ({ teamMembers }) => {
                     {member.name}
                   </motion.h3>
                   <motion.p 
-                    className="text-lg font-semibold text-purple-600 dark:text-purple-400 mb-1"
+                    className="text-lg font-semibold text-purple-400 mb-1"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 10 }}
                     transition={{ delay: index * 0.3 + 0.5, duration: 0.6 }}
@@ -205,7 +207,7 @@ const TeamSection = ({ teamMembers }) => {
                   </motion.p>
                   {(member.name.includes('Akhyar') || member.name.includes('Tanvir') || member.name.includes('Ahmed') || member.name.includes('Zahin')) && (
                     <motion.p 
-                      className="text-sm font-medium text-blue-500 dark:text-blue-300 mb-4"
+                      className="text-sm font-medium text-blue-400 mb-4"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: isInView ? 1 : 0 }}
                       transition={{ delay: index * 0.3 + 0.6, duration: 0.6 }}
@@ -319,7 +321,7 @@ const TechStackSection = () => {
             className="group perspective-1000"
           >
             <motion.div
-              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-gray-200/50 dark:border-gray-700/50 text-center relative overflow-hidden transform-gpu"
+              className="aura-glass aura-glass-card p-6 text-center relative overflow-hidden transform-gpu"
               whileHover={{ 
                 scale: 1.1,
                 rotateY: 15,
@@ -373,7 +375,7 @@ const TechStackSection = () => {
               </motion.div>
               
               <motion.h3 
-                className="font-bold text-lg text-gray-800 dark:text-white mb-3 relative z-10"
+                className="font-bold text-lg text-slate-200 mb-3 relative z-10"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
                 transition={{ delay: index * 0.15 + 0.3, duration: 0.8 }}
@@ -382,7 +384,7 @@ const TechStackSection = () => {
               </motion.h3>
               
               <motion.p 
-                className="text-sm text-gray-600 dark:text-gray-300 relative z-10 leading-relaxed"
+                className="text-sm text-slate-400 relative z-10 leading-relaxed"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
                 transition={{ delay: index * 0.15 + 0.5, duration: 0.8 }}
@@ -495,7 +497,7 @@ const JourneySection = () => {
               </motion.div>
               
               <motion.div
-                className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-gray-200/50 dark:border-gray-700/50 relative overflow-hidden mt-8"
+                className="aura-glass aura-glass-card p-6 relative overflow-hidden mt-8"
                 whileHover={{ 
                   scale: 1.1,
                   rotateY: 10,
@@ -548,7 +550,7 @@ const JourneySection = () => {
                 </motion.div>
                 
                 <motion.h3 
-                  className="font-bold text-xl text-gray-800 dark:text-white mb-3 relative z-10"
+                  className="font-bold text-xl text-slate-200 mb-3 relative z-10"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: isInView ? 1 : 0, x: isInView ? 0 : -20 }}
                   transition={{ delay: index * 0.3 + 0.7, duration: 0.8 }}
@@ -557,7 +559,7 @@ const JourneySection = () => {
                 </motion.h3>
                 
                 <motion.p 
-                  className="text-gray-600 dark:text-gray-300 leading-relaxed relative z-10"
+                  className="text-slate-400 leading-relaxed relative z-10"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: isInView ? 1 : 0, x: isInView ? 0 : 20 }}
                   transition={{ delay: index * 0.3 + 0.9, duration: 0.8 }}
@@ -625,7 +627,7 @@ const FuturePlansSection = () => {
       </motion.div>
 
       <motion.div 
-        className="bg-gradient-to-br from-cyan-50 to-purple-50 dark:from-cyan-900/20 dark:to-purple-900/20 rounded-3xl p-8 border border-cyan-200/50 dark:border-cyan-700/50"
+        className="aura-glass aura-glass-card p-8"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: isInView ? 1 : 0, scale: isInView ? 1 : 0.9 }}
         transition={{ duration: 1, ease: [0.23, 1, 0.32, 1] }}
@@ -640,10 +642,10 @@ const FuturePlansSection = () => {
             onMouseLeave={() => {}}
           >
             <FaBrain className="text-6xl text-purple-500 mx-auto mb-6" />
-            <h3 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">
+            <h3 className="aura-headline text-3xl mb-6">
               NeuraX - Advanced AI Assistant
             </h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="aura-subhead">
               Our cutting-edge AI assistant with voice interaction, web search, OCR capabilities, and bilingual support.
             </p>
           </motion.div>
@@ -657,14 +659,14 @@ const FuturePlansSection = () => {
             onMouseLeave={() => {}}
           >
             <FaRocket className="text-6xl text-blue-500 mx-auto mb-6" />
-            <h3 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">
+            <h3 className="aura-headline text-3xl mb-6">
               Upcoming Features
             </h3>
             <div className="text-left space-y-2">
-              <p className="text-gray-600 dark:text-gray-300">• Mobile app for iOS and Android</p>
-              <p className="text-gray-600 dark:text-gray-300">• Advanced analytics dashboard</p>
-              <p className="text-gray-600 dark:text-gray-300">• Team-based study groups</p>
-              <p className="text-gray-600 dark:text-gray-300">• Custom quiz creation tools</p>
+              <p className="text-slate-400">• Mobile app for iOS and Android</p>
+              <p className="text-slate-400">• Advanced analytics dashboard</p>
+              <p className="text-slate-400">• Team-based study groups</p>
+              <p className="text-slate-400">• Custom quiz creation tools</p>
             </div>
           </motion.div>
         </div>
@@ -681,7 +683,7 @@ const FinalMessageSection = ({ navigate }) => {
   return (
     <motion.section ref={sectionRef} className="relative">
       <motion.div 
-        className="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-3xl p-12 text-center border border-pink-200/50 dark:border-pink-700/50 relative overflow-hidden"
+        className="aura-glass aura-glass-card p-12 text-center relative overflow-hidden"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: isInView ? 1 : 0, scale: isInView ? 1 : 0.9 }}
         transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1] }}
@@ -694,35 +696,28 @@ const FinalMessageSection = ({ navigate }) => {
         >
           <FaHeart className="text-6xl text-red-500 mx-auto mb-8" />
           
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 dark:text-white mb-8">
+          <h2 className="aura-headline text-2xl sm:text-3xl md:text-4xl lg:text-5xl mb-8">
             A Message to Our Amazing Community 💝
           </h2>
           
-          <div className="max-w-4xl mx-auto space-y-6 text-base sm:text-lg text-gray-700 dark:text-gray-300 mb-12 px-4">
+          <div className="max-w-4xl mx-auto space-y-6 text-base sm:text-lg text-slate-300 mb-12 px-4">
             <p>
               To every friend who has taken a quiz, every competitor who has battled with friends, 
               and every learner who has earned a badge - thank you! Your enthusiasm 
               and engagement drive us to keep improving and innovating.
             </p>
-            <p className="font-semibold text-purple-600 dark:text-purple-400">
+            <p className="font-semibold text-purple-400">
               Keep learning, keep competing, and most importantly - keep having fun! 
               The future of education is bright, and we're part of making it happen. 🌟
             </p>
           </div>
           
-          <motion.button
-            whileHover={{ 
-              scale: 1.05,
-              boxShadow: "0 20px 40px rgba(139, 92, 246, 0.4)"
-            }}
-            whileTap={{ scale: 0.95 }}
+          <Button
             onClick={() => navigate('/dashboard')}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-8 sm:py-4 sm:px-12 rounded-full shadow-2xl transition-all duration-500 text-base sm:text-lg w-full sm:w-auto"
-            onMouseEnter={() => {}}
-            onMouseLeave={() => {}}
+            className="w-full sm:w-auto"
           >
             enough reading 😴
-          </motion.button>
+          </Button>
         </motion.div>
       </motion.div>
     </motion.section>
@@ -844,7 +839,7 @@ const About = () => {
   ];
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200 overflow-hidden">
+    <PageShell className="min-h-[calc(100vh-3.5rem)] text-slate-100 overflow-hidden">
 
       
       {/* Dynamic Floating Elements - SIMPLIFIED for performance */}
@@ -875,7 +870,7 @@ const About = () => {
       
       {/* Parallax Header */}
       <motion.div 
-        className="relative bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 dark:from-gray-800 dark:to-gray-900 p-8 min-h-screen flex items-center justify-center overflow-hidden"
+        className="relative aura-glass p-8 min-h-screen flex items-center justify-center overflow-hidden"
         style={{ y: backgroundY, scale: headerScale, opacity: headerOpacity }}
       >
         {/* Animated Background Elements */}
@@ -908,10 +903,10 @@ const About = () => {
             transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
             className="flex items-center space-x-4 mb-12"
           >
-            <motion.button
+            <Button
+              variant="ghost"
               onClick={() => navigate('/dashboard')}
-              className="flex items-center space-x-2 text-white hover:text-purple-200 transition-colors group"
-              whileHover={{ scale: 1.05, x: -5 }}
+              className="flex items-center gap-2"
             >
               <motion.div
                 animate={{ x: [-2, 2, -2] }}
@@ -920,7 +915,7 @@ const About = () => {
                 <FaArrowLeft />
               </motion.div>
               <span>Back to Dashboard</span>
-            </motion.button>
+            </Button>
           </motion.div>
           
           {/* Hero Title with Character Animation */}
@@ -961,7 +956,7 @@ const About = () => {
                 initial={{ clipPath: "inset(100% 0% 0% 0%)" }}
                 animate={{ clipPath: "inset(0% 0% 0% 0%)" }}
                 transition={{ duration: 2, delay: 1.5, ease: [0.23, 1, 0.32, 1] }}
-                className="text-lg sm:text-xl md:text-2xl text-purple-200 max-w-4xl mx-auto leading-relaxed"
+                className="aura-subhead text-lg sm:text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed"
               >
                 Meet the passionate team behind Neuronerds Quiz and discover NeuraX - 
                 our advanced AI assistant that's revolutionizing how we learn and compete.
@@ -978,14 +973,14 @@ const About = () => {
               <motion.div
                 animate={{ y: [0, 10, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="text-white/60 text-sm flex flex-col items-center space-y-2"
+                className="text-slate-400 text-sm flex flex-col items-center space-y-2"
               >
                 <span>Scroll to explore</span>
-                <div className="w-6 h-10 border-2 border-white/40 rounded-full flex justify-center">
+                <div className="w-6 h-10 border-2 border-slate-500/40 rounded-full flex justify-center">
                   <motion.div
                     animate={{ y: [0, 12, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
-                    className="w-1 h-3 bg-white/60 rounded-full mt-2"
+                    className="w-1 h-3 bg-slate-400 rounded-full mt-2"
                   />
                 </div>
               </motion.div>
@@ -1002,7 +997,7 @@ const About = () => {
       
       {/* Floating Navigation Dots */}
       <motion.div 
-        className="fixed right-8 top-1/2 transform -translate-y-1/2 z-40 space-y-4"
+        className="fixed right-8 top-1/2 transform -translate-y-1/2 z-40 gap-4"
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 3 }}
@@ -1010,7 +1005,7 @@ const About = () => {
         {['Team', 'Tech', 'Journey', 'Future'].map((section, index) => (
           <motion.div
             key={section}
-            className="w-3 h-3 rounded-full bg-white/50 cursor-pointer hover:bg-white transition-colors"
+            className="w-3 h-3 rounded-full bg-slate-500/50 cursor-pointer hover:bg-slate-200 transition-colors"
             whileHover={{ scale: 1.5 }}
             animate={{ 
               scale: [1, 1.2, 1],
@@ -1074,7 +1069,7 @@ const About = () => {
           )
         }}
       />
-    </div>
+    </PageShell>
   );
 };
 

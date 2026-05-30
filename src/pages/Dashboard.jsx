@@ -18,7 +18,8 @@ import ParallaxElement from '../components/ParallaxElement';
 import GlobalLoader from '../components/GlobalLoader';
 import { useGlobalLoader } from '../hooks/useGlobalLoader';
 import MultiChapterBattleSelector from '../components/MultiChapterBattleSelector';
-import '../styles/premium-glass.css';
+import PageShell from '../components/ui/PageShell';
+import Button from '../components/ui/Button';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -395,7 +396,7 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-blue-950 dark:to-purple-950 flex items-center justify-center transition-colors duration-200">
+      <div className="aura-page min-h-[calc(100vh-3.5rem)] flex items-center justify-center">
         <LoadingAnimation message="Loading dashboard..." size="large" />
       </div>
     );
@@ -403,11 +404,8 @@ const Dashboard = () => {
 
   return (
     <GlobalLoader isLoading={isGlobalLoading} skeletonType="dashboard">
-    <div className="premium-glass-background min-h-screen text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
-      {/* Mesh Gradient Effect */}
-      <div className="mesh-gradient-purple"></div>
-      <div className="mesh-gradient-green"></div>
-      <div className="mesh-gradient-blue"></div>
+    <PageShell className="min-h-[calc(100vh-3.5rem)] text-slate-100">
+      {/* Animated Background Particles with Parallax */}
       
       {/* Animated Background Particles with Parallax */}
       <ParallaxElement speed={0.2} className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -439,7 +437,7 @@ const Dashboard = () => {
 
       {/* Header */}
       <motion.div 
-        className="glass-panel p-8 relative overflow-hidden mx-4 mt-4"
+        className="aura-glass aura-glass-card mx-4 mt-4"
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
@@ -453,12 +451,12 @@ const Dashboard = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <motion.h1 
-                className="premium-font premium-heading text-2xl sm:text-3xl lg:text-4xl mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-purple-200"
+                className="aura-headline text-2xl sm:text-3xl lg:text-4xl mb-2"
               >
                 Welcome back, {user?.username || 'Student'}! 🎓
               </motion.h1>
               <motion.p 
-                className="text-cyan-200 text-base lg:text-lg flex items-center gap-2"
+                className="aura-subhead text-base lg:text-lg flex items-center gap-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
@@ -481,24 +479,18 @@ const Dashboard = () => {
                   onError={(e) => { e.target.src = getFallbackAvatar(user?.username || 'User'); }}
                 />
                 <div className="text-left sm:text-right">
-                  <p className="text-xs sm:text-sm text-cyan-200">Logged in as</p>
-                  <p className="font-semibold text-white text-sm sm:text-base">{user?.email}</p>
+                  <p className="text-xs sm:text-sm text-slate-400">Logged in as</p>
+                  <p className="font-semibold text-slate-200 text-sm sm:text-base">{user?.email}</p>
                 </div>
               </div>
               <div className="flex space-x-2">
                 <SoundToggle className="text-xs" />
-                <button
-                  onClick={handleDeleteAccount}
-                  className="bg-red-800 hover:bg-red-900 px-2 sm:px-4 py-2 rounded-lg transition-colors text-white text-xs sm:text-sm"
-                >
+                <Button variant="ghost" size="sm" onClick={handleDeleteAccount} className="text-xs">
                   Delete
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="bg-red-600 hover:bg-red-700 px-3 sm:px-4 py-2 rounded-lg transition-colors text-white text-xs sm:text-sm"
-                >
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="text-xs">
                   Logout
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -508,7 +500,7 @@ const Dashboard = () => {
       {/* Main Content */}
       <motion.div 
         ref={contentRef}
-        className="max-w-6xl mx-auto p-8 relative z-10"
+        className="max-w-6xl mx-auto p-4 sm:p-8 relative z-10"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.3 }}
@@ -519,12 +511,12 @@ const Dashboard = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
           <motion.div 
-            className="glass-panel p-6 relative overflow-hidden group"
+            className="aura-glass aura-glass-card relative overflow-hidden group"
             whileHover={{ scale: 1.02 }}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
             <motion.h4 
-              className="premium-font premium-heading text-lg text-gray-800 dark:text-white mb-4 flex items-center gap-2 relative z-10"
+              className="aura-display text-lg text-white mb-4 flex items-center gap-2 relative z-10"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
@@ -540,10 +532,10 @@ const Dashboard = () => {
             
             {/* Chapter Dropdown */}
             <div className="mb-4 chapter-selection relative z-20">
-              <label htmlFor="chapter-select" className="text-cyan-600 dark:text-cyan-300 font-semibold mb-1 block">Select Chapter</label>
+              <label htmlFor="chapter-select" className="aura-label block mb-2">Select Chapter</label>
               <select 
                 id="chapter-select" 
-                className="px-4 py-2 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 border border-gray-300 dark:border-gray-600 w-full transition-colors relative z-20"
+                className="aura-input relative z-20"
                 value={selectedChapter}
                 onChange={e => setSelectedChapter(e.target.value)}
                 disabled={chaptersLoading}
@@ -555,18 +547,15 @@ const Dashboard = () => {
                   </option>
                 ))}
               </select>
-              {chaptersLoading && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Loading chapters...</p>}
+              {chaptersLoading && <p className="text-sm text-slate-500 mt-1">Loading chapters...</p>}
             </div>
 
             {/* Start Quiz Button */}
-            <motion.button
-              whileHover={{ 
-                scale: 1.05, 
-              }}
-              whileTap={{ scale: 0.95 }}
+            <Button 
+              size="lg"
               onClick={handleStartQuiz}
               onMouseEnter={() => soundManager.play('click')}
-              className="premium-button py-4 px-6 w-full relative overflow-hidden group"
+              className="w-full"
             >
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -574,90 +563,78 @@ const Dashboard = () => {
                 whileHover={{ x: '100%' }}
                 transition={{ duration: 0.6 }}
               />
-              <div className="flex items-center justify-center space-x-2 relative z-10">
-                <motion.span 
-                  className="text-2xl"
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                  🚀
-                </motion.span>
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-xl">🚀</span>
                 <span>Start Quiz</span>
-                <motion.div
-                  className="absolute -right-1 -top-1 w-2 h-2 bg-yellow-400 rounded-full"
-                  animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                />
               </div>
-            </motion.button>
+            </Button>
 
             {/* Leaderboard Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <Button 
+              variant="secondary"
+              size="lg"
               onClick={() => { soundManager.play('transition'); navigate('/leaderboard'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="premium-button-purple py-4 px-6 w-full mt-4 relative z-20"
+              className="w-full mt-4"
             >
-              <div className="flex items-center justify-center space-x-2">
-                <span className="text-2xl">🏆</span>
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-xl">🏆</span>
                 <span>View Leaderboard</span>
               </div>
-            </motion.button>
+            </Button>
 
             {/* Badges Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <Button 
+              variant="magenta"
+              size="lg"
               onClick={() => { soundManager.play('transition'); navigate('/badges'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="premium-button py-4 px-6 w-full mt-4 relative z-20"
-              style={{ background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.8), rgba(194, 120, 3, 0.8))', boxShadow: '0 4px 15px rgba(234, 179, 8, 0.3)' }}
+              className="w-full mt-4"
             >
-              <div className="flex items-center justify-center space-x-2">
-                <span className="text-2xl">🎯</span>
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-xl">🎯</span>
                 <span>View Badges</span>
               </div>
-            </motion.button>
+            </Button>
 
             {/* View Profile Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <Button 
+              variant="secondary"
+              size="lg"
               onClick={() => { soundManager.play('transition'); navigate('/profile'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="premium-button py-4 px-6 w-full mt-4 relative z-20"
+              className="w-full mt-4"
             >
-              <div className="flex items-center justify-center space-x-2">
+              <div className="flex items-center justify-center gap-2">
                 <FaUser className="text-lg" />
                 <span>View Profile</span>
               </div>
-            </motion.button>
+            </Button>
 
             {/* Edit Profile Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <Button 
+              variant="secondary"
+              size="lg"
               onClick={() => { soundManager.play('transition'); navigate('/profile/edit'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="premium-button-blue py-4 px-6 w-full mt-4 relative z-20"
+              className="w-full mt-4"
             >
-              <div className="flex items-center justify-center space-x-2">
+              <div className="flex items-center justify-center gap-2">
                 <FaEdit className="text-lg" />
                 <span>Edit Profile</span>
               </div>
-            </motion.button>
+            </Button>
 
             {/* WhatsApp Messenger Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <Button 
+              variant="secondary"
+              size="lg"
               onClick={() => { soundManager.play('transition'); navigate('/whatsapp'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="premium-button py-4 px-6 w-full mt-4 relative"
+              className="w-full mt-4 relative"
             >
-              <div className="flex items-center justify-center space-x-2">
-                <span className="text-2xl">📱</span>
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-xl">📱</span>
                 <span>WhatsApp Messenger</span>
                 {unreadCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
@@ -665,44 +642,44 @@ const Dashboard = () => {
                   </span>
                 )}
               </div>
-            </motion.button>
+            </Button>
 
             {/* Inbox Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <Button 
+              variant="secondary"
+              size="lg"
               onClick={() => { soundManager.play('transition'); navigate('/inbox'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="premium-button-blue py-4 px-6 w-full mt-4 relative z-20"
+              className="w-full mt-4"
             >
-              <div className="flex items-center justify-center space-x-2">
-                <span className="text-2xl">📬</span>
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-xl">📬</span>
                 <span>Inbox</span>
               </div>
-            </motion.button>
+            </Button>
 
             {/* Behind The Scenes Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <Button 
+              variant="secondary"
+              size="lg"
               onClick={() => { soundManager.play('transition'); navigate('/about'); }}
               onMouseEnter={() => soundManager.play('click')}
-              className="premium-button-purple py-4 px-6 w-full mt-4 relative z-20"
+              className="w-full mt-4"
             >
-              <div className="flex items-center justify-center space-x-2">
-                <span className="text-2xl">🎬</span>
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-xl">🎬</span>
                 <span>Behind The Scenes</span>
               </div>
-            </motion.button>
+            </Button>
           </motion.div>
 
           {/* Quiz Battle Section */}
-          <div className="glass-panel battle-section p-6">
+          <div className="aura-glass aura-glass-card">
             <div className="flex items-center mb-4">
               <FaFire className="text-orange-500 text-2xl mr-2" />
-              <h4 className="premium-font premium-heading text-lg text-gray-800 dark:text-white">Quiz Battle</h4>
+              <h4 className="aura-display text-lg text-white">Quiz Battle</h4>
             </div>
-            <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
+            <p className="aura-subhead text-sm mb-4">
               Challenge your friends in real-time multiplayer quiz battles!
             </p>
             
@@ -711,44 +688,38 @@ const Dashboard = () => {
               <div className="mb-4">
                 {/* Battle Mode Selection */}
                 <div className="mb-3">
-                  <label className="text-orange-600 dark:text-orange-300 font-semibold mb-2 block text-sm">
+                  <label className="aura-label block mb-2">
                     Battle Mode
                   </label>
                   <div className="flex space-x-2 mb-3">
-                    <button
+                    <Button
                       type="button"
+                      size="sm"
+                      variant={battleMode === 'single' ? 'primary' : 'ghost'}
                       onClick={() => setBattleMode('single')}
-                      className={`px-3 py-1 text-xs rounded transition-colors ${
-                        battleMode === 'single'
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
-                      }`}
                     >
                       Single Chapter
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      size="sm"
+                      variant={battleMode === 'multi' ? 'primary' : 'ghost'}
                       onClick={() => setBattleMode('multi')}
-                      className={`px-3 py-1 text-xs rounded transition-colors ${
-                        battleMode === 'multi'
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
-                      }`}
                     >
                       Multi-Chapter
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
                 {/* Single Chapter Selection */}
                 {battleMode === 'single' && (
                   <div className="mb-3">
-                    <label htmlFor="battle-chapter-select" className="text-orange-600 dark:text-orange-300 font-semibold mb-1 block text-sm">
+                    <label htmlFor="battle-chapter-select" className="aura-label block mb-2">
                       Select Chapter for Battle
                     </label>
                     <select 
                       id="battle-chapter-select" 
-                      className="px-3 py-2 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-400 border border-gray-300 dark:border-gray-600 w-full transition-colors text-sm"
+                      className="aura-input text-sm"
                       value={selectedBattleChapter}
                       onChange={e => setSelectedBattleChapter(e.target.value)}
                       disabled={chaptersLoading}
@@ -953,14 +924,14 @@ const Dashboard = () => {
           </div>
 
           {/* Available Quizzes */}
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
-            <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Available Quizzes</h4>
+          <div className="aura-glass aura-glass-card">
+            <h4 className="aura-display text-lg text-white mb-4">Available Quizzes</h4>
             {chaptersLoading ? (
               <div className="text-center py-8">
                 <div className="text-cyan-600 dark:text-cyan-400">Loading quizzes...</div>
               </div>
             ) : (
-              <div className="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+              <div className="space-y-4 max-h-96 overflow-y-auto pr-2 aura-scrollbar">
                 {chapters.reduce((acc, chapter) => {
                   const subject = chapter.subject || 'General';
                   if (!acc[subject]) acc[subject] = [];
@@ -976,20 +947,20 @@ const Dashboard = () => {
                     <h5 className="font-bold text-purple-600 dark:text-purple-400 mb-3">{subject}</h5>
                     <div className="space-y-2">
                       {subjectChapters.map(chapter => (
-                        <div key={chapter._id || chapter.name} className="bg-white/60 dark:bg-gray-600/60 rounded p-3 border border-gray-200/30 dark:border-gray-500/30">
+                        <div key={chapter._id || chapter.name} className="bg-black/20 rounded p-3 border border-cyan-500/10">
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <h6 className="font-semibold text-cyan-600 dark:text-cyan-300">{chapter.name}</h6>
+                              <h6 className="font-semibold text-cyan-300">{chapter.name}</h6>
                               {chapter.description && (
-                                <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">{chapter.description}</p>
+                                <p className="text-slate-400 text-sm mt-1">{chapter.description}</p>
                               )}
                             </div>
                             <div className="text-right ml-3">
-                              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              <div className="text-sm font-medium text-slate-300">
                                 {chapter.questionCount || 0} questions
                               </div>
                               {chapter.practiceMode && (
-                                <div className="text-xs text-orange-600 dark:text-orange-400">Practice Mode</div>
+                                <div className="text-xs text-orange-400">Practice Mode</div>
                               )}
                             </div>
                           </div>
@@ -1009,7 +980,7 @@ const Dashboard = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={startTour}
-        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-3 sm:p-4 rounded-full shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 z-50"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 aura-btn aura-btn-primary p-3 sm:p-4 rounded-full shadow-lg z-50"
         title="Take a tour of the platform"
       >
         <FaQuestionCircle className="text-lg sm:text-xl" />
@@ -1023,7 +994,7 @@ const Dashboard = () => {
       />
       
 
-    </div>
+    </PageShell>
     </GlobalLoader>
   );
 };
