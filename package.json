@@ -15,6 +15,7 @@
     "@google/generative-ai": "^0.21.0",
     "@hapi/boom": "^10.0.1",
     "@lottiefiles/dotlottie-react": "^0.18.3",
+    "@pinecone-database/pinecone": "^7.2.0",
     "@studio-freight/lenis": "^1.0.42",
     "@whiskeysockets/baileys": "^6.7.21",
     "axios": "^1.11.0",
