@@ -147,9 +147,9 @@ Happy New Year 🥳✨
       // Create prompt for NeuraX
       const examInfo = examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `${e.examName} - TODAY` : `${e.examName} in ${e.daysLeft} days`).join(', ') : 'None';
       
-      // Get motivational message based on EXAM COUNTDOWN from MongoDB
-      const examCountdown = examData.length > 0 ? Math.min(...examData.map(e => e.daysLeft)) : 60;
-      const motivationalMessage = await this.motivationalService.getMessageForDay(examCountdown);
+      // Get motivational message based on current date from MongoDB
+      const messageData = await this.motivationalService.getTodayMessage();
+      const motivationalMessage = messageData.message;
       
       const prompt = `Create a short, witty daily message for students.
 
@@ -195,9 +195,9 @@ ${calendarData.hasHolidays ? '🎉 ' + calendarData.holidays.join(', ') + ' - En
         const examData = await this.getUpcomingExams();
         const examMessages = examData.map(e => e.daysLeft === 0 ? `📚 Exam Alert\n*${e.examName}* - *TODAY*! 💪` : `📚 Exam Alert\n*${e.examName}* in *${e.daysLeft}* days 📖`).join('\n\n');
         
-        // Get motivational message based on EXAM COUNTDOWN from MongoDB
-        const examCountdown = examData.length > 0 ? Math.min(...examData.map(e => e.daysLeft)) : 60;
-        const motivationalMessage = await this.motivationalService.getMessageForDay(examCountdown);
+        // Get motivational message based on current date from MongoDB
+        const messageData = await this.motivationalService.getTodayMessage();
+        const motivationalMessage = messageData.message;
         
         let fallbackMessage = `Today: *${calendarData.dayName}, ${calendarData.englishDate}*\n\n${calendarData.hasHolidays ? `🎉 Special: ${calendarData.holidays.join(', ')} - Enjoy responsibly!\n\n` : ''}${examMessages ? examMessages + '\n\n' : ''}${motivationalMessage}`;
         

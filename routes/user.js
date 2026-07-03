@@ -3,8 +3,10 @@ import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 import User from '../models/User.js';
 import UserMessage from '../models/UserMessage.js';
 import whatsappService from '../services/whatsappService.js';
+import MotivationalMessageService from '../services/motivationalMessageService.js';
 
 const router = express.Router();
+const motivationalService = new MotivationalMessageService();
 
 // Get all users with WhatsApp numbers (for messaging)
 router.get('/whatsapp-users', sessionMiddleware, async (req, res) => {
@@ -180,6 +182,33 @@ router.post('/mark-whats-new-seen', sessionMiddleware, async (req, res) => {
     res.json({ success: true, hasSeenWhatsNew: updated.hasSeenWhatsNew });
   } catch (error) {
     res.status(500).json({ error: 'Failed to mark as seen' });
+  }
+});
+
+// Get today's motivational message (HSC Exam Survival Countdown)
+router.get('/motivational-message', async (req, res) => {
+  try {
+    const messageData = await motivationalService.getTodayMessage();
+    res.json(messageData);
+  } catch (error) {
+    console.error('Failed to fetch motivational message:', error);
+    res.status(500).json({ error: 'Failed to fetch motivational message' });
+  }
+});
+
+// Get motivational message for specific date
+router.get('/motivational-message/:date', async (req, res) => {
+  try {
+    const { date } = req.params;
+    // Validate date format (YYYY-MM-DD)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+    }
+    const messageData = await motivationalService.getMessageForDate(date);
+    res.json(messageData);
+  } catch (error) {
+    console.error('Failed to fetch motivational message:', error);
+    res.status(500).json({ error: 'Failed to fetch motivational message' });
   }
 });
 

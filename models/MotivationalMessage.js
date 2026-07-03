@@ -1,30 +1,28 @@
 import mongoose from 'mongoose';
 
 const motivationalMessageSchema = new mongoose.Schema({
+  date: {
+    type: String,
+    required: true,
+    unique: true
+  },
   message: {
     type: String,
     required: true
   },
-  dayNumber: {
+  examsRemaining: {
     type: Number,
     required: true
   },
-  isUsed: {
-    type: Boolean,
-    default: false
-  },
-  usedDate: {
-    type: Date,
+  nextExam: {
+    type: String,
     default: null
   },
   category: {
     type: String,
     enum: [
-      'insult', 'mock_praise', 'absurd_twist', 'confidence_warning', 'irony_hit',
-      'denial', 'contrast', 'pressure', 'final_warning', 'final_hit',
-      'balanced', 'motivation', 'inspiration', 'hope', 'reflection',
-      'science_student', 'pressure_motivation', 'callback', 'funny_motivation',
-      'confidence', 'final_push', 'finale'
+      'opening', 'progress', 'motivation', 'funny', 'physics_arc',
+      'celebration', 'chemistry_arc', 'final_push', 'math_arc', 'finale'
     ],
     required: true
   },
@@ -59,8 +57,9 @@ const motivationalSequenceSchema = new mongoose.Schema({
 });
 
 // Create indexes for efficient queries
-motivationalMessageSchema.index({ isUsed: 1, usedDate: 1 });
-motivationalMessageSchema.index({ dayNumber: 1 });
+motivationalMessageSchema.index({ date: 1 });
+motivationalMessageSchema.index({ category: 1 });
+motivationalMessageSchema.index({ examsRemaining: 1 });
 
 const MotivationalMessage = mongoose.model('MotivationalMessage', motivationalMessageSchema);
 const MotivationalSequence = mongoose.model('MotivationalSequence', motivationalSequenceSchema);

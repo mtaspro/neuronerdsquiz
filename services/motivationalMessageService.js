@@ -6,366 +6,201 @@ class MotivationalMessageService {
     this.isInitialized = false;
   }
 
-  // Initialize motivational messages from examples
+  // Initialize motivational messages - HSC Exam Survival Countdown
   async initializeMessages() {
     try {
       // Clear existing messages to avoid duplicates
       await MotivationalMessage.deleteMany({});
       
       const motivationalMessages = [
-        // Day 68 - Tremendous number style
+        // July 3
         {
-          dayNumber: 68,
-          message: "68 days. Tremendous number, really tremendous.\nPeople are saying you're studying… I'm not seeing it.",
-          category: 'mock_praise'
+          date: "2026-07-03",
+          examsRemaining: 10,
+          nextExam: "Bangla 2nd Paper",
+          message: "10 exams left. Tomorrow it begins.\nDon't fight the whole war tonight. Just win Bangla.",
+          category: 'opening'
         },
-        // Day 67 - Great plan style
+        // July 4 – Bangla 2nd
         {
-          dayNumber: 67,
-          message: "67 days left. Great plan, beautiful plan.\nOnly problem? It exists only in your head.",
-          category: 'insult'
+          date: "2026-07-04",
+          examsRemaining: 9,
+          nextExam: "English 1st Paper",
+          message: "1 paper down. 9 to go.\nCelebrate for one hour. Then it's English season.",
+          category: 'progress'
         },
-        // Day 66 - Starting tomorrow style
+        // July 5
         {
-          dayNumber: 66,
-          message: "66 days. You said 'starting tomorrow.'\nThat was—what?—the best tomorrow? The greatest tomorrow? Never came.",
-          category: 'insult'
-        },
-        // Day 65 - Very busy style
-        {
-          dayNumber: 65,
-          message: "65 days. Very busy, very focused—\non everything except studying. Incredible.",
-          category: 'insult'
-        },
-        // Day 64 - Some people improve style
-        {
-          dayNumber: 64,
-          message: "64 days. Some people are improving daily.\nOthers… wow. Just existing. Not good.",
-          category: 'insult'
-        },
-        // Day 63 - Opened the book style
-        {
-          dayNumber: 63,
-          message: "63 days. You opened the book. Fantastic.\nReading? Understanding? Let's not get ahead of ourselves.",
-          category: 'mock_praise'
-        },
-        // Day 62 - Amazing notes style (absurd twist)
-        {
-          dayNumber: 62,
-          message: "62 days. Your notes look amazing. Beautiful notes.\nIf exams were judged by decoration—you'd top the country.",
-          category: 'absurd_twist'
-        },
-        // Day 61 - Confidence high style
-        {
-          dayNumber: 61,
-          message: "61 days. Confidence is high. Preparation is… missing.\nVery dangerous combination.",
-          category: 'confidence_warning'
-        },
-        // Day 60 - Waiting for motivation style (Iran-style irony)
-        {
-          dayNumber: 60,
-          message: "60 days. You're waiting for motivation.\nMotivation is waiting for you. Both of you doing nothing. Perfect.",
-          category: 'irony_hit'
-        },
-        // Day 59 - Pressure makes diamonds style
-        {
-          dayNumber: 59,
-          message: "59 days. You say pressure makes diamonds.\nRight now, it's making excuses.",
-          category: 'insult'
-        },
-        {
-          dayNumber: 58,
-          message: "58 days. Plenty of time, you say.\nYou've been saying that… for a while now.",
-          category: 'denial'
-        },
-        {
-          dayNumber: 57,
-          message: "57 days. Big comeback planned.\nStill waiting for the first move.",
-          category: 'insult'
-        },
-        {
-          dayNumber: 56,
-          message: "56 days. You made a schedule. Beautiful schedule.\nFollowing it? Not so beautiful.",
-          category: 'mock_praise'
-        },
-        {
-          dayNumber: 55,
-          message: "55 days. You watched 3 productivity videos.\nStudied 0 minutes. Incredible balance.",
-          category: 'absurd_twist'
-        },
-        {
-          dayNumber: 54,
-          message: "54 days. Energy is low. Motivation is low.\nExcuses? Very high. World class.",
-          category: 'insult'
-        },
-        {
-          dayNumber: 53,
-          message: "53 days. You're thinking about starting seriously.\nThinking… still thinking… amazing thinking.",
-          category: 'irony_hit'
-        },
-        {
-          dayNumber: 52,
-          message: "52 days. You cleaned your desk.\nNow if only knowledge appeared the same way.",
-          category: 'absurd_twist'
-        },
-        {
-          dayNumber: 51,
-          message: "51 days. You said 'today is the day.'\nHalf the day gone. No sign of it.",
-          category: 'insult'
-        },
-        {
-          dayNumber: 50,
-          message: "50 days. Big number. Important number.\nWould be nice if your preparation matched it.",
-          category: 'mock_praise'
-        },
-        {
-          dayNumber: 49,
-          message: "49 days. You're calm. Very calm.\nAlmost like you forgot what's coming.",
-          category: 'confidence_warning'
-        },
-        {
-          dayNumber: 48,
-          message: "48 days. You revised… in your head.\nBrain says yes. Reality says no.",
-          category: 'irony_hit'
-        },
-        {
-          dayNumber: 47,
-          message: "47 days. You opened YouTube for 'one lecture.'\nThree hours later—new expert in nothing.",
-          category: 'absurd_twist'
-        },
-        {
-          dayNumber: 46,
-          message: "46 days. Some of you are finally locking in.\nOthers still negotiating with the syllabus. Interesting strategy.",
-          category: 'balanced'
-        },
-        {
-          dayNumber: 45,
-          message: "45 days. Progress is showing now.\nEven small daily wins? Very powerful. Very underrated.",
+          date: "2026-07-05",
+          examsRemaining: 9,
+          nextExam: "English 1st Paper",
+          message: "9 papers left.\nThe best feeling in HSC? Realizing you already survived the first exam.",
           category: 'motivation'
         },
+        // July 6 – English 1st
         {
-          dayNumber: 44,
-          message: "44 days. If you're behind—start now.\nIf you're ahead—don't get comfortable. Simple rule.",
-          category: 'balanced'
+          date: "2026-07-06",
+          examsRemaining: 8,
+          nextExam: "English 2nd Paper",
+          message: "Another paper finished.\nLook at you. Becoming an exam machine.",
+          category: 'progress'
         },
+        // July 7
         {
-          dayNumber: 43,
-          message: "43 days. Your hard work is starting to look real.\nBeautiful thing. Keep going.",
+          date: "2026-07-07",
+          examsRemaining: 8,
+          nextExam: "English 2nd Paper",
+          message: "8 papers left.\nMomentum is a beautiful thing. Don't lose it.",
           category: 'motivation'
         },
+        // July 8 – English 2nd
         {
-          dayNumber: 42,
-          message: "42 days. Panic won't save you.\nBut consistency? Tremendous results.",
-          category: 'inspiration'
+          date: "2026-07-08",
+          examsRemaining: 7,
+          nextExam: "ICT",
+          message: "English is done.\nNow we enter the kingdom of ICT and random MCQs.",
+          category: 'funny'
         },
+        // July 9
         {
-          dayNumber: 41,
-          message: "41 days. Confidence is good now.\nAs long as it's backed by revision. Important detail.",
-          category: 'balanced'
-        },
-        {
-          dayNumber: 40,
-          message: "40 days. Big number. Big pressure.\nBut also enough time to seriously improve.",
-          category: 'hope'
-        },
-        {
-          dayNumber: 39,
-          message: "39 days. Some students are transforming completely.\nVery scary. In a good way.",
+          date: "2026-07-09",
+          examsRemaining: 7,
+          nextExam: "ICT",
+          message: "7 papers left.\nAt this point you're stronger than you were a week ago.",
           category: 'motivation'
         },
+        // July 10
         {
-          dayNumber: 38,
-          message: "38 days. You're not the same student from 2 months ago.\nHopefully better. Much better.",
-          category: 'reflection'
+          date: "2026-07-10",
+          examsRemaining: 7,
+          nextExam: "ICT",
+          message: "Tomorrow is ICT.\nMay the diagrams, binary numbers, and short questions be with you.",
+          category: 'funny'
+        },
+        // July 11 – ICT
+        {
+          date: "2026-07-11",
+          examsRemaining: 6,
+          nextExam: "Physics 1st Paper",
+          message: "ICT survived.\nNow comes Physics. The final boss has appeared.",
+          category: 'physics_arc'
+        },
+        // July 12
+        {
+          date: "2026-07-12",
+          examsRemaining: 6,
+          nextExam: "Physics 1st Paper",
+          message: "6 papers left.\nPhysics doesn't ask if you're ready. It simply arrives.",
+          category: 'funny'
+        },
+        // July 13 – Physics 1st
+        {
+          date: "2026-07-13",
+          examsRemaining: 5,
+          nextExam: "Physics 2nd Paper",
+          message: "One Physics paper defeated.\nThe second one is waiting outside.",
+          category: 'physics_arc'
+        },
+        // July 14
+        {
+          date: "2026-07-14",
+          examsRemaining: 5,
+          nextExam: "Physics 2nd Paper",
+          message: "Physics Paper 2 tomorrow.\nElectricity and magnetism send their regards.",
+          category: 'funny'
+        },
+        // July 15 – Physics 2nd
+        {
+          date: "2026-07-15",
+          examsRemaining: 4,
+          nextExam: "Chemistry 1st Paper",
+          message: "Physics is finally over.\nHuman happiness has increased significantly.",
+          category: 'celebration'
+        },
+        // July 16–18 (Chemistry prep)
+        {
+          date: "2026-07-16",
+          examsRemaining: 4,
+          nextExam: "Chemistry 1st Paper",
+          message: "4 papers left.\nAtoms never sleep and neither do HSC students.",
+          category: 'chemistry_arc'
         },
         {
-          dayNumber: 37,
-          message: "37 days. Effort compounds quietly.\nThen suddenly everyone notices.",
-          category: 'inspiration'
+          date: "2026-07-17",
+          examsRemaining: 4,
+          nextExam: "Chemistry 1st Paper",
+          message: "Chemistry in two days.\nTrust the equations. Fear the exceptions.",
+          category: 'funny'
         },
         {
-          dayNumber: 36,
-          message: "36 days. One productive day still matters.\nNever underestimate momentum.",
+          date: "2026-07-18",
+          examsRemaining: 4,
+          nextExam: "Chemistry 1st Paper",
+          message: "Tomorrow is Chemistry.\nPeriodic table, don't betray us now.",
+          category: 'funny'
+        },
+        // July 19 – Chemistry 1st
+        {
+          date: "2026-07-19",
+          examsRemaining: 3,
+          nextExam: "Chemistry 2nd Paper",
+          message: "Another paper conquered.\nThe finish line is getting closer.",
           category: 'motivation'
         },
+        // July 22 – Chemistry 2nd
         {
-          dayNumber: 35,
-          message: "35 days. Science students surviving chemistry, physics, math together.\nHonestly? Historic resilience.",
-          category: 'science_student'
+          date: "2026-07-22",
+          examsRemaining: 2,
+          nextExam: "Biology 1st Paper",
+          message: "Chemistry is over.\nYour brain can finally stop balancing equations.",
+          category: 'celebration'
         },
+        // July 27 – Biology 1st
         {
-          dayNumber: 34,
-          message: "34 days. You're tired because you're trying.\nThat's a much better problem now.",
-          category: 'motivation'
-        },
-        {
-          dayNumber: 33,
-          message: "33 days. Some chapters finally make sense.\nMiracles happening everywhere.",
-          category: 'absurd_twist'
-        },
-        {
-          dayNumber: 32,
-          message: "32 days. Maybe you're behind.\nMaybe one focused month changes everything.",
-          category: 'hope'
-        },
-        {
-          dayNumber: 31,
-          message: "31 days. One month left.\nThis is where serious students are created.",
-          category: 'pressure_motivation'
-        },
-        {
-          dayNumber: 30,
-          message: "30 days. The pressure is real now.\nGood. Diamonds, remember?",
-          category: 'callback'
-        },
-        {
-          dayNumber: 29,
-          message: "29 days. Your future self is watching closely.\nVery judgmental person.",
-          category: 'funny_motivation'
-        },
-        {
-          dayNumber: 28,
-          message: "28 days. At this point, discipline beats motivation.\nEvery single time.",
-          category: 'inspiration'
-        },
-        {
-          dayNumber: 27,
-          message: "27 days. You're studying topics you once feared.\nLook at that growth. Incredible.",
-          category: 'motivation'
-        },
-        {
-          dayNumber: 26,
-          message: "26 days. Revision season.\nWhere confidence and confusion fight daily.",
-          category: 'balanced'
-        },
-        {
-          dayNumber: 25,
-          message: "25 days. Quarter century left.\nStill enough time for a legendary comeback.",
-          category: 'hope'
-        },
-        {
-          dayNumber: 24,
-          message: "24 days. Your consistency is becoming dangerous now.\nVery good sign.",
-          category: 'motivation'
-        },
-        {
-          dayNumber: 23,
-          message: "23 days. Some of you are finally believing in yourselves.\nAbout time.",
-          category: 'confidence'
-        },
-        {
-          dayNumber: 22,
-          message: "22 days. HSC science students running on stress and determination.\nPowerful combination.",
-          category: 'science_student'
-        },
-        {
-          dayNumber: 21,
-          message: "21 days. Three weeks left.\nNot time to quit. Time to sharpen.",
-          category: 'pressure_motivation'
-        },
-        {
-          dayNumber: 20,
-          message: "20 days. You're closer than you think.\nKeep pushing.",
-          category: 'motivation'
-        },
-        {
-          dayNumber: 19,
-          message: "19 days. Hard topics don't look impossible anymore.\nThat's growth.",
-          category: 'reflection'
-        },
-        {
-          dayNumber: 18,
-          message: "18 days. Your brain is overloaded.\nMeans it's adapting. Beautiful science.",
-          category: 'science_student'
-        },
-        {
-          dayNumber: 17,
-          message: "17 days. You're not aiming for perfection now.\nYou're aiming for progress. Smart move.",
-          category: 'balanced'
-        },
-        {
-          dayNumber: 16,
-          message: "16 days. Even average days matter now.\nKeep stacking them.",
-          category: 'motivation'
-        },
-        {
-          dayNumber: 15,
-          message: "15 days. Half the battle now is mental.\nStay steady.",
-          category: 'inspiration'
-        },
-        {
-          dayNumber: 14,
-          message: "14 days. Two weeks.\nYou've come too far to slow down now.",
-          category: 'pressure_motivation'
-        },
-        {
-          dayNumber: 13,
-          message: "13 days. Imagine giving up after surviving physics numericals.\nCouldn't be you.",
-          category: 'funny_motivation'
-        },
-        {
-          dayNumber: 12,
-          message: "12 days. Revision hitting differently now.\nSome answers entering permanent memory.",
-          category: 'motivation'
-        },
-        {
-          dayNumber: 11,
-          message: "11 days. You're stronger than your old excuses.\nVery important development.",
-          category: 'confidence'
-        },
-        {
-          dayNumber: 10,
-          message: "10 days. Single digits tomorrow.\nLock in. Legendary finish possible.",
-          category: 'pressure_motivation'
-        },
-        {
-          dayNumber: 9,
-          message: "9 days. The students who kept trying? It's starting to show.",
-          category: 'motivation'
-        },
-        {
-          dayNumber: 8,
-          message: "8 days. Sleep matters. Revision matters.\nMental stability? Also useful.",
-          category: 'balanced'
-        },
-        {
-          dayNumber: 7,
-          message: "7 days. One week left.\nNo fear now. Only execution.",
+          date: "2026-07-27",
+          examsRemaining: 1,
+          nextExam: "Biology 2nd Paper",
+          message: "Only two papers remain.\nYou're closer to freedom than ever before.",
           category: 'final_push'
         },
+        // July 29 – Biology 2nd
         {
-          dayNumber: 6,
-          message: "6 days. You've studied harder than people realize.\nBe proud of that quietly.",
-          category: 'reflection'
+          date: "2026-07-29",
+          examsRemaining: 0,
+          nextExam: "Higher Math 1st Paper",
+          message: "Biology is done.\nOnly mathematics stands between you and freedom.",
+          category: 'math_arc'
         },
+        // August 1
         {
-          dayNumber: 5,
-          message: "5 days. The syllabus once looked impossible.\nNow look at you.",
-          category: 'motivation'
-        },
-        {
-          dayNumber: 4,
-          message: "4 days. Keep calm. Revise smart.\nPanic has terrible marks usually.",
-          category: 'funny_motivation'
-        },
-        {
-          dayNumber: 3,
-          message: "3 days. You're entering the final stage now.\nTrust the work you've done.",
+          date: "2026-08-01",
+          examsRemaining: 1,
+          nextExam: "Higher Math 1st Paper",
+          message: "Tomorrow is Higher Math.\nNo fear. Only formulas.",
           category: 'final_push'
         },
+        // August 2 – Higher Math 1st
         {
-          dayNumber: 2,
-          message: "2 days. No more overthinking.\nJust focus and finish strong.",
+          date: "2026-08-02",
+          examsRemaining: 1,
+          nextExam: "Higher Math 2nd Paper",
+          message: "One last paper remains.\nYou can almost hear freedom calling.",
           category: 'final_push'
         },
+        // August 3
         {
-          dayNumber: 1,
-          message: "1 day. Tomorrow changes things.\nWalk in prepared. Walk in proud.",
+          date: "2026-08-03",
+          examsRemaining: 1,
+          nextExam: "Higher Math 2nd Paper",
+          message: "One day left.\nOne final battle. Finish what you started.",
           category: 'final_push'
         },
+        // August 4 – Final Day
         {
-          dayNumber: 0,
-          message: "0 days. HSC day.\nAfter all the stress, late nights, and effort—you made it here. Now go show them.",
+          date: "2026-08-04",
+          examsRemaining: 0,
+          nextExam: null,
+          message: "0 exams left.\nAfter months of stress, late nights, and endless revisions—you did it. Welcome back to freedom.",
           category: 'finale'
         }
       ];
@@ -376,70 +211,93 @@ class MotivationalMessageService {
       this.messages = motivationalMessages;
       this.isInitialized = true;
       
-      console.log(`✅ Initialized ${motivationalMessages.length} motivational messages`);
+      console.log(`✅ Initialized ${motivationalMessages.length} HSC Exam Survival countdown messages`);
     } catch (error) {
       console.error('❌ Error initializing motivational messages:', error);
     }
   }
 
-  // Get a motivational message for specific day (based on exam countdown)
-  async getMessageForDay(dayNumber) {
+  // Get motivational message for a specific date (or current date if not specified)
+  async getMessageForDate(dateString = null) {
     try {
-      // Find exact day match (no 'isUsed' check for exam-based consistency)
-      let message = await MotivationalMessage.findOne({ 
-        dayNumber 
-      });
-
-      // If no exact match, find closest message
-      if (!message) {
-        message = await MotivationalMessage.findOne({ 
-          dayNumber: { $lte: dayNumber }
-        }).sort({ dayNumber: -1 });
-      }
-
-      // If still no message, find any message
-      if (!message) {
-        message = await MotivationalMessage.findOne().sort({ dayNumber: 1 });
-      }
+      // Use current date if not provided
+      const targetDate = dateString || this.getCurrentDateString();
       
+      // Find message for specific date
+      let message = await MotivationalMessage.findOne({ date: targetDate });
+
+      // If no message for today, check if countdown is over
+      if (!message) {
+        // Check if date is after August 4, 2026
+        const targetDateObj = new Date(targetDate);
+        const finalDateObj = new Date('2026-08-04');
+        
+        if (targetDateObj > finalDateObj) {
+          return {
+            message: "HSC is over. Congratulations!",
+            examsRemaining: 0,
+            nextExam: null,
+            category: 'finale'
+          };
+        }
+        
+        // If before July 3, return opening message
+        const startDateObj = new Date('2026-07-03');
+        if (targetDateObj < startDateObj) {
+          message = await MotivationalMessage.findOne({ date: "2026-07-03" });
+        }
+      }
+
       if (message) {
-        console.log(`📝 Using motivational message for day ${dayNumber}: ${message.category}`);
-        return message.message;
+        console.log(`📝 Using message for date ${targetDate}: ${message.category}`);
+        return {
+          message: message.message,
+          examsRemaining: message.examsRemaining,
+          nextExam: message.nextExam,
+          category: message.category,
+          date: message.date
+        };
       }
 
       // Fallback message
-      return "💡 Stay focused and make today count!";
+      return {
+        message: "Stay focused and keep going!",
+        examsRemaining: null,
+        nextExam: null,
+        category: 'motivation'
+      };
     } catch (error) {
       console.error('❌ Error getting motivational message:', error);
-      return "💡 Stay focused and make today count!";
+      return {
+        message: "Stay focused and keep going!",
+        examsRemaining: null,
+        nextExam: null,
+        category: 'motivation'
+      };
     }
   }
 
-  // Get random motivational message (fallback)
-  async getRandomMessage() {
+  // Get motivational message for today
+  async getTodayMessage() {
+    return this.getMessageForDate();
+  }
+
+  // Helper: Get current date string in YYYY-MM-DD format
+  getCurrentDateString() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Get all messages
+  async getAllMessages() {
     try {
-      const count = await MotivationalMessage.countDocuments({ isUsed: false });
-      if (count === 0) {
-        // Reset all messages if all are used
-        await MotivationalMessage.updateMany({}, { isUsed: false, usedDate: null });
-      }
-
-      const message = await MotivationalMessage.findOne({ 
-        isUsed: false 
-      }).sort({ dayNumber: 1 });
-
-      if (message) {
-        await MotivationalMessage.findByIdAndUpdate(message._id, {
-          isUsed: true,
-          usedDate: new Date()
-        });
-        return message.message;
-      }
-
-      return "💡 Stay focused and make today count!";
+      return await MotivationalMessage.find({}).sort({ date: 1 });
     } catch (error) {
-      console.error('❌ Error getting random motivational message:', error);
-      return "💡 Stay focused and make today count!";
+      console.error('❌ Error getting all messages:', error);
+      return [];
     }
   }
 
@@ -447,18 +305,16 @@ class MotivationalMessageService {
   async getStats() {
     try {
       const total = await MotivationalMessage.countDocuments();
-      const used = await MotivationalMessage.countDocuments({ isUsed: true });
-      const unused = total - used;
+      const categories = await MotivationalMessage.distinct('category');
 
       return {
         total,
-        used,
-        unused,
+        categories,
         isInitialized: this.isInitialized
       };
     } catch (error) {
       console.error('❌ Error getting motivational message stats:', error);
-      return { total: 0, used: 0, unused: 0, isInitialized: false };
+      return { total: 0, categories: [], isInitialized: false };
     }
   }
 }
