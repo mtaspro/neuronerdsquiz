@@ -16,6 +16,8 @@ const PINECONE_TOP_K = Math.min(Math.max(parseInt(process.env.PINECONE_TOP_K || 
 const PINECONE_EMBEDDING_MODEL = process.env.PINECONE_EMBEDDING_MODEL || 'openai/text-embedding-3-small';
 const MAX_TOKENS = 2000;
 
+const OPENROUTER_AUTO_FREE_MODEL = 'openrouter/free';
+
 const OPENROUTER_FALLBACK_MODELS = [
   'deepseek/deepseek-r1:free',
   'qwen/qwen-2.5-72b-instruct:free',
@@ -163,7 +165,8 @@ function buildModelFallbackChain(primaryModel, isGroqModel) {
   }
 
   const chain = [
-    primaryModel || 'mistralai/mistral-7b-instruct:free',
+    primaryModel || OPENROUTER_AUTO_FREE_MODEL,
+    OPENROUTER_AUTO_FREE_MODEL,
     ...OPENROUTER_FALLBACK_MODELS
   ];
 
@@ -182,6 +185,7 @@ function isRetryableAIError(error) {
   const message = (error?.response?.data?.error?.message || error?.message || '').toLowerCase();
 
   return (
+    status === 402 ||
     status === 429 ||
     status === 404 ||
     status === 502 ||
@@ -193,7 +197,10 @@ function isRetryableAIError(error) {
     message.includes('capacity') ||
     message.includes('timeout') ||
     message.includes('temporarily unavailable') ||
-    message.includes('model not found')
+    message.includes('model not found') ||
+    message.includes('credit') ||
+    message.includes('payment') ||
+    message.includes('insufficient')
   );
 }
 
@@ -238,9 +245,15 @@ async function callChatCompletion({ apiUrl, headers, messages, model, temperatur
     { headers, timeout: 120000 }
   );
 
-  const content = response.data.choices?.[0]?.message?.content?.trim();
+  const message = response.data.choices?.[0]?.message;
+  const content = (message?.content || message?.reasoning || '').trim();
   if (!content) {
     throw new Error('Failed to get AI response');
+  }
+
+  const modelUsed = response.data.model || model;
+  if (modelUsed !== model) {
+    console.log(`🆓 OpenRouter routed "${model}" → "${modelUsed}"`);
   }
 
   return String(content);
@@ -391,7 +404,7 @@ router.post('/', async (req, res) => {
         });
 
         const searchModelChain = buildModelFallbackChain(
-          model || 'meta-llama/llama-3.3-70b-instruct:free',
+          model || OPENROUTER_AUTO_FREE_MODEL,
           isGroqModel
         );
 
