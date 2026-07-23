@@ -6,6 +6,8 @@ const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY;
+const GEMINI_DEFAULT_MODEL = process.env.GEMINI_DEFAULT_MODEL || 'gemini-2.5-flash-lite';
 
 // Vision analysis endpoint
 router.post('/analyze', upload.single('image'), async (req, res) => {
@@ -16,14 +18,55 @@ router.post('/analyze', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'No image provided' });
     }
 
-    if (!GROQ_API_KEY) {
-      return res.status(500).json({ error: 'Groq API key not configured' });
+    if (!GEMINI_API_KEY && !GROQ_API_KEY) {
+      return res.status(500).json({ error: 'AI API keys (Gemini or Groq) not configured' });
+    }
+
+    const base64Image = req.file.buffer.toString('base64');
+    const mimeType = req.file.mimetype;
+
+    if (GEMINI_API_KEY) {
+      console.log('Using Gemini Vision for analysis...');
+      const geminiModel = GEMINI_DEFAULT_MODEL;
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${GEMINI_API_KEY}`;
+
+      const response = await axios.post(
+        apiUrl,
+        {
+          contents: [
+            {
+              parts: [
+                { text: prompt },
+                {
+                  inlineData: {
+                    mimeType: mimeType,
+                    data: base64Image
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          timeout: 60000
+        }
+      );
+
+      const candidate = response.data.candidates?.[0];
+      const analysis = candidate?.content?.parts?.[0]?.text || '';
+      
+      if (!analysis) {
+        throw new Error('Empty analysis returned from Gemini');
+      }
+
+      console.log('✅ Vision analysis successful with Gemini');
+      return res.json({ analysis });
     }
 
     console.log('Using Groq Llama Vision for analysis...');
-    
-    const base64Image = req.file.buffer.toString('base64');
-    const mimeType = req.file.mimetype;
     
     const response = await axios.post(
       'https://api.groq.com/openai/v1/chat/completions',

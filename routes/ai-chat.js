@@ -9,6 +9,8 @@ const router = express.Router();
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY;
+const GEMINI_DEFAULT_MODEL = process.env.GEMINI_DEFAULT_MODEL || 'gemini-2.5-flash-lite';
 const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
 const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME;
 const PINECONE_NAMESPACE = process.env.PINECONE_NAMESPACE || '';
@@ -204,7 +206,87 @@ function isRetryableAIError(error) {
   );
 }
 
+function isGeminiModel(model) {
+  return model && model.startsWith('gemini/');
+}
+
+function convertMessagesToGeminiFormat(messages, imageBase64) {
+  const systemInstruction = messages.find((m) => m.role === 'system');
+  const contents = [];
+
+  for (const msg of messages) {
+    if (msg.role === 'system') continue;
+
+    const parts = [];
+    if (msg.content) {
+      parts.push({ text: msg.content });
+    }
+
+    if (msg.role === 'user' && imageBase64 && msg === messages[messages.length - 1]) {
+      parts.push({
+        inlineData: {
+          mimeType: 'image/jpeg',
+          data: imageBase64
+        }
+      });
+    }
+
+    contents.push({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts
+    });
+  }
+
+  const body = {
+    contents,
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: MAX_TOKENS,
+      topP: 0.9
+    }
+  };
+
+  if (systemInstruction) {
+    body.systemInstruction = {
+      parts: [{ text: systemInstruction.content }]
+    };
+  }
+
+  return body;
+}
+
+async function callGeminiChatCompletion({ apiUrl, headers, messages, temperature, maxTokens = MAX_TOKENS, imageBase64 }) {
+  const body = convertMessagesToGeminiFormat(messages, imageBase64);
+  
+  const response = await axios.post(
+    apiUrl,
+    body,
+    { headers, timeout: 120000 }
+  );
+
+  const candidate = response.data.candidates?.[0];
+  const content = candidate?.content?.parts?.[0]?.text || '';
+  if (!content) {
+    throw new Error('Failed to get Gemini response');
+  }
+
+  return String(content);
+}
+
 function getApiConfig(model) {
+  if (isGeminiModel(model)) {
+    const geminiModel = model.replace('gemini/', '');
+    const apiUrlWithKey = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${GEMINI_API_KEY}`;
+    return {
+      isGeminiModel: true,
+      apiUrl: apiUrlWithKey,
+      apiKey: GEMINI_API_KEY,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+  }
+
   const isGroqModel = model === 'qwen/qwen3-32b';
 
   if (isGroqModel) {
@@ -232,7 +314,20 @@ function getApiConfig(model) {
   };
 }
 
-async function callChatCompletion({ apiUrl, headers, messages, model, temperature, maxTokens = MAX_TOKENS }) {
+async function callChatCompletion({ apiUrl, headers, messages, model, temperature, maxTokens = MAX_TOKENS, imageBase64 }) {
+  const isGemini = isGeminiModel(model);
+
+  if (isGemini) {
+    return callGeminiChatCompletion({
+      apiUrl,
+      headers,
+      messages,
+      temperature,
+      maxTokens,
+      imageBase64
+    });
+  }
+
   const response = await axios.post(
     apiUrl,
     {
@@ -265,7 +360,8 @@ async function callChatCompletionWithFallback({
   messages,
   modelChain,
   temperature,
-  maxTokens = MAX_TOKENS
+  maxTokens = MAX_TOKENS,
+  imageBase64
 }) {
   let lastError = null;
 
@@ -278,7 +374,8 @@ async function callChatCompletionWithFallback({
         messages,
         model: modelId,
         temperature,
-        maxTokens
+        maxTokens,
+        imageBase64
       });
 
       if (i > 0) {
@@ -324,13 +421,18 @@ function sanitizeAIResponse(aiResponse) {
 // AI Chat endpoint for text-only messages
 router.post('/', async (req, res) => {
   try {
-    const { message, model, systemPrompt, conversationHistory = [], enableWebSearch = false } = req.body;
+    const { message, model, systemPrompt, conversationHistory = [], enableWebSearch = false, imageBase64 } = req.body;
 
     if (!message || !message.trim()) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    if (!OPENROUTER_API_KEY && !GROQ_API_KEY) {
+    const isGeminiModelUsed = isGeminiModel(model);
+    if (isGeminiModelUsed && !GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'Gemini API key not configured' });
+    }
+
+    if (!OPENROUTER_API_KEY && !GROQ_API_KEY && !GEMINI_API_KEY) {
       return res.status(500).json({ error: 'AI API keys not configured' });
     }
 
@@ -347,7 +449,7 @@ router.post('/', async (req, res) => {
       { role: 'user', content: message.trim() }
     ];
 
-    const { apiUrl, headers } = getApiConfig(model);
+    const { apiUrl, headers } = getApiConfig(model || OPENROUTER_AUTO_FREE_MODEL);
     const modelChain = buildModelFallbackChain(model, isGroqModel);
     const temperature = isDolphinModel ? 0.15 : 0.7;
 
@@ -356,7 +458,8 @@ router.post('/', async (req, res) => {
       headers,
       messages,
       modelChain,
-      temperature
+      temperature,
+      imageBase64: isGeminiModelUsed ? imageBase64 : undefined
     });
 
     let aiResponse = firstPassContent;

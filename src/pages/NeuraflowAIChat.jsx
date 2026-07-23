@@ -47,6 +47,8 @@ const NeuraflowAIChat = () => {
 
   const models = [
     { id: 'openrouter/free', name: 'Auto (Free)', description: 'Automatically picks an available free model (Recommended)' },
+    { id: 'gemini/gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', description: 'General Chat (Default) - Supports images' },
+    { id: 'gemini/gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Advanced Reasoning' },
     { id: 'qwen/qwen3-30b-a3b:free', name: 'DeepSeek V3.1', description: 'Advanced reasoning & multilingual' },
     { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B', description: 'Large model with excellent performance' },
     { id: 'qwen/qwen-2.5-72b-instruct:free', name: 'Qwen 2.5 72B', description: 'Perfect for Bengali & multilingual support' }
@@ -342,6 +344,18 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
       setIsProcessingVision(false);
       setVisionProgress(0);
     }
+  };
+
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64 = reader.result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+    });
   };
 
 
@@ -711,8 +725,10 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
     try {
       let aiResult;
       
-      if (selectedImage) {
-        // Use vision model automatically for image analysis
+      if (selectedImage && selectedModel.startsWith('gemini/')) {
+        const base64 = await fileToBase64(selectedImage);
+        aiResult = await getAIResponse(currentInput, base64);
+      } else if (selectedImage) {
         const visionAnalysis = await analyzeImageWithVision(selectedImage, currentInput || 'Analyze this image in detail. If there is text, transcribe it. If there are mathematical equations, explain them. Provide comprehensive analysis.');
         aiResult = { response: visionAnalysis };
       } else {
@@ -808,7 +824,7 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
     }
   };
 
-  const getAIResponse = async (userInput) => {
+  const getAIResponse = async (userInput, imageBase64) => {
     const apiUrl = import.meta.env.VITE_API_URL || '';
     
     const recentMessages = messages.slice(-10).map(msg => ({
@@ -821,7 +837,8 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
       model: selectedModel,
       systemPrompt: systemPrompt,
       conversationHistory: recentMessages,
-      enableWebSearch: enableWebSearch
+      enableWebSearch: enableWebSearch,
+      imageBase64
     });
     return response.data;
   };
