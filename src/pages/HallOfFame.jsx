@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import PageShell from '../components/ui/PageShell';
 import PageTransition from '../components/PageTransition';
 import Button from '../components/ui/Button';
-import { FaArrowLeft, FaCrown, FaTrophy, FaMedal, FaStar } from 'react-icons/fa';
+import { FaArrowLeft, FaCrown, FaTrophy, FaMedal, FaStar, FaLaptopCode } from 'react-icons/fa';
 
 const legends = [
   {
@@ -12,7 +12,7 @@ const legends = [
     role: 'Founding Visionary',
     avatar: '🧠',
     image: '', // paste CDN image link here, leave empty to use emoji fallback
-    quote: '"HSCAura represents our vision of making learning competitive, engaging, and accessible to everyone. When friends compete in a healthy environment, they push each other to achieve greatness."',
+    quote: '"NeuroNerdsQuiz was born from our vision of making learning competitive, engaging, and accessible to everyone. The NeuroNerds Study Group laid the foundation that later evolved into HSCAura."',
     contributions: ['Strategic vision and roadmap', 'Community growth initiatives', 'Educational content planning', 'Future-proof Study plan strategy'],
     badge: 'Founder',
     badgeIcon: FaCrown,
@@ -23,7 +23,7 @@ const legends = [
     role: 'Operations Lead',
     avatar: '📊',
     image: '', // paste CDN image link here
-    quote: '"Every great platform needs solid planning and execution. My role was to ensure that our vision translates into actionable plans and that our operations run smoothly to lead our growing community."',
+    quote: '"Every great platform needs solid planning and execution. My role was to ensure that our vision for NeuroNerdsQuiz translates into actionable plans and that our operations run smoothly to lead our growing study circle."',
     contributions: ['Project planning and coordination', 'Strategic operations management', 'Team coordination', 'Quality assurance'],
     badge: 'Co-founder',
     badgeIcon: FaTrophy,
@@ -34,11 +34,22 @@ const legends = [
     role: 'Managing Director',
     avatar: '🗓️',
     image: '', // paste CDN image link here
-    quote: '"Managing HSCAura is about creating an environment where everyone can thrive. From scheduling exams to hosting battles, every task is an opportunity to make learning more engaging and organized."',
+    quote: '"Managing NeuroNerdsQuiz was about creating an environment where everyone could thrive. From scheduling exams to hosting battles, every task was an opportunity to make learning more engaging and organized for our study circle."',
     contributions: ['Exam scheduling and coordination', 'Battle hosting and management', 'Group activity oversight', 'Community engagement'],
     badge: 'Director',
     badgeIcon: FaMedal,
     color: 'from-purple-400 to-violet-600'
+  },
+  {
+    name: 'Ahmed Azmain Mahtab',
+    role: 'Lead Developer & Founding Member',
+    avatar: '👨‍💻',
+    image: '', // paste CDN image link here
+    quote: '"Building NeuroNerdsQuiz was the initial spark that laid the foundation for everything we have built today. From the first quiz engine to the full HSCAura platform, every line of code carries our study group\'s legacy forward."',
+    contributions: ['Full-Stack Architecture', 'Interactive Quiz Engine', 'Platform Deployment', 'Cyberpunk UI Design'],
+    badge: 'Founding Member',
+    badgeIcon: FaLaptopCode,
+    color: 'from-emerald-400 to-teal-600'
   }
 ];
 
@@ -245,12 +256,12 @@ const HallOfFame = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.8 }}
           >
-            A tribute to the original NeuroNerds Study Group members who inspired, supported, and built the foundation of this platform.
+            A tribute to the original NeuroNerds Study Group. This platform originally started as NeuroNerdsQuiz to empower our study circle, which later evolved into HSCAura.
           </motion.p>
         </motion.div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {legends.map((legend, index) => (
               <LegendCard key={legend.name} legend={legend} index={index} />
             ))}

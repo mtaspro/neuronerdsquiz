@@ -859,7 +859,7 @@ const About = () => {
           {/* Hero Title with Character Animation */}
           <motion.div className="text-center">
             <motion.h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold text-white mb-8">
-              {Array.from("Behind The Scenes").map((char, index) => (
+               {Array.from("Meet the Creator").map((char, index) => (
                 <motion.span
                   key={index}
                   className="inline-block"
@@ -1017,7 +1017,7 @@ const About = () => {
                   viewport={{ once: true }}
                   transition={{ delay: 0.2, duration: 0.8 }}
                 >
-                  Pay tribute to the legends who inspired the NeuroNerds Study Group and laid the foundation of this platform.
+                  Pay tribute to the legends of the original NeuroNerds Study Group who inspired and laid the foundation of this platform.
                 </motion.p>
                 
                 <motion.button
