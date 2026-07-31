@@ -48,37 +48,37 @@ const TeamSection = ({ teamMembers }) => {
         transition={{ duration: 2, ease: [0.23, 1, 0.32, 1] }}
         className="text-center mb-16 relative z-10"
       >
-        <motion.h2 
-          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-          style={{ 
-            background: 'linear-gradient(45deg, #8B5CF6, #3B82F6, #06B6D4)',
-            backgroundSize: '200% 200%',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}
-          animate={{
-            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-          }}
-          transition={{ duration: 5, repeat: Infinity }}
-        >
-          Meet Our Team
-        </motion.h2>
-        <motion.div
-          className="flex justify-center items-center space-x-4 text-4xl"
-          animate={{ rotate: [0, 10, -10, 0] }}
-          transition={{ duration: 3, repeat: Infinity }}
-        >
-          <span>👥</span>
-        </motion.div>
-        <motion.p 
-          className="text-lg text-gray-600 dark:text-gray-300 mt-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isInView ? 1 : 0 }}
-          transition={{ delay: 0.5, duration: 1 }}
-        >
-          The brilliant minds behind HSCAura and NeuraX AI
-        </motion.p>
+          <motion.h2 
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
+            style={{ 
+              background: 'linear-gradient(45deg, #8B5CF6, #3B82F6, #06B6D4)',
+              backgroundSize: '200% 200%',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}
+            animate={{
+              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+            }}
+            transition={{ duration: 5, repeat: Infinity }}
+          >
+            Sole Creator & Full-Stack Architect
+          </motion.h2>
+          <motion.div
+            className="flex justify-center items-center space-x-4 text-4xl"
+            animate={{ rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          >
+            <span>👨‍💻</span>
+          </motion.div>
+          <motion.p 
+            className="text-lg text-gray-600 dark:text-gray-300 mt-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isInView ? 1 : 0 }}
+            transition={{ delay: 0.5, duration: 1 }}
+          >
+            The visionary behind HSCAura and NeuraX AI
+          </motion.p>
       </motion.div>
 
       <div className="space-y-12">
@@ -205,19 +205,10 @@ const TeamSection = ({ teamMembers }) => {
                   >
                     {member.role}
                   </motion.p>
-                  {(member.name.includes('Akhyar') || member.name.includes('Tanvir') || member.name.includes('Ahmed') || member.name.includes('Zahin')) && (
-                    <motion.p 
-                      className="text-sm font-medium text-blue-400 mb-4"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: isInView ? 1 : 0 }}
-                      transition={{ delay: index * 0.3 + 0.6, duration: 0.6 }}
-                    >
-                      HSCAura Study Group
-                    </motion.p>
-                  )}
                   
-                  <motion.div 
-                    className="flex justify-center lg:justify-end space-x-4"
+
+                   <motion.div 
+                     className="flex justify-center lg:justify-end space-x-4"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
                     transition={{ delay: index * 0.3 + 0.8, duration: 0.6 }}
@@ -764,8 +755,8 @@ const About = () => {
   const teamMembers = [
      {
       name: 'Ahmed Azmain Mahtab',
-      role: 'Lead Developer',
-      avatar: '👨💻',
+      role: 'Sole Creator & Full-Stack Architect',
+      avatar: '👨‍💻',
       description: 'Full-stack development, feature planning, design, and deployment',
       message: 'Building HSCAura and NeuraX has been an incredible journey of turning ideas into reality. From simple quizzes to advanced AI capabilities - every line of code represents hours of passion and dedication to create something that truly revolutionizes how students learn.',
       contributions: [
@@ -782,59 +773,6 @@ const About = () => {
         { platform: 'Devpost', icon: FaLaptopCode, url: 'https://devpost.com/mtaspro', color: 'text-gray-800 dark:text-gray-200' },
         { platform: 'Email', icon: FaEnvelope, url: 'mailto:mowama36@gmail.com', color: 'text-gray-800 dark:text-gray-200' }
       ]
-    },
-    {
-      name: 'Akhyar Fardin',
-      role: 'Founder & CEO',
-      avatar: '🧠',
-      description: 'Visionary behind the HSCAura movement',
-      message: 'HSCAura represents our vision of making learning competitive, engaging, and accessible to everyone. We believe that when friends compete in a healthy environment, they push each other to achieve greatness.',
-      contributions: [
-        'Strategic vision and roadmap',
-        'Community growth initiatives',
-        'Educational content planning',
-        'Group Founder and Head',
-        'Future-proof Study plan strategy'
-      ],
-      socials: [
-        { platform: 'X', icon: FaTwitter, url: 'https://x.com/AkhyarFardin', color: 'text-gray-800 dark:text-gray-200' },
-        { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/fardinatwork', color: 'text-gray-800 dark:text-gray-200' },
-        { platform: 'Wikipedia', icon: FaWikipediaW, url: 'https://en.wikipedia.org/wiki/Special:CentralAuth?target=Fardin+work', color: 'text-gray-800 dark:text-gray-200' }
-      ]
-    },
-    {
-      name: 'Md. Tanvir Mahtab',
-      role: 'Co-founder & Former Managing Director',
-      avatar: '📊',
-      description: 'Handled planning, developing, organization, and strategic operations',
-      message: 'Every great platform needs solid planning and execution. My role was to ensure that our vision translates into actionable plans and that our operations run smoothly to lead our growing community.',
-      contributions: [
-        'Project planning and coordination',
-        'Strategic operations management',
-        'Team coordination',
-        'Quality assurance',
-        'Study planning strategy'
-      ],
-      socials: [
-        { platform: 'GitHub', icon: FaGithub, url: 'https://github.com/Tanvir-007-ctg', color: 'text-gray-800 dark:text-gray-200' },
-        { platform: 'wikipedia', icon: FaWikipediaW, url: 'https://bn.m.wikipedia.org/wiki/%E0%A6%AC%E0%A7%8D%E0%A6%AF%E0%A6%AC%E0%A6%B9%E0%A6%BE%E0%A6%B0%E0%A6%95%E0%A6%BE%E0%A6%B0%E0%A7%80:Md._T_Mahtab', color: 'text-gray-800 dark:text-gray-200' }
-      ]
-    },
-    {
-      name: 'Zahin Ushrut Parsa',
-      role: 'Managing Director',
-      avatar: '🗓️',
-      description: 'Manages operations, schedules exams, hosts battles, and oversees group activities',
-      message: 'Managing HSCAura is about creating an environment where everyone can thrive. From scheduling exams to hosting battles, every task is an opportunity to make learning more engaging and organized for our community.',
-      contributions: [
-        'Exam scheduling and coordination',
-        'Battle hosting and management',
-        'Group activity oversight',
-        'Community engagement',
-        'Operational excellence'
-      ],
-      socials: [
-              ]
     }
   ];
 
@@ -1029,6 +967,89 @@ const About = () => {
           <TeamSection 
             teamMembers={teamMembers} 
           />
+        </motion.div>
+
+        {/* Hall of Fame Banner */}
+        <motion.div 
+          style={{ y: useTransform(scrollYProgress, [0.3, 0.5], [50, -50]) }}
+          className="relative my-20"
+        >
+          <motion.div
+            className="relative rounded-2xl p-[1px]"
+            style={{
+              background: 'linear-gradient(135deg, #00f5ff, #a855f7, #ec4899, #00f5ff)',
+              backgroundSize: '300% 300%'
+            }}
+            animate={{
+              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+          >
+            <div className="aura-glass rounded-xl p-8 sm:p-12 text-center relative overflow-hidden">
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-purple-500/5 to-pink-500/5"
+                animate={{ opacity: [0.3, 0.8, 0.3] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              />
+              
+              <div className="relative z-10">
+                <motion.h3 
+                  className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
+                  style={{
+                    background: 'linear-gradient(135deg, #00f5ff, #a855f7, #ec4899)',
+                    backgroundSize: '200% 200%',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}
+                  animate={{
+                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+                  }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  Enter the NeuroNerds Hall of Fame
+                </motion.h3>
+                
+                <motion.p 
+                  className="text-base sm:text-lg text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed"
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.2, duration: 0.8 }}
+                >
+                  Pay tribute to the legends who inspired the NeuroNerds Study Group and laid the foundation of this platform.
+                </motion.p>
+                
+                <motion.button
+                  onClick={() => navigate('/hall-of-fame')}
+                  className="px-8 sm:px-10 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg relative overflow-hidden cursor-pointer"
+                  style={{
+                    background: 'linear-gradient(135deg, #00f5ff, #a855f7, #ec4899)',
+                    backgroundSize: '200% 200%',
+                    color: '#030308',
+                    boxShadow: '0 0 30px rgba(0, 245, 255, 0.4), 0 0 60px rgba(168, 85, 247, 0.2)'
+                  }}
+                  animate={{
+                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                    boxShadow: [
+                      '0 0 30px rgba(0, 245, 255, 0.4), 0 0 60px rgba(168, 85, 247, 0.2)',
+                      '0 0 50px rgba(168, 85, 247, 0.5), 0 0 80px rgba(236, 72, 153, 0.3)',
+                      '0 0 30px rgba(0, 245, 255, 0.4), 0 0 60px rgba(168, 85, 247, 0.2)'
+                    ]
+                  }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    <span>⚡</span>
+                    Explore the Hall of Fame
+                    <span>⚡</span>
+                  </span>
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
 
         {/* Tech Stack Section with Parallax */}

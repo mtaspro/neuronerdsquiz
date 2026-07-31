@@ -37,6 +37,7 @@ import Notepad from './pages/Notepad';
 import NotFound from './pages/NotFound';
 import Badges from './pages/Badges';
 import About from './pages/About';
+import HallOfFame from './pages/HallOfFame';
 import NeuraflowAIChat from './pages/NeuraflowAIChat';
 import VirtualChemLab from './pages/VirtualChemLab';
 import SharedConversation from './pages/SharedConversation';
@@ -327,9 +328,9 @@ function AnimatedRoutes() {
      if (pathname.includes('/quiz') || pathname.includes('/battle')) return 'slideLeft';
      if (pathname.includes('/profile') || pathname.includes('/admin')) return 'slideRight';
      if (pathname.includes('/ai-chat')) return 'rotate';
-     if (pathname.includes('/virtual-lab')) return 'fade';
-     if (pathname.includes('/leaderboard') || pathname.includes('/badges')) return 'slideLeft';
-     return 'fade';
+      if (pathname.includes('/virtual-lab')) return 'fade';
+      if (pathname.includes('/leaderboard') || pathname.includes('/badges') || pathname.includes('/hall-of-fame')) return 'slideLeft';
+      return 'fade';
    };
 
    const transitionVariants = {
@@ -388,8 +389,9 @@ function AnimatedRoutes() {
            <Route path="/leaderboard" element={<Leaderboard />} />
            <Route path="/login" element={<Login />} />
            <Route path="/register" element={<Register />} />
-           <Route path="/about" element={<About />} />
-           <Route path="/ai-chat" element={<NeuraflowAIChat />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/hall-of-fame" element={<HallOfFame />} />
+            <Route path="/ai-chat" element={<NeuraflowAIChat />} />
            <Route path="/share/:shareId" element={<SharedConversation />} />
            <Route
              path="/dashboard"
