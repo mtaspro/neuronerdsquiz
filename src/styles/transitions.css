@@ -1,4 +1,3 @@
-/* Hardware acceleration and smooth transitions */
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -8,7 +7,6 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Page transition optimizations */
 .page-transition {
   will-change: transform, opacity;
   transform: translateZ(0);
@@ -16,9 +14,8 @@ html {
   perspective: 1000px;
 }
 
-/* Smooth hover transitions */
 button, a, .interactive {
-  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform;
 }
 
@@ -26,13 +23,11 @@ button:hover, a:hover, .interactive:hover {
   transform: translateY(-1px);
 }
 
-/* Loading animation optimizations */
 .loading-container {
   will-change: transform, opacity;
   transform: translateZ(0);
 }
 
-/* Route transition container */
 .route-container {
   position: relative;
   width: 100%;
@@ -40,7 +35,6 @@ button:hover, a:hover, .interactive:hover {
   overflow: hidden;
 }
 
-/* Smooth scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -60,7 +54,6 @@ button:hover, a:hover, .interactive:hover {
   background: rgba(0, 0, 0, 0.5);
 }
 
-/* Dark mode scrollbar */
 .dark ::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.1);
 }
@@ -73,31 +66,34 @@ button:hover, a:hover, .interactive:hover {
   background: rgba(255, 255, 255, 0.5);
 }
 
-/* Prevent layout shift during transitions */
 .transition-wrapper {
   min-height: 100vh;
   position: relative;
 }
 
-/* Smooth focus transitions */
 *:focus {
   outline: none;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-  transition: box-shadow 0.15s ease-in-out;
+  transition: box-shadow 0.15s ease;
 }
 
-/* Performance optimizations */
 .gpu-accelerated {
   transform: translateZ(0);
   will-change: transform;
 }
 
-/* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .page-transition {
+    will-change: auto;
+    transform: none;
   }
 }

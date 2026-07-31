@@ -1,53 +1,55 @@
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 
+const KINETIC_EASE = [0.16, 1, 0.3, 1];
+const ENTRY_DURATION = 0.24;
+const EXIT_DURATION = 0.16;
+const STAGGER_DELAY = 0.025;
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: ENTRY_DURATION,
+      ease: KINETIC_EASE,
+      staggerChildren: STAGGER_DELAY,
+      delayChildren: 0.02
+    }
+  },
+  exit: {
+    opacity: 0,
+    y: 12,
+    transition: {
+      duration: EXIT_DURATION,
+      ease: KINETIC_EASE
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: ENTRY_DURATION,
+      ease: KINETIC_EASE
+    }
+  },
+  exit: {
+    opacity: 0,
+    y: 16,
+    transition: {
+      duration: EXIT_DURATION,
+      ease: KINETIC_EASE
+    }
+  }
+};
+
 const PageTransition = ({ children, className = '' }) => {
   const location = useLocation();
-  
-  // Staggered animation for child elements
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    },
-    exit: {
-      opacity: 0,
-      transition: {
-        staggerChildren: 0.05,
-        staggerDirection: -1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: 20,
-      scale: 0.95
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 12
-      }
-    },
-    exit: {
-      opacity: 0,
-      y: -10,
-      scale: 1.05,
-      transition: {
-        duration: 0.2
-      }
-    }
-  };
 
   return (
     <motion.div

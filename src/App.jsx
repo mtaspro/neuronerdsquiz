@@ -317,273 +317,261 @@ function Navbar() {
   );
 }
 
-// Advanced animated route transitions
+// Advanced animated route transitions — Staggered Kinetic Reveal (Idea C)
 function AnimatedRoutes() {
-  const location = useLocation();
-  
-  // Different transition variants for different routes
-  const getTransitionVariant = (pathname) => {
-    if (pathname === '/') return 'zoom';
-    if (pathname.includes('/quiz') || pathname.includes('/battle')) return 'slideLeft';
-    if (pathname.includes('/profile') || pathname.includes('/admin')) return 'slideRight';
-    if (pathname.includes('/ai-chat')) return 'rotate';
-    if (pathname.includes('/virtual-lab')) return 'fade';
-    if (pathname.includes('/leaderboard') || pathname.includes('/badges')) return 'slideLeft';
-    return 'fade';
-  };
-  
-  const transitionVariants = {
-    fade: {
-      initial: { opacity: 0, filter: 'blur(10px)' },
-      animate: { opacity: 1, filter: 'blur(0px)' },
-      exit: { opacity: 0, filter: 'blur(10px)' }
-    },
-    slideUp: {
-      initial: { opacity: 0, y: 50, scale: 0.95 },
-      animate: { opacity: 1, y: 0, scale: 1 },
-      exit: { opacity: 0, y: -50, scale: 1.05 }
-    },
-    slideLeft: {
-      initial: { opacity: 0, x: 100, rotateY: -15 },
-      animate: { opacity: 1, x: 0, rotateY: 0 },
-      exit: { opacity: 0, x: -100, rotateY: 15 }
-    },
-    slideRight: {
-      initial: { opacity: 0, x: -100, rotateY: 15 },
-      animate: { opacity: 1, x: 0, rotateY: 0 },
-      exit: { opacity: 0, x: 100, rotateY: -15 }
-    },
-    fadeScale: {
-      initial: { opacity: 0, scale: 0.8, filter: 'blur(10px)' },
-      animate: { opacity: 1, scale: 1, filter: 'blur(0px)' },
-      exit: { opacity: 0, scale: 1.2, filter: 'blur(10px)' }
-    },
-    zoom: {
-      initial: { opacity: 0, scale: 0.5 },
-      animate: { opacity: 1, scale: 1 },
-      exit: { opacity: 0, scale: 1.5 }
-    },
-    rotate: {
-      initial: { opacity: 0, rotate: -10, scale: 0.8 },
-      animate: { opacity: 1, rotate: 0, scale: 1 },
-      exit: { opacity: 0, rotate: 10, scale: 0.8 }
-    }
-  };
-  
-  const variant = getTransitionVariant(location.pathname);
-  const transition = transitionVariants[variant];
-  
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location.pathname}
-        initial={transition.initial}
-        animate={transition.animate}
-        exit={transition.exit}
-        transition={{ 
-          duration: 0.6, 
-          ease: [0.34, 1.56, 0.64, 1],
-          opacity: { duration: 0.4 },
-          scale: { duration: 0.5 },
-          filter: { duration: 0.4 },
-          x: { duration: 0.5 },
-          y: { duration: 0.5 },
-          rotate: { duration: 0.5 }
-        }}
-        className="flex-1 min-h-0 page-transition"
-        style={{ transformStyle: 'preserve-3d' }}
-      >
-        <Routes location={location}>
-          <Route path="/" element={<IntroScreen />} />
-          <Route path="/quiz" element={<QuizPage />} />
-          <Route path="/result" element={<ResultScreen />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/ai-chat" element={<NeuraflowAIChat />} />
-          <Route path="/share/:shareId" element={<SharedConversation />} />
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route
-            path="/battle/:roomId"
-            element={
-              <ProtectedRoute>
-                <ErrorBoundary fallbackMessage="Battle room encountered an error. Please refresh or rejoin the battle.">
-                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
-                    <QuizBattleRoom />
-                  </Suspense>
-                </ErrorBoundary>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/battle-review"
-            element={
-              <ProtectedRoute>
-                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
-                  <BattleReview />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
-                  <UserProfile />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile/edit"
-            element={
-              <ProtectedRoute>
-                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
-                  <ProfileEdit />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/badges"
-            element={
-              <ProtectedRoute>
-                <Badges />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/virtual-lab"
-            element={
-              <ProtectedRoute>
-                <VirtualChemLab />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <ErrorBoundary fallbackMessage="Admin dashboard encountered an error. Please refresh or contact support.">
-                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
-                    <AdminDashboard />
-                  </Suspense>
-                </ErrorBoundary>
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/whatsapp"
-            element={
-              <AdminRoute>
-                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
-                  <AdminWhatsApp />
-                </Suspense>
-              </AdminRoute>
-            }
-          />
+   const location = useLocation();
 
-          <Route
-            path="/superadmin"
-            element={
-              <ProtectedRoute>
-                <ErrorBoundary fallbackMessage="SuperAdmin dashboard encountered an error. Please refresh or contact support.">
-                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
-                    <SuperAdminDashboard />
-                  </Suspense>
-                </ErrorBoundary>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/examiner"
-            element={
-              <ProtectedRoute>
-                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
-                  <ExaminerDashboard />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/written-exams"
-            element={
-              <ProtectedRoute>
-                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
-                  <WrittenExams />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/whatsapp"
-            element={
-              <ProtectedRoute>
-                <UserWhatsApp />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/inbox"
-            element={
-              <ProtectedRoute>
-                <UserInbox />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/notepad"
-            element={
-              <ProtectedRoute>
-                <Notepad />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/secret-chat"
-            element={
-              <ProtectedRoute>
-                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div></div>}>
-                  <SecretChat />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/progress"
-            element={
-              <ProtectedRoute>
-                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
-                  <ProgressTracking />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/progress-editor"
-            element={
-              <ProtectedRoute>
-                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
-                  <ProgressEditor />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </motion.div>
-    </AnimatePresence>
-  );
-}
+   // Route-to-variant mapping for page-level entry character
+   const getTransitionVariant = (pathname) => {
+     if (pathname === '/') return 'zoom';
+     if (pathname.includes('/quiz') || pathname.includes('/battle')) return 'slideLeft';
+     if (pathname.includes('/profile') || pathname.includes('/admin')) return 'slideRight';
+     if (pathname.includes('/ai-chat')) return 'rotate';
+     if (pathname.includes('/virtual-lab')) return 'fade';
+     if (pathname.includes('/leaderboard') || pathname.includes('/badges')) return 'slideLeft';
+     return 'fade';
+   };
+
+   const transitionVariants = {
+     fade: {
+       initial: { opacity: 0 },
+       animate: { opacity: 1 },
+       exit: { opacity: 0 }
+     },
+     slideUp: {
+       initial: { opacity: 0, y: 12 },
+       animate: { opacity: 1, y: 0 },
+       exit: { opacity: 0, y: 12 }
+     },
+     slideLeft: {
+       initial: { opacity: 0, x: 12 },
+       animate: { opacity: 1, x: 0 },
+       exit: { opacity: 0, x: -12 }
+     },
+     slideRight: {
+       initial: { opacity: 0, x: -12 },
+       animate: { opacity: 1, x: 0 },
+       exit: { opacity: 0, x: 12 }
+     },
+     zoom: {
+       initial: { opacity: 0, scale: 0.95 },
+       animate: { opacity: 1, scale: 1 },
+       exit: { opacity: 0, scale: 1.05 }
+     },
+     rotate: {
+       initial: { opacity: 0, rotate: -5, scale: 0.95 },
+       animate: { opacity: 1, rotate: 0, scale: 1 },
+       exit: { opacity: 0, rotate: 5, scale: 0.95 }
+     }
+   };
+
+   const variant = getTransitionVariant(location.pathname);
+
+   return (
+     <AnimatePresence mode="wait">
+       <motion.div
+         key={location.pathname}
+         initial={transitionVariants[variant].initial}
+         animate={transitionVariants[variant].animate}
+         exit={transitionVariants[variant].exit}
+         transition={{
+           duration: 0.24,
+           ease: [0.16, 1, 0.3, 1]
+         }}
+         className="flex-1 min-h-0 page-transition"
+         style={{ transformStyle: 'preserve-3d' }}
+       >
+         <Routes location={location}>
+           <Route path="/" element={<IntroScreen />} />
+           <Route path="/quiz" element={<QuizPage />} />
+           <Route path="/result" element={<ResultScreen />} />
+           <Route path="/leaderboard" element={<Leaderboard />} />
+           <Route path="/login" element={<Login />} />
+           <Route path="/register" element={<Register />} />
+           <Route path="/about" element={<About />} />
+           <Route path="/ai-chat" element={<NeuraflowAIChat />} />
+           <Route path="/share/:shareId" element={<SharedConversation />} />
+           <Route
+             path="/dashboard"
+             element={
+               <ProtectedRoute>
+                 <Dashboard />
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/battle/:roomId"
+             element={
+               <ProtectedRoute>
+                 <ErrorBoundary fallbackMessage="Battle room encountered an error. Please refresh or rejoin the battle.">
+                   <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                     <QuizBattleRoom />
+                   </Suspense>
+                 </ErrorBoundary>
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/battle-review"
+             element={
+               <ProtectedRoute>
+                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                   <BattleReview />
+                 </Suspense>
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/profile"
+             element={
+               <ProtectedRoute>
+                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                   <UserProfile />
+                 </Suspense>
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/profile/edit"
+             element={
+               <ProtectedRoute>
+                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                   <ProfileEdit />
+                 </Suspense>
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/badges"
+             element={
+               <ProtectedRoute>
+                 <Badges />
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/virtual-lab"
+             element={
+               <ProtectedRoute>
+                 <VirtualChemLab />
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/admin"
+             element={
+               <AdminRoute>
+                 <ErrorBoundary fallbackMessage="Admin dashboard encountered an error. Please refresh or contact support.">
+                   <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                     <AdminDashboard />
+                   </Suspense>
+                 </ErrorBoundary>
+               </AdminRoute>
+             }
+           />
+           <Route
+             path="/admin/whatsapp"
+             element={
+               <AdminRoute>
+                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                   <AdminWhatsApp />
+                 </Suspense>
+               </AdminRoute>
+             }
+           />
+
+           <Route
+             path="/superadmin"
+             element={
+               <ProtectedRoute>
+                 <ErrorBoundary fallbackMessage="SuperAdmin dashboard encountered an error. Please refresh or contact support.">
+                   <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                     <SuperAdminDashboard />
+                   </Suspense>
+                 </ErrorBoundary>
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/examiner"
+             element={
+               <ProtectedRoute>
+                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                   <ExaminerDashboard />
+                 </Suspense>
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/written-exams"
+             element={
+               <ProtectedRoute>
+                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                   <WrittenExams />
+                 </Suspense>
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/whatsapp"
+             element={
+               <ProtectedRoute>
+                 <UserWhatsApp />
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/inbox"
+             element={
+               <ProtectedRoute>
+                 <UserInbox />
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/notepad"
+             element={
+               <ProtectedRoute>
+                 <Notepad />
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/secret-chat"
+             element={
+               <ProtectedRoute>
+                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div></div>}>
+                   <SecretChat />
+                 </Suspense>
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/progress"
+             element={
+               <ProtectedRoute>
+                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                   <ProgressTracking />
+                 </Suspense>
+               </ProtectedRoute>
+             }
+           />
+           <Route
+             path="/progress-editor"
+             element={
+               <ProtectedRoute>
+                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                   <ProgressEditor />
+                 </Suspense>
+               </ProtectedRoute>
+             }
+           />
+           <Route path="*" element={<NotFound />} />
+         </Routes>
+       </motion.div>
+     </AnimatePresence>
+   );
+ }
 
 function AppContent() {
   const {
