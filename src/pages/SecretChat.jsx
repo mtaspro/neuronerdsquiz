@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
+import { createSocket, addSocketListeners } from '../utils/socket.js';
 import { secureStorage } from '../utils/secureStorage';
 import '../styles/premium-glass.css';
 
@@ -49,8 +50,22 @@ export default function SecretChat() {
   useEffect(() => {
     if (authenticated && phoneNumber && mode === 'chat') {
       loadHistory();
-      const interval = setInterval(() => loadHistory(), 7000);
-      return () => clearInterval(interval);
+      const interval = setInterval(() => loadHistory(), 10000);
+
+      createSocket();
+      const cleanupSocket = addSocketListeners({
+        secretChatNewMessage: (data) => {
+          if (data.phoneNumber === phoneNumber) {
+            console.log('📡 [SOCKET] New friend message received, refreshing history');
+            loadHistory();
+          }
+        }
+      });
+
+      return () => {
+        clearInterval(interval);
+        cleanupSocket();
+      };
     }
   }, [phoneNumber, authenticated, mode, loadHistory]);
 

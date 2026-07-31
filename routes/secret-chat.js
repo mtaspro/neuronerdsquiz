@@ -166,6 +166,23 @@ router.post('/auto-save', async (req, res) => {
       timestamp: saved.timestamp
     });
     
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('secretChatNewMessage', {
+        phoneNumber: saved.phoneNumber,
+        realNumber: saved.realNumber,
+        friendName: saved.friendName,
+        sender: saved.sender,
+        message: saved.message,
+        encrypted: saved.encrypted,
+        timestamp: saved.timestamp,
+        _id: saved._id
+      });
+      console.log('📡 [AUTO-SAVE] Emitted secretChatNewMessage for phoneNumber:', saved.phoneNumber);
+    } else {
+      console.warn('⚠️ [AUTO-SAVE] Socket.IO instance not available, skipping real-time emit');
+    }
+    
     res.json({ success: true, savedId: saved._id });
   } catch (error) {
     console.error('❌ [AUTO-SAVE] Error:', error);
