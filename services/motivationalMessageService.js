@@ -1,288 +1,28 @@
 import MotivationalMessage, { MotivationalSequence } from '../models/MotivationalMessage.js';
+import axios from 'axios';
 
 class MotivationalMessageService {
   constructor() {
     this.messages = [];
     this.isInitialized = false;
+    this.OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+    this.DU_ADMISSION_DATE = '2026-12-10';
+    this.FALLBACK_MODELS = [
+      'meta-llama/llama-3.3-70b-instruct:free',
+      'deepseek/deepseek-r1:free',
+      'qwen/qwen-2.5-72b-instruct:free'
+    ];
   }
 
-  // Initialize motivational messages - HSC Exam Survival Countdown
   async initializeMessages() {
     try {
-      // Clear existing messages to avoid duplicates
-      await MotivationalMessage.deleteMany({});
-      
-      const motivationalMessages = [
-        // July 3
-        {
-          date: "2026-07-03",
-          examsRemaining: 10,
-          nextExam: "Bangla 2nd Paper",
-          message: "10 exams left. Tomorrow it begins.\nDon't fight the whole war tonight. Just win Bangla.",
-          category: 'opening'
-        },
-        // July 4 – Bangla 2nd
-        {
-          date: "2026-07-04",
-          examsRemaining: 9,
-          nextExam: "English 1st Paper",
-          message: "1 paper down. 9 to go.\nCelebrate for one hour. Then it's English season.",
-          category: 'progress'
-        },
-        // July 5
-        {
-          date: "2026-07-05",
-          examsRemaining: 9,
-          nextExam: "English 1st Paper",
-          message: "9 papers left.\nThe best feeling in HSC? Realizing you already survived the first exam.",
-          category: 'motivation'
-        },
-        // July 6 – English 1st
-        {
-          date: "2026-07-06",
-          examsRemaining: 8,
-          nextExam: "English 2nd Paper",
-          message: "Another paper finished.\nLook at you. Becoming an exam machine.",
-          category: 'progress'
-        },
-        // July 7
-        {
-          date: "2026-07-07",
-          examsRemaining: 8,
-          nextExam: "English 2nd Paper",
-          message: "8 papers left.\nMomentum is a beautiful thing. Don't lose it.",
-          category: 'motivation'
-        },
-        // July 8 – English 2nd
-        {
-          date: "2026-07-08",
-          examsRemaining: 7,
-          nextExam: "ICT",
-          message: "English is done.\nNow we enter the kingdom of ICT and random MCQs.",
-          category: 'funny'
-        },
-        // July 9
-        {
-          date: "2026-07-09",
-          examsRemaining: 7,
-          nextExam: "ICT",
-          message: "7 papers left.\nAt this point you're stronger than you were a week ago.",
-          category: 'motivation'
-        },
-        // July 10
-        {
-          date: "2026-07-10",
-          examsRemaining: 7,
-          nextExam: "ICT",
-          message: "Tomorrow is ICT.\nMay the diagrams, binary numbers, and short questions be with you.",
-          category: 'funny'
-        },
-        // July 11 – ICT
-        {
-          date: "2026-07-11",
-          examsRemaining: 6,
-          nextExam: "Physics 1st Paper",
-          message: "ICT survived.\nNow comes Physics. The final boss has appeared.",
-          category: 'physics_arc'
-        },
-        // July 12
-        {
-          date: "2026-07-12",
-          examsRemaining: 6,
-          nextExam: "Physics 1st Paper",
-          message: "6 papers left.\nPhysics doesn't ask if you're ready. It simply arrives.",
-          category: 'funny'
-        },
-        // July 13 – Physics 1st
-        {
-          date: "2026-07-13",
-          examsRemaining: 5,
-          nextExam: "Physics 2nd Paper",
-          message: "One Physics paper defeated.\nThe second one is waiting outside.",
-          category: 'physics_arc'
-        },
-        // July 14
-        {
-          date: "2026-07-14",
-          examsRemaining: 5,
-          nextExam: "Physics 2nd Paper",
-          message: "Physics Paper 2 tomorrow.\nElectricity and magnetism send their regards.",
-          category: 'funny'
-        },
-        // July 15 – Physics 2nd
-        {
-          date: "2026-07-15",
-          examsRemaining: 4,
-          nextExam: "Chemistry 1st Paper",
-          message: "Physics is finally over.\nHuman happiness has increased significantly.",
-          category: 'celebration'
-        },
-        // July 16–18 (Chemistry prep)
-        {
-          date: "2026-07-16",
-          examsRemaining: 4,
-          nextExam: "Chemistry 1st Paper",
-          message: "4 papers left.\nAtoms never sleep and neither do HSC students.",
-          category: 'chemistry_arc'
-        },
-        {
-          date: "2026-07-17",
-          examsRemaining: 4,
-          nextExam: "Chemistry 1st Paper",
-          message: "Chemistry in two days.\nTrust the equations. Fear the exceptions.",
-          category: 'funny'
-        },
-        {
-          date: "2026-07-18",
-          examsRemaining: 4,
-          nextExam: "Chemistry 1st Paper",
-          message: "Tomorrow is Chemistry.\nPeriodic table, don't betray us now.",
-          category: 'funny'
-        },
-        // July 19 – Chemistry 1st
-        {
-          date: "2026-07-19",
-          examsRemaining: 3,
-          nextExam: "Chemistry 2nd Paper",
-          message: "Another paper conquered.\nThe finish line is getting closer.",
-          category: 'motivation'
-        },
-        // July 22 – Chemistry 2nd
-        {
-          date: "2026-07-22",
-          examsRemaining: 2,
-          nextExam: "Biology 1st Paper",
-          message: "Chemistry is over.\nYour brain can finally stop balancing equations.",
-          category: 'celebration'
-        },
-        // July 27 – Biology 1st
-        {
-          date: "2026-07-27",
-          examsRemaining: 1,
-          nextExam: "Biology 2nd Paper",
-          message: "Only two papers remain.\nYou're closer to freedom than ever before.",
-          category: 'final_push'
-        },
-        // July 29 – Biology 2nd
-        {
-          date: "2026-07-29",
-          examsRemaining: 0,
-          nextExam: "Higher Math 1st Paper",
-          message: "Biology is done.\nOnly mathematics stands between you and freedom.",
-          category: 'math_arc'
-        },
-        // August 1
-        {
-          date: "2026-08-01",
-          examsRemaining: 1,
-          nextExam: "Higher Math 1st Paper",
-          message: "Tomorrow is Higher Math.\nNo fear. Only formulas.",
-          category: 'final_push'
-        },
-        // August 2 – Higher Math 1st
-        {
-          date: "2026-08-02",
-          examsRemaining: 1,
-          nextExam: "Higher Math 2nd Paper",
-          message: "One last paper remains.\nYou can almost hear freedom calling.",
-          category: 'final_push'
-        },
-        // August 3
-        {
-          date: "2026-08-03",
-          examsRemaining: 1,
-          nextExam: "Higher Math 2nd Paper",
-          message: "One day left.\nOne final battle. Finish what you started.",
-          category: 'final_push'
-        },
-        // August 4 – Final Day
-        {
-          date: "2026-08-04",
-          examsRemaining: 0,
-          nextExam: null,
-          message: "0 exams left.\nAfter months of stress, late nights, and endless revisions—you did it. Welcome back to freedom.",
-          category: 'finale'
-        }
-      ];
-
-      // Insert all messages into database
-      await MotivationalMessage.insertMany(motivationalMessages);
-      
-      this.messages = motivationalMessages;
       this.isInitialized = true;
-      
-      console.log(`✅ Initialized ${motivationalMessages.length} HSC Exam Survival countdown messages`);
+      console.log('✅ Motivational message service initialized (AI-generated for DU Admission)');
     } catch (error) {
       console.error('❌ Error initializing motivational messages:', error);
     }
   }
 
-  // Get motivational message for a specific date (or current date if not specified)
-  async getMessageForDate(dateString = null) {
-    try {
-      // Use current date if not provided
-      const targetDate = dateString || this.getCurrentDateString();
-      
-      // Find message for specific date
-      let message = await MotivationalMessage.findOne({ date: targetDate });
-
-      // If no message for today, check if countdown is over
-      if (!message) {
-        // Check if date is after August 4, 2026
-        const targetDateObj = new Date(targetDate);
-        const finalDateObj = new Date('2026-08-04');
-        
-        if (targetDateObj > finalDateObj) {
-          return {
-            message: "HSC is over. Congratulations!",
-            examsRemaining: 0,
-            nextExam: null,
-            category: 'finale'
-          };
-        }
-        
-        // If before July 3, return opening message
-        const startDateObj = new Date('2026-07-03');
-        if (targetDateObj < startDateObj) {
-          message = await MotivationalMessage.findOne({ date: "2026-07-03" });
-        }
-      }
-
-      if (message) {
-        console.log(`📝 Using message for date ${targetDate}: ${message.category}`);
-        return {
-          message: message.message,
-          examsRemaining: message.examsRemaining,
-          nextExam: message.nextExam,
-          category: message.category,
-          date: message.date
-        };
-      }
-
-      // Fallback message
-      return {
-        message: "Stay focused and keep going!",
-        examsRemaining: null,
-        nextExam: null,
-        category: 'motivation'
-      };
-    } catch (error) {
-      console.error('❌ Error getting motivational message:', error);
-      return {
-        message: "Stay focused and keep going!",
-        examsRemaining: null,
-        nextExam: null,
-        category: 'motivation'
-      };
-    }
-  }
-
-  // Get motivational message for today
-  async getTodayMessage() {
-    return this.getMessageForDate();
-  }
-
-  // Helper: Get current date string in YYYY-MM-DD format
   getCurrentDateString() {
     const today = new Date();
     const year = today.getFullYear();
@@ -291,7 +31,250 @@ class MotivationalMessageService {
     return `${year}-${month}-${day}`;
   }
 
-  // Get all messages
+  calculateDaysUntilAdmission(dateString) {
+    const target = new Date(this.DU_ADMISSION_DATE);
+    const current = new Date(dateString + 'T00:00:00');
+    const diff = target - current;
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }
+
+  getCategoryForDaysRemaining(daysRemaining) {
+    if (daysRemaining <= 0) return 'finale';
+    if (daysRemaining <= 7) return 'final_push';
+    if (daysRemaining <= 30) return 'motivation';
+    if (daysRemaining <= 90) return 'progress';
+    return 'opening';
+  }
+
+  getNextExam(daysRemaining) {
+    if (daysRemaining <= 0) return null;
+    return 'Dhaka University Admission Test';
+  }
+
+  buildSystemPrompt() {
+    const customPrompt = process.env.DU_MOTIVATIONAL_SYSTEM_PROMPT;
+    if (customPrompt) return customPrompt;
+
+    return `You are NeuraX, an expert motivational writer for Dhaka University Admission test aspirants.
+
+Your task: Generate a single, short, punchy motivational message for a student preparing for the Dhaka University Admission Test (December 10, 2026).
+
+Schema context:
+- date: YYYY-MM-DD
+- examsRemaining: days until admission test
+- nextExam: upcoming exam name or null
+- category: one of [opening, progress, motivation, funny, celebration, final_push, finale, study_tip, unit_based, subject_focus]
+- message: the motivational text (max 150 words, mix of English and Bengali naturally, use emojis, be witty and relatable)
+
+Message guidelines:
+- Max 150 words
+- Mix English and Bengali naturally
+- Use emojis
+- Be witty, relatable, and energetic
+- Reference the specific context (days remaining, upcoming exams)
+- No JSON, no meta-commentary, no reasoning tags
+- Output ONLY the message text`;
+  }
+
+  buildUserPrompt(context) {
+    const toneMap = {
+      'finale': 'celebratory and emotional',
+      'final_push': 'urgent and determined',
+      'motivation': 'encouraging and energetic',
+      'progress': 'steady and confident',
+      'opening': 'inspiring and exciting',
+      'celebration': 'joyful and proud',
+      'funny': 'humorous and lighthearted',
+      'study_tip': 'helpful and focused',
+      'unit_based': 'analytical and strategic',
+      'subject_focus': 'clear and targeted'
+    };
+
+    return `Generate a motivational message for:
+Date: ${context.date}
+Days until DU Admission: ${context.examsRemaining}
+Next exam: ${context.nextExam || 'None'}
+Category: ${context.category}
+Tone: ${toneMap[context.category] || 'encouraging and energetic'}`;
+  }
+
+  async callOpenRouterWithFallback(messages) {
+    const models = this.FALLBACK_MODELS;
+
+    for (const model of models) {
+      try {
+        const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+          model: model,
+          messages: messages,
+          max_tokens: 200,
+          temperature: 0.8
+        }, {
+          headers: {
+            'Authorization': `Bearer ${this.OPENROUTER_API_KEY}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://neuronerds-quiz.com',
+            'X-Title': 'NeuraX Motivational Messages'
+          },
+          timeout: 30000
+        });
+
+        const content = response.data.choices[0]?.message?.content;
+        if (content && content.trim()) {
+          return { content, model };
+        }
+      } catch (error) {
+        console.error(`❌ OpenRouter model ${model} failed:`, error.message);
+        continue;
+      }
+    }
+
+    throw new Error('All OpenRouter models failed');
+  }
+
+  async generateAIMessage(context) {
+    const systemPrompt = this.buildSystemPrompt();
+    let userPrompt = this.buildUserPrompt(context);
+
+    try {
+      const previousMessages = await MotivationalMessage.find({})
+        .sort({ date: -1 })
+        .limit(5)
+        .lean();
+
+      if (previousMessages.length > 0) {
+        const history = previousMessages
+          .reverse()
+          .map(m => `${m.date} (${m.examsRemaining} days left, ${m.category}): "${m.message.substring(0, 100)}${m.message.length > 100 ? '...' : ''}"`)
+          .join('\n');
+
+        userPrompt += `\n\nRecent message history for continuity:\n${history}\n\nMaintain the same energetic NeuraX tone and build on the narrative arc.`;
+      }
+    } catch (error) {
+      console.error('⚠️ Could not load previous messages for context:', error.message);
+    }
+
+    const result = await this.callOpenRouterWithFallback([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ]);
+
+    let message = result.content.trim();
+
+    message = message.replace(/<think>[\s\S]*?<\/think>/g, '');
+    message = message.replace(/<reasoning>[\s\S]*?<\/reasoning>/g, '');
+    message = message.replace(/<[^>]*>/g, '');
+
+    return {
+      message: message,
+      aiModel: result.model,
+      generatedPrompt: userPrompt
+    };
+  }
+
+  async getMessageForDate(dateString = null) {
+    try {
+      const targetDate = dateString || this.getCurrentDateString();
+      const daysRemaining = this.calculateDaysUntilAdmission(targetDate);
+      const category = this.getCategoryForDaysRemaining(daysRemaining);
+      const nextExam = this.getNextExam(daysRemaining);
+
+      let cachedMessage = await MotivationalMessage.findOne({ date: targetDate });
+
+      if (cachedMessage && cachedMessage.isReusable && cachedMessage.generatedByAI) {
+        return {
+          message: cachedMessage.message,
+          examsRemaining: cachedMessage.examsRemaining,
+          nextExam: cachedMessage.nextExam,
+          category: cachedMessage.category,
+          date: cachedMessage.date,
+          generatedByAI: cachedMessage.generatedByAI
+        };
+      }
+
+      const context = {
+        date: targetDate,
+        examsRemaining: daysRemaining,
+        nextExam: nextExam,
+        category: category,
+        tone: category === 'finale' ? 'celebratory and emotional' :
+              category === 'final_push' ? 'urgent and determined' :
+              category === 'funny' ? 'humorous and lighthearted' : 'encouraging'
+      };
+
+      let aiResult;
+      try {
+        aiResult = await this.generateAIMessage(context);
+      } catch (error) {
+        console.error('❌ AI generation failed, using fallback:', error.message);
+        return this.getFallbackMessage(targetDate, daysRemaining, category, nextExam);
+      }
+
+      const messageDoc = {
+        date: targetDate,
+        message: aiResult.message,
+        examsRemaining: daysRemaining,
+        nextExam: nextExam,
+        category: category,
+        generatedByAI: true,
+        aiModel: aiResult.aiModel,
+        generatedPrompt: aiResult.generatedPrompt,
+        isReusable: true
+      };
+
+      if (cachedMessage) {
+        await MotivationalMessage.findByIdAndUpdate(cachedMessage._id, messageDoc);
+      } else {
+        await MotivationalMessage.create(messageDoc);
+      }
+
+      return {
+        message: aiResult.message,
+        examsRemaining: daysRemaining,
+        nextExam: nextExam,
+        category: category,
+        date: targetDate,
+        generatedByAI: true
+      };
+    } catch (error) {
+      console.error('❌ Error getting motivational message:', error);
+      return this.getFallbackMessage(dateString || this.getCurrentDateString());
+    }
+  }
+
+  getFallbackMessage(dateString, examsRemaining = null, category = 'motivation', nextExam = null) {
+    if (!examsRemaining) {
+      const today = new Date(dateString + 'T00:00:00');
+      const admission = new Date(this.DU_ADMISSION_DATE);
+      examsRemaining = Math.max(0, Math.ceil((admission - today) / (1000 * 60 * 60 * 24)));
+    }
+
+    const fallbacks = {
+      'finale': "🎉 DU Admission test is over! Congratulations! You did it!",
+      'final_push': `🔥 Only ${examsRemaining} days left! You're almost there!`,
+      'motivation': `💪 ${examsRemaining} days to go. Keep pushing forward!`,
+      'progress': `📚 ${examsRemaining} days remaining. Every day counts!`,
+      'opening': `🚀 ${examsRemaining} days until DU Admission. The journey begins now!`,
+      'celebration': `🎉 Keep it up! ${examsRemaining} days to go!`,
+      'funny': `😄 ${examsRemaining} days left. Stay sane!`,
+      'study_tip': `📖 ${examsRemaining} days. Study smart!`,
+      'unit_based': `🎯 ${examsRemaining} days. Master your units!`,
+      'subject_focus': `📝 ${examsRemaining} days. Focus on your subjects!`
+    };
+
+    return {
+      message: fallbacks[category] || fallbacks['motivation'],
+      examsRemaining,
+      nextExam,
+      category,
+      date: dateString,
+      generatedByAI: false
+    };
+  }
+
+  async getTodayMessage() {
+    return this.getMessageForDate();
+  }
+
   async getAllMessages() {
     try {
       return await MotivationalMessage.find({}).sort({ date: 1 });
@@ -301,7 +284,6 @@ class MotivationalMessageService {
     }
   }
 
-  // Get statistics
   async getStats() {
     try {
       const total = await MotivationalMessage.countDocuments();

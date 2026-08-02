@@ -185,7 +185,7 @@ router.post('/mark-whats-new-seen', sessionMiddleware, async (req, res) => {
   }
 });
 
-// Get today's motivational message (HSC Exam Survival Countdown)
+// Get today's motivational message (Dhaka University Admission)
 router.get('/motivational-message', async (req, res) => {
   try {
     const messageData = await motivationalService.getTodayMessage();

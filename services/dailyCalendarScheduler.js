@@ -25,7 +25,7 @@ class DailyCalendarScheduler {
     
     console.log('📅 Starting daily calendar scheduler...');
     
-    // Initialize motivational messages
+    // Initialize motivational messages (AI-generated for DU Admission)
     await this.motivationalService.initializeMessages();
     
     this.cronJob = cron.schedule(cronExpression, async () => {

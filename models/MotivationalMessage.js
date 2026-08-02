@@ -21,10 +21,34 @@ const motivationalMessageSchema = new mongoose.Schema({
   category: {
     type: String,
     enum: [
-      'opening', 'progress', 'motivation', 'funny', 'physics_arc',
-      'celebration', 'chemistry_arc', 'final_push', 'math_arc', 'finale'
+      'opening', 'progress', 'motivation', 'funny', 'celebration',
+      'final_push', 'finale', 'study_tip', 'unit_based', 'subject_focus'
     ],
     required: true
+  },
+  unit: {
+    type: String,
+    default: null
+  },
+  subject: {
+    type: String,
+    default: null
+  },
+  generatedPrompt: {
+    type: String,
+    default: null
+  },
+  generatedByAI: {
+    type: Boolean,
+    default: false
+  },
+  aiModel: {
+    type: String,
+    default: null
+  },
+  isReusable: {
+    type: Boolean,
+    default: true
   },
   createdAt: {
     type: Date,
@@ -32,11 +56,14 @@ const motivationalMessageSchema = new mongoose.Schema({
   }
 });
 
-// Schema for tracking motivational sequence state
+motivationalMessageSchema.index({ date: 1 });
+motivationalMessageSchema.index({ category: 1 });
+motivationalMessageSchema.index({ examsRemaining: 1 });
+
 const motivationalSequenceSchema = new mongoose.Schema({
   currentDay: {
     type: Number,
-    default: 68 // Start from Day 68
+    default: 1
   },
   lastUsedDate: {
     type: Date,
@@ -55,11 +82,6 @@ const motivationalSequenceSchema = new mongoose.Schema({
     default: Date.now
   }
 });
-
-// Create indexes for efficient queries
-motivationalMessageSchema.index({ date: 1 });
-motivationalMessageSchema.index({ category: 1 });
-motivationalMessageSchema.index({ examsRemaining: 1 });
 
 const MotivationalMessage = mongoose.model('MotivationalMessage', motivationalMessageSchema);
 const MotivationalSequence = mongoose.model('MotivationalSequence', motivationalSequenceSchema);

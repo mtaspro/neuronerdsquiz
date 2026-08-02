@@ -1030,7 +1030,7 @@ app.get('/api/motivational-messages/stats', async (req, res) => {
 
 app.post('/api/motivational-messages/reset', async (req, res) => {
   try {
-    await MotivationalMessage.updateMany({}, { isUsed: false, usedDate: null });
+    await MotivationalMessage.deleteMany({});
     res.json({ message: 'Motivational messages reset successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1051,7 +1051,7 @@ app.get('/api/motivational-sequence/status', async (req, res) => {
     const { MotivationalSequence } = await import('./models/MotivationalMessage.js');
     const sequence = await MotivationalSequence.findOne({ isActive: true });
     res.json({
-      currentDay: sequence?.currentDay || 68,
+      currentDay: sequence?.currentDay || 1,
       lastUsedDate: sequence?.lastUsedDate,
       isActive: sequence?.isActive || false
     });
@@ -1064,18 +1064,16 @@ app.post('/api/motivational-sequence/reset', async (req, res) => {
   try {
     const { MotivationalSequence } = await import('./models/MotivationalMessage.js');
     const { MotivationalMessage } = await import('./models/MotivationalMessage.js');
-    
-    // Reset all messages
-    await MotivationalMessage.updateMany({}, { isUsed: false, usedDate: null });
-    
-    // Reset sequence to Day 68
+
+    await MotivationalMessage.deleteMany({});
+
     await MotivationalSequence.findOneAndUpdate(
       { isActive: true },
-      { currentDay: 68, lastUsedDate: null, updatedAt: new Date() },
+      { currentDay: 1, lastUsedDate: null, updatedAt: new Date() },
       { upsert: true }
     );
-    
-    res.json({ message: 'Motivational sequence reset to Day 68 successfully' });
+
+    res.json({ message: 'Motivational sequence reset successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -1085,17 +1083,17 @@ app.put('/api/motivational-sequence/day', async (req, res) => {
   try {
     const { day } = req.body;
     const { MotivationalSequence } = await import('./models/MotivationalMessage.js');
-    
-    if (typeof day !== 'number' || day < 0 || day > 68) {
-      return res.status(400).json({ error: 'Day must be a number between 0 and 68' });
+
+    if (typeof day !== 'number' || day < 0) {
+      return res.status(400).json({ error: 'Day must be a non-negative number' });
     }
-    
+
     await MotivationalSequence.findOneAndUpdate(
       { isActive: true },
       { currentDay: day, updatedAt: new Date() },
       { upsert: true }
     );
-    
+
     res.json({ message: `Motivational sequence set to Day ${day} successfully` });
   } catch (error) {
     res.status(500).json({ error: error.message });
