@@ -18,7 +18,7 @@ const NeuraflowAIChat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('openrouter/free');
+  const [selectedModel, setSelectedModel] = useState('step-3.5-flash');
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isProcessingVision, setIsProcessingVision] = useState(false);
@@ -46,9 +46,12 @@ const NeuraflowAIChat = () => {
   const synthRef = useRef(null);
 
   const models = [
-    { id: 'openrouter/free', name: 'Auto (Free)', description: 'Automatically picks an available free model (Recommended)' },
-    { id: 'gemini/gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', description: 'General Chat (Default) - Supports images' },
-    { id: 'gemini/gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Advanced Reasoning' },
+    { id: 'step-3.5-flash', name: 'Step 3.5 Flash', description: 'Fast general-purpose chat (Primary · Recommended)' },
+    { id: 'step-3.7-flash', name: 'Step 3.7 Flash', description: 'Heavy / complex reasoning & deep analysis' },
+    { id: 'DeepSeek-V4-Pro', name: 'DeepSeek V4 Pro', description: 'Advanced complex reasoning fallback' },
+    { id: 'openrouter/free', name: 'OpenRouter Auto (Free)', description: 'Secondary fallback · auto-picks free tier model' },
+    { id: 'gemini/gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', description: 'General Chat · Supports images' },
+    { id: 'gemini/gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Advanced Reasoning with image support' },
     { id: 'qwen/qwen3-30b-a3b:free', name: 'DeepSeek V3.1', description: 'Advanced reasoning & multilingual' },
     { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B', description: 'Large model with excellent performance' },
     { id: 'qwen/qwen-2.5-72b-instruct:free', name: 'Qwen 2.5 72B', description: 'Perfect for Bengali & multilingual support' }

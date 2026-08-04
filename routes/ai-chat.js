@@ -7,6 +7,11 @@ import ChatHistory from '../models/ChatHistory.js';
 
 const router = express.Router();
 
+const HCN_API_BASE_URL = process.env.HCN_API_BASE_URL || 'https://api.hcnsec.cn/v1';
+const HCN_API_KEY = process.env.HCN_API_KEY;
+const HCN_PRIMARY_MODEL = process.env.HCN_PRIMARY_MODEL || 'step-3.5-flash';
+const HCN_HEAVY_MODEL = process.env.HCN_HEAVY_MODEL || 'step-3.7-flash';
+
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY;
@@ -166,11 +171,25 @@ function buildModelFallbackChain(primaryModel, isGroqModel) {
     return [primaryModel];
   }
 
-  const chain = [
-    primaryModel || OPENROUTER_AUTO_FREE_MODEL,
-    OPENROUTER_AUTO_FREE_MODEL,
-    ...OPENROUTER_FALLBACK_MODELS
-  ];
+  const basePrimary = primaryModel || (HCN_API_KEY ? HCN_PRIMARY_MODEL : OPENROUTER_AUTO_FREE_MODEL);
+  const isPrimaryHcn = isHcnModel(basePrimary);
+
+  let chain;
+  if (isPrimaryHcn && HCN_API_KEY) {
+    chain = [
+      basePrimary,
+      HCN_HEAVY_MODEL,
+      'DeepSeek-V4-Pro',
+      OPENROUTER_AUTO_FREE_MODEL,
+      ...OPENROUTER_FALLBACK_MODELS
+    ];
+  } else {
+    chain = [
+      basePrimary,
+      OPENROUTER_AUTO_FREE_MODEL,
+      ...OPENROUTER_FALLBACK_MODELS
+    ];
+  }
 
   const seen = new Set();
   return chain.filter((modelId) => {
@@ -180,6 +199,21 @@ function buildModelFallbackChain(primaryModel, isGroqModel) {
     seen.add(modelId);
     return true;
   });
+}
+
+function canFallbackToNextModel(error, currentModelIndex, modelChain) {
+  if (currentModelIndex >= modelChain.length - 1) return false;
+
+  const currentModel = modelChain[currentModelIndex];
+  const nextModel = modelChain[currentModelIndex + 1];
+  const fromHcn = isHcnModel(currentModel);
+  const toOpenRouter = !isHcnModel(nextModel) && !isGeminiModel(nextModel) && nextModel !== 'qwen/qwen3-32b';
+
+  if (fromHcn && toOpenRouter) {
+    return isHcnServerError(error);
+  }
+
+  return isRetryableAIError(error);
 }
 
 function isRetryableAIError(error) {
@@ -204,6 +238,16 @@ function isRetryableAIError(error) {
     message.includes('payment') ||
     message.includes('insufficient')
   );
+}
+
+function isHcnModel(model) {
+  if (!model) return false;
+  const lower = String(model).toLowerCase();
+  return lower === HCN_PRIMARY_MODEL.toLowerCase()
+    || lower === HCN_HEAVY_MODEL.toLowerCase()
+    || lower.startsWith('step-')
+    || lower.startsWith('deepseek-')
+    || lower === 'deepseek-v4-pro';
 }
 
 function isGeminiModel(model) {
@@ -273,7 +317,28 @@ async function callGeminiChatCompletion({ apiUrl, headers, messages, temperature
   return String(content);
 }
 
+function isHcnServerError(error) {
+  const status = error?.response?.status;
+  const message = (error?.response?.data?.error?.message || error?.message || '').toLowerCase();
+  if (status === 500 || status === 502 || status === 503 || status === 504) return true;
+  if (message.includes('timeout')) return true;
+  if (error?.code === 'ECONNABORTED' || error?.code === 'ETIMEDOUT' || error?.code === 'ECONNRESET') return true;
+  return false;
+}
+
 function getApiConfig(model) {
+  if (isHcnModel(model) && HCN_API_KEY) {
+    return {
+      isHcnModel: true,
+      apiUrl: `${HCN_API_BASE_URL}/chat/completions`,
+      apiKey: HCN_API_KEY,
+      headers: {
+        Authorization: `Bearer ${HCN_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  }
+
   if (isGeminiModel(model)) {
     const geminiModel = model.replace('gemini/', '');
     const apiUrlWithKey = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${GEMINI_API_KEY}`;
@@ -355,8 +420,6 @@ async function callChatCompletion({ apiUrl, headers, messages, model, temperatur
 }
 
 async function callChatCompletionWithFallback({
-  apiUrl,
-  headers,
   messages,
   modelChain,
   temperature,
@@ -368,6 +431,9 @@ async function callChatCompletionWithFallback({
   for (let i = 0; i < modelChain.length; i++) {
     const modelId = modelChain[i];
     try {
+      const { apiUrl, headers } = getApiConfig(modelId);
+      const isGeminiModelUsed = isGeminiModel(modelId);
+
       const content = await callChatCompletion({
         apiUrl,
         headers,
@@ -375,7 +441,7 @@ async function callChatCompletionWithFallback({
         model: modelId,
         temperature,
         maxTokens,
-        imageBase64
+        imageBase64: isGeminiModelUsed ? imageBase64 : undefined
       });
 
       if (i > 0) {
@@ -385,7 +451,7 @@ async function callChatCompletionWithFallback({
       return { content, modelUsed: modelId };
     } catch (error) {
       lastError = error;
-      const canRetry = i < modelChain.length - 1 && isRetryableAIError(error);
+      const canRetry = canFallbackToNextModel(error, i, modelChain);
       console.error(
         `AI model "${modelId}" failed:`,
         error?.response?.data?.error?.message || error.message
@@ -432,10 +498,11 @@ router.post('/', async (req, res) => {
       return res.status(500).json({ error: 'Gemini API key not configured' });
     }
 
-    if (!OPENROUTER_API_KEY && !GROQ_API_KEY && !GEMINI_API_KEY) {
+    if (!HCN_API_KEY && !OPENROUTER_API_KEY && !GROQ_API_KEY && !GEMINI_API_KEY) {
       return res.status(500).json({ error: 'AI API keys not configured' });
     }
 
+    const defaultModel = HCN_API_KEY ? HCN_PRIMARY_MODEL : OPENROUTER_AUTO_FREE_MODEL;
     const isGroqModel = model === 'qwen/qwen3-32b';
     const isDolphinModel = model === 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free';
     const textbookContext = await retrieveTextbookContext(message.trim());
@@ -449,17 +516,14 @@ router.post('/', async (req, res) => {
       { role: 'user', content: message.trim() }
     ];
 
-    const { apiUrl, headers } = getApiConfig(model || OPENROUTER_AUTO_FREE_MODEL);
-    const modelChain = buildModelFallbackChain(model, isGroqModel);
+    const modelChain = buildModelFallbackChain(model || defaultModel, isGroqModel);
     const temperature = isDolphinModel ? 0.15 : 0.7;
 
     const { content: firstPassContent } = await callChatCompletionWithFallback({
-      apiUrl,
-      headers,
       messages,
       modelChain,
       temperature,
-      imageBase64: isGeminiModelUsed ? imageBase64 : undefined
+      imageBase64
     });
 
     let aiResponse = firstPassContent;
@@ -507,13 +571,11 @@ router.post('/', async (req, res) => {
         });
 
         const searchModelChain = buildModelFallbackChain(
-          model || OPENROUTER_AUTO_FREE_MODEL,
+          model || defaultModel,
           isGroqModel
         );
 
         const { content: searchPassContent } = await callChatCompletionWithFallback({
-          apiUrl,
-          headers,
           messages,
           modelChain: searchModelChain,
           temperature

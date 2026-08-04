@@ -142,26 +142,67 @@ async function startWhatsAppBot() {
                         const axios = require('axios');
                         const recentMsgs = conversationHistory.get(chatId) || [];
                         const context = recentMsgs.slice(-3).map(m => m.content).join(' | ');
-                        
-                        const reactionResponse = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-                            model: 'meta-llama/llama-3.2-3b-instruct:free',
-                            messages: [{
-                                role: 'user',
-                                content: `Context: ${context}\nMessage: ${messageText}\n\nReply with ONE emoji that best reacts to this message. Only the emoji, nothing else.`
-                            }],
-                            max_tokens: 10
-                        }, {
-                            headers: {
-                                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                                'Content-Type': 'application/json',
-                                'HTTP-Referer': 'https://github.com/mtaspro/neuronerds-quiz',
-                                'X-Title': 'NeuraX WhatsApp Bot'
+                        const prompt = `Context: ${context}\nMessage: ${messageText}\n\nReply with ONE emoji that best reacts to this message. Only the emoji, nothing else.`;
+
+                        const hcnBaseUrl = process.env.HCN_API_BASE_URL || 'https://api.hcnsec.cn/v1';
+                        const hcnKey = process.env.HCN_API_KEY;
+                        const orKey = process.env.OPENROUTER_API_KEY;
+
+                        let reactionResponse = null;
+                        let usedHcn = false;
+
+                        if (hcnKey) {
+                            try {
+                                reactionResponse = await axios.post(`${hcnBaseUrl}/chat/completions`, {
+                                    model: 'step-3.5-flash',
+                                    messages: [{ role: 'user', content: prompt }],
+                                    max_tokens: 10
+                                }, {
+                                    headers: {
+                                        'Authorization': `Bearer ${hcnKey}`,
+                                        'Content-Type': 'application/json'
+                                    },
+                                    timeout: 15000
+                                });
+                                usedHcn = true;
+                            } catch (hcnError) {
+                                const status = hcnError?.response?.status;
+                                const msg = (hcnError?.message || '').toLowerCase();
+                                const code = hcnError?.code;
+                                const shouldFallback =
+                                    status === 500 || status === 502 || status === 503 || status === 504
+                                    || msg.includes('timeout')
+                                    || code === 'ECONNABORTED' || code === 'ETIMEDOUT' || code === 'ECONNRESET';
+                                if (!shouldFallback || !orKey) {
+                                    throw hcnError;
+                                }
+                                console.warn('HCN reaction failed, falling back to OpenRouter:', hcnError.message);
                             }
-                        });
-                        
+                        }
+
+                        if (!reactionResponse && orKey) {
+                            reactionResponse = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+                                model: 'meta-llama/llama-3.2-3b-instruct:free',
+                                messages: [{ role: 'user', content: prompt }],
+                                max_tokens: 10
+                            }, {
+                                headers: {
+                                    'Authorization': `Bearer ${orKey}`,
+                                    'Content-Type': 'application/json',
+                                    'HTTP-Referer': 'https://github.com/mtaspro/neuronerds-quiz',
+                                    'X-Title': 'NeuraX WhatsApp Bot'
+                                },
+                                timeout: 20000
+                            });
+                        }
+
+                        if (!reactionResponse) {
+                            throw new Error('No AI provider available for reaction');
+                        }
+
                         const emoji = reactionResponse.data.choices?.[0]?.message?.content?.trim() || '👍';
                         await socket.sendMessage(chatId, { react: { text: emoji, key: message.key } });
-                        console.log(`😊 Reacted with ${emoji} to user message`);
+                        console.log(`😊 Reacted with ${emoji} to user message (${usedHcn ? 'HCN' : 'OpenRouter'})`);
                     } catch (error) {
                         console.error('Reaction error:', error.message);
                     }
@@ -217,7 +258,7 @@ async function startWhatsAppBot() {
                             
                             const response = await axios.post(`${apiUrl}/api/ai-chat`, {
                                 message: query,
-                                model: 'mistralai/mistral-7b-instruct:free',
+                                model: 'step-3.5-flash',
                                 systemPrompt: `You are NeuraX Omega (নিউরএক্স ওমেগা), an advanced AI assistant for the Neuronerds whatsapp Study Group. You provide comprehensive, well-formatted responses similar to ChatGPT.
 
 📝 Use bold for important keywords
