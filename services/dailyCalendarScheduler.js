@@ -169,7 +169,9 @@ Requirements:
 - End with a SHORT AI-generated motivational closing (1-2 lines max) based on the exam context
 - Tone: ${tone}
 - Max 150 words total
-- Mix English and Bengali naturally with emojis
+- FULLY ENGLISH ONLY — no Bengali, no Bangla, no mixed language
+- Human-like, conversational, relatable tone — like a friend giving a reality check
+- Include light, funny roasting for students who are not studying seriously, but keep it motivational
 - NO repeated countdown numbers — the exam days are already listed above
 - Keep it clean and direct, no meta-commentary`;
       // Send to NeuraX AI
@@ -179,7 +181,7 @@ Requirements:
       const aiResponse = await axios.post(`${apiUrl}/api/ai-chat`, {
         message: prompt,
         model: 'meta-llama/llama-3.3-70b-instruct:free',
-        systemPrompt: 'You are NeuraX. Generate concise calendar messages following the exact format provided. NEVER include reasoning tags like <think> or any meta-commentary in your response. Keep the message clean and direct.',
+        systemPrompt: 'You are NeuraX. Generate concise calendar messages following the exact format provided. NEVER include reasoning tags like <think> or any meta-commentary in your response. Keep the message clean and direct. IMPORTANT: Output must be FULLY ENGLISH ONLY. No Bengali, no Bangla, no mixed language. Use a human-like, conversational tone with light roasting for students who are not studying seriously, but keep it motivational.',
         conversationHistory: []
       });
 
