@@ -7,7 +7,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY;
-const GEMINI_DEFAULT_MODEL = process.env.GEMINI_DEFAULT_MODEL || 'Gemini 3.5 Flash Lite';
+const GEMINI_DEFAULT_MODEL = process.env.GEMINI_DEFAULT_MODEL || 'gemini-3.5-flash-lite';
 
 // Vision analysis endpoint
 router.post('/analyze', upload.single('image'), async (req, res) => {
