@@ -460,22 +460,29 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
     }
   };
 
-  const generateImage = async (prompt) => {
+  const generateImage = async (prompt, options = {}) => {
     setIsGeneratingImage(true);
     try {
       if (!prompt || prompt.trim().length < 3) {
         throw new Error('Please provide a more detailed description (at least 3 characters)');
       }
-      
+
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const response = await axios.post(`${apiUrl}/api/generate-image`, {
-        prompt: prompt.trim()
-      });
-      
+      const payload = { prompt: prompt.trim() };
+      if (options.model) payload.model = options.model;
+      if (options.width != null) payload.width = Number(options.width);
+      if (options.height != null) payload.height = Number(options.height);
+      if (options.seed != null) payload.seed = Number(options.seed);
+      if (options.nologo != null) payload.nologo = options.nologo;
+      if (options.enhance != null) payload.enhance = options.enhance;
+      if (options.private != null) payload.private = options.private;
+
+      const response = await axios.post(`${apiUrl}/api/generate-image`, payload);
+
       if (!response.data.imageUrl) {
         throw new Error('Failed to generate image');
       }
-      
+
       return response.data.imageUrl;
     } catch (error) {
       console.error('Image generation error:', error);
@@ -485,9 +492,9 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
     }
   };
 
-  const handleImageGeneration = async (prompt) => {
+  const handleImageGeneration = async (prompt, options) => {
     try {
-      const generatedImageUrl = await generateImage(prompt);
+      const generatedImageUrl = await generateImage(prompt, options);
       
       const imageMessage = {
         id: Date.now(),
