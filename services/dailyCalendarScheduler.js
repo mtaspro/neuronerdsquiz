@@ -144,24 +144,34 @@ Happy New Year 🥳✨
       // Get upcoming exams
       const examData = await this.getUpcomingExams();
       
-      // Create prompt for NeuraX
+      // Get calendar data
+      const calendarData = await this.calendarService.generateCalendarData();
+      
+      // Get motivational tone/category from today's seeded message (not the text itself)
+      const messageData = await this.motivationalService.getTodayMessage();
+      const tone = messageData.category || 'encouraging';
+      const daysRemaining = messageData.examsRemaining != null ? messageData.examsRemaining : examData.reduce((min, e) => Math.min(min, e.daysLeft), Infinity);
+      
       const examInfo = examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? `${e.examName} - TODAY` : `${e.examName} in ${e.daysLeft} days`).join(', ') : 'None';
       
-      // Get motivational message based on current date from MongoDB
-      const messageData = await this.motivationalService.getTodayMessage();
-      const motivationalMessage = messageData.message;
-      
-      const prompt = `Create a short, witty daily message for students.
+      // Create prompt for NeuraX — AI generates the motivational closing itself
+      const prompt = `Create a short, witty daily WhatsApp message for students.
 
 Day: ${calendarData.dayName}
 Date: ${calendarData.englishDate}
-Holidays: ${calendarData.hasHolidays ? calendarData.holidays.join(', ') : 'None'}
-Exams: ${examInfo}
-Motivational style: Use this tone: "${motivationalMessage.substring(0, 50)}..."
+Special days: ${calendarData.hasHolidays ? calendarData.holidays.join(', ') : 'None'}
+Upcoming exams: ${examInfo}
 
-Write EXACTLY in this format (no extra lines):
-Today: *${calendarData.dayName}, ${calendarData.englishDate}*
-${calendarData.hasHolidays ? '🎉 ' + calendarData.holidays.join(', ') + ' - Enjoy responsibly!\n' : ''}${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? '📚 *' + e.examName + '* - TODAY! 💪\n' : '📚 *' + e.examName + '* in ' + e.daysLeft + ' days\n').join('') : ''}${motivationalMessage}`;
+Requirements:
+- Start with: Today: *${calendarData.dayName}, ${calendarData.englishDate}*
+- Mention any special/holiday days with 🎉
+- List upcoming exams with days remaining using 📚
+- End with a SHORT AI-generated motivational closing (1-2 lines max) based on the exam context
+- Tone: ${tone}
+- Max 150 words total
+- Mix English and Bengali naturally with emojis
+- NO repeated countdown numbers — the exam days are already listed above
+- Keep it clean and direct, no meta-commentary`;
       // Send to NeuraX AI
       const axios = (await import('axios')).default;
       const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
@@ -193,18 +203,30 @@ ${calendarData.hasHolidays ? '🎉 ' + calendarData.holidays.join(', ') + ' - En
       try {
         const calendarData = await this.calendarService.generateCalendarData();
         const examData = await this.getUpcomingExams();
-        const examMessages = examData.map(e => e.daysLeft === 0 ? `📚 Exam Alert\n*${e.examName}* - *TODAY*! 💪` : `📚 Exam Alert\n*${e.examName}* in *${e.daysLeft}* days 📖`).join('\n\n');
+        const examMessages = examData.map(e => e.daysLeft === 0 ? `📚 *${e.examName}* - *TODAY*! 💪` : `📚 *${e.examName}* in *${e.daysLeft}* days 📖`).join('\n\n');
         
-        // Get motivational message based on current date from MongoDB
         const messageData = await this.motivationalService.getTodayMessage();
-        const motivationalMessage = messageData.message;
         
-        let fallbackMessage = `Today: *${calendarData.dayName}, ${calendarData.englishDate}*\n\n${calendarData.hasHolidays ? `🎉 Special: ${calendarData.holidays.join(', ')} - Enjoy responsibly!\n\n` : ''}${examMessages ? examMessages + '\n\n' : ''}${motivationalMessage}`;
+        const genericMotivational = {
+          finale: '🎉 Admission test is over! Congratulations! You did it!',
+          final_push: '🔥 Final push! Stay focused, stay strong — you are almost there!',
+          motivation: '💪 Keep pushing forward! Every day counts!',
+          progress: '📚 Steady progress! Keep building that momentum!',
+          opening: '🚀 Stay focused! The journey has just begun — make it count!',
+          celebration: '🎉 Keep it up! Celebrate every small win!',
+          funny: '😄 Stay sane! Balance study with breaks!',
+          study_tip: '📖 Study smart, not just hard!',
+          unit_based: '🎯 Master your units one by one!',
+          subject_focus: '📝 Focus on your weak subjects today!'
+        };
         
-        // Filter out any reasoning tags or thinking sections
+        const fallbackMotivation = genericMotivational[messageData.category] || genericMotivational['motivation'];
+        
+        let fallbackMessage = `Today: *${calendarData.dayName}, ${calendarData.englishDate}*\n\n${calendarData.hasHolidays ? `🎉 Special: ${calendarData.holidays.join(', ')} - Enjoy responsibly!\n\n` : ''}${examMessages ? examMessages + '\n\n' : ''}${fallbackMotivation}`;
+        
         fallbackMessage = fallbackMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
         fallbackMessage = fallbackMessage.replace(/<reasoning>[\s\S]*?<\/reasoning>/g, '');
-        fallbackMessage = fallbackMessage.replace(/<.*?>/g, ''); // Remove any other tags
+        fallbackMessage = fallbackMessage.replace(/<.*?>/g, '');
         
         const calendarGroupSetting = await WhatsAppSettings.findOne({ settingKey: 'dailyCalendarGroup' });
         if (calendarGroupSetting?.settingValue) {
