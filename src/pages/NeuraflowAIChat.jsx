@@ -501,6 +501,7 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
         type: 'bot',
         content: `🎨 Generated image for: "${prompt}"`,
         image: generatedImageUrl,
+        imageProvider: 'pollinations',
         timestamp: new Date()
       };
       
@@ -1195,9 +1196,22 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                           <div className="mb-2 md:mb-3">
                             <img 
                               src={message.image} 
-                              alt="Uploaded" 
+                              alt={message.imageProvider === 'pollinations' ? "AI-generated image" : "Uploaded"} 
                               className="max-w-full md:max-w-sm rounded-xl shadow-lg border border-gray-600/30"
                             />
+                            {message.imageProvider === 'pollinations' && (
+                              <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
+                                <span>Powered by</span>
+                                <a
+                                  href="https://pollinations.ai"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-cyan-400 hover:text-cyan-300 hover:underline font-medium"
+                                >
+                                  Pollinations AI
+                                </a>
+                              </div>
+                            )}
                           </div>
                         )}
                         <RichMessageRenderer 
@@ -1338,7 +1352,19 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`;
                 <span className="text-sm text-blue-300">{searchStatus}</span>
               </div>
             )}
-            
+
+            <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
+              <span>Image generation powered by</span>
+              <a
+                href="https://pollinations.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-cyan-400 hover:text-cyan-300 font-medium"
+                title="Generated via Pollinations AI"
+              >
+                Pollinations AI
+              </a>
+            </div>
 
             
             {/* Live Markdown Preview */}
