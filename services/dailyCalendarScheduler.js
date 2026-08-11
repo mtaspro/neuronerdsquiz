@@ -180,7 +180,7 @@ Requirements:
       
       const aiResponse = await axios.post(`${apiUrl}/api/ai-chat`, {
         message: prompt,
-        model: 'meta-llama/llama-3.3-70b-instruct:free',
+        model: 'openrouter/free',
         systemPrompt: 'You are NeuraX. Generate concise calendar messages following the exact format provided. NEVER include reasoning tags like <think> or any meta-commentary in your response. Keep the message clean and direct. IMPORTANT: Output must be FULLY ENGLISH ONLY. No Bengali, no Bangla, no mixed language. Use a human-like, conversational tone with light roasting for students who are not studying seriously, but keep it motivational.',
         conversationHistory: []
       });
