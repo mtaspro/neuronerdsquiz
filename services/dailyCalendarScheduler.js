@@ -162,35 +162,87 @@ Date: ${calendarData.englishDate}
 Special days: ${calendarData.hasHolidays ? calendarData.holidays.join(', ') : 'None'}
 Upcoming exams: ${examInfo}
 
-Requirements:
-- Start with: Today: *${calendarData.dayName}, ${calendarData.englishDate}*
-- Mention any special/holiday days with 🎉
-- List upcoming exams with days remaining using 📚
-- End with a SHORT AI-generated motivational closing (1-2 lines max) based on the exam context
-- Tone: ${tone}
-- Max 150 words total
+REQUIRED FORMAT:
+Wrap ONLY the final message between these exact markers and nothing else:
+
+@@CALENDAR_MESSAGE_START@@
+Today: *${calendarData.dayName}, ${calendarData.englishDate}*
+${calendarData.hasHolidays ? '🎉 ' + calendarData.holidays.join(', ') + ' - Enjoy responsibly!\\n' : ''}${examData.length > 0 ? examData.map(e => e.daysLeft === 0 ? '📚 *' + e.examName + '* - TODAY! 💪\\n' : '📚 *' + e.examName + '* in *' + e.daysLeft + '* days 📖\\n').join('') : ''}Your AI-generated motivational closing here (1-2 lines, English only, human-like, slightly roasted, motivational)
+@@CALENDAR_MESSAGE_END@@
+
+RULES:
+- Put the COMPLETE final message between the markers
+- No reasoning, no thought process, no meta-commentary outside the markers
+- If you need to think, do it silently, then output ONLY the markers + message
+- Max 150 words total inside the markers
 - FULLY ENGLISH ONLY — no Bengali, no Bangla, no mixed language
 - Human-like, conversational, relatable tone — like a friend giving a reality check
-- Include light, funny roasting for students who are not studying seriously, but keep it motivational
-- NO repeated countdown numbers — the exam days are already listed above
-- Keep it clean and direct, no meta-commentary`;
-      // Send to NeuraX AI
+- Include light, funny roasting for students who are not studying seriously, but keep it motivational`;
+      // Send to Groq AI directly
       const axios = (await import('axios')).default;
-      const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
+      const groqApiKey = process.env.GROQ_API_KEY;
       
-      const aiResponse = await axios.post(`${apiUrl}/api/ai-chat`, {
-        message: prompt,
-        model: 'openrouter/free',
-        systemPrompt: 'You are NeuraX. Generate concise calendar messages following the exact format provided. NEVER include reasoning tags like <think> or any meta-commentary in your response. Keep the message clean and direct. IMPORTANT: Output must be FULLY ENGLISH ONLY. No Bengali, no Bangla, no mixed language. Use a human-like, conversational tone with light roasting for students who are not studying seriously, but keep it motivational.',
-        conversationHistory: []
+      if (!groqApiKey) {
+        throw new Error('GROQ_API_KEY not configured');
+      }
+      
+      const aiResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are NeuraX. Generate concise calendar messages. IMPORTANT: Output ONLY the final message wrapped in these exact markers: @@CALENDAR_MESSAGE_START@@ ... @@CALENDAR_MESSAGE_END@@. Do NOT output reasoning, thought process, or meta-commentary outside the markers. If you think silently, do not show it. The message inside the markers must be FULLY ENGLISH ONLY, human-like, conversational, with light roasting for students who are not studying seriously, but keep it motivational.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.7
+      }, {
+        headers: {
+          'Authorization': `Bearer ${groqApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000
       });
-
-      let neuraXMessage = aiResponse.data.response;
       
-      // Filter out any reasoning tags or thinking sections
-      neuraXMessage = neuraXMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
-      neuraXMessage = neuraXMessage.replace(/<reasoning>[\s\S]*?<\/reasoning>/g, '');
-      neuraXMessage = neuraXMessage.replace(/<.*?>/g, ''); // Remove any other tags
+      const aiContent = aiResponse.data.choices?.[0]?.message?.content || '';
+      
+      if (!aiContent) {
+        throw new Error('Empty response from Groq');
+      }
+      
+      let neuraXMessage = aiContent;
+      
+      const START_MARKER = '@@CALENDAR_MESSAGE_START@@';
+      const END_MARKER = '@@CALENDAR_MESSAGE_END@@';
+      
+      const startIdx = neuraXMessage.indexOf(START_MARKER);
+      const endIdx = neuraXMessage.indexOf(END_MARKER);
+      
+      if (startIdx >= 0 && endIdx > startIdx) {
+        neuraXMessage = neuraXMessage.substring(startIdx + START_MARKER.length, endIdx).trim();
+      } else if (startIdx >= 0) {
+        const afterStart = neuraXMessage.substring(startIdx + START_MARKER.length);
+        const todayMatch = afterStart.match(/Today:[\s\S]*/);
+        neuraXMessage = todayMatch ? todayMatch[0].trim() : afterStart.trim();
+      } else {
+        const todayIndex = neuraXMessage.indexOf('Today:');
+        if (todayIndex >= 0) {
+          neuraXMessage = neuraXMessage.substring(todayIndex).trim();
+        }
+      }
+      
+      // Final safety: if message still doesn't start with "Today:", drop to fallback
+      if (!neuraXMessage.startsWith('Today:')) {
+        neuraXMessage = null;
+      }
+      
+      if (!neuraXMessage) {
+        throw new Error('AI response did not contain a valid calendar message');
+      }
       
       // Send filtered NeuraX response to WhatsApp group
       await whatsappService.sendGroupMessage(calendarGroupSetting.settingValue, neuraXMessage);
