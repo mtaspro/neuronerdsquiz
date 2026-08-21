@@ -187,7 +187,7 @@ RULES:
       }
       
       const aiResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-        model: 'openai/gpt-oss-120b',
+        model: 'qwen/qwen3.6-27b',
         messages: [
           {
             role: 'system',
@@ -198,7 +198,7 @@ RULES:
             content: prompt
           }
         ],
-        max_tokens: 500,
+        max_tokens: 1000,
         temperature: 0.7
       }, {
         headers: {
