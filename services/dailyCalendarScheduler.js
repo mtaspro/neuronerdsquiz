@@ -178,40 +178,40 @@ RULES:
 - FULLY ENGLISH ONLY — no Bengali, no Bangla, no mixed language
 - Human-like, conversational, relatable tone — like a friend giving a reality check
 - Include light, funny roasting for students who are not studying seriously, but keep it motivational`;
-      // Send to Groq AI directly
+      // Send to Gemini AI directly
       const axios = (await import('axios')).default;
-      const groqApiKey = process.env.GROQ_API_KEY;
+      const geminiApiKey = process.env.GEMINI_API_KEY;
       
-      if (!groqApiKey) {
-        throw new Error('GROQ_API_KEY not configured');
+      if (!geminiApiKey) {
+        throw new Error('GEMINI_API_KEY not configured');
       }
       
-      const aiResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-        model: 'qwen/qwen3.6-27b',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are NeuraX. Generate concise calendar messages. IMPORTANT: Output ONLY the final message wrapped in these exact markers: @@CALENDAR_MESSAGE_START@@ ... @@CALENDAR_MESSAGE_END@@. Do NOT output reasoning, thought process, or meta-commentary outside the markers. If you think silently, do not show it. The message inside the markers must be FULLY ENGLISH ONLY, human-like, conversational, with light roasting for students who are not studying seriously, but keep it motivational.'
-          },
+      const aiResponse = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
+        contents: [
           {
             role: 'user',
-            content: prompt
+            parts: [{ text: prompt }]
           }
         ],
-        max_tokens: 1000,
-        temperature: 0.7
+        systemInstruction: {
+          parts: [{ text: 'You are NeuraX. Generate concise calendar messages. IMPORTANT: Output ONLY the final message wrapped in these exact markers: @@CALENDAR_MESSAGE_START@@ ... @@CALENDAR_MESSAGE_END@@. Do NOT output reasoning, thought process, or meta-commentary outside the markers. If you think silently, do not show it. The message inside the markers must be FULLY ENGLISH ONLY, human-like, conversational, with light roasting for students who are not studying seriously, but keep it motivational.' }]
+        },
+        generationConfig: {
+          maxOutputTokens: 1000,
+          temperature: 0.7
+        }
       }, {
         headers: {
-          'Authorization': `Bearer ${groqApiKey}`,
           'Content-Type': 'application/json'
         },
         timeout: 30000
       });
       
-      const aiContent = aiResponse.data.choices?.[0]?.message?.content || '';
+      let aiContent = aiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      aiContent = aiContent.replace(/<think>[\s\S]*?<\/think>/g, '').replace(/<reasoning>[\s\S]*?<\/reasoning>/g, '');
       
       if (!aiContent) {
-        throw new Error('Empty response from Groq');
+        throw new Error('Empty response from Gemini');
       }
       
       let neuraXMessage = aiContent;
