@@ -5,6 +5,7 @@ import { FaCheck, FaTimes, FaUser, FaTrash, FaHistory, FaPalette, FaGraduationCa
 import { useNotification } from '../components/NotificationSystem';
 import { secureStorage } from '../utils/secureStorage.js';
 import BattleReminderManager from '../components/BattleReminderManager';
+import AIProviderConfigPanel from '../components/AIProviderConfigPanel';
 
 const SuperAdminDashboard = () => {
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -358,6 +359,8 @@ const SuperAdminDashboard = () => {
             </button>
           </div>
         </div>
+
+        <AIProviderConfigPanel />
 
         {/* WhatsApp Bot Blocking */}
         <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-700">

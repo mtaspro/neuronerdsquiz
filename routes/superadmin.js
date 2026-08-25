@@ -10,6 +10,11 @@ import UserQuestionRecord from '../models/UserQuestionRecord.js';
 import BadgeService from '../services/badgeService.js';
 import GlobalSettings from '../models/GlobalSettings.js';
 import LifelineConfig from '../models/LifelineConfig.js';
+import {
+  getAiIntegrationConfig,
+  saveAiIntegrationConfig,
+  getProviderKeyStatus
+} from '../services/aiIntegrationConfig.js';
 
 const router = express.Router();
 
@@ -593,6 +598,35 @@ router.get('/lifeline-config', sessionMiddleware, requireSuperAdmin, async (req,
     res.json(config);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Get AI provider routing (NeuraX, daily calendar, WhatsApp bot)
+router.get('/ai-integrations', sessionMiddleware, requireSuperAdmin, async (req, res) => {
+  try {
+    const integrations = await getAiIntegrationConfig();
+    res.json({
+      integrations,
+      providerKeys: getProviderKeyStatus()
+    });
+  } catch (error) {
+    console.error('Error fetching AI integration config:', error);
+    res.status(500).json({ error: 'Failed to fetch AI integration settings' });
+  }
+});
+
+// Update AI provider routing
+router.put('/ai-integrations', sessionMiddleware, requireSuperAdmin, async (req, res) => {
+  try {
+    const integrations = await saveAiIntegrationConfig(req.body.integrations, req.user.userId);
+    res.json({
+      message: 'AI integration settings saved',
+      integrations,
+      providerKeys: getProviderKeyStatus()
+    });
+  } catch (error) {
+    console.error('Error saving AI integration config:', error);
+    res.status(400).json({ error: error.message || 'Failed to save AI integration settings' });
   }
 });
 

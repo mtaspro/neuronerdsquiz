@@ -178,36 +178,15 @@ RULES:
 - FULLY ENGLISH ONLY — no Bengali, no Bangla, no mixed language
 - Human-like, conversational, relatable tone — like a friend giving a reality check
 - Include light, funny roasting for students who are not studying seriously, but keep it motivational`;
-      // Send to Gemini AI directly
       const axios = (await import('axios')).default;
-      const geminiApiKey = process.env.GEMINI_API_KEY;
-      
-      if (!geminiApiKey) {
-        throw new Error('GEMINI_API_KEY not configured');
-      }
-      
-      const aiResponse = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: prompt }]
-          }
-        ],
-        systemInstruction: {
-          parts: [{ text: 'You are NeuraX. Generate concise calendar messages. IMPORTANT: Output ONLY the final message wrapped in these exact markers: @@CALENDAR_MESSAGE_START@@ ... @@CALENDAR_MESSAGE_END@@. Do NOT output reasoning, thought process, or meta-commentary outside the markers. If you think silently, do not show it. The message inside the markers must be FULLY ENGLISH ONLY, human-like, conversational, with light roasting for students who are not studying seriously, but keep it motivational.' }]
-        },
-        generationConfig: {
-          maxOutputTokens: 1000,
-          temperature: 0.7
-        }
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        timeout: 30000
-      });
-      
-      let aiContent = aiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const apiUrl = process.env.API_URL || process.env.VITE_API_URL || 'http://localhost:5000';
+      const aiResponse = await axios.post(`${apiUrl}/api/ai-chat`, {
+        message: prompt,
+        integration: 'daily_calendar',
+        systemPrompt: 'You are NeuraX. Generate concise calendar messages. IMPORTANT: Output ONLY the final message wrapped in these exact markers: @@CALENDAR_MESSAGE_START@@ ... @@CALENDAR_MESSAGE_END@@. Do NOT output reasoning, thought process, or meta-commentary outside the markers. If you think silently, do not show it. The message inside the markers must be FULLY ENGLISH ONLY, human-like, conversational, with light roasting for students who are not studying seriously, but keep it motivational.'
+      }, { timeout: 30000 });
+
+      let aiContent = aiResponse.data?.response || '';
       aiContent = aiContent.replace(/<think>[\s\S]*?<\/think>/g, '').replace(/<reasoning>[\s\S]*?<\/reasoning>/g, '');
       
       if (!aiContent) {

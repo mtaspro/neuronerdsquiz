@@ -186,7 +186,7 @@ async function startWhatsAppBot() {
                             
                             const response = await axios.post(`${apiUrl}/api/ai-chat`, {
                                 message: query,
-                                model: 'step-3.5-flash',
+                                integration: 'whatsapp_bot',
                                 systemPrompt: `You are NeuraX Omega (নিউরএক্স ওমেগা), an advanced AI assistant for the Neuronerds whatsapp Study Group. You provide comprehensive, well-formatted responses similar to ChatGPT.
 
 📝 Use bold for important keywords

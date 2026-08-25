@@ -4,6 +4,7 @@ import { Pinecone } from '@pinecone-database/pinecone';
 
 import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 import ChatHistory from '../models/ChatHistory.js';
+import { getIntegrationSettings, resolveRouting } from '../services/aiIntegrationConfig.js';
 
 const router = express.Router();
 
@@ -166,51 +167,69 @@ ${HSC_RAG_INSTRUCTIONS}
 ${textbookContext}`;
 }
 
-function buildModelFallbackChain(primaryModel, isGroqModel) {
-  if (isGroqModel) {
-    return [primaryModel];
+function toChainEntry(entry) {
+  if (!entry) return null;
+  if (typeof entry === 'string') {
+    return { model: entry, provider: inferProvider(entry) };
+  }
+  return {
+    model: entry.model,
+    provider: entry.provider || inferProvider(entry.model)
+  };
+}
+
+function inferProvider(model) {
+  if (!model) return 'openrouter';
+  if (isGeminiModel(model)) return 'gemini';
+  if (isHcnModel(model) && HCN_API_KEY) return 'hcn';
+  if (model === 'qwen/qwen3-32b') return 'groq';
+  return 'openrouter';
+}
+
+function buildModelFallbackChain(primaryModel, configuredChain = []) {
+  const chain = [];
+  const seen = new Set();
+
+  const pushEntry = (entry) => {
+    const normalized = toChainEntry(entry);
+    if (!normalized?.model) return;
+    const key = `${normalized.provider}:${normalized.model}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    chain.push(normalized);
+  };
+
+  if (configuredChain.length) {
+    configuredChain.forEach(pushEntry);
+    return chain;
   }
 
   const basePrimary = primaryModel || (HCN_API_KEY ? HCN_PRIMARY_MODEL : OPENROUTER_AUTO_FREE_MODEL);
-  const isPrimaryHcn = isHcnModel(basePrimary);
+  pushEntry({ model: basePrimary, provider: inferProvider(basePrimary) });
 
-  let chain;
-  if (isPrimaryHcn && HCN_API_KEY) {
-    chain = [
-      basePrimary,
-      HCN_HEAVY_MODEL,
-      'DeepSeek-V4-Pro',
-      OPENROUTER_AUTO_FREE_MODEL,
-      ...OPENROUTER_FALLBACK_MODELS
-    ];
-  } else {
-    chain = [
-      basePrimary,
-      OPENROUTER_AUTO_FREE_MODEL,
-      ...OPENROUTER_FALLBACK_MODELS
-    ];
+  if (isHcnModel(basePrimary) && HCN_API_KEY) {
+    pushEntry({ model: HCN_HEAVY_MODEL, provider: 'hcn' });
+    pushEntry({ model: 'DeepSeek-V4-Pro', provider: 'hcn' });
   }
 
-  const seen = new Set();
-  return chain.filter((modelId) => {
-    if (!modelId || seen.has(modelId)) {
-      return false;
-    }
-    seen.add(modelId);
-    return true;
+  pushEntry({ model: OPENROUTER_AUTO_FREE_MODEL, provider: 'openrouter' });
+  OPENROUTER_FALLBACK_MODELS.forEach((modelId) => {
+    pushEntry({ model: modelId, provider: 'openrouter' });
   });
+
+  return chain;
 }
 
 function canFallbackToNextModel(error, currentModelIndex, modelChain) {
   if (currentModelIndex >= modelChain.length - 1) return false;
 
-  const currentModel = modelChain[currentModelIndex];
-  const nextModel = modelChain[currentModelIndex + 1];
-  const fromHcn = isHcnModel(currentModel);
-  const toOpenRouter = !isHcnModel(nextModel) && !isGeminiModel(nextModel) && nextModel !== 'qwen/qwen3-32b';
+  const current = toChainEntry(modelChain[currentModelIndex]);
+  const next = toChainEntry(modelChain[currentModelIndex + 1]);
+  const fromHcn = current?.provider === 'hcn';
+  const toOpenRouter = next?.provider === 'openrouter';
 
   if (fromHcn && toOpenRouter) {
-    return isHcnServerError(error);
+    return isHcnServerError(error) || isRetryableAIError(error);
   }
 
   return isRetryableAIError(error);
@@ -251,7 +270,13 @@ function isHcnModel(model) {
 }
 
 function isGeminiModel(model) {
-  return model && model.startsWith('gemini/');
+  if (!model) return false;
+  const lower = String(model).toLowerCase();
+  return lower.startsWith('gemini/') || lower.startsWith('gemini-');
+}
+
+function getGeminiModelId(model) {
+  return String(model || GEMINI_DEFAULT_MODEL).replace(/^gemini\//i, '');
 }
 
 function convertMessagesToGeminiFormat(messages, imageBase64) {
@@ -326,9 +351,12 @@ function isHcnServerError(error) {
   return false;
 }
 
-function getApiConfig(model) {
-  if (isHcnModel(model) && HCN_API_KEY) {
+function getApiConfig(model, provider) {
+  const resolvedProvider = provider || inferProvider(model);
+
+  if (resolvedProvider === 'hcn') {
     return {
+      provider: 'hcn',
       isHcnModel: true,
       apiUrl: `${HCN_API_BASE_URL}/chat/completions`,
       apiKey: HCN_API_KEY,
@@ -339,10 +367,11 @@ function getApiConfig(model) {
     };
   }
 
-  if (isGeminiModel(model)) {
-    const geminiModel = model.replace('gemini/', '');
+  if (resolvedProvider === 'gemini') {
+    const geminiModel = getGeminiModelId(model);
     const apiUrlWithKey = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${GEMINI_API_KEY}`;
     return {
+      provider: 'gemini',
       isGeminiModel: true,
       apiUrl: apiUrlWithKey,
       apiKey: GEMINI_API_KEY,
@@ -352,10 +381,9 @@ function getApiConfig(model) {
     };
   }
 
-  const isGroqModel = model === 'qwen/qwen3-32b';
-
-  if (isGroqModel) {
+  if (resolvedProvider === 'groq') {
     return {
+      provider: 'groq',
       isGroqModel: true,
       apiUrl: 'https://api.groq.com/openai/v1/chat/completions',
       apiKey: GROQ_API_KEY,
@@ -367,6 +395,7 @@ function getApiConfig(model) {
   }
 
   return {
+    provider: 'openrouter',
     isGroqModel: false,
     apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
     apiKey: OPENROUTER_API_KEY,
@@ -379,8 +408,8 @@ function getApiConfig(model) {
   };
 }
 
-async function callChatCompletion({ apiUrl, headers, messages, model, temperature, maxTokens = MAX_TOKENS, imageBase64 }) {
-  const isGemini = isGeminiModel(model);
+async function callChatCompletion({ apiUrl, headers, messages, model, provider, temperature, maxTokens = MAX_TOKENS, imageBase64 }) {
+  const isGemini = provider === 'gemini' || isGeminiModel(model);
 
   if (isGemini) {
     return callGeminiChatCompletion({
@@ -429,16 +458,19 @@ async function callChatCompletionWithFallback({
   let lastError = null;
 
   for (let i = 0; i < modelChain.length; i++) {
-    const modelId = modelChain[i];
+    const entry = toChainEntry(modelChain[i]);
+    const modelId = entry.model;
+    const provider = entry.provider;
     try {
-      const { apiUrl, headers } = getApiConfig(modelId);
-      const isGeminiModelUsed = isGeminiModel(modelId);
+      const { apiUrl, headers } = getApiConfig(modelId, provider);
+      const isGeminiModelUsed = provider === 'gemini' || isGeminiModel(modelId);
 
       const content = await callChatCompletion({
         apiUrl,
         headers,
         messages,
         model: modelId,
+        provider,
         temperature,
         maxTokens,
         imageBase64: isGeminiModelUsed ? imageBase64 : undefined
@@ -487,25 +519,50 @@ function sanitizeAIResponse(aiResponse) {
 // AI Chat endpoint for text-only messages
 router.post('/', async (req, res) => {
   try {
-    const { message, model, systemPrompt, conversationHistory = [], enableWebSearch = false, imageBase64 } = req.body;
+    const {
+      message,
+      model,
+      systemPrompt,
+      conversationHistory = [],
+      enableWebSearch = false,
+      imageBase64,
+      integration = 'neurax'
+    } = req.body;
 
     if (!message || !message.trim()) {
       return res.status(400).json({ error: 'Message is required' });
-    }
-
-    const isGeminiModelUsed = isGeminiModel(model);
-    if (isGeminiModelUsed && !GEMINI_API_KEY) {
-      return res.status(500).json({ error: 'Gemini API key not configured' });
     }
 
     if (!HCN_API_KEY && !OPENROUTER_API_KEY && !GROQ_API_KEY && !GEMINI_API_KEY) {
       return res.status(500).json({ error: 'AI API keys not configured' });
     }
 
-    const defaultModel = HCN_API_KEY ? HCN_PRIMARY_MODEL : OPENROUTER_AUTO_FREE_MODEL;
-    const isGroqModel = model === 'qwen/qwen3-32b';
-    const isDolphinModel = model === 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free';
-    const textbookContext = await retrieveTextbookContext(message.trim());
+    const { key: integrationKey, settings } = await getIntegrationSettings(integration);
+    if (!settings.enabled) {
+      return res.status(503).json({ error: `${integrationKey} AI integration is disabled by SuperAdmin` });
+    }
+
+    const routing = resolveRouting({ settings, clientModel: model });
+    const configuredChain = routing.chain;
+    const primaryModel = configuredChain[0]?.model;
+    const primaryProvider = configuredChain[0]?.provider || inferProvider(primaryModel);
+
+    if (primaryProvider === 'gemini' && !GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'Gemini API key not configured' });
+    }
+    if (primaryProvider === 'hcn' && !HCN_API_KEY) {
+      return res.status(500).json({ error: 'HCN API key not configured' });
+    }
+    if (primaryProvider === 'groq' && !GROQ_API_KEY) {
+      return res.status(500).json({ error: 'Groq API key not configured' });
+    }
+    if (primaryProvider === 'openrouter' && !OPENROUTER_API_KEY) {
+      return res.status(500).json({ error: 'OpenRouter API key not configured' });
+    }
+
+    const isDolphinModel = primaryModel === 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free';
+    const shouldUseRag = integrationKey === 'neurax';
+    const textbookContext = shouldUseRag ? await retrieveTextbookContext(message.trim()) : '';
 
     let messages = [
       {
@@ -516,8 +573,10 @@ router.post('/', async (req, res) => {
       { role: 'user', content: message.trim() }
     ];
 
-    const modelChain = buildModelFallbackChain(model || defaultModel, isGroqModel);
+    const modelChain = buildModelFallbackChain(primaryModel, configuredChain);
     const temperature = isDolphinModel ? 0.15 : 0.7;
+
+    console.log(`🤖 ${integrationKey}: ${primaryProvider}/${primaryModel}${settings.fallbackEnabled ? ` (fallback ${settings.fallbackProvider}/${settings.fallbackModelId})` : ''}`);
 
     const { content: firstPassContent } = await callChatCompletionWithFallback({
       messages,
@@ -570,10 +629,7 @@ router.post('/', async (req, res) => {
           content: `Here are the current web search results for "${searchQuery}":\n\n${searchContext}\n\nPlease provide a comprehensive answer using this information. When answering HSC academic content, still prioritize the NCTB/HSC textbook context from the system prompt over web snippets.`
         });
 
-        const searchModelChain = buildModelFallbackChain(
-          model || defaultModel,
-          isGroqModel
-        );
+        const searchModelChain = buildModelFallbackChain(primaryModel, configuredChain);
 
         const { content: searchPassContent } = await callChatCompletionWithFallback({
           messages,
