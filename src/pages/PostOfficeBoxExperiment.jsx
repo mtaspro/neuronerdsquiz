@@ -16,29 +16,39 @@ const SOCKET_GROUPS = {
   P: {
     label: 'Ratio Arm P',
     sockets: [
-      { id: 'P1', resistance: 1, x: 0.12, y: 0.18 },
-      { id: 'P2', resistance: 2, x: 0.12, y: 0.28 },
-      { id: 'P3', resistance: 2, x: 0.12, y: 0.38 },
-      { id: 'P4', resistance: 5, x: 0.12, y: 0.48 },
-      { id: 'P5', resistance: 10, x: 0.12, y: 0.58 },
+      { id: 'P1', resistance: 1, x: 0.202, y: 0.210 },
+      { id: 'P2', resistance: 2, x: 0.296, y: 0.210 },
+      { id: 'P3', resistance: 2, x: 0.391, y: 0.210 },
+      { id: 'P4', resistance: 5, x: 0.492, y: 0.210 },
+      { id: 'P5', resistance: 10, x: 0.593, y: 0.210 },
+      { id: 'P6', resistance: 20, x: 0.695, y: 0.210 },
+      { id: 'P7', resistance: 50, x: 0.795, y: 0.210 },
     ],
   },
   Q: {
     label: 'Ratio Arm Q',
     sockets: [
-      { id: 'Q1', resistance: 1, x: 0.88, y: 0.18 },
-      { id: 'Q2', resistance: 2, x: 0.88, y: 0.28 },
-      { id: 'Q3', resistance: 2, x: 0.88, y: 0.38 },
-      { id: 'Q4', resistance: 5, x: 0.88, y: 0.48 },
-      { id: 'Q5', resistance: 10, x: 0.88, y: 0.58 },
+      { id: 'Q1', resistance: 1, x: 0.202, y: 0.440 },
+      { id: 'Q2', resistance: 2, x: 0.297, y: 0.440 },
+      { id: 'Q3', resistance: 2, x: 0.392, y: 0.440 },
+      { id: 'Q4', resistance: 5, x: 0.484, y: 0.440 },
+      { id: 'Q5', resistance: 10, x: 0.576, y: 0.440 },
+      { id: 'Q6', resistance: 20, x: 0.666, y: 0.440 },
+      { id: 'Q7', resistance: 50, x: 0.759, y: 0.440 },
+      { id: 'Q8', resistance: 100, x: 0.853, y: 0.440 },
     ],
   },
   R: {
     label: 'Resistance Arm R',
     sockets: [
-      { id: 'R1', resistance: 1, x: 0.50, y: 0.78 },
-      { id: 'R2', resistance: 2, x: 0.50, y: 0.88 },
-      { id: 'R∞', resistance: Infinity, x: 0.50, y: 0.68 },
+      { id: 'R1', resistance: 1, x: 0.202, y: 0.732 },
+      { id: 'R2', resistance: 2, x: 0.299, y: 0.732 },
+      { id: 'R3', resistance: 5, x: 0.391, y: 0.732 },
+      { id: 'R4', resistance: 10, x: 0.484, y: 0.732 },
+      { id: 'R5', resistance: 20, x: 0.575, y: 0.732 },
+      { id: 'R6', resistance: 50, x: 0.669, y: 0.732 },
+      { id: 'R7', resistance: 100, x: 0.760, y: 0.732 },
+      { id: 'R∞', resistance: Infinity, x: 0.854, y: 0.732 },
     ],
   },
 };
@@ -76,16 +86,23 @@ const COMPONENTS = {
 };
 
 const TERMINALS = {
-  batteryPlus: { id: 'batteryPlus', label: '+', color: '#ef4444', x: 0.20, y: 0.65, component: 'battery' },
-  batteryMinus: { id: 'batteryMinus', label: '−', color: '#1f2937', x: 0.14, y: 0.65, component: 'battery' },
-  galvanometerG0: { id: 'galvanometerG0', label: 'G0', color: '#3b82f6', x: 0.42, y: 0.10, component: 'galvanometer' },
-  galvanometerG1: { id: 'galvanometerG1', label: 'G1', color: '#3b82f6', x: 0.58, y: 0.10, component: 'galvanometer' },
-  unknownX1: { id: 'unknownX1', label: '1', color: '#10b981', x: 0.44, y: 0.95, component: 'unknownResistance' },
-  unknownX2: { id: 'unknownX2', label: '2', color: '#10b981', x: 0.56, y: 0.95, component: 'unknownResistance' },
-  boardA: { id: 'boardA', label: 'A', color: '#f59e0b', x: 0.30, y: 0.32, component: 'board' },
-  boardB: { id: 'boardB', label: 'B', color: '#f59e0b', x: 0.70, y: 0.32, component: 'board' },
-  boardC: { id: 'boardC', label: 'C', color: '#f59e0b', x: 0.30, y: 0.68, component: 'board' },
-  boardD: { id: 'boardD', label: 'D', color: '#f59e0b', x: 0.70, y: 0.68, component: 'board' },
+  batteryPlus: { id: 'batteryPlus', label: '+', color: '#ef4444', x: 0.077, y: 0.202, component: 'battery' },
+  batteryMinus: { id: 'batteryMinus', label: '−', color: '#1f2937', x: 0.075, y: 0.442, component: 'battery' },
+  galvanometerG0: { id: 'galvanometerG0', label: 'G0', color: '#3b82f6', x: 0.408, y: 0.075, component: 'galvanometer' },
+  galvanometerG1: { id: 'galvanometerG1', label: 'G1', color: '#3b82f6', x: 0.592, y: 0.075, component: 'galvanometer' },
+  unknownX1: { id: 'unknownX1', label: '1', color: '#10b981', x: 0.149, y: 0.897, component: 'unknownResistance' },
+  unknownX2: { id: 'unknownX2', label: '2', color: '#10b981', x: 0.424, y: 0.903, component: 'unknownResistance' },
+  boardA: { id: 'boardA', label: 'A', color: '#f59e0b', x: 0.267, y: 0.310, component: 'board' },
+  boardB: { id: 'boardB', label: 'B', color: '#f59e0b', x: 0.733, y: 0.310, component: 'board' },
+  boardC: { id: 'boardC', label: 'C', color: '#f59e0b', x: 0.267, y: 0.680, component: 'board' },
+  boardD: { id: 'boardD', label: 'D', color: '#f59e0b', x: 0.733, y: 0.680, component: 'board' },
+  leftScrew1: { id: 'leftScrew1', label: 'LS1', color: '#f59e0b', x: 0.077, y: 0.202, component: 'board' },
+  leftScrew2: { id: 'leftScrew2', label: 'LS2', color: '#f59e0b', x: 0.075, y: 0.442, component: 'board' },
+  leftScrew3: { id: 'leftScrew3', label: 'LS3', color: '#f59e0b', x: 0.075, y: 0.735, component: 'board' },
+  bottomScrew1: { id: 'bottomScrew1', label: 'BS1', color: '#f59e0b', x: 0.149, y: 0.897, component: 'board' },
+  bottomScrew2: { id: 'bottomScrew2', label: 'BS2', color: '#f59e0b', x: 0.424, y: 0.903, component: 'board' },
+  rightScrew1: { id: 'rightScrew1', label: 'RS1', color: '#f59e0b', x: 0.922, y: 0.200, component: 'board' },
+  bottomScrew3: { id: 'bottomScrew3', label: 'BS3', color: '#f59e0b', x: 0.845, y: 0.911, component: 'board' },
 };
 
 const TERMINAL_RADIUS = 12;
@@ -100,7 +117,14 @@ const VALID_CONNECTIONS = {
   boardA: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2'],
   boardB: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2'],
   boardC: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2'],
-  boardD: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2'],
+  boardD: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  leftScrew1: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  leftScrew2: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  leftScrew3: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  bottomScrew1: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  bottomScrew2: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew3', 'rightScrew1'],
+  bottomScrew3: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'rightScrew1'],
+  rightScrew1: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3'],
 };
 
 const TERMINAL_COMPONENT_MAP = {
@@ -114,6 +138,13 @@ const TERMINAL_COMPONENT_MAP = {
   boardB: 'board',
   boardC: 'board',
   boardD: 'board',
+  leftScrew1: 'board',
+  leftScrew2: 'board',
+  leftScrew3: 'board',
+  bottomScrew1: 'board',
+  bottomScrew2: 'board',
+  bottomScrew3: 'board',
+  rightScrew1: 'board',
 };
 
 function useAssetLoader(urls) {
@@ -369,8 +400,6 @@ const PostOfficeBoxExperiment = () => {
   const [showKeyWarning, setShowKeyWarning] = useState(false);
   const [observations, setObservations] = useState([]);
   const [showObservationTable, setShowObservationTable] = useState(false);
-  const [clickMarker, setClickMarker] = useState(null);
-  const clickMarkerTimeoutRef = useRef(null);
   const nextIdRef = useRef(1);
   const nextObsIdRef = useRef(1);
 
@@ -426,7 +455,12 @@ const PostOfficeBoxExperiment = () => {
         group.sockets.forEach((socket) => {
           const sx = offsetX + socket.x * drawWidth;
           const sy = offsetY + socket.y * drawHeight;
-          drawSocket(ctx, sx, sy, 10, `${socket.id}\n${socket.resistance}Ω`, pluggedSockets[socket.id]);
+          drawSocket(ctx, sx, sy, 10, `${socket.resistance}Ω`, pluggedSockets[socket.id]);
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '8px "Space Grotesk", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillText(socket.id, sx, sy + 14);
         });
       });
     } else {
@@ -437,7 +471,12 @@ const PostOfficeBoxExperiment = () => {
         group.sockets.forEach((socket) => {
           const sx = socket.x * width;
           const sy = socket.y * height;
-          drawSocket(ctx, sx, sy, 10, `${socket.id}\n${socket.resistance}Ω`, pluggedSockets[socket.id]);
+          drawSocket(ctx, sx, sy, 10, `${socket.resistance}Ω`, pluggedSockets[socket.id]);
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '8px "Space Grotesk", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillText(socket.id, sx, sy + 14);
         });
       });
 
@@ -500,26 +539,7 @@ const PostOfficeBoxExperiment = () => {
     ctx.font = '12px "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(unknown.label, ux, uy - ur - 8);
-
-    if (clickMarker) {
-      ctx.beginPath();
-      ctx.arc(clickMarker.x, clickMarker.y, 6, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = '#ef4444';
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(clickMarker.x - 10, clickMarker.y);
-      ctx.lineTo(clickMarker.x + 10, clickMarker.y);
-      ctx.moveTo(clickMarker.x, clickMarker.y - 10);
-      ctx.lineTo(clickMarker.x, clickMarker.y + 10);
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = '#ef4444';
-      ctx.stroke();
-    }
-  }, [images, dimensions, pluggedSockets, clickMarker]);
+  }, [images, dimensions, pluggedSockets]);
 
   useEffect(() => {
     const animate = () => {
@@ -608,36 +628,6 @@ const PostOfficeBoxExperiment = () => {
   const handleTerminalDoubleClick = useCallback((terminalId) => {
     setWires((prev) => prev.filter((w) => w.fromTerminalId !== terminalId && w.toTerminalId !== terminalId));
   }, []);
-
-  const handleCanvasClick = useCallback((e) => {
-    const point = getCanvasPoint(e.clientX, e.clientY);
-    if (!point || !images.board || !dimensions.width) return;
-
-    const boardImg = images.board;
-    const boardAspect = boardImg.naturalWidth / boardImg.naturalHeight;
-    let drawWidth = dimensions.width;
-    let drawHeight = dimensions.width / boardAspect;
-    if (drawHeight < dimensions.height) {
-      drawHeight = dimensions.height;
-      drawWidth = dimensions.height * boardAspect;
-    }
-    const offsetX = (dimensions.width - drawWidth) / 2;
-    const offsetY = (dimensions.height - drawHeight) / 2;
-
-    const imgX = point.x - offsetX;
-    const imgY = point.y - offsetY;
-
-    if (imgX < 0 || imgY < 0 || imgX > drawWidth || imgY > drawHeight) return;
-
-    const normX = imgX / drawWidth;
-    const normY = imgY / drawHeight;
-
-    console.log(`x: ${normX.toFixed(3)}, y: ${normY.toFixed(3)}`);
-
-    if (clickMarkerTimeoutRef.current) clearTimeout(clickMarkerTimeoutRef.current);
-    setClickMarker({ x: point.x, y: point.y });
-    clickMarkerTimeoutRef.current = setTimeout(() => setClickMarker(null), 2000);
-  }, [getCanvasPoint, images.board, dimensions]);
 
   useEffect(() => {
     if (!k1Pressed || !k2Pressed) {
@@ -758,18 +748,18 @@ const PostOfficeBoxExperiment = () => {
 
           <div className="aura-glass aura-glass-card rounded-2xl border border-cyan-500/10 shadow-lg shadow-cyan-500/10 p-6 sm:p-8">
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="rounded-xl border border-cyan-500/10 bg-black/20 p-4 text-center">
-                <p className="text-xs uppercase tracking-widest text-slate-400 mb-1">Apparatus</p>
-                <p className="text-sm text-slate-200">Post Office Box, Leclanche cell, galvanometer, resistance box, jockey, connecting wires.</p>
-              </div>
-              <div className="rounded-xl border border-cyan-500/10 bg-black/20 p-4 text-center">
-                <p className="text-xs uppercase tracking-widest text-slate-400 mb-1">Theory</p>
-                <p className="text-sm text-slate-200">Use the Wheatstone bridge principle to determine unknown resistance by balancing the bridge.</p>
-              </div>
-              <div className="rounded-xl border border-cyan-500/10 bg-black/20 p-4 text-center">
-                <p className="text-xs uppercase tracking-widest text-slate-400 mb-1">Formula</p>
-                <p className="text-sm text-slate-200 font-mono">R = S × (P/Q)</p>
-              </div>
+               <div className="rounded-xl border border-cyan-500/10 bg-black/20 p-4 text-center">
+                 <p className="text-xs uppercase tracking-widest text-slate-400 mb-1">Apparatus</p>
+                 <p className="text-sm text-slate-200">Post Office Box, Galvanometer, Resistance Wire (Unknown X), Battery, Keys (K1, K2), Connecting Wires.</p>
+               </div>
+               <div className="rounded-xl border border-cyan-500/10 bg-black/20 p-4 text-center">
+                 <p className="text-xs uppercase tracking-widest text-slate-400 mb-1">Theory</p>
+                 <p className="text-sm text-slate-200">Wheatstone bridge principle: Unknown resistance S = (Q / P) * R when bridge is balanced.</p>
+               </div>
+               <div className="rounded-xl border border-cyan-500/10 bg-black/20 p-4 text-center">
+                 <p className="text-xs uppercase tracking-widest text-slate-400 mb-1">Formula</p>
+                 <p className="text-sm text-slate-200 font-mono">S = (Q / P) × R</p>
+               </div>
             </div>
 
               <div className="mt-8">
@@ -834,20 +824,29 @@ const PostOfficeBoxExperiment = () => {
                 >
                     <p className="text-[10px] uppercase tracking-widest text-slate-400 mb-2 text-center">Galvanometer HUD</p>
                     <div className="relative w-32 h-32 mx-auto">
-                      <div className="absolute inset-0 rounded-full border-2 border-cyan-500/30 bg-black/40" />
-                      <div className="absolute inset-0 flex items-center justify-center">
+                      {images.galvanometerBody && (
+                        <img
+                          src={ASSETS.galvanometerBody}
+                          alt="Galvanometer dial"
+                          className="absolute inset-0 w-full h-full object-contain opacity-80"
+                          style={{ zIndex: 0 }}
+                        />
+                      )}
+                      <div className="absolute inset-0 rounded-full border-2 border-cyan-500/30 bg-black/40" style={{ zIndex: 1 }} />
+                      <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 2 }}>
                         <div className="w-0.5 h-12 bg-cyan-500/20 absolute" />
                         <div className="w-12 h-0.5 bg-cyan-500/20 absolute" />
                       </div>
                       <div
                         className="absolute bottom-1/2 left-1/2 w-1 h-12 origin-bottom transition-transform duration-300"
                         style={{
+                          zIndex: 3,
                           transform: `translateX(-50%) rotate(${bridgeResult.valid && k1Pressed && k2Pressed ? Math.max(-30, Math.min(30, bridgeResult.polarity * Math.min(30, bridgeResult.ig * 5))) : 0}deg)`,
                           background: bridgeResult.polarity > 0 ? '#ef4444' : bridgeResult.polarity < 0 ? '#3b82f6' : '#94a3b8',
                           borderRadius: '2px',
                         }}
                       />
-                      <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 4 }}>
                         <div className="w-2 h-2 rounded-full bg-slate-300" />
                       </div>
                       {[-30, -20, -10, 0, 10, 20, 30].map((deg) => {
@@ -858,7 +857,7 @@ const PostOfficeBoxExperiment = () => {
                           <span
                             key={deg}
                             className="absolute text-[8px] text-slate-400"
-                            style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
+                            style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)', zIndex: 5 }}
                           >
                             {deg}
                           </span>
@@ -881,7 +880,6 @@ const PostOfficeBoxExperiment = () => {
                   onMouseMove={handleCanvasMouseMove}
                   onMouseDown={handleCanvasMouseDown}
                   onMouseUp={handleCanvasMouseUp}
-                  onClick={handleCanvasClick}
                   onMouseLeave={() => {
                     setHoveredTerminal(null);
                     setDraggingFrom(null);
