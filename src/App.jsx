@@ -39,7 +39,10 @@ import Badges from './pages/Badges';
 import About from './pages/About';
 import HallOfFame from './pages/HallOfFame';
 import NeuraflowAIChat from './pages/NeuraflowAIChat';
-import VirtualChemLab from './pages/VirtualChemLab';
+import VirtualLabHub from './pages/VirtualLabHub';
+import PhysicsLab from './pages/PhysicsLab';
+import ChemistryLab from './pages/ChemistryLab';
+import PostOfficeBoxExperiment from './pages/PostOfficeBoxExperiment';
 import SharedConversation from './pages/SharedConversation';
 import DarkModeToggle from './components/DarkModeToggle';
 import ThemeSelector from './components/ThemeSelector';
@@ -451,14 +454,38 @@ function AnimatedRoutes() {
                </ProtectedRoute>
              }
            />
-           <Route
-             path="/virtual-lab"
-             element={
-               <ProtectedRoute>
-                 <VirtualChemLab />
-               </ProtectedRoute>
-             }
-           />
+            <Route
+              path="/virtual-lab"
+              element={
+                <ProtectedRoute>
+                  <VirtualLabHub />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/virtual-lab/chemistry"
+              element={
+                <ProtectedRoute>
+                  <ChemistryLab />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/virtual-lab/physics"
+              element={
+                <ProtectedRoute>
+                  <PhysicsLab />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/virtual-lab/physics/post-office-box"
+              element={
+                <ProtectedRoute>
+                  <PostOfficeBoxExperiment />
+                </ProtectedRoute>
+              }
+            />
            <Route
              path="/admin"
              element={
