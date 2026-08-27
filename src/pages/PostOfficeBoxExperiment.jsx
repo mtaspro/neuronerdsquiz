@@ -369,6 +369,8 @@ const PostOfficeBoxExperiment = () => {
   const [showKeyWarning, setShowKeyWarning] = useState(false);
   const [observations, setObservations] = useState([]);
   const [showObservationTable, setShowObservationTable] = useState(false);
+  const [clickMarker, setClickMarker] = useState(null);
+  const clickMarkerTimeoutRef = useRef(null);
   const nextIdRef = useRef(1);
   const nextObsIdRef = useRef(1);
 
@@ -498,7 +500,26 @@ const PostOfficeBoxExperiment = () => {
     ctx.font = '12px "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(unknown.label, ux, uy - ur - 8);
-  }, [images, dimensions, pluggedSockets]);
+
+    if (clickMarker) {
+      ctx.beginPath();
+      ctx.arc(clickMarker.x, clickMarker.y, 6, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#ef4444';
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(clickMarker.x - 10, clickMarker.y);
+      ctx.lineTo(clickMarker.x + 10, clickMarker.y);
+      ctx.moveTo(clickMarker.x, clickMarker.y - 10);
+      ctx.lineTo(clickMarker.x, clickMarker.y + 10);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#ef4444';
+      ctx.stroke();
+    }
+  }, [images, dimensions, pluggedSockets, clickMarker]);
 
   useEffect(() => {
     const animate = () => {
@@ -587,6 +608,36 @@ const PostOfficeBoxExperiment = () => {
   const handleTerminalDoubleClick = useCallback((terminalId) => {
     setWires((prev) => prev.filter((w) => w.fromTerminalId !== terminalId && w.toTerminalId !== terminalId));
   }, []);
+
+  const handleCanvasClick = useCallback((e) => {
+    const point = getCanvasPoint(e.clientX, e.clientY);
+    if (!point || !images.board || !dimensions.width) return;
+
+    const boardImg = images.board;
+    const boardAspect = boardImg.naturalWidth / boardImg.naturalHeight;
+    let drawWidth = dimensions.width;
+    let drawHeight = dimensions.width / boardAspect;
+    if (drawHeight < dimensions.height) {
+      drawHeight = dimensions.height;
+      drawWidth = dimensions.height * boardAspect;
+    }
+    const offsetX = (dimensions.width - drawWidth) / 2;
+    const offsetY = (dimensions.height - drawHeight) / 2;
+
+    const imgX = point.x - offsetX;
+    const imgY = point.y - offsetY;
+
+    if (imgX < 0 || imgY < 0 || imgX > drawWidth || imgY > drawHeight) return;
+
+    const normX = imgX / drawWidth;
+    const normY = imgY / drawHeight;
+
+    console.log(`x: ${normX.toFixed(3)}, y: ${normY.toFixed(3)}`);
+
+    if (clickMarkerTimeoutRef.current) clearTimeout(clickMarkerTimeoutRef.current);
+    setClickMarker({ x: point.x, y: point.y });
+    clickMarkerTimeoutRef.current = setTimeout(() => setClickMarker(null), 2000);
+  }, [getCanvasPoint, images.board, dimensions]);
 
   useEffect(() => {
     if (!k1Pressed || !k2Pressed) {
@@ -830,6 +881,7 @@ const PostOfficeBoxExperiment = () => {
                   onMouseMove={handleCanvasMouseMove}
                   onMouseDown={handleCanvasMouseDown}
                   onMouseUp={handleCanvasMouseUp}
+                  onClick={handleCanvasClick}
                   onMouseLeave={() => {
                     setHoveredTerminal(null);
                     setDraggingFrom(null);
