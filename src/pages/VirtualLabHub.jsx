@@ -43,21 +43,24 @@ const VirtualLabHub = () => {
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 mb-10">
-          {subjects.map(({ title, description, to, border, shadow, iconBg, iconText }) => (
-            <Link
-              key={title}
-              to={to}
-              className={`aura-glass aura-glass-card rounded-2xl ${border} ${shadow} shadow-lg p-6 sm:p-8 transition-transform hover:-translate-y-1 hover:shadow-xl`}
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconBg} ${iconText}`}>
-                  <Icon className="h-5 w-5" aria-hidden />
-                </span>
-                <h2 className="aura-headline text-xl">{title}</h2>
-              </div>
-              <p className="text-sm text-slate-300 leading-relaxed">{description}</p>
-            </Link>
-          ))}
+          {subjects.map((subject) => {
+            const { title, description, to, border, shadow, iconBg, iconText, icon: Icon } = subject;
+            return (
+              <Link
+                key={title}
+                to={to}
+                className={`aura-glass aura-glass-card rounded-2xl ${border} ${shadow} shadow-lg p-6 sm:p-8 transition-transform hover:-translate-y-1 hover:shadow-xl`}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconBg} ${iconText}`}>
+                    <Icon className="h-5 w-5" aria-hidden />
+                  </span>
+                  <h2 className="aura-headline text-xl">{title}</h2>
+                </div>
+                <p className="text-sm text-slate-300 leading-relaxed">{description}</p>
+              </Link>
+            );
+          })}
         </div>
 
         <Button to="/dashboard" variant="secondary">
