@@ -88,6 +88,8 @@ const COMPONENTS = {
 const TERMINALS = {
   batteryPlus: { id: 'batteryPlus', label: '+', color: '#ef4444', x: 0.077, y: 0.202, component: 'battery' },
   batteryMinus: { id: 'batteryMinus', label: '−', color: '#1f2937', x: 0.075, y: 0.442, component: 'battery' },
+  batteryBoxPlus: { id: 'batteryBoxPlus', label: 'B+', color: '#ef4444', x: 0.05, y: 0.82, component: 'batteryBox' },
+  batteryBoxMinus: { id: 'batteryBoxMinus', label: 'B-', color: '#1f2937', x: 0.13, y: 0.82, component: 'batteryBox' },
   galvanometerG0: { id: 'galvanometerG0', label: 'G0', color: '#3b82f6', x: 0.408, y: 0.075, component: 'galvanometer' },
   galvanometerG1: { id: 'galvanometerG1', label: 'G1', color: '#3b82f6', x: 0.592, y: 0.075, component: 'galvanometer' },
   unknownX1: { id: 'unknownX1', label: '1', color: '#10b981', x: 0.149, y: 0.897, component: 'unknownResistance' },
@@ -108,28 +110,32 @@ const TERMINALS = {
 const TERMINAL_RADIUS = 12;
 
 const VALID_CONNECTIONS = {
-  batteryPlus: ['boardA', 'boardC', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2'],
-  batteryMinus: ['boardB', 'boardD', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2'],
-  galvanometerG0: ['batteryPlus', 'batteryMinus', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2'],
-  galvanometerG1: ['batteryPlus', 'batteryMinus', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2'],
-  unknownX1: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD'],
-  unknownX2: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD'],
-  boardA: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2'],
-  boardB: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2'],
-  boardC: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2'],
-  boardD: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  leftScrew1: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  leftScrew2: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  leftScrew3: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  bottomScrew1: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  bottomScrew2: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew3', 'rightScrew1'],
-  bottomScrew3: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'rightScrew1'],
-  rightScrew1: ['batteryPlus', 'batteryMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3'],
+  batteryPlus: ['boardA', 'boardC', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
+  batteryMinus: ['boardB', 'boardD', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
+  batteryBoxPlus: ['boardA', 'boardC', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxMinus'],
+  batteryBoxMinus: ['boardB', 'boardD', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxPlus'],
+  galvanometerG0: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  galvanometerG1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  unknownX1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  unknownX2: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  boardA: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  boardB: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  boardC: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  boardD: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  leftScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  leftScrew2: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  leftScrew3: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  bottomScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  bottomScrew2: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew3', 'rightScrew1'],
+  bottomScrew3: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'rightScrew1'],
+  rightScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3'],
 };
 
 const TERMINAL_COMPONENT_MAP = {
   batteryPlus: 'battery',
   batteryMinus: 'battery',
+  batteryBoxPlus: 'batteryBox',
+  batteryBoxMinus: 'batteryBox',
   galvanometerG0: 'galvanometer',
   galvanometerG1: 'galvanometer',
   unknownX1: 'unknownResistance',
@@ -211,13 +217,23 @@ function buildTerminalHitAreas(dimensions, boardImg) {
     offsetY = (height - drawHeight) / 2;
   }
 
-  return Object.fromEntries(
-    Object.entries(TERMINALS).map(([id, terminal]) => {
+  const boardHitAreas = Object.fromEntries(
+    Object.entries(TERMINALS).filter(([, terminal]) => terminal.component !== 'batteryBox').map(([id, terminal]) => {
       const cx = offsetX + terminal.x * drawWidth;
       const cy = offsetY + terminal.y * drawHeight;
       return [id, { x: cx, y: cy, radius: TERMINAL_RADIUS }];
     })
   );
+
+  const externalHitAreas = Object.fromEntries(
+    Object.entries(TERMINALS).filter(([, terminal]) => terminal.component === 'batteryBox').map(([id, terminal]) => {
+      const cx = terminal.x * width;
+      const cy = terminal.y * height;
+      return [id, { x: cx, y: cy, radius: TERMINAL_RADIUS }];
+    })
+  );
+
+  return { ...boardHitAreas, ...externalHitAreas };
 }
 
 function getTerminalScreenPositions(dimensions, boardImg) {
@@ -239,11 +255,19 @@ function getTerminalScreenPositions(dimensions, boardImg) {
     offsetY = (height - drawHeight) / 2;
   }
 
-  return Object.fromEntries(
-    Object.entries(TERMINALS).map(([id, terminal]) => {
+  const boardTerminals = Object.fromEntries(
+    Object.entries(TERMINALS).filter(([, terminal]) => terminal.component !== 'batteryBox').map(([id, terminal]) => {
       return [id, { x: offsetX + terminal.x * drawWidth, y: offsetY + terminal.y * drawHeight }];
     })
   );
+
+  const externalTerminals = Object.fromEntries(
+    Object.entries(TERMINALS).filter(([, terminal]) => terminal.component === 'batteryBox').map(([id, terminal]) => {
+      return [id, { x: terminal.x * width, y: terminal.y * height }];
+    })
+  );
+
+  return { ...boardTerminals, ...externalTerminals };
 }
 
 const UNKNOWN_RESISTANCE_X = 12.5;
@@ -511,15 +535,6 @@ const PostOfficeBoxExperiment = () => {
       ctx.rotate(needleAngleRef.current);
       ctx.drawImage(images[needle.src], -nw / 2, -nh, nw, nh);
       ctx.restore();
-    }
-
-    const batt = COMPONENTS.battery;
-    if (images[batt.src]) {
-      const bx = batt.x * width;
-      const by = batt.y * height;
-      const bw = batt.width * width;
-      const bh = batt.height * height;
-      ctx.drawImage(images[batt.src], bx, by, bw, bh);
     }
 
     const unknown = COMPONENTS.unknownResistance;
@@ -819,60 +834,83 @@ const PostOfficeBoxExperiment = () => {
                   </div>
                 )}
 
-                <div
-                  className="absolute top-4 right-4 z-20 w-48 bg-black/80 border border-cyan-500/30 rounded-xl p-3 backdrop-blur-sm"
-                >
-                    <p className="text-[10px] uppercase tracking-widest text-slate-400 mb-2 text-center">Galvanometer HUD</p>
-                    <div className="relative w-32 h-32 mx-auto">
+                {/* External Battery Box */}
+                <div className="absolute bottom-4 left-4 z-10">
+                  <div className="relative w-28 h-20 bg-gradient-to-b from-slate-700 to-slate-800 border-2 border-slate-500 rounded-lg shadow-lg flex flex-col items-center justify-center gap-1">
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-red-500 rounded-full border border-red-300" />
+                    <div className="absolute -top-1 left-1/2 translate-x-3 w-3 h-3 bg-slate-900 rounded-full border border-slate-500" />
+                    <span className="text-[10px] font-bold text-slate-300 tracking-wider">BATTERY</span>
+                    <div className="flex gap-3 mt-1">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-red-500" />
+                        <span className="text-[9px] text-red-400 font-bold">+</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-slate-900 border border-slate-500" />
+                        <span className="text-[9px] text-slate-400 font-bold">-</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dynamic Zoom Camera Projection */}
+                {k1Pressed && k2Pressed && bridgeResult.valid && (
+                  <div className="absolute z-20" style={{ top: '8%', left: '55%' }}>
+                    <svg width="160" height="120" viewBox="0 0 160 120" className="absolute -left-4 -top-2">
+                      <defs>
+                        <linearGradient id="projGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+                          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M 0 60 Q 40 30 80 60 T 160 60" fill="none" stroke="url(#projGrad)" strokeWidth="18" strokeLinecap="round" opacity="0.6" />
+                      <path d="M 0 60 Q 40 30 80 60 T 160 60" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.8" />
+                    </svg>
+                    <div className="relative w-28 h-28 rounded-full border-4 border-cyan-500/40 bg-black/80 shadow-lg shadow-cyan-500/20 overflow-hidden backdrop-blur-sm">
                       {images.galvanometerBody && (
                         <img
                           src={ASSETS.galvanometerBody}
                           alt="Galvanometer dial"
-                          className="absolute inset-0 w-full h-full object-contain opacity-80"
-                          style={{ zIndex: 0 }}
+                          className="absolute inset-0 w-full h-full object-cover rounded-full opacity-90"
                         />
                       )}
-                      <div className="absolute inset-0 rounded-full border-2 border-cyan-500/30 bg-black/40" style={{ zIndex: 1 }} />
-                      <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 2 }}>
-                        <div className="w-0.5 h-12 bg-cyan-500/20 absolute" />
-                        <div className="w-12 h-0.5 bg-cyan-500/20 absolute" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-0.5 h-14 bg-cyan-500/15 absolute" />
+                        <div className="w-14 h-0.5 bg-cyan-500/15 absolute" />
                       </div>
                       <div
-                        className="absolute bottom-1/2 left-1/2 w-1 h-12 origin-bottom transition-transform duration-300"
+                        className="absolute bottom-1/2 left-1/2 w-0.5 h-14 origin-bottom transition-transform duration-200"
                         style={{
-                          zIndex: 3,
-                          transform: `translateX(-50%) rotate(${bridgeResult.valid && k1Pressed && k2Pressed ? Math.max(-30, Math.min(30, bridgeResult.polarity * Math.min(30, bridgeResult.ig * 5))) : 0}deg)`,
+                          transform: `translateX(-50%) rotate(${Math.max(-30, Math.min(30, bridgeResult.polarity * Math.min(30, bridgeResult.ig * 5)))}deg)`,
                           background: bridgeResult.polarity > 0 ? '#ef4444' : bridgeResult.polarity < 0 ? '#3b82f6' : '#94a3b8',
-                          borderRadius: '2px',
+                          borderRadius: '1px',
                         }}
                       />
-                      <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 4 }}>
-                        <div className="w-2 h-2 rounded-full bg-slate-300" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
                       </div>
                       {[-30, -20, -10, 0, 10, 20, 30].map((deg) => {
                         const rad = (deg - 90) * (Math.PI / 180);
-                        const x = 50 + 42 * Math.cos(rad);
-                        const y = 50 + 42 * Math.sin(rad);
+                        const x = 50 + 38 * Math.cos(rad);
+                        const y = 50 + 38 * Math.sin(rad);
                         return (
                           <span
                             key={deg}
-                            className="absolute text-[8px] text-slate-400"
-                            style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)', zIndex: 5 }}
+                            className="absolute text-[7px] text-slate-400 font-mono"
+                            style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
                           >
                             {deg}
                           </span>
                         );
                       })}
                     </div>
-                    <div className="mt-2 text-center">
-                      <p className="text-xs font-mono text-cyan-300">
-                        {bridgeResult.valid && k1Pressed && k2Pressed ? `${bridgeResult.polarity > 0 ? '+' : bridgeResult.polarity < 0 ? '-' : '0'}${bridgeResult.ig.toFixed(2)} mA` : '0.00 mA'}
-                      </p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">
-                        {bridgeResult.balanced ? 'BALANCED' : bridgeResult.extreme || 'UNBALANCED'}
+                    <div className="mt-1 text-center">
+                      <p className="text-[10px] font-mono text-cyan-300">
+                        {bridgeResult.polarity > 0 ? '+' : bridgeResult.polarity < 0 ? '-' : '0'}{bridgeResult.ig.toFixed(2)} mA
                       </p>
                     </div>
                   </div>
+                )}
 
                 <canvas
                   ref={canvasRef}
