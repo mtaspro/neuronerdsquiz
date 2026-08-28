@@ -693,7 +693,7 @@ function AppContent() {
       <WhatsNewModal />
       
       {/* Support Neuronerds Button - Floating on every page */}
-      <SupportDevelopers />
+      <SupportNeuronerds />
     </>
   );
 }
