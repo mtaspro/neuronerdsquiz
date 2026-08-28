@@ -113,7 +113,7 @@ const VALID_CONNECTIONS = {
   batteryPlus: ['boardA', 'boardC', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
   batteryMinus: ['boardB', 'boardD', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
   batteryBoxPlus: ['boardA', 'boardC', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxMinus'],
-  batteryBoxMinus: ['boardB', 'boardD', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxPlus'],
+  batteryBoxMinus: ['boardA', 'boardB', 'boardC', 'boardD', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxPlus'],
   galvanometerG0: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
   galvanometerG1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
   unknownX1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
@@ -897,62 +897,60 @@ const PostOfficeBoxExperiment = () => {
                    </div>
                  )}
 
-                 {/* Dynamic Zoom Camera Projection */}
-                {k1Pressed && k2Pressed && bridgeResult.valid && (
-                  <div className="absolute z-20" style={{ top: '12%', left: '60%' }}>
-                    <svg width="120" height="90" viewBox="0 0 120 90" className="absolute -left-2 -top-1">
-                      <defs>
-                        <linearGradient id="projGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-                          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
-                        </linearGradient>
-                      </defs>
-                      <path d="M 0 45 Q 30 20 60 45 T 120 45" fill="none" stroke="url(#projGrad)" strokeWidth="12" strokeLinecap="round" opacity="0.5" />
-                      <path d="M 0 45 Q 30 20 60 45 T 120 45" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.7" />
-                    </svg>
-                    <div className="relative w-24 h-24 rounded-full border-4 border-cyan-500/40 bg-black/80 shadow-lg shadow-cyan-500/20 overflow-hidden backdrop-blur-sm">
-                      {images.galvanometerBody && (
-                        <img
-                          src={ASSETS.galvanometerBody}
-                          alt="Galvanometer dial"
-                          className="absolute inset-0 w-full h-full object-cover rounded-full opacity-90"
-                        />
-                      )}
-                       <div className="absolute inset-0 flex items-center justify-center">
-                         <div className="w-0.5 h-10 bg-cyan-500/15 absolute" />
-                         <div className="w-10 h-0.5 bg-cyan-500/15 absolute" />
-                       </div>
-                       <div
-                         className="absolute bottom-1/2 left-1/2 w-0.5 h-10 origin-bottom transition-transform duration-200"
-                         style={{
-                           transform: `translateX(-50%) rotate(${Math.max(-30, Math.min(30, bridgeResult.polarity * Math.min(30, bridgeResult.ig * 5)))}deg)`,
-                           background: bridgeResult.polarity > 0 ? '#ef4444' : bridgeResult.polarity < 0 ? '#3b82f6' : '#94a3b8',
-                           borderRadius: '1px',
-                         }}
-                       />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+                 {/* Dynamic Zoom Camera Projection View */}
+                {k1Pressed && k2Pressed && (
+                  <div className="absolute z-20 pointer-events-none" style={{ top: '5%', right: '5%' }}>
+                    {bridgeResult.valid ? (
+                      <div className="flex flex-col items-center">
+                        <div className="relative w-28 h-28 rounded-full border-4 border-cyan-500/60 bg-black/90 shadow-xl shadow-cyan-500/30 overflow-hidden backdrop-blur-md">
+                          {images.galvanometerBody && (
+                            <img
+                              src={ASSETS.galvanometerBody}
+                              alt="Galvanometer dial"
+                              className="absolute inset-0 w-full h-full object-cover rounded-full opacity-90"
+                            />
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-0.5 h-12 bg-cyan-500/20 absolute" />
+                            <div className="w-12 h-0.5 bg-cyan-500/20 absolute" />
+                          </div>
+                          <div
+                            className="absolute bottom-1/2 left-1/2 w-1 h-12 origin-bottom transition-transform duration-300 ease-out z-10"
+                            style={{
+                              transform: `translateX(-50%) rotate(${Math.max(-30, Math.min(30, bridgeResult.polarity * Math.min(30, bridgeResult.ig * 5)))}deg)`,
+                              background: bridgeResult.polarity > 0 ? '#ef4444' : bridgeResult.polarity < 0 ? '#3b82f6' : '#94a3b8',
+                              borderRadius: '2px',
+                            }}
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center z-20">
+                            <div className="w-2.5 h-2.5 rounded-full bg-slate-100 shadow border border-slate-700" />
+                          </div>
+                          {[-30, -20, -10, 0, 10, 20, 30].map((deg) => {
+                            const rad = (deg - 90) * (Math.PI / 180);
+                            const x = 50 + 38 * Math.cos(rad);
+                            const y = 50 + 38 * Math.sin(rad);
+                            return (
+                              <span
+                                key={deg}
+                                className="absolute text-[7px] text-cyan-200/80 font-mono font-bold select-none"
+                                style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
+                              >
+                                {deg}
+                              </span>
+                            );
+                          })}
+                        </div>
+                        <div className="mt-1.5 text-center bg-black/80 px-2.5 py-1 rounded border border-cyan-500/40 shadow-md">
+                          <p className="text-[11px] font-mono font-bold text-cyan-300">
+                            {bridgeResult.polarity > 0 ? '+' : bridgeResult.polarity < 0 ? '-' : '0'}{bridgeResult.ig.toFixed(2)} mA
+                          </p>
+                        </div>
                       </div>
-                      {[-30, -20, -10, 0, 10, 20, 30].map((deg) => {
-                        const rad = (deg - 90) * (Math.PI / 180);
-                        const x = 50 + 38 * Math.cos(rad);
-                        const y = 50 + 38 * Math.sin(rad);
-                        return (
-                          <span
-                            key={deg}
-                            className="absolute text-[7px] text-slate-400 font-mono"
-                            style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
-                          >
-                            {deg}
-                          </span>
-                        );
-                      })}
-                    </div>
-                    <div className="mt-1 text-center">
-                      <p className="text-[10px] font-mono text-cyan-300">
-                        {bridgeResult.polarity > 0 ? '+' : bridgeResult.polarity < 0 ? '-' : '0'}{bridgeResult.ig.toFixed(2)} mA
-                      </p>
-                    </div>
+                    ) : (
+                      <div className="bg-rose-950/90 border border-rose-500/50 text-rose-200 text-[11px] p-2.5 rounded-lg max-w-[170px] text-center shadow-xl backdrop-blur-md">
+                        ⚠️ {bridgeResult.reason}
+                      </div>
+                    )}
                   </div>
                 )}
 
