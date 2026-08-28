@@ -319,55 +319,70 @@ function calculateArmResistances(pluggedSockets) {
   };
 }
 
+function buildAdjacencyGraph(wires) {
+  const graph = new Map();
+  const addEdge = (a, b) => {
+    if (!graph.has(a)) graph.set(a, new Set());
+    if (!graph.has(b)) graph.set(b, new Set());
+    graph.get(a).add(b);
+    graph.get(b).add(a);
+  };
+  wires.forEach((w) => addEdge(w.fromTerminalId, w.toTerminalId));
+  return graph;
+}
+
+function bfsReachable(graph, startNodes) {
+  const visited = new Set();
+  const queue = [...startNodes];
+  startNodes.forEach((n) => visited.add(n));
+  while (queue.length > 0) {
+    const node = queue.shift();
+    const neighbors = graph.get(node);
+    if (neighbors) {
+      for (const neighbor of neighbors) {
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor);
+          queue.push(neighbor);
+        }
+      }
+    }
+  }
+  return visited;
+}
+
 function validateCircuitConnections(wires, pluggedSockets) {
-  const batteryPositive = wires.find((w) => 
-    w.fromTerminalId === 'batteryPlus' || w.toTerminalId === 'batteryPlus' ||
-    w.fromTerminalId === 'batteryBoxPlus' || w.toTerminalId === 'batteryBoxPlus'
-  );
-  const batteryNegative = wires.find((w) => 
-    w.fromTerminalId === 'batteryMinus' || w.toTerminalId === 'batteryMinus' ||
-    w.fromTerminalId === 'batteryBoxMinus' || w.toTerminalId === 'batteryBoxMinus'
-  );
-  if (!batteryPositive || !batteryNegative) return { valid: false, reason: 'Battery not connected' };
+  const graph = buildAdjacencyGraph(wires);
 
-  const batteryPosTerminals = new Set();
-  const batteryNegTerminals = new Set();
-  wires.forEach((w) => {
-    if (w.fromTerminalId === 'batteryPlus' || w.toTerminalId === 'batteryPlus' || w.fromTerminalId === 'batteryBoxPlus' || w.toTerminalId === 'batteryBoxPlus') {
-      const target = (w.fromTerminalId === 'batteryPlus' || w.fromTerminalId === 'batteryBoxPlus') ? w.toTerminalId : w.fromTerminalId;
-      batteryPosTerminals.add(target);
-    }
-    if (w.fromTerminalId === 'batteryMinus' || w.toTerminalId === 'batteryMinus' || w.fromTerminalId === 'batteryBoxMinus' || w.toTerminalId === 'batteryBoxMinus') {
-      const target = (w.fromTerminalId === 'batteryMinus' || w.fromTerminalId === 'batteryBoxMinus') ? w.toTerminalId : w.fromTerminalId;
-      batteryNegTerminals.add(target);
-    }
-  });
+  const batteryPosSources = ['batteryPlus', 'batteryBoxPlus'];
+  const batteryNegSources = ['batteryMinus', 'batteryBoxMinus'];
 
-  const aConnected = batteryPosTerminals.has('boardA') || batteryNegTerminals.has('boardA');
-  const cConnected = batteryPosTerminals.has('boardC') || batteryNegTerminals.has('boardC');
-  if (!aConnected || !cConnected) return { valid: false, reason: 'Battery not connected to A and C' };
-  const aIsPositive = batteryPosTerminals.has('boardA');
-  const cIsPositive = batteryPosTerminals.has('boardC');
+  const hasPosSource = batteryPosSources.some((s) => graph.has(s));
+  const hasNegSource = batteryNegSources.some((s) => graph.has(s));
+  if (!hasPosSource || !hasNegSource) return { valid: false, reason: 'Battery not connected' };
+
+  const posReachable = bfsReachable(graph, batteryPosSources);
+  const negReachable = bfsReachable(graph, batteryNegSources);
+
+  const aReachable = posReachable.has('boardA') || negReachable.has('boardA');
+  const cReachable = posReachable.has('boardC') || negReachable.has('boardC');
+  if (!aReachable || !cReachable) return { valid: false, reason: 'Battery not connected to A and C' };
+
+  const aIsPositive = posReachable.has('boardA');
+  const cIsPositive = posReachable.has('boardC');
   if (aIsPositive === cIsPositive) return { valid: false, reason: 'Battery polarity invalid across A-C' };
 
-  const galvanometerTerminals = new Set();
-  wires.forEach((w) => {
-    if (w.fromTerminalId.startsWith('galvanometer') || w.toTerminalId.startsWith('galvanometer')) {
-      galvanometerTerminals.add(w.fromTerminalId.startsWith('galvanometer') ? w.toTerminalId : w.fromTerminalId);
-    }
-  });
-  const bConnected = galvanometerTerminals.has('boardB');
-  const dConnected = galvanometerTerminals.has('boardD');
+  const galvSources = ['galvanometerG0', 'galvanometerG1'].filter((s) => graph.has(s));
+  if (galvSources.length < 2) return { valid: false, reason: 'Galvanometer not connected across B and D' };
+  const galvReachable = bfsReachable(graph, galvSources);
+  const bConnected = galvReachable.has('boardB');
+  const dConnected = galvReachable.has('boardD');
   if (!bConnected || !dConnected) return { valid: false, reason: 'Galvanometer not connected across B and D' };
 
-  const xTerminals = new Set();
-  wires.forEach((w) => {
-    if (w.fromTerminalId.startsWith('unknownX') || w.toTerminalId.startsWith('unknownX')) {
-      xTerminals.add(w.fromTerminalId.startsWith('unknownX') ? w.toTerminalId : w.fromTerminalId);
-    }
-  });
-  const cForX = xTerminals.has('boardC');
-  const dForX = xTerminals.has('boardD');
+  const xSources = ['unknownX1', 'unknownX2'].filter((s) => graph.has(s));
+  if (xSources.length < 2) return { valid: false, reason: 'Unknown resistance X not connected across C and D' };
+  const xReachable = bfsReachable(graph, xSources);
+  const cForX = xReachable.has('boardC');
+  const dForX = xReachable.has('boardD');
   if (!cForX || !dForX) return { valid: false, reason: 'Unknown resistance X not connected across C and D' };
 
   const arms = calculateArmResistances(pluggedSockets);
@@ -450,6 +465,8 @@ const PostOfficeBoxExperiment = () => {
   const [hoveredTerminal, setHoveredTerminal] = useState(null);
   const [draggingFrom, setDraggingFrom] = useState(null);
   const [dragEnd, setDragEnd] = useState(null);
+  const [dragWireId, setDragWireId] = useState(null);
+  const [dragWireEnd, setDragWireEnd] = useState(null);
   const [pluggedSockets, setPluggedSockets] = useState(SOCKET_DEFAULT_STATE);
   const [bridgeResult, setBridgeResult] = useState({ valid: false, reason: 'Incomplete circuit', arms: null, ig: 0, polarity: 0, balanced: false });
   const targetAngleRef = useRef(0);
@@ -460,6 +477,8 @@ const PostOfficeBoxExperiment = () => {
   const [showObservationTable, setShowObservationTable] = useState(false);
   const nextIdRef = useRef(1);
   const nextObsIdRef = useRef(1);
+  const latestPointRef = useRef(null);
+  const rafPendingRef = useRef(false);
 
   const resizeCanvas = useCallback(() => {
     if (!containerRef.current) return;
@@ -609,6 +628,23 @@ const PostOfficeBoxExperiment = () => {
     return { x: clientX - rect.left, y: clientY - rect.top };
   }, [dimensions.width]);
 
+  const findWireAtTerminal = useCallback((terminalId, wiresList) => {
+    return wiresList.find((w) => w.fromTerminalId === terminalId || w.toTerminalId === terminalId) || null;
+  }, []);
+
+  const scheduleDragUpdate = useCallback((point) => {
+    latestPointRef.current = point;
+    if (!rafPendingRef.current) {
+      rafPendingRef.current = true;
+      requestAnimationFrame(() => {
+        rafPendingRef.current = false;
+        if (latestPointRef.current) {
+          setDragEnd(latestPointRef.current);
+        }
+      });
+    }
+  }, []);
+
   const hitTestTerminal = useCallback((point) => {
     if (!point || !images.board || !dimensions.width) return null;
     const batteryBoxYOffset = (dimensions.height || 560) + 16 + 12;
@@ -626,38 +662,79 @@ const PostOfficeBoxExperiment = () => {
   const handleCanvasMouseMove = useCallback((e) => {
     const point = getCanvasPoint(e.clientX, e.clientY);
     if (!point) return;
-    
-    if (draggingFrom) {
-      requestAnimationFrame(() => {
-        setDragEnd(point);
-      });
+
+    if (draggingFrom || dragWireId) {
+      scheduleDragUpdate(point);
       return;
     }
     const hit = hitTestTerminal(point);
     setHoveredTerminal(hit);
-  }, [draggingFrom, getCanvasPoint, hitTestTerminal]);
+  }, [draggingFrom, dragWireId, getCanvasPoint, hitTestTerminal, scheduleDragUpdate]);
 
   const handleCanvasMouseDown = useCallback((e) => {
     const point = getCanvasPoint(e.clientX, e.clientY);
     const hit = hitTestTerminal(point);
-    if (hit) {
+    if (!hit) return;
+
+    const existingWire = findWireAtTerminal(hit, wires);
+    if (existingWire) {
+      const dragEndKey = existingWire.fromTerminalId === hit ? 'from' : 'to';
+      setDragWireId(existingWire.id);
+      setDragWireEnd(dragEndKey);
       setDraggingFrom(hit);
       setDragEnd(point);
+      return;
     }
-  }, [getCanvasPoint, hitTestTerminal]);
+
+    const alreadyConnected = wires.some(
+      (w) => w.fromTerminalId === hit || w.toTerminalId === hit
+    );
+    if (alreadyConnected) return;
+
+    setDraggingFrom(hit);
+    setDragEnd(point);
+  }, [getCanvasPoint, hitTestTerminal, wires, findWireAtTerminal]);
 
   const handleCanvasMouseUp = useCallback((e) => {
+    if (dragWireId) {
+      const point = getCanvasPoint(e.clientX, e.clientY);
+      const targetId = hitTestTerminal(point);
+      const wire = wires.find((w) => w.id === dragWireId);
+      if (targetId && targetId !== draggingFrom && wire) {
+        const allowed = VALID_CONNECTIONS[draggingFrom] || [];
+        if (allowed.includes(targetId)) {
+          const targetOccupied = wires.some(
+            (w) => w.id !== dragWireId && (w.fromTerminalId === targetId || w.toTerminalId === targetId)
+          );
+          if (!targetOccupied) {
+            setWires((prev) =>
+              prev.map((w) => {
+                if (w.id !== dragWireId) return w;
+                return dragWireEnd === 'from'
+                  ? { ...w, fromTerminalId: targetId }
+                  : { ...w, toTerminalId: targetId };
+              })
+            );
+          }
+        }
+      }
+      setDragWireId(null);
+      setDragWireEnd(null);
+      setDraggingFrom(null);
+      setDragEnd(null);
+      return;
+    }
+
     if (!draggingFrom) return;
     const point = getCanvasPoint(e.clientX, e.clientY);
     const targetId = hitTestTerminal(point);
     if (targetId && targetId !== draggingFrom) {
       const allowed = VALID_CONNECTIONS[draggingFrom] || [];
       if (allowed.includes(targetId)) {
-        const exists = wires.some(w =>
-          (w.fromTerminalId === draggingFrom && w.toTerminalId === targetId) ||
-          (w.fromTerminalId === targetId && w.toTerminalId === draggingFrom)
+        const targetOccupied = wires.some(
+          (w) => w.fromTerminalId === targetId || w.toTerminalId === targetId
         );
-        if (!exists) {
+        if (!targetOccupied) {
           const terminalA = TERMINALS[draggingFrom];
           const terminalB = TERMINALS[targetId];
           const color = terminalA.color || terminalB.color || '#00f5ff';
@@ -672,7 +749,7 @@ const PostOfficeBoxExperiment = () => {
     }
     setDraggingFrom(null);
     setDragEnd(null);
-  }, [draggingFrom, getCanvasPoint, hitTestTerminal, wires]);
+  }, [draggingFrom, dragWireId, dragWireEnd, getCanvasPoint, hitTestTerminal, wires]);
 
   const handleWireDoubleClick = useCallback((wireId) => {
     setWires((prev) => prev.filter((w) => w.id !== wireId));
@@ -884,6 +961,8 @@ const PostOfficeBoxExperiment = () => {
                     setHoveredTerminal(null);
                     setDraggingFrom(null);
                     setDragEnd(null);
+                    setDragWireId(null);
+                    setDragWireEnd(null);
                   }}
                 >
                 <div
@@ -1028,6 +1107,26 @@ const PostOfficeBoxExperiment = () => {
                   })}
 
                   {draggingFrom && dragEnd && (() => {
+                    if (dragWireId) {
+                      const wire = wires.find((w) => w.id === dragWireId);
+                      if (!wire) return null;
+                      const fixedEnd = dragWireEnd === 'from' ? wire.toTerminalId : wire.fromTerminalId;
+                      const fixedPos = terminalPositions[fixedEnd];
+                      if (!fixedPos) return null;
+                      const terminal = TERMINALS[fixedEnd];
+                      const cp = getControlPoint(fixedPos, dragEnd);
+                      return (
+                        <path
+                          d={`M ${fixedPos.x} ${fixedPos.y} Q ${cp.x} ${cp.y} ${dragEnd.x} ${dragEnd.y}`}
+                          fill="none"
+                          stroke={terminal.color}
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeDasharray="6 4"
+                          opacity="0.7"
+                        />
+                      );
+                    }
                     const fromPos = terminalPositions[draggingFrom];
                     if (!fromPos) return null;
                     const terminal = TERMINALS[draggingFrom];
