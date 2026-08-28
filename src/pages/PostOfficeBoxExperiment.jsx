@@ -86,10 +86,10 @@ const COMPONENTS = {
 };
 
 const TERMINALS = {
-  batteryPlus: { id: 'batteryPlus', label: '+', color: '#ef4444', x: 0.077, y: 0.202, component: 'battery' },
-  batteryMinus: { id: 'batteryMinus', label: '−', color: '#1f2937', x: 0.075, y: 0.442, component: 'battery' },
-  batteryBoxPlus: { id: 'batteryBoxPlus', label: 'B+', color: '#ef4444', x: 0.045, y: 0.52, component: 'batteryBox' },
-  batteryBoxMinus: { id: 'batteryBoxMinus', label: 'B-', color: '#1f2937', x: 0.095, y: 0.52, component: 'batteryBox' },
+  batteryPlus: { id: 'batteryPlus', label: '+', color: '#ef4444', x: 0.035, y: 0.50, component: 'batteryBox' },
+  batteryMinus: { id: 'batteryMinus', label: '−', color: '#1f2937', x: 0.115, y: 0.50, component: 'batteryBox' },
+  batteryBoxPlus: { id: 'batteryBoxPlus', label: 'B+', color: '#ef4444', x: 0.035, y: 0.50, component: 'batteryBox' },
+  batteryBoxMinus: { id: 'batteryBoxMinus', label: 'B-', color: '#1f2937', x: 0.115, y: 0.50, component: 'batteryBox' },
   galvanometerG0: { id: 'galvanometerG0', label: 'G0', color: '#3b82f6', x: 0.408, y: 0.075, component: 'galvanometer' },
   galvanometerG1: { id: 'galvanometerG1', label: 'G1', color: '#3b82f6', x: 0.592, y: 0.075, component: 'galvanometer' },
   unknownX1: { id: 'unknownX1', label: '1', color: '#10b981', x: 0.149, y: 0.925, component: 'unknownResistance' },
@@ -382,10 +382,10 @@ function calculateGalvanometerCurrent(arms, batteryVoltage, galvanometerResistan
   const { P, Q, R, X } = arms;
   
   if (R === 0) {
-    return { ig: 6.0, polarity: 1, balanced: false, extreme: 'R=0' };
+    return { ig: 30.0, polarity: 1, balanced: false, extreme: 'R=0' };
   }
   if (R === Infinity) {
-    return { ig: 6.0, polarity: -1, balanced: false, extreme: 'R=∞' };
+    return { ig: 30.0, polarity: -1, balanced: false, extreme: 'R=∞' };
   }
   
   if (P <= 0 || Q <= 0 || X <= 0) return { ig: 0, polarity: 0, balanced: false };
@@ -616,7 +616,7 @@ const PostOfficeBoxExperiment = () => {
     for (const [id, area] of Object.entries(hitAreas)) {
       const dx = point.x - area.x;
       const dy = point.y - area.y;
-      if (dx * dx + dy * dy <= (area.radius + 4) * (area.radius + 4)) {
+      if (dx * dx + dy * dy <= (area.radius + 12) * (area.radius + 12)) {
         return id;
       }
     }
@@ -626,8 +626,11 @@ const PostOfficeBoxExperiment = () => {
   const handleCanvasMouseMove = useCallback((e) => {
     const point = getCanvasPoint(e.clientX, e.clientY);
     if (!point) return;
+    
     if (draggingFrom) {
-      setDragEnd(point);
+      requestAnimationFrame(() => {
+        setDragEnd(point);
+      });
       return;
     }
     const hit = hitTestTerminal(point);
@@ -861,10 +864,22 @@ const PostOfficeBoxExperiment = () => {
                 )}
                 <div
                   ref={wrapperRef}
-                  className="relative"
+                  className="relative touch-none select-none"
                   onMouseMove={handleCanvasMouseMove}
                   onMouseDown={handleCanvasMouseDown}
                   onMouseUp={handleCanvasMouseUp}
+                  onTouchStart={(e) => {
+                    const touch = e.touches[0];
+                    handleCanvasMouseDown({ clientX: touch.clientX, clientY: touch.clientY });
+                  }}
+                  onTouchMove={(e) => {
+                    const touch = e.touches[0];
+                    handleCanvasMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+                  }}
+                  onTouchEnd={(e) => {
+                    const touch = e.changedTouches[0];
+                    handleCanvasMouseUp({ clientX: touch.clientX, clientY: touch.clientY });
+                  }}
                   onMouseLeave={() => {
                     setHoveredTerminal(null);
                     setDraggingFrom(null);
