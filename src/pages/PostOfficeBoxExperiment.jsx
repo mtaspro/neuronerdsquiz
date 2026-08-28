@@ -110,8 +110,8 @@ const TERMINALS = {
 const TERMINAL_RADIUS = 12;
 
 const VALID_CONNECTIONS = {
-  batteryPlus: ['boardA', 'boardC', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
-  batteryMinus: ['boardB', 'boardD', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
+  batteryPlus: ['boardA', 'boardB', 'boardC', 'boardD', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
+  batteryMinus: ['boardA', 'boardB', 'boardC', 'boardD', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
   batteryBoxPlus: ['boardA', 'boardC', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxMinus'],
   batteryBoxMinus: ['boardA', 'boardB', 'boardC', 'boardD', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxPlus'],
   galvanometerG0: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
