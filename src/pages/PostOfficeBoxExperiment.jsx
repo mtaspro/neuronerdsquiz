@@ -14,40 +14,35 @@ const ASSETS = {
 
 const SOCKET_GROUPS = {
   P: {
-    label: 'Ratio Arm P',
+    label: 'Ratio Arm P (Left)',
     sockets: [
-      { id: 'P1', resistance: 1, x: 0.202, y: 0.210 },
-      { id: 'P2', resistance: 2, x: 0.296, y: 0.210 },
-      { id: 'P3', resistance: 2, x: 0.391, y: 0.210 },
-      { id: 'P4', resistance: 5, x: 0.492, y: 0.210 },
-      { id: 'P5', resistance: 10, x: 0.593, y: 0.210 },
-      { id: 'P6', resistance: 20, x: 0.695, y: 0.210 },
-      { id: 'P7', resistance: 50, x: 0.795, y: 0.210 },
+      { id: 'P1', resistance: 10, x: 0.202, y: 0.210 },
+      { id: 'P2', resistance: 100, x: 0.296, y: 0.210 },
+      { id: 'P3', resistance: 1000, x: 0.391, y: 0.210 },
     ],
   },
   Q: {
-    label: 'Ratio Arm Q',
+    label: 'Ratio Arm Q (Right)',
     sockets: [
-      { id: 'Q1', resistance: 1, x: 0.202, y: 0.440 },
-      { id: 'Q2', resistance: 2, x: 0.297, y: 0.440 },
-      { id: 'Q3', resistance: 2, x: 0.392, y: 0.440 },
-      { id: 'Q4', resistance: 5, x: 0.484, y: 0.440 },
-      { id: 'Q5', resistance: 10, x: 0.576, y: 0.440 },
-      { id: 'Q6', resistance: 20, x: 0.666, y: 0.440 },
-      { id: 'Q7', resistance: 50, x: 0.759, y: 0.440 },
-      { id: 'Q8', resistance: 100, x: 0.853, y: 0.440 },
+      { id: 'Q1', resistance: 10, x: 0.593, y: 0.210 },
+      { id: 'Q2', resistance: 100, x: 0.695, y: 0.210 },
+      { id: 'Q3', resistance: 1000, x: 0.795, y: 0.210 },
     ],
   },
   R: {
     label: 'Resistance Arm R',
     sockets: [
-      { id: 'R1', resistance: 1, x: 0.202, y: 0.732 },
-      { id: 'R2', resistance: 2, x: 0.299, y: 0.732 },
-      { id: 'R3', resistance: 5, x: 0.391, y: 0.732 },
-      { id: 'R4', resistance: 10, x: 0.484, y: 0.732 },
-      { id: 'R5', resistance: 20, x: 0.575, y: 0.732 },
-      { id: 'R6', resistance: 50, x: 0.669, y: 0.732 },
-      { id: 'R7', resistance: 100, x: 0.760, y: 0.732 },
+      { id: 'R1', resistance: 1, x: 0.202, y: 0.520 },
+      { id: 'R2', resistance: 2, x: 0.299, y: 0.520 },
+      { id: 'R3', resistance: 5, x: 0.391, y: 0.520 },
+      { id: 'R4', resistance: 10, x: 0.484, y: 0.520 },
+      { id: 'R5', resistance: 20, x: 0.575, y: 0.520 },
+      { id: 'R6', resistance: 50, x: 0.669, y: 0.520 },
+      { id: 'R7', resistance: 100, x: 0.760, y: 0.520 },
+      { id: 'R8', resistance: 500, x: 0.202, y: 0.732 },
+      { id: 'R9', resistance: 1000, x: 0.299, y: 0.732 },
+      { id: 'R10', resistance: 2000, x: 0.391, y: 0.732 },
+      { id: 'R11', resistance: 5000, x: 0.484, y: 0.732 },
       { id: 'R∞', resistance: Infinity, x: 0.854, y: 0.732 },
     ],
   },
@@ -331,34 +326,26 @@ function validateCircuitConnections(wires, pluggedSockets, unknownResWire) {
   const posReachable = bfsReachable(graph, batteryPosSources);
   const negReachable = bfsReachable(graph, batteryNegSources);
 
-  const k1Terminals = ['bottomScrew1', 'bottomScrew2'];
-  const k1PosConnected = k1Terminals.some((t) => posReachable.has(t));
-  if (!k1PosConnected) return { valid: false, reason: 'Battery positive not connected through K1 key (BS1/BS2)' };
+  const batteryPosToRS1 = posReachable.has('rightScrew1');
+  if (!batteryPosToRS1) return { valid: false, reason: 'Battery (+) not connected to RS1' };
 
-  const negToLS1 = negReachable.has('leftScrew1');
-  if (!negToLS1) return { valid: false, reason: 'Battery negative not connected to LS1' };
-
-  const k1ViaRS1 = bfsReachable(graph, k1Terminals.filter((t) => posReachable.has(t))).has('rightScrew1');
-  if (!k1ViaRS1) return { valid: false, reason: 'K1 key not routing to RS1' };
+  const batteryNegToK2 = negReachable.has('bottomScrew3') || negReachable.has('bottomScrew4');
+  if (!batteryNegToK2) return { valid: false, reason: 'Battery (-) not connected to K2 base (BS3/BS4)' };
 
   const galvSources = ['galvanometerG0', 'galvanometerG1'].filter((s) => graph.has(s));
   if (galvSources.length < 2) return { valid: false, reason: 'Galvanometer not connected' };
   const galvReachable = bfsReachable(graph, galvSources);
 
-  const k2Terminals = ['bottomScrew3', 'bottomScrew4'];
-  const k2Connected = k2Terminals.some((t) => galvReachable.has(t));
-  if (!k2Connected) return { valid: false, reason: 'Galvanometer not connected through K2 key (BS3/BS4)' };
+  const galvG0ToLS1 = galvReachable.has('leftScrew1');
+  if (!galvG0ToLS1) return { valid: false, reason: 'Galvanometer G0 not connected to LS1' };
 
-  const k2ViaLS3 = bfsReachable(graph, k2Terminals.filter((t) => galvReachable.has(t))).has('leftScrew3');
-  if (!k2ViaLS3) return { valid: false, reason: 'K2 key not routing to LS3' };
+  const galvG1ToK1 = galvReachable.has('bottomScrew1') || galvReachable.has('bottomScrew2');
+  if (!galvG1ToK1) return { valid: false, reason: 'Galvanometer G1 not connected to K1 base (BS1/BS2)' };
 
   const end1 = unknownResWire.end1Terminal;
   const end2 = unknownResWire.end2Terminal;
-  const resWireConnected = (end1 === 'rightScrew1' && end2 === 'leftScrew3') || (end1 === 'leftScrew3' && end2 === 'rightScrew1');
-  if (!resWireConnected) return { valid: false, reason: 'Unknown resistance S not connected across RS1 and LS3' };
-
-  const ls2ToLS3 = bfsReachable(graph, ['leftScrew2']).has('leftScrew3') || bfsReachable(graph, ['leftScrew3']).has('leftScrew2');
-  if (!ls2ToLS3) return { valid: false, reason: 'LS2 not bridged to LS3 (internal junction incomplete)' };
+  const resWireConnected = (end1 === 'leftScrew1' && end2 === 'rightScrew1') || (end1 === 'rightScrew1' && end2 === 'leftScrew1');
+  if (!resWireConnected) return { valid: false, reason: 'Unknown resistance S not connected across LS1 and RS1' };
 
   const arms = calculateArmResistances(pluggedSockets);
   if (arms.P <= 0 || arms.Q <= 0) {
@@ -457,8 +444,8 @@ const PostOfficeBoxExperiment = () => {
   const [unknownResWire, setUnknownResWire] = useState({
     id: 'unknown-res-s',
     x: 0.50,
-    y: 0.45,
-    width: 0.20,
+    y: 0.20,
+    width: 0.30,
     end1Terminal: null,
     end2Terminal: null,
     color: '#d97706',
@@ -735,31 +722,16 @@ const PostOfficeBoxExperiment = () => {
     const hit = hitTestTerminal(point);
     if (!hit) return;
 
-    const existingWire = findWireAtTerminal(hit, wires);
-    if (existingWire) {
-      const dragEndKey = existingWire.fromTerminalId === hit ? 'from' : 'to';
-      setDragWireId(existingWire.id);
-      setDragWireEnd(dragEndKey);
-      setDraggingFrom(hit);
-      setDragEnd(point);
-      return;
-    }
-
-    const alreadyConnected = wires.some(
-      (w) => w.fromTerminalId === hit || w.toTerminalId === hit
-    );
-    if (alreadyConnected) return;
-
     setDraggingFrom(hit);
     setDragEnd(point);
-  }, [getCanvasPoint, hitTestTerminal, hitTestResHandle, unknownResWire, dimensions, wires, findWireAtTerminal]);
+  }, [getCanvasPoint, hitTestTerminal, hitTestResHandle, unknownResWire, dimensions]);
 
   const findNearestSnapTerminal = useCallback((point, terminals, maxDist = 30) => {
     if (!point || !terminals) return null;
     let closest = null;
     let closestDist = maxDist * maxDist;
     for (const [id, pos] of Object.entries(terminals)) {
-      if (id !== 'rightScrew1' && id !== 'leftScrew3') continue;
+      if (id !== 'leftScrew1' && id !== 'rightScrew1') continue;
       const dx = point.x - pos.x;
       const dy = point.y - pos.y;
       const dist = dx * dx + dy * dy;
@@ -798,19 +770,14 @@ const PostOfficeBoxExperiment = () => {
       if (targetId && targetId !== draggingFrom && wire) {
         const allowed = VALID_CONNECTIONS[draggingFrom] || [];
         if (allowed.includes(targetId)) {
-          const targetOccupied = wires.some(
-            (w) => w.id !== dragWireId && (w.fromTerminalId === targetId || w.toTerminalId === targetId)
+          setWires((prev) =>
+            prev.map((w) => {
+              if (w.id !== dragWireId) return w;
+              return dragWireEnd === 'from'
+                ? { ...w, fromTerminalId: targetId }
+                : { ...w, toTerminalId: targetId };
+            })
           );
-          if (!targetOccupied) {
-            setWires((prev) =>
-              prev.map((w) => {
-                if (w.id !== dragWireId) return w;
-                return dragWireEnd === 'from'
-                  ? { ...w, fromTerminalId: targetId }
-                  : { ...w, toTerminalId: targetId };
-              })
-            );
-          }
         }
       }
       setDragWireId(null);
@@ -826,20 +793,15 @@ const PostOfficeBoxExperiment = () => {
     if (targetId && targetId !== draggingFrom) {
       const allowed = VALID_CONNECTIONS[draggingFrom] || [];
       if (allowed.includes(targetId)) {
-        const targetOccupied = wires.some(
-          (w) => w.fromTerminalId === targetId || w.toTerminalId === targetId
-        );
-        if (!targetOccupied) {
-          const terminalA = TERMINALS[draggingFrom];
-          const terminalB = TERMINALS[targetId];
-          const color = terminalA.color || terminalB.color || '#00f5ff';
-          setWires((prev) => [...prev, {
-            id: nextIdRef.current++,
-            fromTerminalId: draggingFrom,
-            toTerminalId: targetId,
-            color,
-          }]);
-        }
+        const terminalA = TERMINALS[draggingFrom];
+        const terminalB = TERMINALS[targetId];
+        const color = terminalA.color || terminalB.color || '#00f5ff';
+        setWires((prev) => [...prev, {
+          id: nextIdRef.current++,
+          fromTerminalId: draggingFrom,
+          toTerminalId: targetId,
+          color,
+        }]);
       }
     }
     setDraggingFrom(null);
@@ -953,8 +915,8 @@ const PostOfficeBoxExperiment = () => {
     setUnknownResWire({
       id: 'unknown-res-s',
       x: 0.50,
-      y: 0.45,
-      width: 0.20,
+      y: 0.20,
+      width: 0.30,
       end1Terminal: null,
       end2Terminal: null,
       color: '#d97706',
@@ -1405,7 +1367,7 @@ const PostOfficeBoxExperiment = () => {
                    <div className="grid gap-4">
                      {Object.entries(SOCKET_GROUPS).map(([groupKey, group]) => (
                        <div key={groupKey}>
-                         <p className="text-xs font-medium text-slate-300 mb-2">{group.label} — {groupKey === 'P' ? 'A-B' : groupKey === 'Q' ? 'A-D' : 'C-B'}</p>
+                          <p className="text-xs font-medium text-slate-300 mb-2">{group.label}</p>
                          <div className="flex flex-wrap gap-3">
                            {group.sockets.map((socket) => {
                              const isPlugged = pluggedSockets[socket.id];
