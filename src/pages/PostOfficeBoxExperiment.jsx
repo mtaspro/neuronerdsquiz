@@ -350,7 +350,7 @@ function bfsReachable(graph, startNodes) {
   return visited;
 }
 
-function validateCircuitConnections(wires, pluggedSockets) {
+function validateCircuitConnections(wires, pluggedSockets, unknownResWire) {
   const graph = buildAdjacencyGraph(wires);
 
   const batteryPosSources = ['batteryPlus', 'batteryBoxPlus'];
@@ -378,12 +378,11 @@ function validateCircuitConnections(wires, pluggedSockets) {
   const dConnected = galvReachable.has('boardD');
   if (!bConnected || !dConnected) return { valid: false, reason: 'Galvanometer not connected across B and D' };
 
-  const xSources = ['unknownX1', 'unknownX2'].filter((s) => graph.has(s));
-  if (xSources.length < 2) return { valid: false, reason: 'Unknown resistance X not connected across C and D' };
-  const xReachable = bfsReachable(graph, xSources);
-  const cForX = xReachable.has('boardC');
-  const dForX = xReachable.has('boardD');
-  if (!cForX || !dForX) return { valid: false, reason: 'Unknown resistance X not connected across C and D' };
+  const end1 = unknownResWire.end1Terminal;
+  const end2 = unknownResWire.end2Terminal;
+  const resWireConnectedToCD =
+    (end1 === 'boardC' && end2 === 'boardD') || (end1 === 'boardD' && end2 === 'boardC');
+  if (!resWireConnectedToCD) return { valid: false, reason: 'Unknown resistance S not connected across C and D' };
 
   const arms = calculateArmResistances(pluggedSockets);
   if (arms.P <= 0 || arms.Q <= 0) {
@@ -479,6 +478,17 @@ const PostOfficeBoxExperiment = () => {
   const nextObsIdRef = useRef(1);
   const latestPointRef = useRef(null);
   const rafPendingRef = useRef(false);
+  const [unknownResWire, setUnknownResWire] = useState({
+    id: 'unknown-res-s',
+    x: 0.50,
+    y: 0.85,
+    width: 0.18,
+    end1Terminal: null,
+    end2Terminal: null,
+    color: '#d97706',
+  });
+  const [dragResEnd, setDragResEnd] = useState(null);
+  const RES_HANDLE_RADIUS = 14;
 
   const resizeCanvas = useCallback(() => {
     if (!containerRef.current) return;
@@ -645,6 +655,72 @@ const PostOfficeBoxExperiment = () => {
     }
   }, []);
 
+  const getResWireEndpoints = useCallback((wire, dimensions) => {
+    const { width, height } = dimensions;
+    const cx = wire.x * width;
+    const cy = wire.y * height;
+    const halfW = (wire.width * width) / 2;
+
+    let end1X = cx - halfW;
+    let end1Y = cy;
+    let end2X = cx + halfW;
+    let end2Y = cy;
+
+    if (wire.end1Terminal && terminalPositions[wire.end1Terminal]) {
+      const pos = terminalPositions[wire.end1Terminal];
+      end1X = pos.x;
+      end1Y = pos.y;
+    }
+    if (wire.end2Terminal && terminalPositions[wire.end2Terminal]) {
+      const pos = terminalPositions[wire.end2Terminal];
+      end2X = pos.x;
+      end2Y = pos.y;
+    }
+
+    return { end1: { x: end1X, y: end1Y }, end2: { x: end2X, y: end2Y }, cx, cy, halfW };
+  }, [terminalPositions]);
+
+  const hitTestResHandle = useCallback((point, wire, dimensions) => {
+    if (!point || !dimensions.width) return null;
+    const { end1, end2 } = getResWireEndpoints(wire, dimensions);
+    const dx1 = point.x - end1.x;
+    const dy1 = point.y - end1.y;
+    if (dx1 * dx1 + dy1 * dy1 <= RES_HANDLE_RADIUS * RES_HANDLE_RADIUS) return 'end1';
+    const dx2 = point.x - end2.x;
+    const dy2 = point.y - end2.y;
+    if (dx2 * dx2 + dy2 * dy2 <= RES_HANDLE_RADIUS * RES_HANDLE_RADIUS) return 'end2';
+    return null;
+  }, [getResWireEndpoints]);
+
+  const buildResistorZigZag = useCallback((end1, end2, cx, cy) => {
+    const dx = end2.x - end1.x;
+    const dy = end2.y - end1.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 20) return `M ${end1.x} ${end1.y} L ${end2.x} ${end2.y}`;
+
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const px = -ny;
+    const py = nx;
+
+    const segments = 6;
+    const segLen = dist / (segments + 1);
+    const amplitude = Math.min(12, dist * 0.08);
+
+    let path = `M ${end1.x} ${end1.y}`;
+    for (let i = 1; i <= segments; i++) {
+      const t = i / (segments + 1);
+      const midX = end1.x + dx * t;
+      const midY = end1.y + dy * t;
+      const sign = i % 2 === 1 ? 1 : -1;
+      const zX = midX + px * amplitude * sign;
+      const zY = midY + py * amplitude * sign;
+      path += ` L ${zX} ${zY}`;
+    }
+    path += ` L ${end2.x} ${end2.y}`;
+    return path;
+  }, []);
+
   const hitTestTerminal = useCallback((point) => {
     if (!point || !images.board || !dimensions.width) return null;
     const batteryBoxYOffset = (dimensions.height || 560) + 16 + 12;
@@ -663,16 +739,31 @@ const PostOfficeBoxExperiment = () => {
     const point = getCanvasPoint(e.clientX, e.clientY);
     if (!point) return;
 
+    if (dragResEnd) {
+      scheduleDragUpdate(point);
+      return;
+    }
+
     if (draggingFrom || dragWireId) {
       scheduleDragUpdate(point);
       return;
     }
     const hit = hitTestTerminal(point);
     setHoveredTerminal(hit);
-  }, [draggingFrom, dragWireId, getCanvasPoint, hitTestTerminal, scheduleDragUpdate]);
+  }, [draggingFrom, dragWireId, dragResEnd, getCanvasPoint, hitTestTerminal, scheduleDragUpdate]);
 
   const handleCanvasMouseDown = useCallback((e) => {
     const point = getCanvasPoint(e.clientX, e.clientY);
+
+    if (dimensions.width) {
+      const handleHit = hitTestResHandle(point, unknownResWire, dimensions);
+      if (handleHit) {
+        setDragResEnd(handleHit);
+        setDragEnd(point);
+        return;
+      }
+    }
+
     const hit = hitTestTerminal(point);
     if (!hit) return;
 
@@ -693,9 +784,28 @@ const PostOfficeBoxExperiment = () => {
 
     setDraggingFrom(hit);
     setDragEnd(point);
-  }, [getCanvasPoint, hitTestTerminal, wires, findWireAtTerminal]);
+  }, [getCanvasPoint, hitTestTerminal, hitTestResHandle, unknownResWire, dimensions, wires, findWireAtTerminal]);
 
   const handleCanvasMouseUp = useCallback((e) => {
+    if (dragResEnd) {
+      const point = getCanvasPoint(e.clientX, e.clientY);
+      const targetId = hitTestTerminal(point);
+      if (targetId === 'boardC' || targetId === 'boardD') {
+        setUnknownResWire((prev) => ({
+          ...prev,
+          [dragResEnd === 'end1' ? 'end1Terminal' : 'end2Terminal']: targetId,
+        }));
+      } else {
+        setUnknownResWire((prev) => ({
+          ...prev,
+          [dragResEnd === 'end1' ? 'end1Terminal' : 'end2Terminal']: null,
+        }));
+      }
+      setDragResEnd(null);
+      setDragEnd(null);
+      return;
+    }
+
     if (dragWireId) {
       const point = getCanvasPoint(e.clientX, e.clientY);
       const targetId = hitTestTerminal(point);
@@ -749,7 +859,7 @@ const PostOfficeBoxExperiment = () => {
     }
     setDraggingFrom(null);
     setDragEnd(null);
-  }, [draggingFrom, dragWireId, dragWireEnd, getCanvasPoint, hitTestTerminal, wires]);
+  }, [draggingFrom, dragWireId, dragWireEnd, dragResEnd, getCanvasPoint, hitTestTerminal, wires]);
 
   const handleWireDoubleClick = useCallback((wireId) => {
     setWires((prev) => prev.filter((w) => w.id !== wireId));
@@ -767,7 +877,7 @@ const PostOfficeBoxExperiment = () => {
       return;
     }
 
-    const validation = validateCircuitConnections(wires, pluggedSockets);
+    const validation = validateCircuitConnections(wires, pluggedSockets, unknownResWire);
     if (!validation.valid) {
       setBridgeResult({ valid: false, reason: validation.reason, arms: null, ig: 0, polarity: 0, balanced: false });
       targetAngleRef.current = 0;
@@ -777,7 +887,7 @@ const PostOfficeBoxExperiment = () => {
     const angle = result.polarity * Math.min(30, result.ig * 5);
     targetAngleRef.current = angle;
     setBridgeResult({ ...result, valid: true, reason: 'Circuit complete' });
-  }, [wires, pluggedSockets, k1Pressed, k2Pressed]);
+  }, [wires, pluggedSockets, k1Pressed, k2Pressed, unknownResWire]);
 
   const toggleSocket = useCallback((socketId) => {
     setPluggedSockets((prev) => ({ ...prev, [socketId]: !prev[socketId] }));
@@ -850,6 +960,15 @@ const PostOfficeBoxExperiment = () => {
     setBridgeResult({ valid: false, reason: 'Incomplete circuit', arms: null, ig: 0, polarity: 0, balanced: false });
     setObservations([]);
     setShowObservationTable(false);
+    setUnknownResWire({
+      id: 'unknown-res-s',
+      x: 0.50,
+      y: 0.85,
+      width: 0.18,
+      end1Terminal: null,
+      end2Terminal: null,
+      color: '#d97706',
+    });
   }, []);
 
   const batteryBoxYOffset = (dimensions.height || 560) + 16 + 12;
@@ -963,6 +1082,7 @@ const PostOfficeBoxExperiment = () => {
                     setDragEnd(null);
                     setDragWireId(null);
                     setDragWireEnd(null);
+                    setDragResEnd(null);
                   }}
                 >
                 <div
@@ -1141,6 +1261,92 @@ const PostOfficeBoxExperiment = () => {
                         strokeDasharray="6 4"
                         opacity="0.7"
                       />
+                    );
+                  })()}
+
+                  {/* Unknown Resistance Wire (S) */}
+                  {dimensions.width && (() => {
+                    const { end1, end2, cx, cy } = getResWireEndpoints(unknownResWire, dimensions);
+                    const end1Connected = !!unknownResWire.end1Terminal;
+                    const end2Connected = !!unknownResWire.end2Terminal;
+                    const bothConnected = end1Connected && end2Connected;
+                    const end1Pos = dragResEnd === 'end1' ? dragEnd : end1;
+                    const end2Pos = dragResEnd === 'end2' ? dragEnd : end2;
+
+                    return (
+                      <g style={{ zIndex: 5 }}>
+                        <path
+                          d={buildResistorZigZag(
+                            dragResEnd === 'end1' && dragEnd ? dragEnd : end1,
+                            dragResEnd === 'end2' && dragEnd ? dragEnd : end2,
+                            cx, cy
+                          )}
+                          fill="none"
+                          stroke={unknownResWire.color}
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          filter="url(#neon-glow)"
+                          opacity={bothConnected ? 1 : 0.85}
+                        />
+                        <text
+                          x={cx}
+                          y={cy - 18}
+                          textAnchor="middle"
+                          fill={unknownResWire.color}
+                          fontSize="11"
+                          fontWeight="bold"
+                          fontFamily="Space Grotesk, sans-serif"
+                        >
+                          S (Unknown X)
+                        </text>
+                        <circle
+                          cx={end1Pos.x}
+                          cy={end1Pos.y}
+                          r={RES_HANDLE_RADIUS}
+                          fill={end1Connected ? `${unknownResWire.color}66` : 'rgba(217,119,6,0.2)'}
+                          stroke={unknownResWire.color}
+                          strokeWidth="2.5"
+                          style={{ cursor: 'grab', pointerEvents: 'auto' }}
+                          filter="url(#neon-glow)"
+                        />
+                        <text
+                          x={end1Pos.x}
+                          y={end1Pos.y}
+                          textAnchor="middle"
+                          dy="0.35em"
+                          fill="#fef3c7"
+                          fontSize="9"
+                          fontWeight="bold"
+                          fontFamily="Space Grotesk, sans-serif"
+                          style={{ pointerEvents: 'none' }}
+                        >
+                          1
+                        </text>
+                        <circle
+                          cx={end2Pos.x}
+                          cy={end2Pos.y}
+                          r={RES_HANDLE_RADIUS}
+                          fill={end2Connected ? `${unknownResWire.color}66` : 'rgba(217,119,6,0.2)'}
+                          stroke={unknownResWire.color}
+                          strokeWidth="2.5"
+                          style={{ cursor: 'grab', pointerEvents: 'auto' }}
+                          filter="url(#neon-glow)"
+                        />
+                        <text
+                          x={end2Pos.x}
+                          y={end2Pos.y}
+                          textAnchor="middle"
+                          dy="0.35em"
+                          fill="#fef3c7"
+                          fontSize="9"
+                          fontWeight="bold"
+                          fontFamily="Space Grotesk, sans-serif"
+                          style={{ pointerEvents: 'none' }}
+                        >
+                          2
+                        </text>
+                      </g>
                     );
                   })()}
 
