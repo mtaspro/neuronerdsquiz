@@ -92,8 +92,6 @@ const TERMINALS = {
   batteryBoxMinus: { id: 'batteryBoxMinus', label: 'B-', color: '#1f2937', x: 0.115, y: 0.50, component: 'batteryBox' },
   galvanometerG0: { id: 'galvanometerG0', label: 'G0', color: '#3b82f6', x: 0.408, y: 0.075, component: 'galvanometer' },
   galvanometerG1: { id: 'galvanometerG1', label: 'G1', color: '#3b82f6', x: 0.592, y: 0.075, component: 'galvanometer' },
-  unknownX1: { id: 'unknownX1', label: '1', color: '#10b981', x: 0.149, y: 0.925, component: 'unknownResistance' },
-  unknownX2: { id: 'unknownX2', label: '2', color: '#10b981', x: 0.424, y: 0.931, component: 'unknownResistance' },
   boardA: { id: 'boardA', label: 'A', color: '#f59e0b', x: 0.267, y: 0.310, component: 'board' },
   boardB: { id: 'boardB', label: 'B', color: '#f59e0b', x: 0.733, y: 0.310, component: 'board' },
   boardC: { id: 'boardC', label: 'C', color: '#f59e0b', x: 0.267, y: 0.680, component: 'board' },
@@ -101,57 +99,33 @@ const TERMINALS = {
   leftScrew1: { id: 'leftScrew1', label: 'LS1', color: '#f59e0b', x: 0.077, y: 0.202, component: 'board' },
   leftScrew2: { id: 'leftScrew2', label: 'LS2', color: '#f59e0b', x: 0.075, y: 0.442, component: 'board' },
   leftScrew3: { id: 'leftScrew3', label: 'LS3', color: '#f59e0b', x: 0.075, y: 0.735, component: 'board' },
-  bottomScrew1: { id: 'bottomScrew1', label: 'BS1', color: '#f59e0b', x: 0.149, y: 0.897, component: 'board' },
-  bottomScrew2: { id: 'bottomScrew2', label: 'BS2', color: '#f59e0b', x: 0.424, y: 0.895, component: 'board' },
+  bottomScrew1: { id: 'bottomScrew1', label: 'K1', color: '#f59e0b', x: 0.149, y: 0.897, component: 'board' },
+  bottomScrew2: { id: 'bottomScrew2', label: 'K1', color: '#f59e0b', x: 0.424, y: 0.903, component: 'board' },
   rightScrew1: { id: 'rightScrew1', label: 'RS1', color: '#f59e0b', x: 0.922, y: 0.200, component: 'board' },
-  bottomScrew3: { id: 'bottomScrew3', label: 'BS3', color: '#f59e0b', x: 0.845, y: 0.911, component: 'board' },
+  bottomScrew3: { id: 'bottomScrew3', label: 'K2', color: '#f59e0b', x: 0.845, y: 0.911, component: 'board' },
 };
 
 const TERMINAL_RADIUS = 12;
 
 const VALID_CONNECTIONS = {
-  batteryPlus: ['boardA', 'boardB', 'boardC', 'boardD', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
-  batteryMinus: ['boardA', 'boardB', 'boardC', 'boardD', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
-  batteryBoxPlus: ['boardA', 'boardC', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxMinus'],
-  batteryBoxMinus: ['boardA', 'boardB', 'boardC', 'boardD', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxPlus'],
-  galvanometerG0: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  galvanometerG1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  unknownX1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  unknownX2: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  boardA: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  boardB: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  boardC: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  boardD: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  leftScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  leftScrew2: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  leftScrew3: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  bottomScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  bottomScrew2: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew3', 'rightScrew1'],
-  bottomScrew3: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'rightScrew1'],
-  rightScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'unknownX1', 'unknownX2', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3'],
-};
-
-const TERMINAL_COMPONENT_MAP = {
-  batteryPlus: 'battery',
-  batteryMinus: 'battery',
-  batteryBoxPlus: 'batteryBox',
-  batteryBoxMinus: 'batteryBox',
-  galvanometerG0: 'galvanometer',
-  galvanometerG1: 'galvanometer',
-  unknownX1: 'unknownResistance',
-  unknownX2: 'unknownResistance',
-  boardA: 'board',
-  boardB: 'board',
-  boardC: 'board',
-  boardD: 'board',
-  leftScrew1: 'board',
-  leftScrew2: 'board',
-  leftScrew3: 'board',
-  bottomScrew1: 'board',
-  bottomScrew2: 'board',
-  bottomScrew3: 'board',
-  rightScrew1: 'board',
-};
+  batteryPlus: ['boardA', 'boardB', 'boardC', 'boardD', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
+  batteryMinus: ['boardA', 'boardB', 'boardC', 'boardD', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
+  batteryBoxPlus: ['boardA', 'boardC', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxMinus'],
+  batteryBoxMinus: ['boardA', 'boardB', 'boardC', 'boardD', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxPlus'],
+  galvanometerG0: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'boardA', 'boardB', 'boardC', 'boardD', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  galvanometerG1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'boardA', 'boardB', 'boardC', 'boardD', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  boardA: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  boardB: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  boardC: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  boardD: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  leftScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  leftScrew2: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'leftScrew1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  leftScrew3: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'leftScrew1', 'leftScrew2', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  bottomScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  bottomScrew2: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew3', 'rightScrew1'],
+  bottomScrew3: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'rightScrew1'],
+  rightScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'boardA', 'boardB', 'boardC', 'boardD', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3'],
+ };
 
 function useAssetLoader(urls) {
   const [images, setImages] = useState({});
@@ -363,26 +337,35 @@ function validateCircuitConnections(wires, pluggedSockets, unknownResWire) {
   const posReachable = bfsReachable(graph, batteryPosSources);
   const negReachable = bfsReachable(graph, batteryNegSources);
 
-  const aReachable = posReachable.has('boardA') || negReachable.has('boardA');
-  const cReachable = posReachable.has('boardC') || negReachable.has('boardC');
-  if (!aReachable || !cReachable) return { valid: false, reason: 'Battery not connected to A and C' };
+  const k1Terminals = ['bottomScrew1', 'bottomScrew2'];
+  const k1PosConnected = k1Terminals.some((t) => posReachable.has(t));
+  const k1NegConnected = k1Terminals.some((t) => negReachable.has(t));
+  if (!k1PosConnected || !k1NegConnected) return { valid: false, reason: 'Battery not connected through K1 key (BS1/BS2)' };
 
-  const aIsPositive = posReachable.has('boardA');
-  const cIsPositive = posReachable.has('boardC');
-  if (aIsPositive === cIsPositive) return { valid: false, reason: 'Battery polarity invalid across A-C' };
+  const aViaPos = posReachable.has('boardA') || bfsReachable(graph, k1Terminals.filter((t) => posReachable.has(t))).has('boardA');
+  const cViaPos = posReachable.has('boardC') || bfsReachable(graph, k1Terminals.filter((t) => posReachable.has(t))).has('boardC');
+  const aViaNeg = negReachable.has('boardA') || bfsReachable(graph, k1Terminals.filter((t) => negReachable.has(t))).has('boardA');
+  const cViaNeg = negReachable.has('boardC') || bfsReachable(graph, k1Terminals.filter((t) => negReachable.has(t))).has('boardC');
+  const aReachable = aViaPos || aViaNeg;
+  const cReachable = cViaPos || cViaNeg;
+  if (!aReachable || !cReachable) return { valid: false, reason: 'Battery not connected to A and C' };
+  if ((aViaPos && cViaPos) || (aViaNeg && cViaNeg)) return { valid: false, reason: 'Battery polarity invalid across A-C' };
 
   const galvSources = ['galvanometerG0', 'galvanometerG1'].filter((s) => graph.has(s));
   if (galvSources.length < 2) return { valid: false, reason: 'Galvanometer not connected across B and D' };
   const galvReachable = bfsReachable(graph, galvSources);
-  const bConnected = galvReachable.has('boardB');
-  const dConnected = galvReachable.has('boardD');
-  if (!bConnected || !dConnected) return { valid: false, reason: 'Galvanometer not connected across B and D' };
+  const k2Connected = galvReachable.has('bottomScrew3');
+  if (!k2Connected) return { valid: false, reason: 'Galvanometer not connected through K2 key (BS3)' };
+  const k2Reachable = bfsReachable(graph, ['bottomScrew3']);
+  const bConnected = k2Reachable.has('boardB');
+  const dConnected = k2Reachable.has('boardD');
+  if (!bConnected || !dConnected) return { valid: false, reason: 'Galvanometer not connected to B and D' };
 
   const end1 = unknownResWire.end1Terminal;
   const end2 = unknownResWire.end2Terminal;
-  const resWireConnectedToCD =
-    (end1 === 'boardC' && end2 === 'boardD') || (end1 === 'boardD' && end2 === 'boardC');
-  if (!resWireConnectedToCD) return { valid: false, reason: 'Unknown resistance S not connected across C and D' };
+  const resWireConnectedToLS =
+    (end1 === 'leftScrew2' && end2 === 'leftScrew3') || (end1 === 'leftScrew3' && end2 === 'leftScrew2');
+  if (!resWireConnectedToLS) return { valid: false, reason: 'Unknown resistance S not connected across LS2 and LS3' };
 
   const arms = calculateArmResistances(pluggedSockets);
   if (arms.P <= 0 || arms.Q <= 0) {
@@ -480,12 +463,13 @@ const PostOfficeBoxExperiment = () => {
   const rafPendingRef = useRef(false);
   const [unknownResWire, setUnknownResWire] = useState({
     id: 'unknown-res-s',
-    x: 0.50,
-    y: 0.85,
-    width: 0.18,
+    x: 0.075,
+    y: 0.588,
+    height: 0.14,
     end1Terminal: null,
     end2Terminal: null,
     color: '#d97706',
+    orientation: 'vertical',
   });
   const [dragResEnd, setDragResEnd] = useState(null);
   const RES_HANDLE_RADIUS = 14;
@@ -602,24 +586,6 @@ const PostOfficeBoxExperiment = () => {
       ctx.drawImage(images[needle.src], -nw / 2, -nh, nw, nh);
       ctx.restore();
     }
-
-    const unknown = COMPONENTS.unknownResistance;
-    const ux = unknown.x * width;
-    const uy = unknown.y * height;
-    const ur = unknown.radius * Math.min(width, height);
-
-    ctx.beginPath();
-    ctx.arc(ux, uy, ur, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0,245,255,0.1)';
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#00f5ff';
-    ctx.stroke();
-
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '12px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(unknown.label, ux, uy + ur + 14);
   }, [images, dimensions, pluggedSockets]);
 
   useEffect(() => {
@@ -662,12 +628,18 @@ const PostOfficeBoxExperiment = () => {
     const { width, height } = dimensions;
     const cx = wire.x * width;
     const cy = wire.y * height;
-    const halfW = (wire.width * width) / 2;
+    const isVertical = wire.orientation === 'vertical';
+    const halfSize = ((isVertical ? wire.height : wire.width) * (isVertical ? height : width)) / 2;
 
-    let end1X = cx - halfW;
-    let end1Y = cy;
-    let end2X = cx + halfW;
-    let end2Y = cy;
+    let end1X = cx;
+    let end1Y = isVertical ? cy - halfSize : cy;
+    let end2X = cx;
+    let end2Y = isVertical ? cy + halfSize : cy;
+
+    if (!isVertical) {
+      end1X = cx - halfSize;
+      end2X = cx + halfSize;
+    }
 
     if (wire.end1Terminal && terminalPositions[wire.end1Terminal]) {
       const pos = terminalPositions[wire.end1Terminal];
@@ -680,7 +652,7 @@ const PostOfficeBoxExperiment = () => {
       end2Y = pos.y;
     }
 
-    return { end1: { x: end1X, y: end1Y }, end2: { x: end2X, y: end2Y }, cx, cy, halfW };
+    return { end1: { x: end1X, y: end1Y }, end2: { x: end2X, y: end2Y }, cx, cy, halfSize };
   }, [terminalPositions]);
 
   const hitTestResHandle = useCallback((point, wire, dimensions) => {
@@ -789,14 +761,31 @@ const PostOfficeBoxExperiment = () => {
     setDragEnd(point);
   }, [getCanvasPoint, hitTestTerminal, hitTestResHandle, unknownResWire, dimensions, wires, findWireAtTerminal]);
 
+  const findNearestSnapTerminal = useCallback((point, terminals, maxDist = 30) => {
+    if (!point || !terminals) return null;
+    let closest = null;
+    let closestDist = maxDist * maxDist;
+    for (const [id, pos] of Object.entries(terminals)) {
+      if (id !== 'leftScrew2' && id !== 'leftScrew3') continue;
+      const dx = point.x - pos.x;
+      const dy = point.y - pos.y;
+      const dist = dx * dx + dy * dy;
+      if (dist < closestDist) {
+        closestDist = dist;
+        closest = id;
+      }
+    }
+    return closest;
+  }, []);
+
   const handleCanvasMouseUp = useCallback((e) => {
     if (dragResEnd) {
       const point = getCanvasPoint(e.clientX, e.clientY);
-      const targetId = hitTestTerminal(point);
-      if (targetId === 'boardC' || targetId === 'boardD') {
+      const snapTarget = findNearestSnapTerminal(point, terminalPositions, 35);
+      if (snapTarget) {
         setUnknownResWire((prev) => ({
           ...prev,
-          [dragResEnd === 'end1' ? 'end1Terminal' : 'end2Terminal']: targetId,
+          [dragResEnd === 'end1' ? 'end1Terminal' : 'end2Terminal']: snapTarget,
         }));
       } else {
         setUnknownResWire((prev) => ({
@@ -862,7 +851,7 @@ const PostOfficeBoxExperiment = () => {
     }
     setDraggingFrom(null);
     setDragEnd(null);
-  }, [draggingFrom, dragWireId, dragWireEnd, dragResEnd, getCanvasPoint, hitTestTerminal, wires]);
+  }, [draggingFrom, dragWireId, dragWireEnd, dragResEnd, getCanvasPoint, hitTestTerminal, wires, findNearestSnapTerminal, terminalPositions]);
 
   const handleWireDoubleClick = useCallback((wireId) => {
     setWires((prev) => prev.filter((w) => w.id !== wireId));
@@ -965,12 +954,13 @@ const PostOfficeBoxExperiment = () => {
     setShowObservationTable(false);
     setUnknownResWire({
       id: 'unknown-res-s',
-      x: 0.50,
-      y: 0.85,
-      width: 0.18,
+      x: 0.075,
+      y: 0.588,
+      height: 0.14,
       end1Terminal: null,
       end2Terminal: null,
       color: '#d97706',
+      orientation: 'vertical',
     });
   }, []);
 
