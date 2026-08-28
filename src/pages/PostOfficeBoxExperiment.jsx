@@ -88,8 +88,8 @@ const COMPONENTS = {
 const TERMINALS = {
   batteryPlus: { id: 'batteryPlus', label: '+', color: '#ef4444', x: 0.077, y: 0.202, component: 'battery' },
   batteryMinus: { id: 'batteryMinus', label: '−', color: '#1f2937', x: 0.075, y: 0.442, component: 'battery' },
-  batteryBoxPlus: { id: 'batteryBoxPlus', label: 'B+', color: '#ef4444', x: 0.02, y: 0.88, component: 'batteryBox' },
-  batteryBoxMinus: { id: 'batteryBoxMinus', label: 'B-', color: '#1f2937', x: 0.10, y: 0.88, component: 'batteryBox' },
+  batteryBoxPlus: { id: 'batteryBoxPlus', label: 'B+', color: '#ef4444', x: 0.045, y: 0.52, component: 'batteryBox' },
+  batteryBoxMinus: { id: 'batteryBoxMinus', label: 'B-', color: '#1f2937', x: 0.095, y: 0.52, component: 'batteryBox' },
   galvanometerG0: { id: 'galvanometerG0', label: 'G0', color: '#3b82f6', x: 0.408, y: 0.075, component: 'galvanometer' },
   galvanometerG1: { id: 'galvanometerG1', label: 'G1', color: '#3b82f6', x: 0.592, y: 0.075, component: 'galvanometer' },
   unknownX1: { id: 'unknownX1', label: '1', color: '#10b981', x: 0.149, y: 0.925, component: 'unknownResistance' },
@@ -320,18 +320,26 @@ function calculateArmResistances(pluggedSockets) {
 }
 
 function validateCircuitConnections(wires, pluggedSockets) {
-  const batteryPositive = wires.find((w) => w.fromTerminalId === 'batteryPlus' || w.toTerminalId === 'batteryPlus');
-  const batteryNegative = wires.find((w) => w.fromTerminalId === 'batteryMinus' || w.toTerminalId === 'batteryMinus');
+  const batteryPositive = wires.find((w) => 
+    w.fromTerminalId === 'batteryPlus' || w.toTerminalId === 'batteryPlus' ||
+    w.fromTerminalId === 'batteryBoxPlus' || w.toTerminalId === 'batteryBoxPlus'
+  );
+  const batteryNegative = wires.find((w) => 
+    w.fromTerminalId === 'batteryMinus' || w.toTerminalId === 'batteryMinus' ||
+    w.fromTerminalId === 'batteryBoxMinus' || w.toTerminalId === 'batteryBoxMinus'
+  );
   if (!batteryPositive || !batteryNegative) return { valid: false, reason: 'Battery not connected' };
 
   const batteryPosTerminals = new Set();
   const batteryNegTerminals = new Set();
   wires.forEach((w) => {
-    if (w.fromTerminalId === 'batteryPlus' || w.toTerminalId === 'batteryPlus') {
-      batteryPosTerminals.add(w.fromTerminalId === 'batteryPlus' ? w.toTerminalId : w.fromTerminalId);
+    if (w.fromTerminalId === 'batteryPlus' || w.toTerminalId === 'batteryPlus' || w.fromTerminalId === 'batteryBoxPlus' || w.toTerminalId === 'batteryBoxPlus') {
+      const target = (w.fromTerminalId === 'batteryPlus' || w.fromTerminalId === 'batteryBoxPlus') ? w.toTerminalId : w.fromTerminalId;
+      batteryPosTerminals.add(target);
     }
-    if (w.fromTerminalId === 'batteryMinus' || w.toTerminalId === 'batteryMinus') {
-      batteryNegTerminals.add(w.fromTerminalId === 'batteryMinus' ? w.toTerminalId : w.fromTerminalId);
+    if (w.fromTerminalId === 'batteryMinus' || w.toTerminalId === 'batteryMinus' || w.fromTerminalId === 'batteryBoxMinus' || w.toTerminalId === 'batteryBoxMinus') {
+      const target = (w.fromTerminalId === 'batteryMinus' || w.fromTerminalId === 'batteryBoxMinus') ? w.toTerminalId : w.fromTerminalId;
+      batteryNegTerminals.add(target);
     }
   });
 
@@ -972,8 +980,8 @@ const PostOfficeBoxExperiment = () => {
 
                 <svg
                   ref={svgRef}
-                  className="absolute inset-0 w-full h-full pointer-events-none"
-                  style={{ zIndex: 2 }}
+                  className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
+                  style={{ zIndex: 10 }}
                 >
                   <defs>
                     <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
