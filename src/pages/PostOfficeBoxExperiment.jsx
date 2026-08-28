@@ -776,7 +776,11 @@ const PostOfficeBoxExperiment = () => {
                 : { ...w, toTerminalId: targetId };
             })
           );
+        } else {
+          setWires((prev) => prev.filter((w) => w.id !== dragWireId));
         }
+      } else {
+        setWires((prev) => prev.filter((w) => w.id !== dragWireId));
       }
       setDragWireId(null);
       setDragWireEnd(null);
@@ -838,27 +842,19 @@ const PostOfficeBoxExperiment = () => {
     setPluggedSockets((prev) => ({ ...prev, [socketId]: !prev[socketId] }));
   }, []);
 
-  const handleK1MouseDown = useCallback(() => {
-    setK1Pressed(true);
-  }, []);
+  const handleK1Click = useCallback(() => {
+    setK1Pressed((prev) => !prev);
+    if (!k1Pressed) setK2Pressed(false);
+  }, [k1Pressed]);
 
-  const handleK1MouseUp = useCallback(() => {
-    setK1Pressed(false);
-    setK2Pressed(false);
-  }, []);
-
-  const handleK2MouseDown = useCallback(() => {
+  const handleK2Click = useCallback(() => {
     if (!k1Pressed) {
       setShowKeyWarning(true);
       setTimeout(() => setShowKeyWarning(false), 3000);
       return;
     }
-    setK2Pressed(true);
+    setK2Pressed((prev) => !prev);
   }, [k1Pressed]);
-
-  const handleK2MouseUp = useCallback(() => {
-    setK2Pressed(false);
-  }, []);
 
   const addObservation = useCallback(() => {
     if (!bridgeResult.valid || !bridgeResult.arms) return;
@@ -922,38 +918,62 @@ const PostOfficeBoxExperiment = () => {
     });
   }, []);
 
-  const checkConnection = useCallback((wires, fromSet, toSet) => {
-    return wires.some((w) => {
-      const fromMatch = fromSet.includes(w.fromTerminalId) || fromSet.includes(w.toTerminalId);
-      const toMatch = toSet.includes(w.fromTerminalId) || toSet.includes(w.toTerminalId);
-      return fromMatch && toMatch;
-    });
+  const hasWireBetween = useCallback((wires, termA, termB) => {
+    return wires.some((w) =>
+      (w.fromTerminalId === termA && w.toTerminalId === termB) ||
+      (w.fromTerminalId === termB && w.toTerminalId === termA)
+    );
   }, []);
 
   const handleHint = useCallback(() => {
-    const posSources = ['batteryPlus', 'batteryBoxPlus'];
-    const negSources = ['batteryMinus', 'batteryBoxMinus'];
-    const k2Base = ['bottomScrew3', 'bottomScrew4'];
-    const k1Base = ['bottomScrew1', 'bottomScrew2'];
-
     const requiredConnections = [
-      { from: posSources, to: ['rightScrew1'], label: 'Battery (+) ↔ RS1' },
-      { from: negSources, to: k2Base, label: 'Battery (-) ↔ K2 Base' },
-      { from: ['galvanometerG0', 'galvanometerG1'], to: ['leftScrew3'], label: 'Galvanometer G0 ↔ LS3' },
-      { from: ['galvanometerG0', 'galvanometerG1'], to: k1Base, label: 'Galvanometer G1 ↔ K1 Base' },
+      {
+        id: 'bat-pos-rs1',
+        check: () => hasWireBetween(wires, 'batteryPlus', 'rightScrew1') || hasWireBetween(wires, 'batteryBoxPlus', 'rightScrew1'),
+        hintTerminals: ['batteryPlus', 'rightScrew1'],
+        label: 'Battery (+) ↔ RS1',
+      },
+      {
+        id: 'bat-neg-k2',
+        check: () => hasWireBetween(wires, 'batteryMinus', 'bottomScrew3') || hasWireBetween(wires, 'batteryMinus', 'bottomScrew4') || hasWireBetween(wires, 'batteryBoxMinus', 'bottomScrew3') || hasWireBetween(wires, 'batteryBoxMinus', 'bottomScrew4'),
+        hintTerminals: ['batteryMinus', 'bottomScrew3'],
+        label: 'Battery (-) ↔ K2 Base',
+      },
+      {
+        id: 'g0-ls3',
+        check: () => hasWireBetween(wires, 'galvanometerG0', 'leftScrew3'),
+        hintTerminals: ['galvanometerG0', 'leftScrew3'],
+        label: 'Galvanometer G0 ↔ LS3',
+      },
+      {
+        id: 'g1-k1',
+        check: () => hasWireBetween(wires, 'galvanometerG1', 'bottomScrew1') || hasWireBetween(wires, 'galvanometerG1', 'bottomScrew2'),
+        hintTerminals: ['galvanometerG1', 'bottomScrew1'],
+        label: 'Galvanometer G1 ↔ K1 Base',
+      },
     ];
 
     const sEnd1 = unknownResWire.end1Terminal;
     const sEnd2 = unknownResWire.end2Terminal;
     const sConnected = (sEnd1 === 'leftScrew3' && sEnd2 === 'rightScrew1') || (sEnd1 === 'rightScrew1' && sEnd2 === 'leftScrew3');
 
-    const missing = requiredConnections.filter((conn) => !checkConnection(wires, conn.from, conn.to));
+    const missing = requiredConnections.filter((conn) => !conn.check());
 
     if (!sConnected) {
-      missing.push({ from: ['S-Wire'], to: ['LS3', 'RS1'], label: 'Unknown S ↔ LS3/RS1' });
+      missing.push({
+        id: 'unknown-s',
+        hintTerminals: ['leftScrew3', 'rightScrew1'],
+        label: 'Unknown S ↔ LS3/RS1',
+      });
     }
 
     if (missing.length === 0) {
+      if (!k1Pressed || !k2Pressed) {
+        setHintTerminals([]);
+        setHintMessage(!k1Pressed ? 'Press K1 (Battery Key) to energize circuit' : 'Press K2 (Galvanometer Key) to complete circuit');
+        setTimeout(() => setHintMessage(null), 3000);
+        return;
+      }
       setHintMessage('সব কানেকশন ঠিক আছে।');
       setHintTerminals([]);
       setTimeout(() => setHintMessage(null), 3000);
@@ -961,14 +981,13 @@ const PostOfficeBoxExperiment = () => {
     }
 
     const randomMissing = missing[Math.floor(Math.random() * missing.length)];
-    const allTerminals = [...randomMissing.from, ...randomMissing.to];
-    setHintTerminals(allTerminals);
+    setHintTerminals(randomMissing.hintTerminals);
     setHintMessage(null);
 
     setTimeout(() => {
       setHintTerminals([]);
     }, 2500);
-  }, [wires, unknownResWire, checkConnection]);
+  }, [wires, unknownResWire, k1Pressed, k2Pressed, hasWireBetween]);
 
   return (
     <PageShell className="min-h-[calc(100vh-3.5rem)] text-slate-100">
@@ -1026,11 +1045,7 @@ const PostOfficeBoxExperiment = () => {
                 <div className="flex flex-wrap items-center gap-3 mb-4">
                   <button
                     type="button"
-                    onMouseDown={handleK1MouseDown}
-                    onMouseUp={handleK1MouseUp}
-                    onMouseLeave={handleK1MouseUp}
-                    onTouchStart={handleK1MouseDown}
-                    onTouchEnd={handleK1MouseUp}
+                    onClick={handleK1Click}
                     className={`px-5 py-2.5 rounded-lg text-xs font-bold border-2 transition-all select-none ${
                       k1Pressed
                         ? 'bg-emerald-500/30 border-emerald-400 text-emerald-200 shadow-lg shadow-emerald-500/30 scale-95'
@@ -1039,16 +1054,12 @@ const PostOfficeBoxExperiment = () => {
                   >
                     <span className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${k1Pressed ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
-                      K1 (Battery Key)
+                      {k1Pressed ? 'K1 ON' : 'K1 (Battery Key)'}
                     </span>
                   </button>
                   <button
                     type="button"
-                    onMouseDown={handleK2MouseDown}
-                    onMouseUp={handleK2MouseUp}
-                    onMouseLeave={handleK2MouseUp}
-                    onTouchStart={handleK2MouseDown}
-                    onTouchEnd={handleK2MouseUp}
+                    onClick={handleK2Click}
                     className={`px-5 py-2.5 rounded-lg text-xs font-bold border-2 transition-all select-none ${
                       k2Pressed
                         ? 'bg-amber-500/30 border-amber-400 text-amber-200 shadow-lg shadow-amber-500/30 scale-95'
@@ -1059,7 +1070,7 @@ const PostOfficeBoxExperiment = () => {
                   >
                     <span className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${k2Pressed ? 'bg-amber-400 animate-pulse' : 'bg-slate-500'}`} />
-                      K2 (Galvanometer Key)
+                      {k2Pressed ? 'K2 ON' : 'K2 (Galvanometer Key)'}
                     </span>
                   </button>
                   <button
