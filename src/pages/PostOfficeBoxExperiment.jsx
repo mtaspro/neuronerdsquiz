@@ -490,6 +490,9 @@ const PostOfficeBoxExperiment = () => {
   const [dragResEnd, setDragResEnd] = useState(null);
   const RES_HANDLE_RADIUS = 14;
 
+  const batteryBoxYOffset = (dimensions.height || 560) + 16 + 12;
+  const terminalPositions = dimensions.width && images.board ? getTerminalScreenPositions(dimensions, images.board, batteryBoxYOffset) : {};
+
   const resizeCanvas = useCallback(() => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
@@ -970,9 +973,6 @@ const PostOfficeBoxExperiment = () => {
       color: '#d97706',
     });
   }, []);
-
-  const batteryBoxYOffset = (dimensions.height || 560) + 16 + 12;
-  const terminalPositions = dimensions.width && images.board ? getTerminalScreenPositions(dimensions, images.board, batteryBoxYOffset) : {};
 
   return (
     <PageShell className="min-h-[calc(100vh-3.5rem)] text-slate-100">

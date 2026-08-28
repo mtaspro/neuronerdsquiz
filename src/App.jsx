@@ -160,7 +160,7 @@ function Navbar() {
         <div className="flex justify-between h-14 items-center">
           <div className="flex items-center space-x-3 sm:space-x-4">
             <Link to="/" className="aura-nav-brand hidden sm:block mr-2 shrink-0">
-              NEURONERDS
+              HSCAura
             </Link>
             {/* Settings Button - Desktop Only */}
             <div className="hidden lg:block relative settings-dropdown">
@@ -693,7 +693,7 @@ function AppContent() {
       <WhatsNewModal />
       
       {/* Support Neuronerds Button - Floating on every page */}
-      <SupportNeuronerds />
+      <SupportDevelopers />
     </>
   );
 }
