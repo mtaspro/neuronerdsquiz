@@ -33,17 +33,21 @@ const SOCKET_GROUPS = {
     label: 'Resistance Arm R',
     sockets: [
       { id: 'R1', resistance: 1, x: 0.202, y: 0.520 },
-      { id: 'R2', resistance: 2, x: 0.299, y: 0.520 },
-      { id: 'R3', resistance: 5, x: 0.391, y: 0.520 },
+      { id: 'R2', resistance: 5, x: 0.299, y: 0.520 },
+      { id: 'R3', resistance: 10, x: 0.391, y: 0.520 },
       { id: 'R4', resistance: 10, x: 0.484, y: 0.520 },
       { id: 'R5', resistance: 20, x: 0.575, y: 0.520 },
-      { id: 'R6', resistance: 50, x: 0.669, y: 0.520 },
-      { id: 'R7', resistance: 100, x: 0.760, y: 0.520 },
-      { id: 'R8', resistance: 500, x: 0.202, y: 0.732 },
-      { id: 'R9', resistance: 1000, x: 0.299, y: 0.732 },
-      { id: 'R10', resistance: 2000, x: 0.391, y: 0.732 },
-      { id: 'R11', resistance: 5000, x: 0.484, y: 0.732 },
+      { id: 'R6', resistance: 20, x: 0.669, y: 0.520 },
+      { id: 'R7', resistance: 50, x: 0.760, y: 0.520 },
+      { id: 'R8', resistance: 100, x: 0.202, y: 0.732 },
+      { id: 'R9', resistance: 200, x: 0.299, y: 0.732 },
+      { id: 'R10', resistance: 200, x: 0.391, y: 0.732 },
+      { id: 'R11', resistance: 500, x: 0.484, y: 0.732 },
       { id: 'R∞', resistance: Infinity, x: 0.854, y: 0.732 },
+      { id: 'R12', resistance: 100, x: 0.945, y: 0.732 },
+      { id: 'R13', resistance: 200, x: 0.945, y: 0.732 },
+      { id: 'R14', resistance: 200, x: 0.945, y: 0.732 },
+      { id: 'R15', resistance: 500, x: 0.945, y: 0.732 },
     ],
   },
 };
@@ -451,6 +455,7 @@ const PostOfficeBoxExperiment = () => {
   const RES_HANDLE_RADIUS = 14;
   const [hintTerminals, setHintTerminals] = useState([]);
   const [hintMessage, setHintMessage] = useState(null);
+  const [hintSWireTerminal, setHintSWireTerminal] = useState(null);
 
   const batteryBoxYOffset = (dimensions.height || 560) + 16 + 12;
   const terminalPositions = dimensions.width && images.board ? getTerminalScreenPositions(dimensions, images.board, batteryBoxYOffset) : {};
@@ -955,37 +960,53 @@ const PostOfficeBoxExperiment = () => {
 
     const sEnd1 = unknownResWire.end1Terminal;
     const sEnd2 = unknownResWire.end2Terminal;
+    const sTerm1Connected = sEnd1 === 'leftScrew3' || sEnd1 === 'rightScrew1';
+    const sTerm2Connected = sEnd2 === 'leftScrew3' || sEnd2 === 'rightScrew1';
     const sConnected = (sEnd1 === 'leftScrew3' && sEnd2 === 'rightScrew1') || (sEnd1 === 'rightScrew1' && sEnd2 === 'leftScrew3');
 
     const missing = requiredConnections.filter((conn) => !conn.check());
 
-    if (!sConnected) {
+    if (!sTerm1Connected) {
       missing.push({
-        id: 'unknown-s',
-        hintTerminals: ['leftScrew3', 'rightScrew1'],
-        label: 'Unknown S ↔ LS3/RS1',
+        id: 's-term1',
+        hintTerminals: ['leftScrew3'],
+        hintSWire: 1,
+        label: 'Unknown S (Terminal 1) ↔ LS3',
+      });
+    }
+
+    if (!sTerm2Connected) {
+      missing.push({
+        id: 's-term2',
+        hintTerminals: ['rightScrew1'],
+        hintSWire: 2,
+        label: 'Unknown S (Terminal 2) ↔ RS1',
       });
     }
 
     if (missing.length === 0) {
       if (!k1Pressed || !k2Pressed) {
         setHintTerminals([]);
+        setHintSWireTerminal(null);
         setHintMessage(!k1Pressed ? 'Press K1 (Battery Key) to energize circuit' : 'Press K2 (Galvanometer Key) to complete circuit');
         setTimeout(() => setHintMessage(null), 3000);
         return;
       }
       setHintMessage('সব কানেকশন ঠিক আছে।');
       setHintTerminals([]);
+      setHintSWireTerminal(null);
       setTimeout(() => setHintMessage(null), 3000);
       return;
     }
 
     const randomMissing = missing[Math.floor(Math.random() * missing.length)];
     setHintTerminals(randomMissing.hintTerminals);
+    setHintSWireTerminal(randomMissing.hintSWire || null);
     setHintMessage(null);
 
     setTimeout(() => {
       setHintTerminals([]);
+      setHintSWireTerminal(null);
     }, 2500);
   }, [wires, unknownResWire, k1Pressed, k2Pressed, hasWireBetween]);
 
@@ -1314,7 +1335,8 @@ const PostOfficeBoxExperiment = () => {
                     const bothConnected = end1Connected && end2Connected;
                     const end1Pos = dragResEnd === 'end1' ? dragEnd : end1;
                     const end2Pos = dragResEnd === 'end2' ? dragEnd : end2;
-                    const sWireHint = hintTerminals.includes('LS3') || hintTerminals.includes('RS1');
+                    const sWireHintEnd1 = hintSWireTerminal === 1;
+                    const sWireHintEnd2 = hintSWireTerminal === 2;
 
                     return (
                       <g style={{ zIndex: 5 }}>
@@ -1347,12 +1369,12 @@ const PostOfficeBoxExperiment = () => {
                           cx={end1Pos.x}
                           cy={end1Pos.y}
                           r={RES_HANDLE_RADIUS}
-                          fill={sWireHint ? '#fbbf24' : end1Connected ? `${unknownResWire.color}66` : 'rgba(217,119,6,0.2)'}
-                          stroke={sWireHint ? '#fbbf24' : unknownResWire.color}
-                          strokeWidth={sWireHint ? '4' : '2.5'}
+                          fill={sWireHintEnd1 ? '#fbbf24' : end1Connected ? `${unknownResWire.color}66` : 'rgba(217,119,6,0.2)'}
+                          stroke={sWireHintEnd1 ? '#fbbf24' : unknownResWire.color}
+                          strokeWidth={sWireHintEnd1 ? '4' : '2.5'}
                           style={{ cursor: 'grab', pointerEvents: 'auto' }}
                           filter="url(#neon-glow)"
-                          className={sWireHint ? 'hint-pulse' : ''}
+                          className={sWireHintEnd1 ? 'hint-pulse' : ''}
                         />
                         <text
                           x={end1Pos.x}
@@ -1371,12 +1393,12 @@ const PostOfficeBoxExperiment = () => {
                           cx={end2Pos.x}
                           cy={end2Pos.y}
                           r={RES_HANDLE_RADIUS}
-                          fill={sWireHint ? '#fbbf24' : end2Connected ? `${unknownResWire.color}66` : 'rgba(217,119,6,0.2)'}
-                          stroke={sWireHint ? '#fbbf24' : unknownResWire.color}
-                          strokeWidth={sWireHint ? '4' : '2.5'}
+                          fill={sWireHintEnd2 ? '#fbbf24' : end2Connected ? `${unknownResWire.color}66` : 'rgba(217,119,6,0.2)'}
+                          stroke={sWireHintEnd2 ? '#fbbf24' : unknownResWire.color}
+                          strokeWidth={sWireHintEnd2 ? '4' : '2.5'}
                           style={{ cursor: 'grab', pointerEvents: 'auto' }}
                           filter="url(#neon-glow)"
-                          className={sWireHint ? 'hint-pulse' : ''}
+                          className={sWireHintEnd2 ? 'hint-pulse' : ''}
                         />
                         <text
                           x={end2Pos.x}
