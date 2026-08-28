@@ -80,7 +80,7 @@ const COMPONENTS = {
   unknownResistance: {
     label: 'Unknown Resistance X',
     x: 0.50,
-    y: 0.97,
+    y: 0.98,
     radius: 0.04,
   },
 };
@@ -92,8 +92,8 @@ const TERMINALS = {
   batteryBoxMinus: { id: 'batteryBoxMinus', label: 'B-', color: '#1f2937', x: 0.10, y: 0.88, component: 'batteryBox' },
   galvanometerG0: { id: 'galvanometerG0', label: 'G0', color: '#3b82f6', x: 0.408, y: 0.075, component: 'galvanometer' },
   galvanometerG1: { id: 'galvanometerG1', label: 'G1', color: '#3b82f6', x: 0.592, y: 0.075, component: 'galvanometer' },
-  unknownX1: { id: 'unknownX1', label: '1', color: '#10b981', x: 0.149, y: 0.915, component: 'unknownResistance' },
-  unknownX2: { id: 'unknownX2', label: '2', color: '#10b981', x: 0.424, y: 0.921, component: 'unknownResistance' },
+  unknownX1: { id: 'unknownX1', label: '1', color: '#10b981', x: 0.149, y: 0.925, component: 'unknownResistance' },
+  unknownX2: { id: 'unknownX2', label: '2', color: '#10b981', x: 0.424, y: 0.931, component: 'unknownResistance' },
   boardA: { id: 'boardA', label: 'A', color: '#f59e0b', x: 0.267, y: 0.310, component: 'board' },
   boardB: { id: 'boardB', label: 'B', color: '#f59e0b', x: 0.733, y: 0.310, component: 'board' },
   boardC: { id: 'boardC', label: 'C', color: '#f59e0b', x: 0.267, y: 0.680, component: 'board' },
@@ -102,7 +102,7 @@ const TERMINALS = {
   leftScrew2: { id: 'leftScrew2', label: 'LS2', color: '#f59e0b', x: 0.075, y: 0.442, component: 'board' },
   leftScrew3: { id: 'leftScrew3', label: 'LS3', color: '#f59e0b', x: 0.075, y: 0.735, component: 'board' },
   bottomScrew1: { id: 'bottomScrew1', label: 'BS1', color: '#f59e0b', x: 0.149, y: 0.897, component: 'board' },
-  bottomScrew2: { id: 'bottomScrew2', label: 'BS2', color: '#f59e0b', x: 0.424, y: 0.903, component: 'board' },
+  bottomScrew2: { id: 'bottomScrew2', label: 'BS2', color: '#f59e0b', x: 0.424, y: 0.895, component: 'board' },
   rightScrew1: { id: 'rightScrew1', label: 'RS1', color: '#f59e0b', x: 0.922, y: 0.200, component: 'board' },
   bottomScrew3: { id: 'bottomScrew3', label: 'BS3', color: '#f59e0b', x: 0.845, y: 0.911, component: 'board' },
 };
@@ -223,7 +223,7 @@ function drawSocket(ctx, x, y, radius, label, isActive) {
   ctx.fillText(label, x, by + bh / 2);
 }
 
-function buildTerminalHitAreas(dimensions, boardImg) {
+function buildTerminalHitAreas(dimensions, boardImg, batteryBoxYOffset = 0) {
   const { width, height } = dimensions;
   let drawWidth = width;
   let drawHeight = height;
@@ -253,7 +253,7 @@ function buildTerminalHitAreas(dimensions, boardImg) {
   const externalHitAreas = Object.fromEntries(
     Object.entries(TERMINALS).filter(([, terminal]) => terminal.component === 'batteryBox').map(([id, terminal]) => {
       const cx = terminal.x * width;
-      const cy = terminal.y * height;
+      const cy = batteryBoxYOffset + terminal.y * 80;
       return [id, { x: cx, y: cy, radius: TERMINAL_RADIUS }];
     })
   );
@@ -261,7 +261,7 @@ function buildTerminalHitAreas(dimensions, boardImg) {
   return { ...boardHitAreas, ...externalHitAreas };
 }
 
-function getTerminalScreenPositions(dimensions, boardImg) {
+function getTerminalScreenPositions(dimensions, boardImg, batteryBoxYOffset = 0) {
   const { width, height } = dimensions;
   let drawWidth = width;
   let drawHeight = height;
@@ -288,7 +288,7 @@ function getTerminalScreenPositions(dimensions, boardImg) {
 
   const externalTerminals = Object.fromEntries(
     Object.entries(TERMINALS).filter(([, terminal]) => terminal.component === 'batteryBox').map(([id, terminal]) => {
-      return [id, { x: terminal.x * width, y: terminal.y * height }];
+      return [id, { x: terminal.x * width, y: batteryBoxYOffset + terminal.y * 80 }];
     })
   );
 
@@ -432,6 +432,7 @@ const PostOfficeBoxExperiment = () => {
   const canvasRef = useRef(null);
   const svgRef = useRef(null);
   const containerRef = useRef(null);
+  const wrapperRef = useRef(null);
   const { images, progress, error } = useAssetLoader(ASSETS);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const needleAngleRef = useRef(0);
@@ -457,7 +458,7 @@ const PostOfficeBoxExperiment = () => {
     const rect = containerRef.current.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
     const width = rect.width;
-    const height = Math.max(520, Math.min(720, width * 0.65));
+    const height = Math.max(560, Math.min(760, width * 0.65));
 
     setDimensions({ width, height });
     const canvas = canvasRef.current;
@@ -594,15 +595,16 @@ const PostOfficeBoxExperiment = () => {
   }, []);
 
   const getCanvasPoint = useCallback((clientX, clientY) => {
-    const canvas = canvasRef.current;
-    if (!canvas || !dimensions.width) return null;
-    const rect = canvas.getBoundingClientRect();
+    const wrapper = wrapperRef.current;
+    if (!wrapper || !dimensions.width) return null;
+    const rect = wrapper.getBoundingClientRect();
     return { x: clientX - rect.left, y: clientY - rect.top };
   }, [dimensions.width]);
 
   const hitTestTerminal = useCallback((point) => {
     if (!point || !images.board || !dimensions.width) return null;
-    const hitAreas = buildTerminalHitAreas(dimensions, images.board);
+    const batteryBoxYOffset = (dimensions.height || 560) + 16 + 12;
+    const hitAreas = buildTerminalHitAreas(dimensions, images.board, batteryBoxYOffset);
     for (const [id, area] of Object.entries(hitAreas)) {
       const dx = point.x - area.x;
       const dy = point.y - area.y;
@@ -762,7 +764,8 @@ const PostOfficeBoxExperiment = () => {
     setShowObservationTable(false);
   }, []);
 
-  const terminalPositions = dimensions.width && images.board ? getTerminalScreenPositions(dimensions, images.board) : {};
+  const batteryBoxYOffset = (dimensions.height || 560) + 16 + 12;
+  const terminalPositions = dimensions.width && images.board ? getTerminalScreenPositions(dimensions, images.board, batteryBoxYOffset) : {};
 
   return (
     <PageShell className="min-h-[calc(100vh-3.5rem)] text-slate-100">
@@ -848,37 +851,30 @@ const PostOfficeBoxExperiment = () => {
                     Always close Battery Key (K1) before Galvanometer Key (K2).
                   </div>
                 )}
-               <div
-                 ref={containerRef}
-                 className="relative w-full rounded-xl overflow-hidden border border-cyan-500/10 bg-black/30 select-none pb-6"
-                 style={{ height: Math.max(520, Math.min(720, (dimensions.width || 800) * 0.65)) }}
-               >
-                {error && (
-                  <div className="absolute inset-0 flex items-center justify-center text-red-400 text-sm z-10">
-                    {error.message}
-                  </div>
-                )}
+                <div
+                  ref={wrapperRef}
+                  className="relative"
+                  onMouseMove={handleCanvasMouseMove}
+                  onMouseDown={handleCanvasMouseDown}
+                  onMouseUp={handleCanvasMouseUp}
+                  onMouseLeave={() => {
+                    setHoveredTerminal(null);
+                    setDraggingFrom(null);
+                    setDragEnd(null);
+                  }}
+                >
+                <div
+                  ref={containerRef}
+                  className="relative w-full rounded-xl overflow-hidden border border-cyan-500/10 bg-black/30 select-none"
+                  style={{ height: Math.max(560, Math.min(760, (dimensions.width || 800) * 0.65)) }}
+                >
+                 {error && (
+                   <div className="absolute inset-0 flex items-center justify-center text-red-400 text-sm z-10">
+                     {error.message}
+                   </div>
+                 )}
 
-                {/* External Battery Box */}
-                <div className="absolute bottom-6 left-2 z-10">
-                  <div className="relative w-28 h-20 bg-gradient-to-b from-slate-700 to-slate-800 border-2 border-slate-500 rounded-lg shadow-lg flex flex-col items-center justify-center gap-1">
-                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-red-500 rounded-full border border-red-300" />
-                    <div className="absolute -top-1 left-1/2 translate-x-3 w-3 h-3 bg-slate-900 rounded-full border border-slate-500" />
-                    <span className="text-[10px] font-bold text-slate-300 tracking-wider">BATTERY</span>
-                    <div className="flex gap-3 mt-1">
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-red-500" />
-                        <span className="text-[9px] text-red-400 font-bold">+</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-slate-900 border border-slate-500" />
-                        <span className="text-[9px] text-slate-400 font-bold">-</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dynamic Zoom Camera Projection */}
+                 {/* Dynamic Zoom Camera Projection */}
                 {k1Pressed && k2Pressed && bridgeResult.valid && (
                   <div className="absolute z-20" style={{ top: '12%', left: '60%' }}>
                     <svg width="120" height="90" viewBox="0 0 120 90" className="absolute -left-2 -top-1">
@@ -937,18 +933,42 @@ const PostOfficeBoxExperiment = () => {
                   </div>
                 )}
 
-                <canvas
-                  ref={canvasRef}
-                  className="absolute inset-0 w-full h-full"
-                  onMouseMove={handleCanvasMouseMove}
-                  onMouseDown={handleCanvasMouseDown}
-                  onMouseUp={handleCanvasMouseUp}
-                  onMouseLeave={() => {
-                    setHoveredTerminal(null);
-                    setDraggingFrom(null);
-                    setDragEnd(null);
-                  }}
-                />
+                  <canvas
+                    ref={canvasRef}
+                    className="absolute inset-0 w-full h-full pointer-events-none"
+                  />
+                  
+                  {!images.board && !error && (
+                    <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm z-10">
+                      Initializing canvas workspace...
+                    </div>
+                  )}
+                </div>
+
+                {/* External Battery Box Panel */}
+                <div className="mt-4 aura-glass aura-glass-card rounded-xl border border-cyan-500/10 bg-black/20 p-3">
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-28 h-20 bg-gradient-to-b from-slate-700 to-slate-800 border-2 border-slate-500 rounded-lg shadow-lg flex flex-col items-center justify-center gap-1">
+                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-red-500 rounded-full border border-red-300" />
+                      <div className="absolute -top-1 left-1/2 translate-x-3 w-3 h-3 bg-slate-900 rounded-full border border-slate-500" />
+                      <span className="text-[10px] font-bold text-slate-300 tracking-wider">BATTERY</span>
+                      <div className="flex gap-3 mt-1">
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-red-500" />
+                          <span className="text-[9px] text-red-400 font-bold">+</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-slate-900 border border-slate-500" />
+                          <span className="text-[9px] text-slate-400 font-bold">-</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-slate-300">External Battery</p>
+                      <p className="text-[10px] text-slate-400">Connect B+ to board A/C and B- to board B/D</p>
+                    </div>
+                  </div>
+                </div>
 
                 <svg
                   ref={svgRef}
@@ -1039,17 +1059,11 @@ const PostOfficeBoxExperiment = () => {
                          </text>
                        </g>
                      );
-                  })}
-                </svg>
+                   })}
+                 </svg>
+               </div>
 
-                {!images.board && !error && (
-                  <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm z-10">
-                    Initializing canvas workspace...
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-4 grid gap-6 sm:grid-cols-2">
+               <div className="mt-4 grid gap-6 sm:grid-cols-2">
                 <div className="aura-glass aura-glass-card rounded-2xl border border-cyan-500/10 shadow-lg shadow-cyan-500/10 p-6">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-xs uppercase tracking-widest text-slate-400">Socket Controls</p>
