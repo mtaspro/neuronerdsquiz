@@ -80,7 +80,7 @@ const COMPONENTS = {
   unknownResistance: {
     label: 'Unknown Resistance X',
     x: 0.50,
-    y: 0.95,
+    y: 0.97,
     radius: 0.04,
   },
 };
@@ -88,12 +88,12 @@ const COMPONENTS = {
 const TERMINALS = {
   batteryPlus: { id: 'batteryPlus', label: '+', color: '#ef4444', x: 0.077, y: 0.202, component: 'battery' },
   batteryMinus: { id: 'batteryMinus', label: '−', color: '#1f2937', x: 0.075, y: 0.442, component: 'battery' },
-  batteryBoxPlus: { id: 'batteryBoxPlus', label: 'B+', color: '#ef4444', x: 0.05, y: 0.82, component: 'batteryBox' },
-  batteryBoxMinus: { id: 'batteryBoxMinus', label: 'B-', color: '#1f2937', x: 0.13, y: 0.82, component: 'batteryBox' },
+  batteryBoxPlus: { id: 'batteryBoxPlus', label: 'B+', color: '#ef4444', x: 0.02, y: 0.88, component: 'batteryBox' },
+  batteryBoxMinus: { id: 'batteryBoxMinus', label: 'B-', color: '#1f2937', x: 0.10, y: 0.88, component: 'batteryBox' },
   galvanometerG0: { id: 'galvanometerG0', label: 'G0', color: '#3b82f6', x: 0.408, y: 0.075, component: 'galvanometer' },
   galvanometerG1: { id: 'galvanometerG1', label: 'G1', color: '#3b82f6', x: 0.592, y: 0.075, component: 'galvanometer' },
-  unknownX1: { id: 'unknownX1', label: '1', color: '#10b981', x: 0.149, y: 0.897, component: 'unknownResistance' },
-  unknownX2: { id: 'unknownX2', label: '2', color: '#10b981', x: 0.424, y: 0.903, component: 'unknownResistance' },
+  unknownX1: { id: 'unknownX1', label: '1', color: '#10b981', x: 0.149, y: 0.915, component: 'unknownResistance' },
+  unknownX2: { id: 'unknownX2', label: '2', color: '#10b981', x: 0.424, y: 0.921, component: 'unknownResistance' },
   boardA: { id: 'boardA', label: 'A', color: '#f59e0b', x: 0.267, y: 0.310, component: 'board' },
   boardB: { id: 'boardB', label: 'B', color: '#f59e0b', x: 0.733, y: 0.310, component: 'board' },
   boardC: { id: 'boardC', label: 'C', color: '#f59e0b', x: 0.267, y: 0.680, component: 'board' },
@@ -191,11 +191,36 @@ function drawSocket(ctx, x, y, radius, label, isActive) {
   ctx.strokeStyle = isActive ? '#00f5ff' : 'rgba(0,245,255,0.35)';
   ctx.stroke();
 
-  ctx.fillStyle = '#e2e8f0';
-  ctx.font = '10px "Space Grotesk", sans-serif';
+  const badgePadX = 4;
+  const badgePadY = 2;
+  const badgeRadius = 3;
+  ctx.font = 'bold 11px "Space Grotesk", sans-serif';
+  const metrics = ctx.measureText(label);
+  const textWidth = metrics.width;
+  const textHeight = 13;
+  const bx = x - textWidth / 2 - badgePadX;
+  const by = y - radius - textHeight - badgePadY;
+  const bw = textWidth + badgePadX * 2;
+  const bh = textHeight + badgePadY * 2;
+
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.beginPath();
+  ctx.moveTo(bx + badgeRadius, by);
+  ctx.lineTo(bx + bw - badgeRadius, by);
+  ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + badgeRadius);
+  ctx.lineTo(bx + bw, by + bh - badgeRadius);
+  ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - badgeRadius, by + bh);
+  ctx.lineTo(bx + badgeRadius, by + bh);
+  ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - badgeRadius);
+  ctx.lineTo(bx, by + badgeRadius);
+  ctx.quadraticCurveTo(bx, by, bx + badgeRadius, by);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = '#0f172a';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(label, x, y - radius - 6);
+  ctx.fillText(label, x, by + bh / 2);
 }
 
 function buildTerminalHitAreas(dimensions, boardImg) {
@@ -553,7 +578,7 @@ const PostOfficeBoxExperiment = () => {
     ctx.fillStyle = '#e2e8f0';
     ctx.font = '12px "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(unknown.label, ux, uy - ur - 8);
+    ctx.fillText(unknown.label, ux, uy + ur + 14);
   }, [images, dimensions, pluggedSockets]);
 
   useEffect(() => {
@@ -823,11 +848,11 @@ const PostOfficeBoxExperiment = () => {
                     Always close Battery Key (K1) before Galvanometer Key (K2).
                   </div>
                 )}
-              <div
-                ref={containerRef}
-                className="relative w-full rounded-xl overflow-hidden border border-cyan-500/10 bg-black/30 select-none"
-                style={{ height: Math.max(520, Math.min(720, (dimensions.width || 800) * 0.65)) }}
-              >
+               <div
+                 ref={containerRef}
+                 className="relative w-full rounded-xl overflow-hidden border border-cyan-500/10 bg-black/30 select-none pb-6"
+                 style={{ height: Math.max(520, Math.min(720, (dimensions.width || 800) * 0.65)) }}
+               >
                 {error && (
                   <div className="absolute inset-0 flex items-center justify-center text-red-400 text-sm z-10">
                     {error.message}
@@ -835,7 +860,7 @@ const PostOfficeBoxExperiment = () => {
                 )}
 
                 {/* External Battery Box */}
-                <div className="absolute bottom-4 left-4 z-10">
+                <div className="absolute bottom-6 left-2 z-10">
                   <div className="relative w-28 h-20 bg-gradient-to-b from-slate-700 to-slate-800 border-2 border-slate-500 rounded-lg shadow-lg flex flex-col items-center justify-center gap-1">
                     <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-red-500 rounded-full border border-red-300" />
                     <div className="absolute -top-1 left-1/2 translate-x-3 w-3 h-3 bg-slate-900 rounded-full border border-slate-500" />
@@ -855,18 +880,18 @@ const PostOfficeBoxExperiment = () => {
 
                 {/* Dynamic Zoom Camera Projection */}
                 {k1Pressed && k2Pressed && bridgeResult.valid && (
-                  <div className="absolute z-20" style={{ top: '8%', left: '55%' }}>
-                    <svg width="160" height="120" viewBox="0 0 160 120" className="absolute -left-4 -top-2">
+                  <div className="absolute z-20" style={{ top: '12%', left: '60%' }}>
+                    <svg width="120" height="90" viewBox="0 0 120 90" className="absolute -left-2 -top-1">
                       <defs>
                         <linearGradient id="projGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
                           <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
                         </linearGradient>
                       </defs>
-                      <path d="M 0 60 Q 40 30 80 60 T 160 60" fill="none" stroke="url(#projGrad)" strokeWidth="18" strokeLinecap="round" opacity="0.6" />
-                      <path d="M 0 60 Q 40 30 80 60 T 160 60" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.8" />
+                      <path d="M 0 45 Q 30 20 60 45 T 120 45" fill="none" stroke="url(#projGrad)" strokeWidth="12" strokeLinecap="round" opacity="0.5" />
+                      <path d="M 0 45 Q 30 20 60 45 T 120 45" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.7" />
                     </svg>
-                    <div className="relative w-28 h-28 rounded-full border-4 border-cyan-500/40 bg-black/80 shadow-lg shadow-cyan-500/20 overflow-hidden backdrop-blur-sm">
+                    <div className="relative w-24 h-24 rounded-full border-4 border-cyan-500/40 bg-black/80 shadow-lg shadow-cyan-500/20 overflow-hidden backdrop-blur-sm">
                       {images.galvanometerBody && (
                         <img
                           src={ASSETS.galvanometerBody}
@@ -874,18 +899,18 @@ const PostOfficeBoxExperiment = () => {
                           className="absolute inset-0 w-full h-full object-cover rounded-full opacity-90"
                         />
                       )}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-0.5 h-14 bg-cyan-500/15 absolute" />
-                        <div className="w-14 h-0.5 bg-cyan-500/15 absolute" />
-                      </div>
-                      <div
-                        className="absolute bottom-1/2 left-1/2 w-0.5 h-14 origin-bottom transition-transform duration-200"
-                        style={{
-                          transform: `translateX(-50%) rotate(${Math.max(-30, Math.min(30, bridgeResult.polarity * Math.min(30, bridgeResult.ig * 5)))}deg)`,
-                          background: bridgeResult.polarity > 0 ? '#ef4444' : bridgeResult.polarity < 0 ? '#3b82f6' : '#94a3b8',
-                          borderRadius: '1px',
-                        }}
-                      />
+                       <div className="absolute inset-0 flex items-center justify-center">
+                         <div className="w-0.5 h-10 bg-cyan-500/15 absolute" />
+                         <div className="w-10 h-0.5 bg-cyan-500/15 absolute" />
+                       </div>
+                       <div
+                         className="absolute bottom-1/2 left-1/2 w-0.5 h-10 origin-bottom transition-transform duration-200"
+                         style={{
+                           transform: `translateX(-50%) rotate(${Math.max(-30, Math.min(30, bridgeResult.polarity * Math.min(30, bridgeResult.ig * 5)))}deg)`,
+                           background: bridgeResult.polarity > 0 ? '#ef4444' : bridgeResult.polarity < 0 ? '#3b82f6' : '#94a3b8',
+                           borderRadius: '1px',
+                         }}
+                       />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
                       </div>
@@ -986,31 +1011,34 @@ const PostOfficeBoxExperiment = () => {
                     const isDragSource = draggingFrom === id;
                     const glowFilter = isHovered || isDragSource ? 'url(#neon-glow)' : '';
 
-                    return (
-                      <g
-                        key={id}
-                        transform={`translate(${pos.x}, ${pos.y})`}
-                        onDoubleClick={() => handleTerminalDoubleClick(id)}
-                        style={{ zIndex: 4, cursor: 'pointer' }}
-                      >
-                        <circle
-                          r={TERMINAL_RADIUS}
-                          fill={isHovered || isDragSource ? `${terminal.color}33` : 'rgba(15,23,42,0.9)'}
-                          stroke={terminal.color}
-                          strokeWidth="2"
-                          filter={glowFilter}
-                        />
-                        <text
-                          textAnchor="middle"
-                          dy="0.35em"
-                          fill="#e2e8f0"
-                          fontSize="10"
-                          fontFamily="Space Grotesk, sans-serif"
-                        >
-                          {terminal.label}
-                        </text>
-                      </g>
-                    );
+                     return (
+                       <g
+                         key={id}
+                         transform={`translate(${pos.x}, ${pos.y})`}
+                         onDoubleClick={() => handleTerminalDoubleClick(id)}
+                         style={{ zIndex: 4, cursor: 'pointer' }}
+                       >
+                         <circle
+                           r={TERMINAL_RADIUS}
+                           fill={isHovered || isDragSource ? `${terminal.color}33` : 'rgba(15,23,42,0.9)'}
+                           stroke={terminal.color}
+                           strokeWidth="2"
+                           filter={glowFilter}
+                         />
+                         <text
+                           textAnchor="middle"
+                           dy="0.35em"
+                           fill="#f8fafc"
+                           fontSize="11"
+                           fontWeight="bold"
+                           fontFamily="Space Grotesk, sans-serif"
+                           stroke="#0f172a"
+                           strokeWidth="0.4"
+                         >
+                           {terminal.label}
+                         </text>
+                       </g>
+                     );
                   })}
                 </svg>
 
@@ -1033,32 +1061,32 @@ const PostOfficeBoxExperiment = () => {
                       Reset Circuit & Plugs
                     </button>
                   </div>
-                  <div className="grid gap-4">
-                    {Object.entries(SOCKET_GROUPS).map(([groupKey, group]) => (
-                      <div key={groupKey}>
-                        <p className="text-xs font-medium text-slate-300 mb-2">{group.label} — {groupKey === 'P' ? 'A-B' : groupKey === 'Q' ? 'A-D' : 'C-B'}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {group.sockets.map((socket) => {
-                            const isPlugged = pluggedSockets[socket.id];
-                            return (
-                              <button
-                                key={socket.id}
-                                type="button"
-                                onClick={() => toggleSocket(socket.id)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                                  isPlugged
-                                    ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
-                                    : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-cyan-500/30'
-                                }`}
-                              >
-                                {socket.id}: {socket.resistance}Ω
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                   <div className="grid gap-4">
+                     {Object.entries(SOCKET_GROUPS).map(([groupKey, group]) => (
+                       <div key={groupKey}>
+                         <p className="text-xs font-medium text-slate-300 mb-2">{group.label} — {groupKey === 'P' ? 'A-B' : groupKey === 'Q' ? 'A-D' : 'C-B'}</p>
+                         <div className="flex flex-wrap gap-3">
+                           {group.sockets.map((socket) => {
+                             const isPlugged = pluggedSockets[socket.id];
+                             return (
+                               <button
+                                 key={socket.id}
+                                 type="button"
+                                 onClick={() => toggleSocket(socket.id)}
+                                 className={`min-w-[72px] px-4 py-2.5 rounded-lg text-sm font-bold border transition-colors ${
+                                   isPlugged
+                                     ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
+                                     : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-cyan-500/30'
+                                 }`}
+                               >
+                                 {socket.id}: {socket.resistance}Ω
+                               </button>
+                             );
+                           })}
+                         </div>
+                       </div>
+                     ))}
+                   </div>
                 </div>
 
                 <div className="aura-glass aura-glass-card rounded-2xl border border-cyan-500/10 shadow-lg shadow-cyan-500/10 p-6">
