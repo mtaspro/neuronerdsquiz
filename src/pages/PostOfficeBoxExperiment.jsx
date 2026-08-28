@@ -87,8 +87,6 @@ const TERMINALS = {
   batteryBoxMinus: { id: 'batteryBoxMinus', label: 'B-', color: '#1f2937', x: 0.115, y: 0.50, component: 'batteryBox' },
   galvanometerG0: { id: 'galvanometerG0', label: 'G0', color: '#3b82f6', x: 0.408, y: 0.075, component: 'galvanometer' },
   galvanometerG1: { id: 'galvanometerG1', label: 'G1', color: '#3b82f6', x: 0.592, y: 0.075, component: 'galvanometer' },
-  leftScrew1: { id: 'leftScrew1', label: 'LS1', color: '#f59e0b', x: 0.077, y: 0.202, component: 'board' },
-  leftScrew2: { id: 'leftScrew2', label: 'LS2', color: '#f59e0b', x: 0.075, y: 0.442, component: 'board' },
   leftScrew3: { id: 'leftScrew3', label: 'LS3', color: '#f59e0b', x: 0.075, y: 0.735, component: 'board' },
   bottomScrew1: { id: 'bottomScrew1', label: 'K1', color: '#22c55e', x: 0.149, y: 0.897, component: 'board' },
   bottomScrew2: { id: 'bottomScrew2', label: 'K1', color: '#22c55e', x: 0.424, y: 0.903, component: 'board' },
@@ -100,20 +98,18 @@ const TERMINALS = {
 const TERMINAL_RADIUS = 12;
 
 const VALID_CONNECTIONS = {
-  batteryPlus: ['galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
-  batteryMinus: ['galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
-  batteryBoxPlus: ['galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxMinus'],
-  batteryBoxMinus: ['galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxPlus'],
-  galvanometerG0: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
-  galvanometerG1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
-  leftScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
-  leftScrew2: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
-  leftScrew3: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
-  bottomScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
-  bottomScrew2: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
-  bottomScrew3: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew4', 'rightScrew1'],
-  bottomScrew4: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  rightScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew1', 'leftScrew2', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4'],
+  batteryPlus: ['galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
+  batteryMinus: ['galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
+  batteryBoxPlus: ['galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxMinus'],
+  batteryBoxMinus: ['galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxPlus'],
+  galvanometerG0: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
+  galvanometerG1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
+  leftScrew3: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
+  bottomScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
+  bottomScrew2: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
+  bottomScrew3: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew4', 'rightScrew1'],
+  bottomScrew4: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
+  rightScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4'],
 };
 
 function useAssetLoader(urls) {
@@ -336,16 +332,16 @@ function validateCircuitConnections(wires, pluggedSockets, unknownResWire) {
   if (galvSources.length < 2) return { valid: false, reason: 'Galvanometer not connected' };
   const galvReachable = bfsReachable(graph, galvSources);
 
-  const galvG0ToLS1 = galvReachable.has('leftScrew1');
-  if (!galvG0ToLS1) return { valid: false, reason: 'Galvanometer G0 not connected to LS1' };
+  const galvG0ToLS3 = galvReachable.has('leftScrew3');
+  if (!galvG0ToLS3) return { valid: false, reason: 'Galvanometer G0 not connected to LS3' };
 
   const galvG1ToK1 = galvReachable.has('bottomScrew1') || galvReachable.has('bottomScrew2');
   if (!galvG1ToK1) return { valid: false, reason: 'Galvanometer G1 not connected to K1 base (BS1/BS2)' };
 
   const end1 = unknownResWire.end1Terminal;
   const end2 = unknownResWire.end2Terminal;
-  const resWireConnected = (end1 === 'leftScrew1' && end2 === 'rightScrew1') || (end1 === 'rightScrew1' && end2 === 'leftScrew1');
-  if (!resWireConnected) return { valid: false, reason: 'Unknown resistance S not connected across LS1 and RS1' };
+  const resWireConnected = (end1 === 'leftScrew3' && end2 === 'rightScrew1') || (end1 === 'rightScrew1' && end2 === 'leftScrew3');
+  if (!resWireConnected) return { valid: false, reason: 'Unknown resistance S not connected across LS3 and RS1' };
 
   const arms = calculateArmResistances(pluggedSockets);
   if (arms.P <= 0 || arms.Q <= 0) {
@@ -453,6 +449,8 @@ const PostOfficeBoxExperiment = () => {
   });
   const [dragResEnd, setDragResEnd] = useState(null);
   const RES_HANDLE_RADIUS = 14;
+  const [hintTerminals, setHintTerminals] = useState([]);
+  const [hintMessage, setHintMessage] = useState(null);
 
   const batteryBoxYOffset = (dimensions.height || 560) + 16 + 12;
   const terminalPositions = dimensions.width && images.board ? getTerminalScreenPositions(dimensions, images.board, batteryBoxYOffset) : {};
@@ -731,7 +729,7 @@ const PostOfficeBoxExperiment = () => {
     let closest = null;
     let closestDist = maxDist * maxDist;
     for (const [id, pos] of Object.entries(terminals)) {
-      if (id !== 'leftScrew1' && id !== 'rightScrew1') continue;
+      if (id !== 'leftScrew3' && id !== 'rightScrew1') continue;
       const dx = point.x - pos.x;
       const dy = point.y - pos.y;
       const dist = dx * dx + dy * dy;
@@ -924,8 +922,65 @@ const PostOfficeBoxExperiment = () => {
     });
   }, []);
 
+  const checkConnection = useCallback((wires, fromSet, toSet) => {
+    return wires.some((w) => {
+      const fromMatch = fromSet.includes(w.fromTerminalId) || fromSet.includes(w.toTerminalId);
+      const toMatch = toSet.includes(w.fromTerminalId) || toSet.includes(w.toTerminalId);
+      return fromMatch && toMatch;
+    });
+  }, []);
+
+  const handleHint = useCallback(() => {
+    const posSources = ['batteryPlus', 'batteryBoxPlus'];
+    const negSources = ['batteryMinus', 'batteryBoxMinus'];
+    const k2Base = ['bottomScrew3', 'bottomScrew4'];
+    const k1Base = ['bottomScrew1', 'bottomScrew2'];
+
+    const requiredConnections = [
+      { from: posSources, to: ['rightScrew1'], label: 'Battery (+) ↔ RS1' },
+      { from: negSources, to: k2Base, label: 'Battery (-) ↔ K2 Base' },
+      { from: ['galvanometerG0', 'galvanometerG1'], to: ['leftScrew3'], label: 'Galvanometer G0 ↔ LS3' },
+      { from: ['galvanometerG0', 'galvanometerG1'], to: k1Base, label: 'Galvanometer G1 ↔ K1 Base' },
+    ];
+
+    const sEnd1 = unknownResWire.end1Terminal;
+    const sEnd2 = unknownResWire.end2Terminal;
+    const sConnected = (sEnd1 === 'leftScrew3' && sEnd2 === 'rightScrew1') || (sEnd1 === 'rightScrew1' && sEnd2 === 'leftScrew3');
+
+    const missing = requiredConnections.filter((conn) => !checkConnection(wires, conn.from, conn.to));
+
+    if (!sConnected) {
+      missing.push({ from: ['S-Wire'], to: ['LS3', 'RS1'], label: 'Unknown S ↔ LS3/RS1' });
+    }
+
+    if (missing.length === 0) {
+      setHintMessage('সব কানেকশন ঠিক আছে।');
+      setHintTerminals([]);
+      setTimeout(() => setHintMessage(null), 3000);
+      return;
+    }
+
+    const randomMissing = missing[Math.floor(Math.random() * missing.length)];
+    const allTerminals = [...randomMissing.from, ...randomMissing.to];
+    setHintTerminals(allTerminals);
+    setHintMessage(null);
+
+    setTimeout(() => {
+      setHintTerminals([]);
+    }, 2500);
+  }, [wires, unknownResWire, checkConnection]);
+
   return (
     <PageShell className="min-h-[calc(100vh-3.5rem)] text-slate-100">
+      <style>{`
+        @keyframes hint-pulse {
+          0%, 100% { opacity: 1; r: 12; }
+          50% { opacity: 0.5; r: 18; }
+        }
+        .hint-pulse {
+          animation: hint-pulse 0.6s ease-in-out 4;
+        }
+      `}</style>
       <div className="w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           <div className="flex items-center justify-between mb-8">
@@ -1014,7 +1069,20 @@ const PostOfficeBoxExperiment = () => {
                   >
                     Reset Circuit &amp; Plugs
                   </button>
+                  <button
+                    type="button"
+                    onClick={handleHint}
+                    className="px-4 py-2.5 rounded-lg text-xs font-bold border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 hover:bg-yellow-500/20 transition-colors"
+                  >
+                    💡 Hint
+                  </button>
                 </div>
+
+                {hintMessage && (
+                  <div className="mb-4 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+                    {hintMessage}
+                  </div>
+                )}
 
                 {showKeyWarning && (
                   <div className="mb-4 rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
@@ -1235,6 +1303,7 @@ const PostOfficeBoxExperiment = () => {
                     const bothConnected = end1Connected && end2Connected;
                     const end1Pos = dragResEnd === 'end1' ? dragEnd : end1;
                     const end2Pos = dragResEnd === 'end2' ? dragEnd : end2;
+                    const sWireHint = hintTerminals.includes('LS3') || hintTerminals.includes('RS1');
 
                     return (
                       <g style={{ zIndex: 5 }}>
@@ -1267,11 +1336,12 @@ const PostOfficeBoxExperiment = () => {
                           cx={end1Pos.x}
                           cy={end1Pos.y}
                           r={RES_HANDLE_RADIUS}
-                          fill={end1Connected ? `${unknownResWire.color}66` : 'rgba(217,119,6,0.2)'}
-                          stroke={unknownResWire.color}
-                          strokeWidth="2.5"
+                          fill={sWireHint ? '#fbbf24' : end1Connected ? `${unknownResWire.color}66` : 'rgba(217,119,6,0.2)'}
+                          stroke={sWireHint ? '#fbbf24' : unknownResWire.color}
+                          strokeWidth={sWireHint ? '4' : '2.5'}
                           style={{ cursor: 'grab', pointerEvents: 'auto' }}
                           filter="url(#neon-glow)"
+                          className={sWireHint ? 'hint-pulse' : ''}
                         />
                         <text
                           x={end1Pos.x}
@@ -1290,11 +1360,12 @@ const PostOfficeBoxExperiment = () => {
                           cx={end2Pos.x}
                           cy={end2Pos.y}
                           r={RES_HANDLE_RADIUS}
-                          fill={end2Connected ? `${unknownResWire.color}66` : 'rgba(217,119,6,0.2)'}
-                          stroke={unknownResWire.color}
-                          strokeWidth="2.5"
+                          fill={sWireHint ? '#fbbf24' : end2Connected ? `${unknownResWire.color}66` : 'rgba(217,119,6,0.2)'}
+                          stroke={sWireHint ? '#fbbf24' : unknownResWire.color}
+                          strokeWidth={sWireHint ? '4' : '2.5'}
                           style={{ cursor: 'grab', pointerEvents: 'auto' }}
                           filter="url(#neon-glow)"
+                          className={sWireHint ? 'hint-pulse' : ''}
                         />
                         <text
                           x={end2Pos.x}
@@ -1318,7 +1389,8 @@ const PostOfficeBoxExperiment = () => {
                     if (!pos) return null;
                     const isHovered = hoveredTerminal === id;
                     const isDragSource = draggingFrom === id;
-                    const glowFilter = isHovered || isDragSource ? 'url(#neon-glow)' : '';
+                    const isHintActive = hintTerminals.includes(id);
+                    const glowFilter = isHovered || isDragSource || isHintActive ? 'url(#neon-glow)' : '';
 
                      return (
                        <g
@@ -1329,10 +1401,11 @@ const PostOfficeBoxExperiment = () => {
                        >
                          <circle
                            r={TERMINAL_RADIUS}
-                           fill={isHovered || isDragSource ? `${terminal.color}33` : 'rgba(15,23,42,0.9)'}
-                           stroke={terminal.color}
-                           strokeWidth="2"
+                           fill={isHintActive ? '#fbbf24' : isHovered || isDragSource ? `${terminal.color}33` : 'rgba(15,23,42,0.9)'}
+                           stroke={isHintActive ? '#fbbf24' : terminal.color}
+                           strokeWidth={isHintActive ? '4' : '2'}
                            filter={glowFilter}
+                           className={isHintActive ? 'hint-pulse' : ''}
                          />
                          <text
                            textAnchor="middle"
