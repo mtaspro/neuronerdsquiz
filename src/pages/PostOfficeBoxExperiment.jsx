@@ -146,7 +146,7 @@ function useAssetLoader(urls) {
 }
 
 function drawSocket(ctx, x, y, radius, label, isActive, plugKeyImg) {
-  const socketSize = 24;
+  const socketSize = 48;
   const halfSize = socketSize / 2;
 
   if (isActive) {
