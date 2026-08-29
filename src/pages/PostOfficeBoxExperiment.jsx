@@ -484,6 +484,7 @@ const PostOfficeBoxExperiment = () => {
   const [showObservationTable, setShowObservationTable] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarRef = useRef(null);
+  const toggleButtonRef = useRef(null);
   const nextIdRef = useRef(1);
   const nextObsIdRef = useRef(1);
   const latestPointRef = useRef(null);
@@ -529,7 +530,8 @@ const PostOfficeBoxExperiment = () => {
     return () => window.removeEventListener('resize', resizeCanvas);
   }, [resizeCanvas]);
 
-  useEffect(() => {
+  // Extract static canvas drawing into a function that can be called every frame
+  const drawStaticCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !dimensions.width) return;
 
@@ -567,6 +569,16 @@ const PostOfficeBoxExperiment = () => {
           ctx.fillText(socket.id, sx, sy + 14);
         });
       });
+
+      // Draw galvanometer body
+      const galv = COMPONENTS.galvanometer;
+      if (images[galv.src]) {
+        const gx = offsetX + galv.x * drawWidth - (galv.width * drawWidth) / 2;
+        const gy = offsetY + galv.y * drawHeight - (galv.height * drawHeight) / 2;
+        const gw = galv.width * drawWidth;
+        const gh = galv.height * drawHeight;
+        ctx.drawImage(images[galv.src], gx, gy, gw, gh);
+      }
     } else {
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, 0, width, height);
@@ -589,46 +601,69 @@ const PostOfficeBoxExperiment = () => {
       ctx.textAlign = 'center';
       ctx.fillText('Loading board assets...', width / 2, height / 2);
     }
+  }, [images, dimensions, pluggedSockets]);
+
+  // Draw galvanometer needle with current angle
+  const drawNeedle = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !dimensions.width || !images.board) return;
+
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+
+    const { width, height } = dimensions;
+    const boardImg = images.board;
+    const boardAspect = boardImg.naturalWidth / boardImg.naturalHeight;
+    const drawWidth = width;
+    const drawHeight = width / boardAspect;
+    const offsetX = (width - drawWidth) / 2;
+    const offsetY = (height - drawHeight) / 2;
 
     const galv = COMPONENTS.galvanometer;
-    if (images[galv.src] && boardImg) {
-      const drawWidth = width;
-      const drawHeight = width / (boardImg.naturalWidth / boardImg.naturalHeight);
-      const offsetX = (width - drawWidth) / 2;
-      const offsetY = (height - drawHeight) / 2;
+    const needle = COMPONENTS.galvanometerNeedle;
 
-      const gx = offsetX + galv.x * drawWidth - (galv.width * drawWidth) / 2;
-      const gy = offsetY + galv.y * drawHeight - (galv.height * drawHeight) / 2;
-      const gw = galv.width * drawWidth;
-      const gh = galv.height * drawHeight;
-
-      ctx.drawImage(images[galv.src], gx, gy, gw, gh);
-
-      const needle = COMPONENTS.galvanometerNeedle;
+    if (images[galv.src] && images[needle.src]) {
       const nx = offsetX + needle.offsetX * drawWidth;
       const ny = offsetY + needle.offsetY * drawHeight;
       const nw = needle.width * drawWidth;
       const nh = needle.height * drawHeight;
 
+      // Convert degrees to radians for canvas rotation
+      const angleInRadians = (needleAngleRef.current * Math.PI) / 180;
+
       ctx.save();
       ctx.translate(nx, ny + nh * needle.pivotY);
-      ctx.rotate(needleAngleRef.current);
+      ctx.rotate(angleInRadians);
       ctx.drawImage(images[needle.src], -nw / 2, -nh, nw, nh);
       ctx.restore();
     }
-  }, [images, dimensions, pluggedSockets]);
+  }, [images, dimensions]);
 
+  // Initial static draw when dependencies change
+  useEffect(() => {
+    drawStaticCanvas();
+  }, [drawStaticCanvas]);
+
+  // Animation loop for smooth needle movement
   useEffect(() => {
     const animate = () => {
+      // Update needle physics
       needleAngleRef.current += needleVelocityRef.current;
       needleVelocityRef.current += (targetAngleRef.current - needleAngleRef.current) * 0.05;
       needleVelocityRef.current *= 0.92;
+
+      // Redraw canvas with updated needle angle
+      drawStaticCanvas();
+      drawNeedle();
+
       animationRef.current = requestAnimationFrame(animate);
     };
 
     animationRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationRef.current);
-  }, []);
+  }, [drawStaticCanvas, drawNeedle]);
 
   const getCanvasPoint = useCallback((clientX, clientY) => {
     const wrapper = wrapperRef.current;
@@ -947,6 +982,11 @@ const PostOfficeBoxExperiment = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Don't close if click is on the toggle button
+      if (toggleButtonRef.current && toggleButtonRef.current.contains(event.target)) {
+        return;
+      }
+      // Close sidebar if click is outside the sidebar
       if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
         setIsSidebarOpen(false);
       }
@@ -1265,56 +1305,61 @@ const PostOfficeBoxExperiment = () => {
                    </div>
                  )}
 
-                 {/* Dynamic Zoom Camera Projection View */}
+                  {/* Dynamic Zoom Camera Projection View */}
                 {k1Pressed && k2Pressed && (
                   <div className="absolute z-20 pointer-events-none" style={{ top: '5%', right: '5%' }}>
-                    {bridgeResult.valid ? (
-                      <div className="flex flex-col items-center">
-                        <div className="relative w-28 h-28 rounded-full border-4 border-cyan-500/60 bg-black/90 shadow-xl shadow-cyan-500/30 overflow-hidden backdrop-blur-md">
-                          {images.galvanometerBody && (
-                            <img
-                              src={ASSETS.galvanometerBody}
-                              alt="Galvanometer dial"
-                              className="absolute inset-0 w-full h-full object-cover rounded-full opacity-90"
+                    {bridgeResult.valid ? (() => {
+                      // Use the same sensitivity formula as the main galvanometer
+                      const divisions = bridgeResult.ig * GALVANOMETER_SENSITIVITY;
+                      const angle = bridgeResult.polarity * Math.min(MAX_DEFLECTION_ANGLE, divisions);
+                      return (
+                        <div className="flex flex-col items-center">
+                          <div className="relative w-28 h-28 rounded-full border-4 border-cyan-500/60 bg-black/90 shadow-xl shadow-cyan-500/30 overflow-hidden backdrop-blur-md">
+                            {images.galvanometerBody && (
+                              <img
+                                src={ASSETS.galvanometerBody}
+                                alt="Galvanometer dial"
+                                className="absolute inset-0 w-full h-full object-cover rounded-full opacity-90"
+                              />
+                            )}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-0.5 h-12 bg-cyan-500/20 absolute" />
+                              <div className="w-12 h-0.5 bg-cyan-500/20 absolute" />
+                            </div>
+                            <div
+                              className="absolute bottom-1/2 left-1/2 w-1 h-12 origin-bottom transition-transform duration-300 ease-out z-10"
+                              style={{
+                                transform: `translateX(-50%) rotate(${angle}deg)`,
+                                background: bridgeResult.polarity > 0 ? '#ef4444' : bridgeResult.polarity < 0 ? '#3b82f6' : '#94a3b8',
+                                borderRadius: '2px',
+                              }}
                             />
-                          )}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-0.5 h-12 bg-cyan-500/20 absolute" />
-                            <div className="w-12 h-0.5 bg-cyan-500/20 absolute" />
+                            <div className="absolute inset-0 flex items-center justify-center z-20">
+                              <div className="w-2.5 h-2.5 rounded-full bg-slate-100 shadow border border-slate-700" />
+                            </div>
+                            {[-30, -20, -10, 0, 10, 20, 30].map((deg) => {
+                              const rad = (deg - 90) * (Math.PI / 180);
+                              const x = 50 + 38 * Math.cos(rad);
+                              const y = 50 + 38 * Math.sin(rad);
+                              return (
+                                <span
+                                  key={deg}
+                                  className="absolute text-[7px] text-cyan-200/80 font-mono font-bold select-none"
+                                  style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
+                                >
+                                  {deg}
+                                </span>
+                              );
+                            })}
                           </div>
-                          <div
-                            className="absolute bottom-1/2 left-1/2 w-1 h-12 origin-bottom transition-transform duration-300 ease-out z-10"
-                            style={{
-                              transform: `translateX(-50%) rotate(${Math.max(-30, Math.min(30, bridgeResult.polarity * Math.min(30, bridgeResult.ig * 5)))}deg)`,
-                              background: bridgeResult.polarity > 0 ? '#ef4444' : bridgeResult.polarity < 0 ? '#3b82f6' : '#94a3b8',
-                              borderRadius: '2px',
-                            }}
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center z-20">
-                            <div className="w-2.5 h-2.5 rounded-full bg-slate-100 shadow border border-slate-700" />
+                          <div className="mt-1.5 text-center bg-black/80 px-2.5 py-1 rounded border border-cyan-500/40 shadow-md">
+                            <p className="text-[11px] font-mono font-bold text-cyan-300">
+                              {bridgeResult.polarity > 0 ? '+' : bridgeResult.polarity < 0 ? '-' : '0'}{bridgeResult.ig.toFixed(2)} mA
+                            </p>
                           </div>
-                          {[-30, -20, -10, 0, 10, 20, 30].map((deg) => {
-                            const rad = (deg - 90) * (Math.PI / 180);
-                            const x = 50 + 38 * Math.cos(rad);
-                            const y = 50 + 38 * Math.sin(rad);
-                            return (
-                              <span
-                                key={deg}
-                                className="absolute text-[7px] text-cyan-200/80 font-mono font-bold select-none"
-                                style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
-                              >
-                                {deg}
-                              </span>
-                            );
-                          })}
                         </div>
-                        <div className="mt-1.5 text-center bg-black/80 px-2.5 py-1 rounded border border-cyan-500/40 shadow-md">
-                          <p className="text-[11px] font-mono font-bold text-cyan-300">
-                            {bridgeResult.polarity > 0 ? '+' : bridgeResult.polarity < 0 ? '-' : '0'}{bridgeResult.ig.toFixed(2)} mA
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
+                      );
+                    })() : (
                       <div className="bg-rose-950/90 border border-rose-500/50 text-rose-200 text-[11px] p-2.5 rounded-lg max-w-[170px] text-center shadow-xl backdrop-blur-md">
                         ⚠️ {bridgeResult.reason}
                       </div>
@@ -1611,6 +1656,7 @@ const PostOfficeBoxExperiment = () => {
                 </div>
 
                 <button
+                  ref={toggleButtonRef}
                   type="button"
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                   className="fixed right-0 top-1/2 z-50 -translate-y-1/2 bg-slate-800/90 border border-cyan-500/30 text-cyan-300 px-2 py-4 rounded-l-lg shadow-lg hover:bg-slate-700/90 transition-colors"
@@ -1621,8 +1667,8 @@ const PostOfficeBoxExperiment = () => {
 
                 <div
                   ref={sidebarRef}
-                  className={`fixed right-0 top-0 h-full w-64 bg-slate-900/95 border-l border-cyan-500/20 shadow-2xl transform transition-transform duration-300 z-40 ${
-                    isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+                  className={`fixed right-0 top-0 h-full w-64 bg-slate-900/95 border-l border-cyan-500/20 shadow-2xl transform transition-transform duration-300 ease-in-out z-40 ${
+                    isSidebarOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none invisible'
                   }`}
                 >
                   <div className="p-4 h-full overflow-y-auto">
