@@ -792,30 +792,37 @@ const PostOfficeBoxExperiment = () => {
     setHoveredTerminal(hit);
   }, [draggingFrom, dragWireId, dragResEnd, getCanvasPoint, hitTestTerminal, scheduleDragUpdate]);
 
+  // ১. প্রথমে toggleSocket ডিক্লেয়ার করুন
+  const toggleSocket = useCallback((socketId) => {
+  setPluggedSockets((prev) => ({ ...prev, [socketId]: !prev[socketId] }));
+  }, []);
+
+  // ২. এরপর handleCanvasMouseDown কল করুন
   const handleCanvasMouseDown = useCallback((e) => {
-    const point = getCanvasPoint(e.clientX, e.clientY);
+  const point = getCanvasPoint(e.clientX, e.clientY);
 
-    if (dimensions.width) {
-      const handleHit = hitTestResHandle(point, unknownResWire, dimensions);
-      if (handleHit) {
-        setDragResEnd(handleHit);
-        setDragEnd(point);
-        return;
-      }
-    }
-
-    const socketHit = hitTestSocket(point);
-    if (socketHit) {
-      toggleSocket(socketHit);
+  if (dimensions.width) {
+    const handleHit = hitTestResHandle(point, unknownResWire, dimensions);
+    if (handleHit) {
+      setDragResEnd(handleHit);
+      setDragEnd(point);
       return;
     }
+  }
 
-    const hit = hitTestTerminal(point);
-    if (!hit) return;
+  const socketHit = hitTestSocket(point);
+  if (socketHit) {
+    toggleSocket(socketHit); // এখন toggleSocket নিরাপদে এক্সেস হবে
+    return;
+  }
 
-    setDraggingFrom(hit);
-    setDragEnd(point);
-  }, [getCanvasPoint, hitTestTerminal, hitTestResHandle, hitTestSocket, unknownResWire, dimensions, toggleSocket]);
+  const hit = hitTestTerminal(point);
+  if (!hit) return;
+
+  setDraggingFrom(hit);
+  setDragEnd(point);
+}, [getCanvasPoint, hitTestTerminal, hitTestResHandle, hitTestSocket, unknownResWire, dimensions, toggleSocket]);
+
 
   const findNearestSnapTerminal = useCallback((point, terminals, maxDist = 30) => {
     if (!point || !terminals) return null;
@@ -937,9 +944,6 @@ const PostOfficeBoxExperiment = () => {
     setBridgeResult({ ...result, valid: true, reason: 'Circuit complete' });
   }, [wires, pluggedSockets, k1Pressed, k2Pressed, unknownResWire]);
 
-  const toggleSocket = useCallback((socketId) => {
-    setPluggedSockets((prev) => ({ ...prev, [socketId]: !prev[socketId] }));
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
