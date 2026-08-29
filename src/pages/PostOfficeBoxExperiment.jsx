@@ -32,13 +32,13 @@ const SOCKET_GROUPS = {
   R: {
     label: 'Resistance Arm R',
     sockets: [
-      { id: 'R1', resistance: 1, x: 0.202, y: 0.520 },
-      { id: 'R2', resistance: 5, x: 0.299, y: 0.520 },
-      { id: 'R3', resistance: 10, x: 0.391, y: 0.520 },
-      { id: 'R4', resistance: 10, x: 0.484, y: 0.520 },
-      { id: 'R5', resistance: 20, x: 0.575, y: 0.520 },
-      { id: 'R6', resistance: 20, x: 0.669, y: 0.520 },
-      { id: 'R7', resistance: 50, x: 0.760, y: 0.520 },
+      { id: 'R1', resistance: 1, x: 0.202, y: 0.470 },
+      { id: 'R2', resistance: 5, x: 0.299, y: 0.470 },
+      { id: 'R3', resistance: 10, x: 0.391, y: 0.470 },
+      { id: 'R4', resistance: 10, x: 0.484, y: 0.470 },
+      { id: 'R5', resistance: 20, x: 0.575, y: 0.470 },
+      { id: 'R6', resistance: 20, x: 0.669, y: 0.470 },
+      { id: 'R7', resistance: 50, x: 0.760, y: 0.470 },
       { id: 'R8', resistance: 100, x: 0.202, y: 0.732 },
       { id: 'R9', resistance: 200, x: 0.299, y: 0.732 },
       { id: 'R10', resistance: 200, x: 0.391, y: 0.732 },
@@ -55,7 +55,7 @@ const SOCKET_GROUPS = {
 const COMPONENTS = {
   galvanometer: {
     src: ASSETS.galvanometerBody,
-    x: 0.50,
+    x: 0.55,
     y: 0.08,
     width: 0.22,
     height: 0.18,
@@ -79,7 +79,7 @@ const COMPONENTS = {
   unknownResistance: {
     label: 'Unknown Resistance X',
     x: 0.50,
-    y: 0.98,
+    y: 0.200,
     radius: 0.04,
   },
 };
@@ -145,14 +145,47 @@ function useAssetLoader(urls) {
   return { images, progress, error };
 }
 
-function drawSocket(ctx, x, y, radius, label, isActive) {
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI * 2);
-  ctx.fillStyle = isActive ? 'rgba(0,245,255,0.25)' : 'rgba(15,23,42,0.8)';
-  ctx.fill();
-  ctx.lineWidth = isActive ? 2 : 1;
-  ctx.strokeStyle = isActive ? '#00f5ff' : 'rgba(0,245,255,0.35)';
-  ctx.stroke();
+function drawSocket(ctx, x, y, radius, label, isActive, plugKeyImg) {
+  const socketSize = 24;
+  const halfSize = socketSize / 2;
+
+  if (isActive) {
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    if (plugKeyImg) {
+      ctx.drawImage(plugKeyImg, x - halfSize, y - halfSize, socketSize, socketSize);
+    }
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(x, y, radius + 2, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,245,255,0.2)';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#00f5ff';
+    ctx.stroke();
+
+    ctx.shadowColor = '#00f5ff';
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(0,245,255,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  } else {
+    if (plugKeyImg) {
+      ctx.drawImage(plugKeyImg, x - halfSize, y - halfSize, socketSize, socketSize);
+    } else {
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(15,23,42,0.8)';
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(0,245,255,0.35)';
+      ctx.stroke();
+    }
+  }
 
   const badgePadX = 4;
   const badgePadY = 2;
@@ -512,7 +545,7 @@ const PostOfficeBoxExperiment = () => {
         group.sockets.forEach((socket) => {
           const sx = offsetX + socket.x * drawWidth;
           const sy = offsetY + socket.y * drawHeight;
-          drawSocket(ctx, sx, sy, 10, `${socket.resistance}Ω`, pluggedSockets[socket.id]);
+          drawSocket(ctx, sx, sy, 10, `${socket.resistance}Ω`, pluggedSockets[socket.id], images.plugKey);
           ctx.fillStyle = '#94a3b8';
           ctx.font = '8px "Space Grotesk", sans-serif';
           ctx.textAlign = 'center';
@@ -528,7 +561,7 @@ const PostOfficeBoxExperiment = () => {
         group.sockets.forEach((socket) => {
           const sx = socket.x * width;
           const sy = socket.y * height;
-          drawSocket(ctx, sx, sy, 10, `${socket.resistance}Ω`, pluggedSockets[socket.id]);
+          drawSocket(ctx, sx, sy, 10, `${socket.resistance}Ω`, pluggedSockets[socket.id], images.plugKey);
           ctx.fillStyle = '#94a3b8';
           ctx.font = '8px "Space Grotesk", sans-serif';
           ctx.textAlign = 'center';
@@ -941,7 +974,7 @@ const PostOfficeBoxExperiment = () => {
       {
         id: 'bat-neg-k2',
         check: () => hasWireBetween(wires, 'batteryMinus', 'bottomScrew3') || hasWireBetween(wires, 'batteryMinus', 'bottomScrew4') || hasWireBetween(wires, 'batteryBoxMinus', 'bottomScrew3') || hasWireBetween(wires, 'batteryBoxMinus', 'bottomScrew4'),
-        hintTerminals: ['batteryMinus', 'bottomScrew3'],
+        hintTerminals: ['batteryMinus', 'bottomScrew4'],
         label: 'Battery (-) ↔ K2 Base',
       },
       {
@@ -1423,38 +1456,84 @@ const PostOfficeBoxExperiment = () => {
                     const isHovered = hoveredTerminal === id;
                     const isDragSource = draggingFrom === id;
                     const isHintActive = hintTerminals.includes(id);
+                    const isKeyTerminal = id === 'bottomScrew1' || id === 'bottomScrew2' || id === 'bottomScrew3' || id === 'bottomScrew4';
+                    const isK1 = id === 'bottomScrew1' || id === 'bottomScrew2';
+                    const isK2 = id === 'bottomScrew3' || id === 'bottomScrew4';
+                    const keyPressed = isK1 ? k1Pressed : isK2 ? k2Pressed : false;
                     const glowFilter = isHovered || isDragSource || isHintActive ? 'url(#neon-glow)' : '';
 
-                     return (
-                       <g
-                         key={id}
-                         transform={`translate(${pos.x}, ${pos.y})`}
-                         onDoubleClick={() => handleTerminalDoubleClick(id)}
-                         style={{ zIndex: 4, cursor: 'pointer' }}
-                       >
-                         <circle
-                           r={TERMINAL_RADIUS}
-                           fill={isHintActive ? '#fbbf24' : isHovered || isDragSource ? `${terminal.color}33` : 'rgba(15,23,42,0.9)'}
-                           stroke={isHintActive ? '#fbbf24' : terminal.color}
-                           strokeWidth={isHintActive ? '4' : '2'}
-                           filter={glowFilter}
-                           className={isHintActive ? 'hint-pulse' : ''}
-                         />
-                         <text
-                           textAnchor="middle"
-                           dy="0.35em"
-                           fill="#f8fafc"
-                           fontSize="11"
-                           fontWeight="bold"
-                           fontFamily="Space Grotesk, sans-serif"
-                           stroke="#0f172a"
-                           strokeWidth="0.4"
-                         >
-                           {terminal.label}
-                         </text>
-                       </g>
-                     );
-                   })}
+                    if (isKeyTerminal) {
+                      const keyColor = isK1 ? '#22c55e' : '#3b82f6';
+                      return (
+                        <g
+                          key={id}
+                          transform={`translate(${pos.x}, ${pos.y})`}
+                          onClick={isK1 ? handleK1Click : handleK2Click}
+                          style={{ zIndex: 4, cursor: 'pointer' }}
+                        >
+                          <rect
+                            x={-18}
+                            y={-14}
+                            width={36}
+                            height={28}
+                            rx={6}
+                            fill={keyPressed ? `${keyColor}44` : 'rgba(15,23,42,0.9)'}
+                            stroke={keyPressed ? keyColor : isHintActive ? '#fbbf24' : `${keyColor}88`}
+                            strokeWidth={keyPressed ? '3' : '2'}
+                            filter={glowFilter}
+                            className={isHintActive ? 'hint-pulse' : ''}
+                          />
+                          <circle
+                            cx={-8}
+                            cy={0}
+                            r={4}
+                            fill={keyPressed ? keyColor : '#475569'}
+                          />
+                          <text
+                            textAnchor="middle"
+                            x={4}
+                            dy="0.35em"
+                            fill={keyPressed ? keyColor : '#f8fafc'}
+                            fontSize="10"
+                            fontWeight="bold"
+                            fontFamily="Space Grotesk, sans-serif"
+                          >
+                            {isK1 ? 'K1' : 'K2'}
+                          </text>
+                        </g>
+                      );
+                    }
+
+                    return (
+                      <g
+                        key={id}
+                        transform={`translate(${pos.x}, ${pos.y})`}
+                        onDoubleClick={() => handleTerminalDoubleClick(id)}
+                        style={{ zIndex: 4, cursor: 'pointer' }}
+                      >
+                        <circle
+                          r={TERMINAL_RADIUS}
+                          fill={isHintActive ? '#fbbf24' : isHovered || isDragSource ? `${terminal.color}33` : 'rgba(15,23,42,0.9)'}
+                          stroke={isHintActive ? '#fbbf24' : terminal.color}
+                          strokeWidth={isHintActive ? '4' : '2'}
+                          filter={glowFilter}
+                          className={isHintActive ? 'hint-pulse' : ''}
+                        />
+                        <text
+                          textAnchor="middle"
+                          dy="0.35em"
+                          fill="#f8fafc"
+                          fontSize="11"
+                          fontWeight="bold"
+                          fontFamily="Space Grotesk, sans-serif"
+                          stroke="#0f172a"
+                          strokeWidth="0.4"
+                        >
+                          {terminal.label}
+                        </text>
+                      </g>
+                    );
+                  })}
                  </svg>
                </div>
 
