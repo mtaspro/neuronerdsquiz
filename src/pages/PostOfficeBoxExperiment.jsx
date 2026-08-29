@@ -301,6 +301,8 @@ function getTerminalScreenPositions(dimensions, boardImg, batteryBoxYOffset = 0)
 const UNKNOWN_RESISTANCE_X = 12.5;
 const BATTERY_VOLTAGE = 3;
 const GALVANOMETER_RESISTANCE = 100;
+const GALVANOMETER_SENSITIVITY = 10; // Divisions per mA (figure of merit)
+const MAX_DEFLECTION_ANGLE = 30; // Maximum deflection in degrees
 
 const SOCKET_DEFAULT_STATE = Object.fromEntries(
   Object.entries(SOCKET_GROUPS).flatMap(([, group]) =>
@@ -308,10 +310,13 @@ const SOCKET_DEFAULT_STATE = Object.fromEntries(
   )
 );
 
+// FIX 1: In a real Post Office Box, plugging a brass pin SHORT-CIRCUITS the socket (0 ohms),
+// while unplugging INTRODUCES resistance into the circuit.
+// Resistance is added ONLY when the socket is UNPLUGGED.
 function calculateArmResistances(pluggedSockets) {
   const sumArm = (groupKey) =>
     SOCKET_GROUPS[groupKey].sockets.reduce((sum, socket) => {
-      return sum + (pluggedSockets[socket.id] ? socket.resistance : 0);
+      return sum + (!pluggedSockets[socket.id] ? socket.resistance : 0);
     }, 0);
 
   return {
@@ -389,7 +394,7 @@ function validateCircuitConnections(wires, pluggedSockets, unknownResWire) {
 
   const arms = calculateArmResistances(pluggedSockets);
   if (arms.P <= 0 || arms.Q <= 0) {
-    return { valid: false, reason: 'Ratio arms P and Q must be plugged' };
+    return { valid: false, reason: 'Ratio arms P and Q must have resistance (unplug pins to add resistance)' };
   }
 
   return { valid: true, arms };
@@ -474,10 +479,12 @@ const PostOfficeBoxExperiment = () => {
   const targetAngleRef = useRef(0);
   const [k1Pressed, setK1Pressed] = useState(false);
   const [k2Pressed, setK2Pressed] = useState(false);
-  const [showKeyWarning, setShowKeyWarning] = useState(false);
-  const [observations, setObservations] = useState([]);
-  const [showObservationTable, setShowObservationTable] = useState(false);
-  const nextIdRef = useRef(1);
+   const [showKeyWarning, setShowKeyWarning] = useState(false);
+   const [observations, setObservations] = useState([]);
+   const [showObservationTable, setShowObservationTable] = useState(false);
+   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+   const sidebarRef = useRef(null);
+   const nextIdRef = useRef(1);
   const nextObsIdRef = useRef(1);
   const latestPointRef = useRef(null);
   const rafPendingRef = useRef(false);
@@ -733,6 +740,41 @@ const PostOfficeBoxExperiment = () => {
     return null;
   }, [dimensions, images.board]);
 
+  const hitTestSocket = useCallback((point) => {
+    if (!point || !dimensions.width) return null;
+    const { width, height } = dimensions;
+    let drawWidth = width;
+    let drawHeight = height;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if (images.board) {
+      const boardAspect = images.board.naturalWidth / images.board.naturalHeight;
+      drawWidth = width;
+      drawHeight = width / boardAspect;
+      if (drawHeight < height) {
+        drawHeight = height;
+        drawWidth = height * boardAspect;
+      }
+      offsetX = (width - drawWidth) / 2;
+      offsetY = (height - drawHeight) / 2;
+    }
+
+    const socketRadius = 20;
+    for (const group of Object.values(SOCKET_GROUPS)) {
+      for (const socket of group.sockets) {
+        const sx = offsetX + socket.x * drawWidth;
+        const sy = offsetY + socket.y * drawHeight;
+        const dx = point.x - sx;
+        const dy = point.y - sy;
+        if (dx * dx + dy * dy <= socketRadius * socketRadius) {
+          return socket.id;
+        }
+      }
+    }
+    return null;
+  }, [dimensions, images.board]);
+
   const handleCanvasMouseMove = useCallback((e) => {
     const point = getCanvasPoint(e.clientX, e.clientY);
     if (!point) return;
@@ -762,12 +804,18 @@ const PostOfficeBoxExperiment = () => {
       }
     }
 
+    const socketHit = hitTestSocket(point);
+    if (socketHit) {
+      toggleSocket(socketHit);
+      return;
+    }
+
     const hit = hitTestTerminal(point);
     if (!hit) return;
 
     setDraggingFrom(hit);
     setDragEnd(point);
-  }, [getCanvasPoint, hitTestTerminal, hitTestResHandle, unknownResWire, dimensions]);
+  }, [getCanvasPoint, hitTestTerminal, hitTestResHandle, hitTestSocket, unknownResWire, dimensions, toggleSocket]);
 
   const findNearestSnapTerminal = useCallback((point, terminals, maxDist = 30) => {
     if (!point || !terminals) return null;
@@ -878,13 +926,29 @@ const PostOfficeBoxExperiment = () => {
       return;
     }
     const result = calculateGalvanometerCurrent(validation.arms, BATTERY_VOLTAGE, GALVANOMETER_RESISTANCE);
-    const angle = result.polarity * Math.min(30, result.ig * 5);
+
+    // FIX 2: Realistic galvanometer deflection using figure of merit (sensitivity)
+    // Deflection divisions = current (mA) × sensitivity (divisions/mA)
+    // Angle is capped at maximum deflection angle (±30 degrees)
+    const divisions = result.ig * GALVANOMETER_SENSITIVITY;
+    const angle = result.polarity * Math.min(MAX_DEFLECTION_ANGLE, divisions);
     targetAngleRef.current = angle;
+
     setBridgeResult({ ...result, valid: true, reason: 'Circuit complete' });
   }, [wires, pluggedSockets, k1Pressed, k2Pressed, unknownResWire]);
 
   const toggleSocket = useCallback((socketId) => {
     setPluggedSockets((prev) => ({ ...prev, [socketId]: !prev[socketId] }));
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setIsSidebarOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleK1Click = useCallback(() => {
@@ -901,30 +965,27 @@ const PostOfficeBoxExperiment = () => {
     setK2Pressed((prev) => !prev);
   }, [k1Pressed]);
 
+  // FIX 3: Observation Table with correct Wheatstone Bridge physics
+  // At balance/null point (ig = 0): S = (Q / P) × R
+  // No non-standard formulas involving d1/d2 variables
   const addObservation = useCallback(() => {
     if (!bridgeResult.valid || !bridgeResult.arms) return;
 
     const { P, Q, R, X } = bridgeResult.arms;
-    const deflectionDivisions = bridgeResult.polarity * Math.min(30, bridgeResult.ig * 5);
+
+    // Calculate deflection using sensitivity rules
+    const divisions = bridgeResult.ig * GALVANOMETER_SENSITIVITY;
     const deflectionDirection = bridgeResult.polarity === 0 ? 'Zero' : bridgeResult.polarity > 0 ? 'Right' : 'Left';
 
-    let d1, d2;
-    if (bridgeResult.balanced) {
-      d1 = 0;
-      d2 = 1;
-    } else {
-      d1 = Math.abs(deflectionDivisions) || 0.1;
-      d2 = 5;
-    }
+    // At balance (ig ≈ 0), unknown resistance S = (Q / P) × R
+    const calculatedS = (Q / P) * R;
 
-    const baseS = (Q / P) * R;
+    // Estimate range based on deflection direction
     const estimatedRange = deflectionDirection === 'Zero'
-      ? `~${baseS.toFixed(2)} Ω`
+      ? `~${calculatedS.toFixed(2)} Ω (balanced)`
       : deflectionDirection === 'Right'
-        ? `<${baseS.toFixed(2)} Ω`
-        : `>${baseS.toFixed(2)} Ω`;
-
-    const finalS = (Q / P) * (R + d1 / (d1 + d2));
+        ? `S < ${calculatedS.toFixed(2)} Ω`
+        : `S > ${calculatedS.toFixed(2)} Ω`;
 
     setObservations((prev) => [
       ...prev,
@@ -934,10 +995,9 @@ const PostOfficeBoxExperiment = () => {
         Q,
         R,
         deflectionDirection,
+        divisions: divisions.toFixed(1),
         estimatedRange,
-        finalS: finalS.toFixed(2),
-        d1: d1.toFixed(2),
-        d2: d2.toFixed(2),
+        calculatedS: calculatedS.toFixed(2),
       },
     ]);
   }, [bridgeResult]);
@@ -1102,7 +1162,9 @@ const PostOfficeBoxExperiment = () => {
                   <p className="text-xs uppercase tracking-widest text-slate-400">Workspace</p>
                   <p className="text-xs text-slate-500">{progress}% loaded</p>
                 </div>
-                
+
+                <div className="flex gap-4">
+                <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-3 mb-4">
                   <button
                     type="button"
@@ -1163,7 +1225,7 @@ const PostOfficeBoxExperiment = () => {
                 )}
                 <div
                   ref={wrapperRef}
-                  className="relative touch-none select-none"
+                  className="relative touch-none select-none flex-1"
                   onMouseMove={handleCanvasMouseMove}
                   onMouseDown={handleCanvasMouseDown}
                   onMouseUp={handleCanvasMouseUp}
@@ -1537,117 +1599,110 @@ const PostOfficeBoxExperiment = () => {
                         >
                           {isK1 ? 'K1' : 'K2'}
                         </text>
-                      </g>
-                    );
-                  })}
-                 </svg>
-               </div>
-
-               <div className="mt-4 grid gap-6 sm:grid-cols-2">
-                <div className="aura-glass aura-glass-card rounded-2xl border border-cyan-500/10 shadow-lg shadow-cyan-500/10 p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-xs uppercase tracking-widest text-slate-400">Socket Controls</p>
-                    <button
-                      type="button"
-                      onClick={resetCircuit}
-                      className="px-3 py-1 rounded-lg text-[10px] font-bold border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition-colors"
-                    >
-                      Reset Circuit & Plugs
-                    </button>
-                  </div>
-                   <div className="grid gap-4">
-                     {Object.entries(SOCKET_GROUPS).map(([groupKey, group]) => (
-                       <div key={groupKey}>
-                          <p className="text-xs font-medium text-slate-300 mb-2">{group.label}</p>
-                         <div className="flex flex-wrap gap-3">
-                           {group.sockets.map((socket) => {
-                             const isPlugged = pluggedSockets[socket.id];
-                             return (
-                               <button
-                                 key={socket.id}
-                                 type="button"
-                                 onClick={() => toggleSocket(socket.id)}
-                                 className={`min-w-[72px] px-4 py-2.5 rounded-lg text-sm font-bold border transition-colors ${
-                                   isPlugged
-                                     ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
-                                     : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-cyan-500/30'
-                                 }`}
-                               >
-                                 {socket.id}: {socket.resistance}Ω
-                               </button>
-                             );
-                           })}
-                         </div>
-                       </div>
-                     ))}
-                   </div>
+                       </g>
+                     );
+                   })}
+                  </svg>
+                </div>
                 </div>
 
-                <div className="aura-glass aura-glass-card rounded-2xl border border-cyan-500/10 shadow-lg shadow-cyan-500/10 p-6">
-                  <p className="text-xs uppercase tracking-widest text-slate-400 mb-3">Bridge Mathematics</p>
-                  {bridgeResult.valid && bridgeResult.arms ? (
-                    <div className="grid gap-3 text-sm">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-lg bg-black/20 border border-cyan-500/10 p-3">
-                          <p className="text-xs text-slate-400 mb-1">Arm P (A-B)</p>
-                          <p className="text-lg font-mono text-cyan-300">{bridgeResult.arms.P.toFixed(1)} Ω</p>
-                        </div>
-                        <div className="rounded-lg bg-black/20 border border-cyan-500/10 p-3">
-                          <p className="text-xs text-slate-400 mb-1">Arm Q (A-D)</p>
-                          <p className="text-lg font-mono text-cyan-300">{bridgeResult.arms.Q.toFixed(1)} Ω</p>
-                        </div>
-                        <div className="rounded-lg bg-black/20 border border-cyan-500/10 p-3">
-                          <p className="text-xs text-slate-400 mb-1">Arm R (C-B)</p>
-                          <p className="text-lg font-mono text-emerald-300">{bridgeResult.arms.R.toFixed(1)} Ω</p>
-                        </div>
-                        <div className="rounded-lg bg-black/20 border border-cyan-500/10 p-3">
-                          <p className="text-xs text-slate-400 mb-1">Unknown X (C-D)</p>
-                          <p className="text-lg font-mono text-emerald-300">{bridgeResult.arms.X.toFixed(1)} Ω</p>
-                        </div>
-                      </div>
-                      <div className="rounded-lg bg-black/20 border border-cyan-500/10 p-3">
-                        <p className="text-xs text-slate-400 mb-1">Galvanometer Current</p>
-                        <p className="text-lg font-mono text-amber-300">{bridgeResult.ig.toFixed(4)} mA</p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          Polarity: {bridgeResult.polarity === 0 ? 'Zero' : bridgeResult.polarity > 0 ? 'Positive' : 'Negative'}
-                        </p>
-                        {bridgeResult.extreme && (
-                          <p className="text-xs text-rose-400 mt-1 font-medium">
-                            Extreme: {bridgeResult.extreme} — verify wire connectivity
-                          </p>
-                        )}
-                      </div>
-                      <div className="rounded-lg bg-black/20 border border-cyan-500/10 p-3">
-                        <p className="text-xs text-slate-400 mb-1">Balance Check</p>
-                        <p className={`text-sm font-medium ${bridgeResult.balanced ? 'text-emerald-400' : 'text-amber-400'}`}>
-                          {bridgeResult.balanced ? 'Bridge Balanced' : `P/Q ≠ R/X  (${(bridgeResult.arms.P / bridgeResult.arms.Q).toFixed(3)} ≠ ${(bridgeResult.arms.R / bridgeResult.arms.X).toFixed(3)})`}
-                        </p>
-                        {!bridgeResult.balanced && (
-                          <div className="mt-2 text-xs text-slate-400">
-                            <p className="font-mono">S = (Q/P) × (R + d1/(d1+d2))</p>
-                            {(() => {
-                              const { P, Q, R } = bridgeResult.arms;
-                              const deflectionDivisions = bridgeResult.polarity * Math.min(30, bridgeResult.ig * 5);
-                              const d1 = Math.abs(deflectionDivisions) || 0.1;
-                              const d2 = 5;
-                              const s = (Q / P) * (R + d1 / (d1 + d2));
-                              return (
-                                <p className="mt-1">
-                                  d1={d1.toFixed(1)}, d2={d2} → S = <span className="text-amber-300">{s.toFixed(2)} Ω</span>
-                                </p>
-                              );
-                            })()}
-                          </div>
-                        )}
-                      </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                  className="fixed right-0 top-1/2 z-50 -translate-y-1/2 bg-slate-800/90 border border-cyan-500/30 text-cyan-300 px-2 py-4 rounded-l-lg shadow-lg hover:bg-slate-700/90 transition-colors"
+                  aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+                >
+                  {isSidebarOpen ? '›' : '‹'}
+                </button>
+
+                <div
+                  ref={sidebarRef}
+                  className={`fixed right-0 top-0 h-full w-64 bg-slate-900/95 border-l border-cyan-500/20 shadow-2xl transform transition-transform duration-300 z-40 ${
+                    isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+                  }`}
+                >
+                  <div className="p-4 h-full overflow-y-auto">
+                    <div className="flex items-center justify-between mb-4">
+                      <p className="text-xs uppercase tracking-widest text-slate-400">Socket Controls</p>
+                      <button
+                        type="button"
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="text-slate-400 hover:text-slate-200 text-lg"
+                      >
+                        ✕
+                      </button>
                     </div>
-                  ) : (
-                    <p className="text-sm text-slate-400">{bridgeResult.reason}</p>
-                  )}
+                    <p className="text-[10px] text-slate-500 mb-3 italic">
+                      Plug pin = short circuit (0Ω). Unplug pin = resistance in circuit.
+                    </p>
+                    <div className="grid gap-4">
+                      {Object.entries(SOCKET_GROUPS).map(([groupKey, group]) => (
+                        <div key={groupKey}>
+                          <p className="text-xs font-medium text-slate-300 mb-2">{group.label}</p>
+                          <div className="flex flex-col gap-2">
+                            {group.sockets.map((socket) => {
+                              const isPlugged = pluggedSockets[socket.id];
+                              const isInCircuit = !isPlugged; // Unplugged = resistance in circuit
+                              return (
+                                <button
+                                  key={socket.id}
+                                  type="button"
+                                  onClick={() => toggleSocket(socket.id)}
+                                  className={`w-full px-4 py-2.5 rounded-lg text-sm font-bold border transition-colors ${
+                                    isInCircuit
+                                      ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
+                                      : 'bg-slate-800/50 border-slate-600/50 text-slate-400 hover:border-cyan-500/30'
+                                  }`}
+                                >
+                                  {socket.id}: {socket.resistance}Ω {isPlugged ? '(shorted)' : '(in circuit)'}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-slate-700">
+                      <p className="text-xs uppercase tracking-widest text-slate-400 mb-3">Bridge Mathematics</p>
+                      {bridgeResult.valid && bridgeResult.arms ? (
+                        <div className="grid gap-2 text-xs">
+                          <div className="rounded-lg bg-black/20 border border-cyan-500/10 p-2">
+                            <p className="text-slate-400">Arm P (A-B)</p>
+                            <p className="text-cyan-300 font-mono">{bridgeResult.arms.P.toFixed(1)} Ω</p>
+                          </div>
+                          <div className="rounded-lg bg-black/20 border border-cyan-500/10 p-2">
+                            <p className="text-slate-400">Arm Q (A-D)</p>
+                            <p className="text-cyan-300 font-mono">{bridgeResult.arms.Q.toFixed(1)} Ω</p>
+                          </div>
+                          <div className="rounded-lg bg-black/20 border border-cyan-500/10 p-2">
+                            <p className="text-slate-400">Arm R (C-B)</p>
+                            <p className="text-emerald-300 font-mono">{bridgeResult.arms.R.toFixed(1)} Ω</p>
+                          </div>
+                          <div className="rounded-lg bg-black/20 border border-cyan-500/10 p-2">
+                            <p className="text-slate-400">Galvanometer Current</p>
+                            <p className="text-amber-300 font-mono">{bridgeResult.ig.toFixed(4)} mA</p>
+                          </div>
+                          <div className={`rounded-lg border p-2 ${
+                            bridgeResult.balanced
+                              ? 'bg-emerald-500/10 border-emerald-500/30'
+                              : 'bg-black/20 border-cyan-500/10'
+                          }`}>
+                            <p className="text-slate-400">Unknown S = (Q/P) × R</p>
+                            <p className={`font-mono ${bridgeResult.balanced ? 'text-emerald-300' : 'text-amber-300'}`}>
+                              {((bridgeResult.arms.Q / bridgeResult.arms.P) * bridgeResult.arms.R).toFixed(2)} Ω
+                              {bridgeResult.balanced ? ' ✓ Balanced' : ' (at balance)'}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-500">Complete circuit to see calculations</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-slate-400">
+               <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-slate-400">
                 <span>Click and drag between terminals to wire. Double-click a wire or terminal to remove it.</span>
               </div>
 
@@ -1671,53 +1726,53 @@ const PostOfficeBoxExperiment = () => {
                   </button>
                 </div>
 
-                {showObservationTable && (
-                  <div className="aura-glass aura-glass-card rounded-2xl border border-cyan-500/10 shadow-lg shadow-cyan-500/10 p-6 overflow-x-auto">
-                    <p className="text-xs uppercase tracking-widest text-slate-400 mb-3">HSC Practical Observation Table</p>
-                    {observations.length === 0 ? (
-                      <p className="text-sm text-slate-400">No observations recorded. Configure the circuit and click "Add Current Observation".</p>
-                    ) : (
-                      <table className="w-full text-xs text-left">
-                        <thead>
-                          <tr className="border-b border-cyan-500/10">
-                            <th className="py-2 px-3 text-slate-400 font-medium">P (Ω)</th>
-                            <th className="py-2 px-3 text-slate-400 font-medium">Q (Ω)</th>
-                            <th className="py-2 px-3 text-slate-400 font-medium">R (Ω)</th>
-                            <th className="py-2 px-3 text-slate-400 font-medium">Deflection Direction</th>
-                            <th className="py-2 px-3 text-slate-400 font-medium">Estimated Range of S</th>
-                            <th className="py-2 px-3 text-slate-400 font-medium">Final Calculated S (Ω)</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {observations.map((obs) => (
-                            <tr key={obs.id} className="border-b border-cyan-500/5">
-                              <td className="py-2 px-3 font-mono text-cyan-300">{obs.P.toFixed(1)}</td>
-                              <td className="py-2 px-3 font-mono text-cyan-300">{obs.Q.toFixed(1)}</td>
-                              <td className="py-2 px-3 font-mono text-emerald-300">{obs.R === Infinity ? '∞' : obs.R.toFixed(1)}</td>
-                              <td className="py-2 px-3">
-                                <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
-                                  obs.deflectionDirection === 'Zero' ? 'bg-emerald-500/20 text-emerald-300' :
-                                  obs.deflectionDirection === 'Right' ? 'bg-amber-500/20 text-amber-300' :
-                                  'bg-blue-500/20 text-blue-300'
-                                }`}>
-                                  {obs.deflectionDirection}
-                                </span>
-                              </td>
-                              <td className="py-2 px-3 font-mono text-amber-300">{obs.estimatedRange}</td>
-                              <td className="py-2 px-3 font-mono text-emerald-300">{obs.finalS}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-                    {observations.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-cyan-500/10 text-xs text-slate-400">
-                        <p className="font-mono">Formula: S = (Q / P) × (R + d1 / (d1 + d2))</p>
-                        <p className="mt-1">d1 = deflection magnitude, d2 = reference divisions (5)</p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                 {showObservationTable && (
+                   <div className="aura-glass aura-glass-card rounded-2xl border border-cyan-500/10 shadow-lg shadow-cyan-500/10 p-6 overflow-x-auto">
+                     <p className="text-xs uppercase tracking-widest text-slate-400 mb-3">HSC Practical Observation Table</p>
+                     {observations.length === 0 ? (
+                       <p className="text-sm text-slate-400">No observations recorded. Configure the circuit and click "Add Current Observation".</p>
+                     ) : (
+                       <table className="w-full text-xs text-left">
+                         <thead>
+                           <tr className="border-b border-cyan-500/10">
+                             <th className="py-2 px-3 text-slate-400 font-medium">P (Ω)</th>
+                             <th className="py-2 px-3 text-slate-400 font-medium">Q (Ω)</th>
+                             <th className="py-2 px-3 text-slate-400 font-medium">R (Ω)</th>
+                             <th className="py-2 px-3 text-slate-400 font-medium">Deflection</th>
+                             <th className="py-2 px-3 text-slate-400 font-medium">Direction</th>
+                             <th className="py-2 px-3 text-slate-400 font-medium">Calculated S (Ω)</th>
+                           </tr>
+                         </thead>
+                         <tbody>
+                           {observations.map((obs) => (
+                             <tr key={obs.id} className="border-b border-cyan-500/5">
+                               <td className="py-2 px-3 font-mono text-cyan-300">{obs.P.toFixed(1)}</td>
+                               <td className="py-2 px-3 font-mono text-cyan-300">{obs.Q.toFixed(1)}</td>
+                               <td className="py-2 px-3 font-mono text-emerald-300">{obs.R === Infinity ? '∞' : obs.R.toFixed(1)}</td>
+                               <td className="py-2 px-3 font-mono text-amber-300">{obs.divisions} div</td>
+                               <td className="py-2 px-3">
+                                 <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
+                                   obs.deflectionDirection === 'Zero' ? 'bg-emerald-500/20 text-emerald-300' :
+                                   obs.deflectionDirection === 'Right' ? 'bg-amber-500/20 text-amber-300' :
+                                   'bg-blue-500/20 text-blue-300'
+                                 }`}>
+                                   {obs.deflectionDirection}
+                                 </span>
+                               </td>
+                               <td className="py-2 px-3 font-mono text-emerald-300">{obs.calculatedS}</td>
+                             </tr>
+                           ))}
+                         </tbody>
+                       </table>
+                     )}
+                     {observations.length > 0 && (
+                       <div className="mt-4 pt-3 border-t border-cyan-500/10 text-xs text-slate-400">
+                         <p className="font-mono">Wheatstone Bridge Formula: S = (Q / P) × R</p>
+                         <p className="mt-1">At balance (ig = 0), unknown resistance S is calculated from ratio arms P, Q and resistance arm R</p>
+                       </div>
+                     )}
+                   </div>
+                 )}
               </div>
             </div>
           </div>
