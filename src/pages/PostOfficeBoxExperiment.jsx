@@ -92,28 +92,29 @@ const TERMINALS = {
   galvanometerG0: { id: 'galvanometerG0', label: 'G0', color: '#3b82f6', x: 0.408, y: 0.075, component: 'galvanometer' },
   galvanometerG1: { id: 'galvanometerG1', label: 'G1', color: '#3b82f6', x: 0.592, y: 0.075, component: 'galvanometer' },
   leftScrew3: { id: 'leftScrew3', label: 'LS3', color: '#f59e0b', x: 0.075, y: 0.735, component: 'board' },
-  bottomScrew1: { id: 'bottomScrew1', label: 'K1', color: '#22c55e', x: 0.149, y: 0.897, component: 'board' },
-  bottomScrew2: { id: 'bottomScrew2', label: 'K1', color: '#22c55e', x: 0.424, y: 0.903, component: 'board' },
+  bottomScrew1: { id: 'bottomScrew1', label: 'G1', color: '#22c55e', x: 0.149, y: 0.897, component: 'board' },
   rightScrew1: { id: 'rightScrew1', label: 'RS1', color: '#f59e0b', x: 0.922, y: 0.200, component: 'board' },
-  bottomScrew3: { id: 'bottomScrew3', label: 'K2', color: '#3b82f6', x: 0.582, y: 0.903, component: 'board' },
-  bottomScrew4: { id: 'bottomScrew4', label: 'K2', color: '#3b82f6', x: 0.845, y: 0.911, component: 'board' },
+  bottomScrew4: { id: 'bottomScrew4', label: 'B-', color: '#3b82f6', x: 0.845, y: 0.911, component: 'board' },
 };
 
 const TERMINAL_RADIUS = 12;
 
+const KEY_BUTTONS = {
+  k1Key: { id: 'k1Key', label: 'K1', color: '#22c55e', x: 0.424, y: 0.903 },
+  k2Key: { id: 'k2Key', label: 'K2', color: '#3b82f6', x: 0.582, y: 0.903 },
+};
+
 const VALID_CONNECTIONS = {
-  batteryPlus: ['galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
-  batteryMinus: ['galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
-  batteryBoxPlus: ['galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxMinus'],
-  batteryBoxMinus: ['galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxPlus'],
-  galvanometerG0: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
-  galvanometerG1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
-  leftScrew3: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
-  bottomScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
-  bottomScrew2: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew3', 'bottomScrew4', 'rightScrew1'],
-  bottomScrew3: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew4', 'rightScrew1'],
-  bottomScrew4: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'rightScrew1'],
-  rightScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew2', 'bottomScrew3', 'bottomScrew4'],
+  batteryPlus: ['galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew4', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
+  batteryMinus: ['galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew4', 'rightScrew1', 'batteryBoxPlus', 'batteryBoxMinus'],
+  batteryBoxPlus: ['galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew4', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxMinus'],
+  batteryBoxMinus: ['galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew4', 'rightScrew1', 'batteryPlus', 'batteryMinus', 'batteryBoxPlus'],
+  galvanometerG0: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'leftScrew3', 'bottomScrew1', 'bottomScrew4', 'rightScrew1'],
+  galvanometerG1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'leftScrew3', 'bottomScrew1', 'bottomScrew4', 'rightScrew1'],
+  leftScrew3: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'bottomScrew1', 'bottomScrew4', 'rightScrew1'],
+  bottomScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew4', 'rightScrew1'],
+  bottomScrew4: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'rightScrew1'],
+  rightScrew1: ['batteryPlus', 'batteryMinus', 'batteryBoxPlus', 'batteryBoxMinus', 'galvanometerG0', 'galvanometerG1', 'leftScrew3', 'bottomScrew1', 'bottomScrew4'],
 };
 
 function useAssetLoader(urls) {
@@ -282,13 +283,19 @@ function getTerminalScreenPositions(dimensions, boardImg, batteryBoxYOffset = 0)
     })
   );
 
+  const keyButtonPositions = Object.fromEntries(
+    Object.entries(KEY_BUTTONS).map(([id, key]) => {
+      return [id, { x: offsetX + key.x * drawWidth, y: offsetY + key.y * drawHeight }];
+    })
+  );
+
   const externalTerminals = Object.fromEntries(
     Object.entries(TERMINALS).filter(([, terminal]) => terminal.component === 'batteryBox').map(([id, terminal]) => {
       return [id, { x: terminal.x * width, y: batteryBoxYOffset + terminal.y * 80 }];
     })
   );
 
-  return { ...boardTerminals, ...externalTerminals };
+  return { ...boardTerminals, ...keyButtonPositions, ...externalTerminals };
 }
 
 const UNKNOWN_RESISTANCE_X = 12.5;
@@ -362,8 +369,8 @@ function validateCircuitConnections(wires, pluggedSockets, unknownResWire) {
   const batteryPosToRS1 = posReachable.has('rightScrew1');
   if (!batteryPosToRS1) return { valid: false, reason: 'Battery (+) not connected to RS1' };
 
-  const batteryNegToK2 = negReachable.has('bottomScrew3') || negReachable.has('bottomScrew4');
-  if (!batteryNegToK2) return { valid: false, reason: 'Battery (-) not connected to K2 base (BS3/BS4)' };
+  const batteryNegToK2 = negReachable.has('bottomScrew4');
+  if (!batteryNegToK2) return { valid: false, reason: 'Battery (-) not connected to B- (bottomScrew4)' };
 
   const galvSources = ['galvanometerG0', 'galvanometerG1'].filter((s) => graph.has(s));
   if (galvSources.length < 2) return { valid: false, reason: 'Galvanometer not connected' };
@@ -372,8 +379,8 @@ function validateCircuitConnections(wires, pluggedSockets, unknownResWire) {
   const galvG0ToLS3 = galvReachable.has('leftScrew3');
   if (!galvG0ToLS3) return { valid: false, reason: 'Galvanometer G0 not connected to LS3' };
 
-  const galvG1ToK1 = galvReachable.has('bottomScrew1') || galvReachable.has('bottomScrew2');
-  if (!galvG1ToK1) return { valid: false, reason: 'Galvanometer G1 not connected to K1 base (BS1/BS2)' };
+  const galvG1ToK1 = galvReachable.has('bottomScrew1');
+  if (!galvG1ToK1) return { valid: false, reason: 'Galvanometer G1 not connected to G1 (bottomScrew1)' };
 
   const end1 = unknownResWire.end1Terminal;
   const end2 = unknownResWire.end2Terminal;
@@ -973,9 +980,9 @@ const PostOfficeBoxExperiment = () => {
       },
       {
         id: 'bat-neg-k2',
-        check: () => hasWireBetween(wires, 'batteryMinus', 'bottomScrew3') || hasWireBetween(wires, 'batteryMinus', 'bottomScrew4') || hasWireBetween(wires, 'batteryBoxMinus', 'bottomScrew3') || hasWireBetween(wires, 'batteryBoxMinus', 'bottomScrew4'),
+        check: () => hasWireBetween(wires, 'batteryMinus', 'bottomScrew4') || hasWireBetween(wires, 'batteryBoxMinus', 'bottomScrew4'),
         hintTerminals: ['batteryMinus', 'bottomScrew4'],
-        label: 'Battery (-) ↔ K2 Base',
+        label: 'Battery (-) ↔ B- (K2 Base)',
       },
       {
         id: 'g0-ls3',
@@ -985,9 +992,9 @@ const PostOfficeBoxExperiment = () => {
       },
       {
         id: 'g1-k1',
-        check: () => hasWireBetween(wires, 'galvanometerG1', 'bottomScrew1') || hasWireBetween(wires, 'galvanometerG1', 'bottomScrew2'),
+        check: () => hasWireBetween(wires, 'galvanometerG1', 'bottomScrew1'),
         hintTerminals: ['galvanometerG1', 'bottomScrew1'],
-        label: 'Galvanometer G1 ↔ K1 Base',
+        label: 'Galvanometer G1 ↔ G1 (K1 Base)',
       },
     ];
 
@@ -1456,53 +1463,7 @@ const PostOfficeBoxExperiment = () => {
                     const isHovered = hoveredTerminal === id;
                     const isDragSource = draggingFrom === id;
                     const isHintActive = hintTerminals.includes(id);
-                    const isKeyTerminal = id === 'bottomScrew1' || id === 'bottomScrew2' || id === 'bottomScrew3' || id === 'bottomScrew4';
-                    const isK1 = id === 'bottomScrew1' || id === 'bottomScrew2';
-                    const isK2 = id === 'bottomScrew3' || id === 'bottomScrew4';
-                    const keyPressed = isK1 ? k1Pressed : isK2 ? k2Pressed : false;
                     const glowFilter = isHovered || isDragSource || isHintActive ? 'url(#neon-glow)' : '';
-
-                    if (isKeyTerminal) {
-                      const keyColor = isK1 ? '#22c55e' : '#3b82f6';
-                      return (
-                        <g
-                          key={id}
-                          transform={`translate(${pos.x}, ${pos.y})`}
-                          onClick={isK1 ? handleK1Click : handleK2Click}
-                          style={{ zIndex: 4, cursor: 'pointer' }}
-                        >
-                          <rect
-                            x={-18}
-                            y={-14}
-                            width={36}
-                            height={28}
-                            rx={6}
-                            fill={keyPressed ? `${keyColor}44` : 'rgba(15,23,42,0.9)'}
-                            stroke={keyPressed ? keyColor : isHintActive ? '#fbbf24' : `${keyColor}88`}
-                            strokeWidth={keyPressed ? '3' : '2'}
-                            filter={glowFilter}
-                            className={isHintActive ? 'hint-pulse' : ''}
-                          />
-                          <circle
-                            cx={-8}
-                            cy={0}
-                            r={4}
-                            fill={keyPressed ? keyColor : '#475569'}
-                          />
-                          <text
-                            textAnchor="middle"
-                            x={4}
-                            dy="0.35em"
-                            fill={keyPressed ? keyColor : '#f8fafc'}
-                            fontSize="10"
-                            fontWeight="bold"
-                            fontFamily="Space Grotesk, sans-serif"
-                          >
-                            {isK1 ? 'K1' : 'K2'}
-                          </text>
-                        </g>
-                      );
-                    }
 
                     return (
                       <g
@@ -1530,6 +1491,51 @@ const PostOfficeBoxExperiment = () => {
                           strokeWidth="0.4"
                         >
                           {terminal.label}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {Object.entries(KEY_BUTTONS).map(([id, key]) => {
+                    const pos = terminalPositions[id];
+                    if (!pos) return null;
+                    const isK1 = id === 'k1Key';
+                    const keyPressed = isK1 ? k1Pressed : k2Pressed;
+                    const keyColor = isK1 ? '#22c55e' : '#3b82f6';
+
+                    return (
+                      <g
+                        key={id}
+                        transform={`translate(${pos.x}, ${pos.y})`}
+                        onClick={isK1 ? handleK1Click : handleK2Click}
+                        style={{ zIndex: 4, cursor: 'pointer' }}
+                      >
+                        <rect
+                          x={-18}
+                          y={-14}
+                          width={36}
+                          height={28}
+                          rx={6}
+                          fill={keyPressed ? `${keyColor}44` : 'rgba(15,23,42,0.9)'}
+                          stroke={keyPressed ? keyColor : `${keyColor}88`}
+                          strokeWidth={keyPressed ? '3' : '2'}
+                        />
+                        <circle
+                          cx={-8}
+                          cy={0}
+                          r={4}
+                          fill={keyPressed ? keyColor : '#475569'}
+                        />
+                        <text
+                          textAnchor="middle"
+                          x={4}
+                          dy="0.35em"
+                          fill={keyPressed ? keyColor : '#f8fafc'}
+                          fontSize="10"
+                          fontWeight="bold"
+                          fontFamily="Space Grotesk, sans-serif"
+                        >
+                          {isK1 ? 'K1' : 'K2'}
                         </text>
                       </g>
                     );
