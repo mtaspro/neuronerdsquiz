@@ -1,4 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
+
+// Minimum cinematic boot duration (ms) so the loader animation, aperture reveal,
+// and sound cues are always experienced — never skipped.
+const MIN_LOADER_DURATION = 2800;
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useInView, useScroll, useTransform } from "framer-motion";
 import { FaPalette, FaRocket, FaBolt, FaBrain } from "react-icons/fa";
@@ -138,6 +142,17 @@ export default function IntroScreen() {
   const { scrollYProgress } = useScroll({ target: containerRef });
   const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const finishLoading = useCallback(() => {
+    setIsLoading(false);
+    setShowVideo(true);
+    // Wait for the loader exit animation to FULLY complete before revealing hero.
+    // Loader exit = 0.3s delay + 0.6s duration ≈ 0.9s. We use 1s for a clean buffer
+    // so the hero never appears while the loader is still fading — true cinematic stagger.
+    setTimeout(() => {
+      setShowContent(true);
+    }, 1000);
+  }, []);
+
 
   // Mobile gyroscope tilt → background parallax (eased CSS vars, no re-renders)
   useGyroscopeParallax(containerRef, 12, 10);
@@ -263,12 +278,6 @@ export default function IntroScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  const finishLoading = useCallback(() => {
-    setIsLoading(false);
-    setShowVideo(true);
-    setTimeout(() => setShowContent(true), 400);
-  }, []);
-
   useEffect(() => {
     // Fluid rAF-driven progress (replaces the old coarse 90ms tick).
     // eases from 0 -> 100 with a subtle organic jitter at a locked 60fps cadence.
@@ -291,8 +300,11 @@ export default function IntroScreen() {
         rafId = requestAnimationFrame(tick);
       } else {
         setPreloaderProgress(100);
-        // Let the warp-speed exit play, then swap to the hero reveal
-        swapTimeout = setTimeout(finishLoading, 320);
+        // Enforce the minimum cinematic boot duration so the aperture reveal,
+        // HUD rings, and sound cues are always fully experienced — never skipped.
+        // Then trigger the warp-speed camera zoom exit.
+        const remaining = MIN_LOADER_DURATION - elapsed;
+        swapTimeout = setTimeout(finishLoading, Math.max(remaining, 320));
       }
     };
 
@@ -345,7 +357,7 @@ export default function IntroScreen() {
         {isLoading && (
           <motion.div
             key="aura-loader"
-            className="relative"
+            className="fixed inset-0 z-[10000] flex items-center justify-center"
             style={{ willChange: 'transform, opacity' }}
             initial={{ opacity: 1, scale: 1 }}
             exit={{
@@ -461,7 +473,8 @@ export default function IntroScreen() {
       {/* Event Showdown */}
       {eventData && <EventShowdown eventData={eventData} />}
 
-      {/* Content Container */}
+      {/* Content Container — strictly gated: NOT rendered until the loader fully exits */}
+      {showContent && (
       <div
         ref={contentRef}
         className="relative z-10 text-center px-4 sm:px-6 max-w-6xl mx-auto py-16 sm:py-20"
@@ -561,6 +574,7 @@ export default function IntroScreen() {
           </div>
         </motion.div>
       </div>
+      )}
     </div>
   );
 }
