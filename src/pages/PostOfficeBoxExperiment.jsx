@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { FaArrowLeft, FaPlay } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
 import PageShell from '../components/ui/PageShell';
 import Button from '../components/ui/Button';
 
@@ -146,21 +145,20 @@ function useAssetLoader(urls) {
   return { images, progress, error };
 }
 
-function drawSocket(ctx, x, y, radius, label, isActive, plugKeyImg) {
+function drawSocket(ctx, x, y, radius, label, isPlugged, plugKeyImg) {
   const socketSize = 48;
   const halfSize = socketSize / 2;
 
-  if (isActive) {
-    ctx.save();
-    ctx.globalAlpha = 0.25;
+  if (isPlugged) {
+    // Plug inserted: show plug key fully visible (short-circuits socket to 0Ω)
     if (plugKeyImg) {
       ctx.drawImage(plugKeyImg, x - halfSize, y - halfSize, socketSize, socketSize);
     }
-    ctx.restore();
 
+    // Cyan glow to indicate active short
     ctx.beginPath();
     ctx.arc(x, y, radius + 2, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0,245,255,0.2)';
+    ctx.fillStyle = 'rgba(0,245,255,0.15)';
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#00f5ff';
@@ -175,17 +173,14 @@ function drawSocket(ctx, x, y, radius, label, isActive, plugKeyImg) {
     ctx.stroke();
     ctx.shadowBlur = 0;
   } else {
-    if (plugKeyImg) {
-      ctx.drawImage(plugKeyImg, x - halfSize, y - halfSize, socketSize, socketSize);
-    } else {
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(15,23,42,0.8)';
-      ctx.fill();
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = 'rgba(0,245,255,0.35)';
-      ctx.stroke();
-    }
+    // Plug removed: show empty socket hole (resistance introduced into circuit)
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(15,23,42,0.8)';
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(0,245,255,0.35)';
+    ctx.stroke();
   }
 
   const badgePadX = 4;
@@ -400,36 +395,69 @@ function validateCircuitConnections(wires, pluggedSockets, unknownResWire) {
   return { valid: true, arms };
 }
 
-function calculateGalvanometerCurrent(arms, batteryVoltage, galvanometerResistance) {
+// FIX 2: Standard Wheatstone Bridge galvanometer current formula
+// Ig = V * (P*X - Q*R) / (Rg*(P+Q)*(R+X) + P*Q*(R+X) + R*X*(P+Q))
+// This produces realistic mA-scale currents that map properly to needle deflection
+function calculateBridgeCurrent(arms, batteryVoltage, galvanometerResistance) {
   const { P, Q, R, X } = arms;
-  
-  if (R === 0) {
-    return { ig: 30.0, polarity: 1, balanced: false, extreme: 'R=0' };
-  }
-  if (R === Infinity) {
-    return { ig: 30.0, polarity: -1, balanced: false, extreme: 'R=∞' };
-  }
-  
+
+  // Guard: invalid arms
   if (P <= 0 || Q <= 0 || X <= 0) return { ig: 0, polarity: 0, balanced: false };
 
-  const Va = batteryVoltage;
-  const Vc = 0;
-  const Rg = galvanometerResistance;
+  // R = 0: All R plugs inserted → short circuit → maximum positive deflection
+  if (R === 0) {
+    // Bridge heavily unbalanced: V_B = 0 (shorted to ground), V_D > 0
+    // Ig flows from D to B through galvanometer → positive deflection
+    const Vd = batteryVoltage * (X / (Q + X));
+    const Vb = 0;
+    const ig = (Vd - Vb) / galvanometerResistance;
+    const polarity = ig > 0 ? 1 : ig < 0 ? -1 : 0;
+    return {
+      ig: Math.abs(ig) * 1000,
+      polarity,
+      balanced: false,
+      Vb,
+      Vd,
+      P,
+      Q,
+      R,
+      X,
+    };
+  }
 
-  const a = 1 / P + 1 / R + 1 / Rg;
-  const b = 1 / Q + 1 / X + 1 / Rg;
-  const c = 1 / Rg;
+  // R = Infinity: R∞ plug removed → open circuit → maximum negative deflection
+  if (R === Infinity) {
+    // Bridge heavily unbalanced in opposite direction
+    // V_B = V * P/(P+Q) (voltage divider), V_D = V * X/(Q+X)
+    // With R = ∞, V_B is at the P/Q divider midpoint
+    const Vb = batteryVoltage * (P / (P + Q));
+    const Vd = batteryVoltage * (X / (Q + X));
+    const ig = (Vd - Vb) / galvanometerResistance;
+    const polarity = ig > 0 ? 1 : ig < 0 ? -1 : 0;
+    return {
+      ig: Math.abs(ig) * 1000,
+      polarity,
+      balanced: false,
+      Vb,
+      Vd,
+      P,
+      Q,
+      R,
+      X,
+    };
+  }
 
-  const det = a * b - c * c;
-  if (Math.abs(det) < 1e-12) return { ig: 0, polarity: 0, balanced: false };
+  // Standard Wheatstone bridge galvanometer current formula
+  // Ig = V * (P*X - Q*R) / (Rg*(P+Q)*(R+X) + P*Q*(R+X) + R*X*(P+Q))
+  const numerator = batteryVoltage * (P * X - Q * R);
+  const denominator =
+    galvanometerResistance * (P + Q) * (R + X) +
+    P * Q * (R + X) +
+    R * X * (P + Q);
 
-  const rhs1 = Va / P + Vc / R;
-  const rhs2 = Va / Q + Vc / X;
+  if (Math.abs(denominator) < 1e-12) return { ig: 0, polarity: 0, balanced: false };
 
-  const Vb = (b * rhs1 + c * rhs2) / det;
-  const Vd = (c * rhs1 + a * rhs2) / det;
-
-  const ig = (Vd - Vb) / Rg;
+  const ig = numerator / denominator;
   const polarity = ig > 0 ? 1 : ig < 0 ? -1 : 0;
   const balanced = Math.abs(P / Q - R / X) < 0.01;
 
@@ -437,13 +465,36 @@ function calculateGalvanometerCurrent(arms, batteryVoltage, galvanometerResistan
     ig: Math.abs(ig) * 1000,
     polarity,
     balanced,
-    Vb,
-    Vd,
+    Vb: batteryVoltage * (P / (P + Q)),
+    Vd: batteryVoltage * (X / (Q + X)),
     P,
     Q,
     R,
     X,
   };
+}
+
+// FIX 3: Map galvanometer current to needle deflection angle
+// Deflection Divisions = Current (mA) * GALVANOMETER_SENSITIVITY
+// Angle = polarity * min(MAX_DEFLECTION_ANGLE, divisions)
+// Extreme cases (R=0, R=∞) force maximum deflection as required by physics
+function updateNeedleAngle(result) {
+  if (!result || result.ig === 0) return 0;
+
+  // R = 0: All R plugs inserted → heavily unbalanced → force +30° (max right)
+  if (result.R === 0) {
+    return MAX_DEFLECTION_ANGLE;
+  }
+
+  // R = Infinity: R∞ plug removed → heavily unbalanced → force -30° (max left)
+  if (result.R === Infinity) {
+    return -MAX_DEFLECTION_ANGLE;
+  }
+
+  // Normal case: scale deflection proportionally to current
+  const divisions = result.ig * GALVANOMETER_SENSITIVITY;
+  const angle = result.polarity * Math.min(MAX_DEFLECTION_ANGLE, divisions);
+  return angle;
 }
 
 function getControlPoint(from, to) {
@@ -641,29 +692,43 @@ const PostOfficeBoxExperiment = () => {
     }
   }, [images, dimensions]);
 
+  // Keep latest draw functions in refs so the animation loop never restarts
+  const drawStaticCanvasRef = useRef(drawStaticCanvas);
+  const drawNeedleRef = useRef(drawNeedle);
+  useEffect(() => {
+    drawStaticCanvasRef.current = drawStaticCanvas;
+    drawNeedleRef.current = drawNeedle;
+  }, [drawStaticCanvas, drawNeedle]);
+
   // Initial static draw when dependencies change
   useEffect(() => {
     drawStaticCanvas();
   }, [drawStaticCanvas]);
 
-  // Animation loop for smooth needle movement
+  // Animation loop for smooth needle movement - runs ONCE, never restarts
   useEffect(() => {
     const animate = () => {
-      // Update needle physics
+      // Update needle physics with spring-damper model
       needleAngleRef.current += needleVelocityRef.current;
       needleVelocityRef.current += (targetAngleRef.current - needleAngleRef.current) * 0.05;
       needleVelocityRef.current *= 0.92;
 
-      // Redraw canvas with updated needle angle
-      drawStaticCanvas();
-      drawNeedle();
+      // Clamp needle angle to ±MAX_DEFLECTION_ANGLE
+      needleAngleRef.current = Math.max(
+        -MAX_DEFLECTION_ANGLE,
+        Math.min(MAX_DEFLECTION_ANGLE, needleAngleRef.current)
+      );
+
+      // Redraw canvas with updated needle angle using latest refs
+      drawStaticCanvasRef.current();
+      drawNeedleRef.current();
 
       animationRef.current = requestAnimationFrame(animate);
     };
 
     animationRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationRef.current);
-  }, [drawStaticCanvas, drawNeedle]);
+  }, []);
 
   const getCanvasPoint = useCallback((clientX, clientY) => {
     const wrapper = wrapperRef.current;
@@ -827,37 +892,35 @@ const PostOfficeBoxExperiment = () => {
     setHoveredTerminal(hit);
   }, [draggingFrom, dragWireId, dragResEnd, getCanvasPoint, hitTestTerminal, scheduleDragUpdate]);
 
-  // ১. প্রথমে toggleSocket ডিক্লেয়ার করুন
+  // toggleSocket declared BEFORE handleCanvasMouseDown to avoid ReferenceError
   const toggleSocket = useCallback((socketId) => {
-  setPluggedSockets((prev) => ({ ...prev, [socketId]: !prev[socketId] }));
+    setPluggedSockets((prev) => ({ ...prev, [socketId]: !prev[socketId] }));
   }, []);
 
-  // ২. এরপর handleCanvasMouseDown কল করুন
   const handleCanvasMouseDown = useCallback((e) => {
-  const point = getCanvasPoint(e.clientX, e.clientY);
+    const point = getCanvasPoint(e.clientX, e.clientY);
 
-  if (dimensions.width) {
-    const handleHit = hitTestResHandle(point, unknownResWire, dimensions);
-    if (handleHit) {
-      setDragResEnd(handleHit);
-      setDragEnd(point);
+    if (dimensions.width) {
+      const handleHit = hitTestResHandle(point, unknownResWire, dimensions);
+      if (handleHit) {
+        setDragResEnd(handleHit);
+        setDragEnd(point);
+        return;
+      }
+    }
+
+    const socketHit = hitTestSocket(point);
+    if (socketHit) {
+      toggleSocket(socketHit);
       return;
     }
-  }
 
-  const socketHit = hitTestSocket(point);
-  if (socketHit) {
-    toggleSocket(socketHit); // এখন toggleSocket নিরাপদে এক্সেস হবে
-    return;
-  }
+    const hit = hitTestTerminal(point);
+    if (!hit) return;
 
-  const hit = hitTestTerminal(point);
-  if (!hit) return;
-
-  setDraggingFrom(hit);
-  setDragEnd(point);
-}, [getCanvasPoint, hitTestTerminal, hitTestResHandle, hitTestSocket, unknownResWire, dimensions, toggleSocket]);
-
+    setDraggingFrom(hit);
+    setDragEnd(point);
+  }, [getCanvasPoint, hitTestTerminal, hitTestResHandle, hitTestSocket, unknownResWire, dimensions, toggleSocket]);
 
   const findNearestSnapTerminal = useCallback((point, terminals, maxDist = 30) => {
     if (!point || !terminals) return null;
@@ -953,7 +1016,9 @@ const PostOfficeBoxExperiment = () => {
     setWires((prev) => prev.filter((w) => w.fromTerminalId !== terminalId && w.toTerminalId !== terminalId));
   }, []);
 
+  // FIX 4: Circuit calculation effect - recalculates on every state change
   useEffect(() => {
+    // Guard: Both keys MUST be pressed for current to flow
     if (!k1Pressed || !k2Pressed) {
       const reason = k2Pressed && !k1Pressed ? 'Close K1 before K2' : 'Press K1 then K2 to energize circuit';
       setBridgeResult({ valid: false, reason, arms: null, ig: 0, polarity: 0, balanced: false });
@@ -967,18 +1032,16 @@ const PostOfficeBoxExperiment = () => {
       targetAngleRef.current = 0;
       return;
     }
-    const result = calculateGalvanometerCurrent(validation.arms, BATTERY_VOLTAGE, GALVANOMETER_RESISTANCE);
 
-    // FIX 2: Realistic galvanometer deflection using figure of merit (sensitivity)
-    // Deflection divisions = current (mA) × sensitivity (divisions/mA)
-    // Angle is capped at maximum deflection angle (±30 degrees)
-    const divisions = result.ig * GALVANOMETER_SENSITIVITY;
-    const angle = result.polarity * Math.min(MAX_DEFLECTION_ANGLE, divisions);
+    // Calculate bridge current using standard Wheatstone formula
+    const result = calculateBridgeCurrent(validation.arms, BATTERY_VOLTAGE, GALVANOMETER_RESISTANCE);
+
+    // Map current to needle deflection angle
+    const angle = updateNeedleAngle(result);
     targetAngleRef.current = angle;
 
     setBridgeResult({ ...result, valid: true, reason: 'Circuit complete' });
   }, [wires, pluggedSockets, k1Pressed, k2Pressed, unknownResWire]);
-
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -1009,13 +1072,13 @@ const PostOfficeBoxExperiment = () => {
     setK2Pressed((prev) => !prev);
   }, [k1Pressed]);
 
-  // FIX 3: Observation Table with correct Wheatstone Bridge physics
+  // Observation Table with correct Wheatstone Bridge physics
   // At balance/null point (ig = 0): S = (Q / P) × R
   // No non-standard formulas involving d1/d2 variables
   const addObservation = useCallback(() => {
     if (!bridgeResult.valid || !bridgeResult.arms) return;
 
-    const { P, Q, R, X } = bridgeResult.arms;
+    const { P, Q, R } = bridgeResult.arms;
 
     // Calculate deflection using sensitivity rules
     const divisions = bridgeResult.ig * GALVANOMETER_SENSITIVITY;
@@ -1245,7 +1308,7 @@ const PostOfficeBoxExperiment = () => {
                     onClick={resetCircuit}
                     className="px-4 py-2.5 rounded-lg text-xs font-bold border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition-colors"
                   >
-                    Reset Circuit &amp; Plugs
+                    Reset Circuit & Plugs
                   </button>
                   <button
                     type="button"
@@ -1309,9 +1372,8 @@ const PostOfficeBoxExperiment = () => {
                 {k1Pressed && k2Pressed && (
                   <div className="absolute z-20 pointer-events-none" style={{ top: '5%', right: '5%' }}>
                     {bridgeResult.valid ? (() => {
-                      // Use the same sensitivity formula as the main galvanometer
-                      const divisions = bridgeResult.ig * GALVANOMETER_SENSITIVITY;
-                      const angle = bridgeResult.polarity * Math.min(MAX_DEFLECTION_ANGLE, divisions);
+                      // Use the same deflection logic as the main galvanometer needle
+                      const angle = updateNeedleAngle(bridgeResult);
                       return (
                         <div className="flex flex-col items-center">
                           <div className="relative w-28 h-28 rounded-full border-4 border-cyan-500/60 bg-black/90 shadow-xl shadow-cyan-500/30 overflow-hidden backdrop-blur-md">
@@ -1790,6 +1852,7 @@ const PostOfficeBoxExperiment = () => {
                              <th className="py-2 px-3 text-slate-400 font-medium">R (Ω)</th>
                              <th className="py-2 px-3 text-slate-400 font-medium">Deflection</th>
                              <th className="py-2 px-3 text-slate-400 font-medium">Direction</th>
+                             <th className="py-2 px-3 text-slate-400 font-medium">Estimated S Range</th>
                              <th className="py-2 px-3 text-slate-400 font-medium">Calculated S (Ω)</th>
                            </tr>
                          </thead>
@@ -1809,6 +1872,7 @@ const PostOfficeBoxExperiment = () => {
                                    {obs.deflectionDirection}
                                  </span>
                                </td>
+                               <td className="py-2 px-3 font-mono text-slate-300">{obs.estimatedRange}</td>
                                <td className="py-2 px-3 font-mono text-emerald-300">{obs.calculatedS}</td>
                              </tr>
                            ))}
