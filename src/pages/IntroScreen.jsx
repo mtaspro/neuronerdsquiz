@@ -27,22 +27,12 @@ const VIDEO_POSTER =
     `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720">` +
       `<defs><radialGradient id="g" cx="50%" cy="42%" r="75%">` +
       `<stop offset="0%" stop-color="#0b2230"/><stop offset="55%" stop-color="#07202f"/>` +
-      `<stop offset="100%" stop-color="#020208"/></radialGradient></defs>` +
+      `<stop offset="100%" stop-color="#0a0a14"/></radialGradient></defs>` +
       `<rect width="100%" height="100%" fill="url(#g)"/>` +
-      `<circle cx="50%" cy="42%" r="26%" fill="none" stroke="#00f5ff" stroke-opacity="0.18" stroke-width="2"/>` +
-      `<circle cx="50%" cy="42%" r="34%" fill="none" stroke="#a855f7" stroke-opacity="0.14" stroke-width="1.5"/>` +
+      `<circle cx="50%" cy="42%" r="26%" fill="none" stroke="#00f5ff" stroke-opacity="0.25" stroke-width="2"/>` +
+      `<circle cx="50%" cy="42%" r="34%" fill="none" stroke="#a855f7" stroke-opacity="0.18" stroke-width="1.5"/>` +
       `</svg>`
   );
-
-// Detect low-end (mid-range Android) or reduced-motion users → skip heavy video decode
-// entirely and show the static poster instead (saves GPU + battery + bandwidth).
-const isLowPowerDevice = () => {
-  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
-  const cores = navigator.hardwareConcurrency || 8;
-  const mem = navigator.deviceMemory || 4;
-  return cores <= 4 && mem <= 3;
-};
 
 const KINETIC = [0.22, 1, 0.36, 1];
 
@@ -140,8 +130,6 @@ export default function IntroScreen() {
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [eventData, setEventData] = useState(null);
   const [showAudioPrompt, setShowAudioPrompt] = useState(false);
-  // Low-power / reduced-motion → render static poster background, skip video decode.
-  const [lowPower] = useState(isLowPowerDevice);
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const contentRef = useRef(null);
@@ -202,7 +190,6 @@ export default function IntroScreen() {
   // Power-saver: pause the background video when the tab is hidden or the hero
   // scrolls off-screen — prevents GPU/battery drain on low-end devices.
   useEffect(() => {
-    if (lowPower) return undefined;
     const vid = videoRef.current;
     if (!vid || showVideo === false) return undefined;
 
@@ -228,7 +215,7 @@ export default function IntroScreen() {
       io.disconnect();
       document.removeEventListener('visibilitychange', onVis);
     };
-  }, [showVideo, lowPower]);
+  }, [showVideo]);
 
   // Check auth
   useEffect(() => {
@@ -343,32 +330,7 @@ export default function IntroScreen() {
     }
   };
 
-  // Theme gradient
-  const getThemeGradient = () => {
-    const gradients = {
-      'tech-bg': 'from-cyan-600 via-blue-600 to-purple-600',
-      'tech-bg1': 'from-green-600 via-teal-600 to-cyan-600',
-      'tech-bg2': 'from-purple-600 via-pink-600 to-rose-600',
-      'tech-bg3': 'from-orange-600 via-red-600 to-pink-600',
-      'tech-bg4': 'from-slate-600 via-gray-600 to-zinc-600',
-      'tech-bg5': 'from-blue-600 via-cyan-600 to-teal-600',
-      'tech-bg6': 'from-amber-600 via-yellow-600 to-orange-600',
-    };
-    return gradients[currentTheme] || gradients['tech-bg'];
-  };
-
-  const getThemeName = () => {
-    const names = {
-      'tech-bg': 'LOONY CIRCLES',
-      'tech-bg1': 'CUTY KITTENS',
-      'tech-bg2': 'LIVING KING',
-      'tech-bg3': 'ALIEN ISOLATION',
-      'tech-bg4': 'RADIOGRAPHY DNA',
-      'tech-bg5': 'CRYSTAL MATRIX',
-      'tech-bg6': 'NEON TUNNEL',
-    };
-    return names[currentTheme] || 'LOONY CIRCLES';
-  };
+  // Theme gradient (removed — overlays derive from the animated aura palette)
 
   const handleEnableAudio = () => {
     soundManager.startMusicOnInteraction();
@@ -423,27 +385,19 @@ export default function IntroScreen() {
         className="absolute inset-0 pointer-events-none"
         style={{ transform: 'translate3d(calc(var(--gyro-x, 0) * -0.6px), calc(var(--gyro-y, 0) * -0.6px), 0)' }}
       >
+      {/* Always-on animated aura gradient → guarantees the background is NEVER pitch-black,
+          even while the video streams or if it fails to load. */}
+      <div className="absolute inset-0 aura-event-horizon" aria-hidden="true" />
       <ParallaxElement speed={0.3} className="absolute inset-0 w-full h-full pointer-events-none z-0">
         <motion.div
           className="w-full h-full parallax-bg"
           style={{ opacity }}
           initial={{ opacity: 0, scale: 1.1 }}
-          animate={{ opacity: showVideo ? 0.55 : 0, scale: 1 }}
+          animate={{ opacity: showVideo ? 0.85 : 0, scale: 1 }}
           transition={{ duration: 2, ease: [0.23, 1, 0.32, 1] }}
           key={currentTheme}
         >
-        {/* Background Video (static poster on low-power devices) */}
-        {lowPower ? (
-          <div
-            className="w-full h-full object-cover"
-            style={{
-              backgroundImage: `url(${VIDEO_POSTER})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-            aria-hidden="true"
-          />
-        ) : (
+        {/* Background Video — always mounted; animated aura gradient sits behind it */}
         <video
           ref={videoRef}
           className="w-full h-full object-cover"
@@ -463,7 +417,6 @@ export default function IntroScreen() {
             }
           }}
         />
-        )}
         {/* Video Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#020208]/40 via-[#020208]/50 to-[#020208]/90" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#020208_75%)]" />
@@ -570,18 +523,15 @@ export default function IntroScreen() {
             initial={{ opacity: 0 }}
             animate={{ opacity: showContent ? 1 : 0 }}
             transition={{ delay: 0.8 }}
-            className="mt-10 inline-flex"
+            className="mt-10 inline-flex justify-center"
           >
             <button
               type="button"
+              aria-label="Change visual theme"
               onClick={() => setShowThemeSelector(true)}
-              className="aura-glass inline-flex items-center gap-3 px-5 py-2.5 rounded-full hover:border-cyan-400/40 transition-colors"
+              className="aura-glass inline-flex items-center justify-center w-12 h-12 rounded-full hover:border-cyan-400/40 transition-colors"
             >
               <FaPalette className="text-cyan-400" />
-              <span className="text-sm text-slate-300">
-                Visual: <span className="text-cyan-400 font-medium">{getThemeName()}</span>
-              </span>
-              <span className="text-xs text-cyan-500/80 uppercase tracking-widest">Change</span>
             </button>
           </motion.div>
 

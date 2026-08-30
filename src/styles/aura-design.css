@@ -623,7 +623,25 @@ body.aura-home-immersive.aura-nav-visible .aura-nav {
   border: 1px solid var(--aura-border);
   color: var(--aura-cyan);
 }
-/* ===== Step 4 — Sci-Fi HUD buttons & interactive 3D glass cards ===== */
+/* ===== Bug-fix: always-on animated aura gradient (never-pitch-black background) ===== */
+.aura-event-horizon {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(55% 45% at 22% 25%, rgba(0, 245, 255, 0.30), transparent 62%),
+    radial-gradient(50% 42% at 82% 28%, rgba(168, 85, 247, 0.30), transparent 62%),
+    radial-gradient(60% 50% at 50% 88%, rgba(236, 72, 153, 0.22), transparent 62%),
+    linear-gradient(135deg, #07131f 0%, #0a0a14 55%, #1a0b2e 100%);
+  background-size: 220% 220%, 220% 220%, 220% 220%, auto;
+  animation: aura-horizon-drift 18s ease-in-out infinite alternate;
+  will-change: background-position;
+  transform: translateZ(0);
+  pointer-events: none;
+}
+@keyframes aura-horizon-drift {
+  0%   { background-position: 0% 0%, 100% 0%, 50% 50%, 0 0; }
+  100% { background-position: 100% 100%, 0% 100%, 55% 45%, 0 0; }
+}
 
 /* Circulating proton-beam border (rotating conic ring) */
 .aura-beam {
