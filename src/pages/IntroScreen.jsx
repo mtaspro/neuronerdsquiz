@@ -8,6 +8,8 @@ import ParallaxElement from "../components/ParallaxElement";
 import FuturisticLoader from "../components/ui/FuturisticLoader";
 import Button from "../components/ui/Button";
 import soundManager from "../utils/soundUtils";
+import CanvasParticleField from "../components/CanvasParticleField";
+import { useGyroscopeParallax } from "../hooks/useGyroscopeParallax";
 
 // Cloudinary video URLs
 const techVideo = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021260/tech-bg_w8qhkh.mp4';
@@ -18,10 +20,116 @@ const techVideo4 = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v175802136
 const techVideo5 = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021392/tech-bg5_xvylzf.mp4';
 const techVideo6 = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021421/tech-bg6_pnp74u.mp4';
 
+// Static poster fallback — tiny inline SVG gradient (loads instantly, no network).
+const VIDEO_POSTER =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720">` +
+      `<defs><radialGradient id="g" cx="50%" cy="42%" r="75%">` +
+      `<stop offset="0%" stop-color="#0b2230"/><stop offset="55%" stop-color="#07202f"/>` +
+      `<stop offset="100%" stop-color="#020208"/></radialGradient></defs>` +
+      `<rect width="100%" height="100%" fill="url(#g)"/>` +
+      `<circle cx="50%" cy="42%" r="26%" fill="none" stroke="#00f5ff" stroke-opacity="0.18" stroke-width="2"/>` +
+      `<circle cx="50%" cy="42%" r="34%" fill="none" stroke="#a855f7" stroke-opacity="0.14" stroke-width="1.5"/>` +
+      `</svg>`
+  );
+
+// Detect low-end (mid-range Android) or reduced-motion users → skip heavy video decode
+// entirely and show the static poster instead (saves GPU + battery + bandwidth).
+const isLowPowerDevice = () => {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
+  const cores = navigator.hardwareConcurrency || 8;
+  const mem = navigator.deviceMemory || 4;
+  return cores <= 4 && mem <= 3;
+};
+
+const KINETIC = [0.22, 1, 0.36, 1];
+
+// Terminal / typewriter character reveal for hero subtitles.
+function TypewriterText({ text = '', active = false, className = '' }) {
+  const chars = text.split('');
+  return (
+    <p className={className}>
+      {chars.map((char, i) => (
+        <motion.span
+          key={i}
+          className="terminal-char"
+          initial={{ opacity: 0, y: 8 }}
+          animate={active ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+          transition={{
+            delay: active ? 0.35 + i * 0.028 : 0,
+            duration: 0.2,
+            ease: KINETIC,
+          }}
+        >
+          {char === ' ' ? '\u00A0' : char}
+        </motion.span>
+      ))}
+      <motion.span
+        className="terminal-caret"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: active ? [1, 0, 1] : 0 }}
+        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+      >
+        _
+      </motion.span>
+    </p>
+  );
+}
+
+// Lightweight 3D tilt card with cursor/touch-tracking edge spotlight.
+// Writes straight to CSS vars (--rx/--ry/--spot-*) — no React re-renders.
+function TiltCard({ children, className = '' }) {
+  const ref = useRef(null);
+
+  const apply = (clientX, clientY) => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const px = clientX - r.left;
+    const py = clientY - r.top;
+    el.style.setProperty('--spot-x', `${px}px`);
+    el.style.setProperty('--spot-y', `${py}px`);
+    el.style.setProperty('--rx', `${((py / r.height) - 0.5) * -8}deg`);
+    el.style.setProperty('--ry', `${((px / r.width) - 0.5) * 8}deg`);
+  };
+
+  const onMove = (e) => {
+    const el = ref.current;
+    if (!el) return;
+    el.classList.add('is-tilting');
+    const cx = e.clientX != null ? e.clientX : e.touches?.[0]?.clientX;
+    const cy = e.clientY != null ? e.clientY : e.touches?.[0]?.clientY;
+    if (cx != null && cy != null) apply(cx, cy);
+  };
+
+  const onLeave = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.classList.remove('is-tilting');
+    el.style.setProperty('--rx', '0deg');
+    el.style.setProperty('--ry', '0deg');
+  };
+
+  return (
+    <div
+      ref={ref}
+      className={`aura-tilt-card relative h-full w-full ${className}`}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      onTouchMove={onMove}
+      onTouchEnd={onLeave}
+    >
+      {children}
+      <span className="aura-card-spot" aria-hidden="true" />
+    </div>
+  );
+}
+
 export default function IntroScreen() {
   const [showVideo, setShowVideo] = useState(false);
   const [showContent, setShowContent] = useState(false);
-  const [particles, setParticles] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isHovering, setIsHovering] = useState(false);
@@ -32,6 +140,8 @@ export default function IntroScreen() {
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [eventData, setEventData] = useState(null);
   const [showAudioPrompt, setShowAudioPrompt] = useState(false);
+  // Low-power / reduced-motion → render static poster background, skip video decode.
+  const [lowPower] = useState(isLowPowerDevice);
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const contentRef = useRef(null);
@@ -40,6 +150,9 @@ export default function IntroScreen() {
   const { scrollYProgress } = useScroll({ target: containerRef });
   const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
+  // Mobile gyroscope tilt → background parallax (eased CSS vars, no re-renders)
+  useGyroscopeParallax(containerRef, 12, 10);
 
   // Theme video mapping
   const themeVideos = {
@@ -85,6 +198,37 @@ export default function IntroScreen() {
       window.removeEventListener('themeChanged', handleThemeChange);
     };
   }, []);
+
+  // Power-saver: pause the background video when the tab is hidden or the hero
+  // scrolls off-screen — prevents GPU/battery drain on low-end devices.
+  useEffect(() => {
+    if (lowPower) return undefined;
+    const vid = videoRef.current;
+    if (!vid || showVideo === false) return undefined;
+
+    let visible = true;
+    const onVis = () => {
+      if (document.hidden) {
+        vid.pause();
+      } else if (visible) {
+        vid.play().catch(() => {});
+      }
+    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        visible = entries[0]?.isIntersecting ?? false;
+        if (!visible) vid.pause();
+        else if (!document.hidden) vid.play().catch(() => {});
+      },
+      { threshold: 0.05 }
+    );
+    io.observe(videoRef.current);
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [showVideo, lowPower]);
 
   // Check auth
   useEffect(() => {
@@ -132,22 +276,6 @@ export default function IntroScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  // Generate particles
-  useEffect(() => {
-    const particleArray = [];
-    for (let i = 0; i < 30; i++) {
-      particleArray.push({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: Math.random() * 3 + 2,
-        speed: Math.random() * 1.5 + 1,
-        opacity: Math.random() * 0.4 + 0.3,
-      });
-    }
-    setParticles(particleArray);
-  }, []);
-
   const finishLoading = useCallback(() => {
     setIsLoading(false);
     setShowVideo(true);
@@ -155,17 +283,37 @@ export default function IntroScreen() {
   }, []);
 
   useEffect(() => {
-    const progressInterval = setInterval(() => {
-      setPreloaderProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          setTimeout(finishLoading, 400);
-          return 100;
-        }
-        return Math.min(100, prev + 4 + Math.random() * 8);
-      });
-    }, 90);
-    return () => clearInterval(progressInterval);
+    // Fluid rAF-driven progress (replaces the old coarse 90ms tick).
+    // eases from 0 -> 100 with a subtle organic jitter at a locked 60fps cadence.
+    let rafId = 0;
+    let swapTimeout = null;
+    const DURATION = 2600; // ms to reach 100% — cinematic pacing
+    const start = performance.now();
+
+    const tick = (now) => {
+      const elapsed = now - start;
+      const t = Math.min(1, elapsed / DURATION);
+      // easeOutCubic build-up + a decaying sinusoidal jitter for life
+      const eased = 1 - Math.pow(1 - t, 3);
+      const jitter = Math.sin(elapsed / 110) * 1.6 * (1 - t);
+      const value = Math.min(100, eased * 100 + jitter);
+
+      setPreloaderProgress((prev) => Math.max(prev, Math.round(value))); // monotonic
+
+      if (t < 1) {
+        rafId = requestAnimationFrame(tick);
+      } else {
+        setPreloaderProgress(100);
+        // Let the warp-speed exit play, then swap to the hero reveal
+        swapTimeout = setTimeout(finishLoading, 320);
+      }
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (swapTimeout) clearTimeout(swapTimeout);
+    };
   }, [finishLoading]);
 
 
@@ -235,13 +383,19 @@ export default function IntroScreen() {
         {isLoading && (
           <motion.div
             key="aura-loader"
-            exit={{ opacity: 0, scale: 1.02 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="relative"
+            style={{ willChange: 'transform, opacity' }}
+            initial={{ opacity: 1, scale: 1 }}
+            exit={{
+              opacity: 0,
+              scale: 7, // camera zoom / warp — content expands past the viewport
+              transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] },
+            }}
           >
             <FuturisticLoader
               progress={preloaderProgress}
               title="HSCAura"
-              subtitle="Synchronizing quantum learning matrix"
+              subtitle="SYNCHRONIZING QUANTUM LOADING MATRIX"
               onSkip={finishLoading}
             />
           </motion.div>
@@ -256,34 +410,19 @@ export default function IntroScreen() {
         onThemeChange={handleThemeChange}
       />
 
-      {/* Animated Background Particles */}
-      <div className="absolute inset-0 overflow-hidden">
-        {particles.map((particle) => (
-          <motion.div
-            key={particle.id}
-            className="absolute bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full"
-            style={{
-              left: `${particle.x}%`,
-              top: `${particle.y}%`,
-              width: `${particle.size}px`,
-              height: `${particle.size}px`,
-              opacity: particle.opacity,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              x: [0, 15, -15, 0],
-              scale: [1, 1.3, 1],
-            }}
-            transition={{
-              duration: particle.speed * 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
+      {/* Interactive Multiverse — canvas node/vector field, pauses off-screen (gyro-shifted) */}
+      <div
+        className="absolute inset-0 z-[1] pointer-events-none"
+        style={{ transform: 'translate3d(calc(var(--gyro-x, 0) * 1px), calc(var(--gyro-y, 0) * 1px), 0)' }}
+      >
+        <CanvasParticleField className="h-full w-full" />
       </div>
 
       {/* Background Video with Enhanced Parallax */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ transform: 'translate3d(calc(var(--gyro-x, 0) * -0.6px), calc(var(--gyro-y, 0) * -0.6px), 0)' }}
+      >
       <ParallaxElement speed={0.3} className="absolute inset-0 w-full h-full pointer-events-none z-0">
         <motion.div
           className="w-full h-full parallax-bg"
@@ -293,14 +432,30 @@ export default function IntroScreen() {
           transition={{ duration: 2, ease: [0.23, 1, 0.32, 1] }}
           key={currentTheme}
         >
+        {/* Background Video (static poster on low-power devices) */}
+        {lowPower ? (
+          <div
+            className="w-full h-full object-cover"
+            style={{
+              backgroundImage: `url(${VIDEO_POSTER})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+            aria-hidden="true"
+          />
+        ) : (
         <video
           ref={videoRef}
           className="w-full h-full object-cover"
           src={themeVideos[currentTheme]}
+          poster={VIDEO_POSTER}
+          preload="auto"
           autoPlay
           loop
           muted
           playsInline
+          disablePictureInPicture
+          controls={false}
           onError={(e) => {
             console.log(`Video ${themeVideos[currentTheme]} failed to load`);
             if (currentTheme !== 'tech-bg') {
@@ -308,11 +463,13 @@ export default function IntroScreen() {
             }
           }}
         />
+        )}
         {/* Video Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#020208]/40 via-[#020208]/50 to-[#020208]/90" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#020208_75%)]" />
         </motion.div>
       </ParallaxElement>
+      </div>
 
       {/* Audio Permission Prompt */}
       <AnimatePresence>
@@ -363,14 +520,20 @@ export default function IntroScreen() {
         >
           <p className="aura-label mb-4">Next-gen learning platform</p>
           <ParallaxElement speed={0.08}>
-            <h1 className="aura-headline text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight">
-              HSCAura
+            <h1
+              className="aura-headline aura-glitch-logo text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight"
+              data-text="HSCAura"
+            >
+              <span className="aura-glow-text aura-display">HSCAura</span>
+              <span className="aura-glitch-scan" aria-hidden="true" />
             </h1>
           </ParallaxElement>
 
-          <p className="mt-5 text-xl sm:text-2xl md:text-3xl font-light text-slate-200 tracking-wide">
-            Unleash your inner genius
-          </p>
+          <TypewriterText
+            text="Unleash your inner genius"
+            active={showContent}
+            className="mt-5 text-xl sm:text-2xl md:text-3xl font-light text-slate-200 tracking-wide"
+          />
 
           <p className="aura-subhead text-base sm:text-lg mt-6 max-w-2xl mx-auto leading-relaxed">
             Real-time battles, adaptive quizzes, and AI-powered insights — built for students who refuse to learn in slow mode.
@@ -388,7 +551,7 @@ export default function IntroScreen() {
             onMouseLeave={() => setIsHovering(false)}
           >
             {isAuthenticated ? (
-              <Button size="lg" onClick={() => navigate('/dashboard')} className="w-full sm:w-auto min-w-[200px]">
+              <Button size="lg" beam shockwave onClick={() => navigate('/dashboard')} className="w-full sm:w-auto min-w-[200px]">
                 <FaRocket className="mr-1" /> Launch Dashboard
               </Button>
             ) : (
@@ -433,14 +596,16 @@ export default function IntroScreen() {
                 className="aura-glass aura-glass-card text-left group"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: showContent ? 1 : 0, y: showContent ? 0 : 30 }}
-                transition={{ delay: 0.5 + index * 0.12, duration: 0.6 }}
+                transition={{ delay: 0.6 + index * 0.14, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                 whileHover={{ y: -4 }}
               >
-                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center mb-4 group-hover:shadow-aura-cyan transition-shadow">
-                  <Icon className="text-xl text-cyan-400" />
-                </div>
-                <h3 className="aura-display text-sm text-white mb-2">{title}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">{desc}</p>
+                <TiltCard>
+                  <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center mb-4 group-hover:shadow-aura-cyan transition-shadow">
+                    <Icon className="text-xl text-cyan-400" />
+                  </div>
+                  <h3 className="aura-display text-sm text-white mb-2">{title}</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed">{desc}</p>
+                </TiltCard>
               </motion.div>
             ))}
           </div>

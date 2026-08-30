@@ -373,6 +373,213 @@ html {
   background-size: 32px 32px;
   animation: aura-grid-flow 4s linear infinite;
 }
+/* ===== Cinematic Boot Loader — Aperture, HUD rings, warp streaks ===== */
+
+/* Iris / lens ring that "opens" as the loader reveals */
+.aura-iris-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 46vmin;
+  height: 46vmin;
+  transform: translate3d(-50%, -50%, 0);
+  border-radius: 50%;
+  border: 1px solid rgba(0, 245, 255, 0.28);
+  box-shadow:
+    0 0 60px rgba(0, 245, 255, 0.12) inset,
+    0 0 44px rgba(0, 245, 255, 0.18),
+    0 0 0 20px rgba(0, 245, 255, 0.03),
+    0 0 0 40px rgba(168, 85, 247, 0.04);
+  will-change: transform;
+  animation: aura-aperture-open 1.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  pointer-events: none;
+}
+
+/* Rotating lens aperture "blades" behind the HUD */
+.aura-aperture {
+  position: absolute;
+  inset: -12%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(0, 245, 255, 0.05) 0deg 22deg,
+    transparent 22deg 45deg
+  );
+  -webkit-mask: radial-gradient(circle at 50% 50%, transparent 54%, #000 57%, #000 100%);
+          mask: radial-gradient(circle at 50% 50%, transparent 54%, #000 57%, #000 100%);
+  animation: aura-orbit 22s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);
+  pointer-events: none;
+}
+
+/* HUD concentric ring with rotating tick marks */
+.aura-hud-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 19rem;
+  height: 19rem;
+  transform: translate3d(-50%, -50%, 0);
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 245, 255, 0.16);
+  animation: aura-orbit 16s linear infinite;
+  will-change: transform;
+  pointer-events: none;
+}
+.aura-hud-ring::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    rgba(0, 245, 255, 0.6) 0deg 1deg,
+    transparent 1deg 11.25deg
+  );
+  -webkit-mask: radial-gradient(circle at 50% 50%, transparent 0 45%, #000 45.5% 46.5%, transparent 47%);
+          mask: radial-gradient(circle at 50% 50%, transparent 0 45%, #000 45.5% 46.5%, transparent 47%);
+  animation: aura-orbit 12s linear infinite reverse;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Hyperspace streak field (visible subtly, exaggerates during warp exit) */
+.aura-warp-streak {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0px,
+    rgba(255, 255, 255, 0) 26px,
+    rgba(0, 245, 255, 0.4) 26.5px,
+    rgba(168, 85, 247, 0.4) 27px,
+    rgba(255, 255, 255, 0) 28px
+  );
+  opacity: 0.3;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  pointer-events: none;
+}
+
+/* Glowing percentage readout */
+.halo-text {
+  text-shadow:
+    0 0 12px rgba(0, 245, 255, 0.55),
+    0 0 40px rgba(0, 245, 255, 0.3);
+}
+
+@keyframes aura-aperture-open {
+  0%   { transform: translate3d(-50%, -50%, 0) scale(0.35); opacity: 0; }
+  55%  { transform: translate3d(-50%, -50%, 0) scale(1.05); opacity: 1; }
+  100% { transform: translate3d(-50%, -50%, 0) scale(1);   opacity: 1; }
+}
+/* ===== Sci-Fi Hero — Cyberpunk glitch logo, light-sweep text, terminal reveal ===== */
+
+/* Continuous gradient light-sweep across the cyan title (background-clip:text) */
+.aura-glow-text {
+  background-image: linear-gradient(
+    100deg,
+    #00f5ff 0%,
+    #00f5ff 38%,
+    #eafdff 50%,
+    #00f5ff 62%,
+    #00f5ff 100%
+  );
+  background-size: 320% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: aura-light-sweep 4.5s linear infinite;
+  will-change: background-position;
+}
+
+@keyframes aura-light-sweep {
+  0%   { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+
+/* Glitch logo host — holds pseudo-element RGB-split glitch layers */
+.aura-glitch-logo {
+  position: relative;
+  display: inline-block;
+  will-change: transform;
+}
+.aura-glitch-logo::before,
+.aura-glitch-logo::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+.aura-glitch-logo::before { color: #00f5ff; text-shadow: 0 0 14px rgba(0, 245, 255, 0.6); }
+.aura-glitch-logo::after  { color: #ff2bd6; text-shadow: 0 0 14px rgba(255, 43, 214, 0.6); }
+
+.aura-glitch-logo:hover::before,
+.aura-glitch-logo:active::before {
+  opacity: 0.9;
+  animation: aura-glitch-shift-b 0.38s steps(2, end) infinite;
+}
+.aura-glitch-logo:hover::after,
+.aura-glitch-logo:active::after {
+  opacity: 0.9;
+  animation: aura-glitch-shift-c 0.46s steps(2, end) infinite;
+}
+
+@keyframes aura-glitch-shift-b {
+  0%   { clip-path: inset(20% 0 62% 0); transform: translate(-3px, 2px); }
+  25%  { clip-path: inset(72% 0 8% 0);  transform: translate(2px, -2px); }
+  50%  { clip-path: inset(42% 0 40% 0); transform: translate(-2px, 2px); }
+  75%  { clip-path: inset(6% 0 84% 0);  transform: translate(3px, -1px); }
+  100% { clip-path: inset(60% 0 26% 0); transform: translate(-3px, 1px); }
+}
+@keyframes aura-glitch-shift-c {
+  0%   { clip-path: inset(82% 0 4% 0);  transform: translate(3px, -2px); }
+  25%  { clip-path: inset(12% 0 70% 0); transform: translate(-2px, 2px); }
+  50%  { clip-path: inset(52% 0 30% 0); transform: translate(2px, -2px); }
+  75%  { clip-path: inset(32% 0 54% 0); transform: translate(-3px, 1px); }
+  100% { clip-path: inset(74% 0 9% 0);  transform: translate(3px, -1px); }
+}
+
+/* Scanline slide overlay shown on hover/tap */
+.aura-glitch-scan {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 245, 255, 0) 0%,
+    rgba(0, 245, 255, 0) 34%,
+    rgba(0, 245, 255, 0.30) 50%,
+    rgba(0, 245, 255, 0) 66%,
+    rgba(0, 245, 255, 0) 100%
+  );
+  animation: aura-glitch-scanline 1.4s linear infinite;
+}
+.aura-glitch-logo:hover .aura-glitch-scan,
+.aura-glitch-logo:active .aura-glitch-scan {
+  opacity: 1;
+}
+@keyframes aura-glitch-scanline {
+  0%   { transform: translateY(-105%); }
+  100% { transform: translateY(105%); }
+}
+
+/* Terminal reveals — per-char glow + blinking caret */
+.terminal-char {
+  display: inline-block;
+  color: #e2f7ff;
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.55);
+}
+.terminal-caret {
+  display: inline-block;
+  margin-left: 2px;
+  color: #00f5ff;
+  font-weight: 700;
+  text-shadow: 0 0 12px rgba(0, 245, 255, 0.8);
+}
 
 /* Hide navbar on homepage for immersive intro (optional class on body) */
 body.aura-home-immersive .aura-nav {
@@ -415,4 +622,78 @@ body.aura-home-immersive.aura-nav-visible .aura-nav {
   background: rgba(0, 245, 255, 0.08);
   border: 1px solid var(--aura-border);
   color: var(--aura-cyan);
+}
+/* ===== Step 4 — Sci-Fi HUD buttons & interactive 3D glass cards ===== */
+
+/* Circulating proton-beam border (rotating conic ring) */
+.aura-beam {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    #00f5ff 10%,
+    #ffffff 16%,
+    #7c3aed 21%,
+    transparent 30%
+  );
+  animation: aura-beam-rotate 2.8s linear infinite;
+  will-change: transform;
+  pointer-events: none;
+  opacity: 0.85;
+}
+.aura-btn:hover .aura-beam {
+  opacity: 1;
+}
+@keyframes aura-beam-rotate {
+  to { transform: rotate(360deg); }
+}
+
+/* Push label above the beam ring */
+.aura-btn .aura-btn-inner {
+  z-index: 1;
+  position: relative;
+}
+
+/* Interactive 3D tilt card — transform driven by --rx / --ry (JS-set) */
+.aura-tilt-card {
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* Cursor / touch-tracking edge-spotlight ring */
+.aura-card-spot {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    240px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    rgba(0, 245, 255, 0.20),
+    rgba(0, 245, 255, 0.05) 45%,
+    transparent 62%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.aura-tilt-card.is-tilting .aura-card-spot,
+.aura-tilt-card:hover .aura-card-spot {
+  opacity: 1;
+}
+
+/* Mobile-GPU-friendly glass optimization: keep blur layer light & composited */
+@media (max-width: 767px) {
+  .aura-glass,
+  .aura-tilt-card {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    transform: translateZ(0);
+  }
 }

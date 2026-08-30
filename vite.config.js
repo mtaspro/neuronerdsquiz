@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       host: true,
-      allowedHosts: ['sb-3cwzwoaji40a.vercel.run'],   // ← added this line (allows v0 preview hosts)
+      allowedHosts: true, // ← এখানে নির্দিষ্ট URL-এর বদলে true দিয়ে দিন
       proxy: {
         '/api': 'http://localhost:5000'
       }
