@@ -1,0 +1,112 @@
+Here is the complete, structured summary of the **"Determination of Unknown Resistance using a Post Office Box"** physics experiment, fully prepared in English for your coding agent to implement.
+
+---
+
+# 📌 Physics Experiment Summary: Determination of Unknown Resistance using Post Office Box
+
+## 1. Principle & Formula
+
+The experiment works on the principle of the **Wheatstone Bridge**. When the bridge reaches equilibrium (Null Point) and no current flows through the galvanometer:
+
+
+$$\frac{P}{Q} = \frac{R}{S}$$
+
+Therefore, the equation to determine the unknown resistance $S$ is:
+
+
+$$S = \left(\frac{Q}{P}\right) \times R$$
+
+Where:
+
+* $P$ and $Q$ = Resistance values of the ratio arms
+* $R$ = Known resistance arm value
+* $S$ = Unknown resistance value
+
+---
+
+## 2. Required Apparatus
+
+1. Post Office Box
+2. Galvanometer
+3. DC Power Source / Battery
+4. Unknown Resistance Wire ($S$)
+5. Tapping Keys ($K_1$ for Battery circuit, $K_2$ for Galvanometer circuit)
+6. Connecting Wires
+
+---
+
+## 3. Step-by-Step Procedure (Algorithm / Logic Flow)
+
+1. **Circuit Setup & Verification:**
+* Clean the ends of the connecting wires with sandpaper to ensure firm connections.
+* Unplug $10\,\Omega$ plugs in both ratio arms $P$ and $Q$ (setting initial ratio $P:Q = 10:10$).
+* Set the known resistance arm $R = 0\,\Omega$.
+* Press the battery key ($K_1$) first, then the galvanometer key ($K_2$), and note the direction of deflection (e.g., Right).
+* Unplug the infinity ($\infty$) key in arm $R$ and check again. If the needle deflects in the opposite direction (Left), the circuit setup is correct.
+
+
+2. **Phase 1: Ratio $P : Q = 1 : 1$ ($10\,\Omega : 10\,\Omega$)**
+* Adjust resistance $R$ to find two adjacent integer values (e.g., $R$ and $R+1$) where the galvanometer deflects in opposite directions.
+* This narrows down the unknown resistance $S$ between $R$ and $R+1$.
+
+
+3. **Phase 2: Ratio $P : Q = 10 : 1$ ($100\,\Omega : 10\,\Omega$)**
+* Set $P = 100\,\Omega$ and $Q = 10\,\Omega$.
+* Increase arm $R$'s resistance to approximately $10\times$ the value obtained in Phase 1.
+* Find two adjacent values where deflection reverses to determine the first decimal place using $S = \frac{1}{10} \times R$.
+
+
+4. **Phase 3: Ratio $P : Q = 100 : 1$ ($1000\,\Omega : 10\,\Omega$)**
+* Set $P = 1000\,\Omega$ and $Q = 10\,\Omega$.
+* Increase $R$ to approximately $10\times$ the value from Phase 2.
+* Find the exact value of $R$ that yields **0 deflection** (Null Point). Compute $S = \frac{1}{100} \times R$.
+
+
+5. **Interpolation Method (If exact zero deflection is not reached):**
+* If resistance $R$ produces deflection $d_1$ (Right) and $(R+1)$ produces deflection $d_2$ (Left), use:
+
+$$S = \frac{Q}{P} \left( R + \frac{d_1}{d_1 + d_2} \right)$$
+
+
+
+
+
+---
+
+## 4. Observation Data Table Structure
+
+This structure maps directly to the data table in the notebook:
+
+| Resistance in Arm $P$ ($\Omega$) | Resistance in Arm $Q$ ($\Omega$) | Included Resistance in Arm $R$ ($\Omega$) | Direction of Galvanometer Deflection | Remarks on Unknown Resistance Value ($S$) |
+| --- | --- | --- | --- | --- |
+| **10** | **10** | 0 | Right | Value of $S$ lies between $9\,\Omega$ and $10\,\Omega$ |
+|  |  | $\infty$ | Right |  |
+|  |  | 10 | Right |  |
+|  |  | 9 | Left |  |
+| **100** | **10** | 100 | Right | Value of $S$ lies between $9.3\,\Omega$ and $9.4\,\Omega$ |
+|  |  | 94 | Right |  |
+|  |  | 93 | Left |  |
+|  |  | 90 | Left |  |
+| **1000** | **10** | 940 | Right | $S = \frac{1}{100}\left(R_1 + \frac{d_1}{d_1+d_2}\right)$ or exact 0 deflection at target value |
+|  |  | 933 | Right |  |
+|  |  | **932** | **0 (Equilibrium / Null Point)** | **Target Value Reached** |
+|  |  | 931 | Left |  |
+
+---
+
+## 5. Result Calculation
+
+Based on the lab notebook observations:
+
+* $P = 1000\,\Omega$
+* $Q = 10\,\Omega$
+* Resistance at Null Point $R = 932\,\Omega$
+
+**Calculation:**
+
+
+$$S = \left(\frac{Q}{P}\right) \times R = \left(\frac{10}{1000}\right) \times 932 = 9.32\,\Omega$$
+
+**Final Result:** The experimental value of the unknown resistance is **$S = 9.32\,\Omega$**.
+
+---

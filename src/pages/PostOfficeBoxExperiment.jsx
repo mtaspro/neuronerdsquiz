@@ -32,21 +32,18 @@ const SOCKET_GROUPS = {
     label: 'Resistance Arm R',
     sockets: [
       { id: 'R1', resistance: 1, x: 0.202, y: 0.470 },
-      { id: 'R2', resistance: 5, x: 0.299, y: 0.470 },
-      { id: 'R3', resistance: 10, x: 0.391, y: 0.470 },
-      { id: 'R4', resistance: 10, x: 0.484, y: 0.470 },
-      { id: 'R5', resistance: 20, x: 0.575, y: 0.470 },
+      { id: 'R2', resistance: 2, x: 0.299, y: 0.470 },
+      { id: 'R3', resistance: 2, x: 0.391, y: 0.470 },
+      { id: 'R4', resistance: 5, x: 0.484, y: 0.470 },
+      { id: 'R5', resistance: 10, x: 0.575, y: 0.470 },
       { id: 'R6', resistance: 20, x: 0.669, y: 0.470 },
-      { id: 'R7', resistance: 50, x: 0.760, y: 0.470 },
-      { id: 'R8', resistance: 100, x: 0.202, y: 0.732 },
-      { id: 'R9', resistance: 200, x: 0.299, y: 0.732 },
+      { id: 'R7', resistance: 20, x: 0.760, y: 0.470 },
+      { id: 'R8', resistance: 50, x: 0.202, y: 0.732 },
+      { id: 'R9', resistance: 100, x: 0.299, y: 0.732 },
       { id: 'R10', resistance: 200, x: 0.391, y: 0.732 },
-      { id: 'R11', resistance: 500, x: 0.484, y: 0.732 },
+      { id: 'R11', resistance: 200, x: 0.484, y: 0.732 },
+      { id: 'R12', resistance: 500, x: 0.575, y: 0.732 },
       { id: 'R∞', resistance: Infinity, x: 0.854, y: 0.732 },
-      { id: 'R12', resistance: 100, x: 0.945, y: 0.732 },
-      { id: 'R13', resistance: 200, x: 0.945, y: 0.732 },
-      { id: 'R14', resistance: 200, x: 0.945, y: 0.732 },
-      { id: 'R15', resistance: 500, x: 0.945, y: 0.732 },
     ],
   },
 };
@@ -293,10 +290,15 @@ function getTerminalScreenPositions(dimensions, boardImg, batteryBoxYOffset = 0)
   return { ...boardTerminals, ...keyButtonPositions, ...externalTerminals };
 }
 
-const UNKNOWN_RESISTANCE_X = 12.5;
+// FIX: Unknown resistance must be 9.32 Ω so that the null point occurs at
+// R = 932 Ω with P = 1000 Ω, Q = 10 Ω (S = (Q/P) × R = 9.32 Ω), as in the lab notebook.
+const UNKNOWN_RESISTANCE_X = 9.32;
 const BATTERY_VOLTAGE = 3;
 const GALVANOMETER_RESISTANCE = 100;
-const GALVANOMETER_SENSITIVITY = 10; // Divisions per mA (figure of merit)
+// FIX: Saturating galvanometer response scale (mA). Currents far above this value
+// pin the needle at ±30°; near the null point a 1 Ω error in Phase 3
+// (Ig ≈ 0.00026 mA) produces ≈ 13 divisions — enough for d1/d2 interpolation.
+const DEFLECTION_CURRENT_SCALE = 0.00059; // mA
 const MAX_DEFLECTION_ANGLE = 30; // Maximum deflection in degrees
 
 const SOCKET_DEFAULT_STATE = Object.fromEntries(
@@ -474,27 +476,37 @@ function calculateBridgeCurrent(arms, batteryVoltage, galvanometerResistance) {
   };
 }
 
-// FIX 3: Map galvanometer current to needle deflection angle
-// Deflection Divisions = Current (mA) * GALVANOMETER_SENSITIVITY
-// Angle = polarity * min(MAX_DEFLECTION_ANGLE, divisions)
-// Extreme cases (R=0, R=∞) force maximum deflection as required by physics
-function updateNeedleAngle(result) {
-  if (!result || result.ig === 0) return 0;
+// FIX 3: Map galvanometer current to needle deflection with a SATURATING response.
+// A real low-resistance galvanometer driven near bridge balance shows graded, small
+// deflections for tiny unbalances and pins at full scale for large unbalances.
+// deflection = MAX_DEFLECTION_ANGLE * tanh(Ig / DEFLECTION_CURRENT_SCALE)
+// Extreme cases (R = 0, R = ∞) force maximum deflection as required by the procedure.
+function getDeflectionReading(result) {
+  if (!result || result.ig === 0 || result.polarity === 0) {
+    return { divisions: 0, angle: 0, saturated: false };
+  }
 
   // R = 0: All R plugs inserted → heavily unbalanced → force +30° (max right)
   if (result.R === 0) {
-    return MAX_DEFLECTION_ANGLE;
+    return { divisions: MAX_DEFLECTION_ANGLE, angle: MAX_DEFLECTION_ANGLE, saturated: true };
   }
 
   // R = Infinity: R∞ plug removed → heavily unbalanced → force -30° (max left)
   if (result.R === Infinity) {
-    return -MAX_DEFLECTION_ANGLE;
+    return { divisions: MAX_DEFLECTION_ANGLE, angle: -MAX_DEFLECTION_ANGLE, saturated: true };
   }
 
-  // Normal case: scale deflection proportionally to current
-  const divisions = result.ig * GALVANOMETER_SENSITIVITY;
-  const angle = result.polarity * Math.min(MAX_DEFLECTION_ANGLE, divisions);
-  return angle;
+  const drive = result.ig / DEFLECTION_CURRENT_SCALE;
+  const divisions = Math.tanh(drive) * MAX_DEFLECTION_ANGLE;
+  return {
+    divisions,
+    angle: result.polarity * divisions,
+    saturated: drive > 2.5,
+  };
+}
+
+function updateNeedleAngle(result) {
+  return getDeflectionReading(result).angle;
 }
 
 function getControlPoint(from, to) {
@@ -1080,19 +1092,23 @@ const PostOfficeBoxExperiment = () => {
 
     const { P, Q, R } = bridgeResult.arms;
 
-    // Calculate deflection using sensitivity rules
-    const divisions = bridgeResult.ig * GALVANOMETER_SENSITIVITY;
+    // Calculate deflection using the saturating galvanometer response
+    const reading = getDeflectionReading(bridgeResult);
+    const divisions = reading.divisions;
+    const saturated = reading.saturated;
     const deflectionDirection = bridgeResult.polarity === 0 ? 'Zero' : bridgeResult.polarity > 0 ? 'Right' : 'Left';
 
-    // At balance (ig ≈ 0), unknown resistance S = (Q / P) × R
+    // Estimate range based on deflection direction.
+    // Ig ∝ (P·X − Q·R): a "Right" deflection means R is BELOW the balance value,
+    // so the unknown S is greater than (Q/P)·R; "Left" means S is smaller.
     const calculatedS = (Q / P) * R;
 
     // Estimate range based on deflection direction
     const estimatedRange = deflectionDirection === 'Zero'
       ? `~${calculatedS.toFixed(2)} Ω (balanced)`
       : deflectionDirection === 'Right'
-        ? `S < ${calculatedS.toFixed(2)} Ω`
-        : `S > ${calculatedS.toFixed(2)} Ω`;
+        ? `S > ${calculatedS.toFixed(2)} Ω`
+        : `S < ${calculatedS.toFixed(2)} Ω`;
 
     setObservations((prev) => [
       ...prev,
@@ -1102,7 +1118,7 @@ const PostOfficeBoxExperiment = () => {
         Q,
         R,
         deflectionDirection,
-        divisions: divisions.toFixed(1),
+        divisions: `${divisions.toFixed(1)}${saturated ? '>' : ''}`,
         estimatedRange,
         calculatedS: calculatedS.toFixed(2),
       },
