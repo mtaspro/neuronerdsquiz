@@ -14,6 +14,8 @@ import Button from "../components/ui/Button";
 import soundManager from "../utils/soundUtils";
 import CanvasParticleField from "../components/CanvasParticleField";
 import { useGyroscopeParallax } from "../hooks/useGyroscopeParallax";
+import TiltCard from "../components/ui/TiltCard";
+import QuizBattlePreview from "../components/QuizBattlePreview";
 
 // Cloudinary video URLs
 const techVideo = 'https://res.cloudinary.com/dxqtqnfgf/video/upload/v1758021260/tech-bg_w8qhkh.mp4';
@@ -69,55 +71,6 @@ function TypewriterText({ text = '', active = false, className = '' }) {
         _
       </motion.span>
     </p>
-  );
-}
-
-// Lightweight 3D tilt card with cursor/touch-tracking edge spotlight.
-// Writes straight to CSS vars (--rx/--ry/--spot-*) — no React re-renders.
-function TiltCard({ children, className = '' }) {
-  const ref = useRef(null);
-
-  const apply = (clientX, clientY) => {
-    const el = ref.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const px = clientX - r.left;
-    const py = clientY - r.top;
-    el.style.setProperty('--spot-x', `${px}px`);
-    el.style.setProperty('--spot-y', `${py}px`);
-    el.style.setProperty('--rx', `${((py / r.height) - 0.5) * -8}deg`);
-    el.style.setProperty('--ry', `${((px / r.width) - 0.5) * 8}deg`);
-  };
-
-  const onMove = (e) => {
-    const el = ref.current;
-    if (!el) return;
-    el.classList.add('is-tilting');
-    const cx = e.clientX != null ? e.clientX : e.touches?.[0]?.clientX;
-    const cy = e.clientY != null ? e.clientY : e.touches?.[0]?.clientY;
-    if (cx != null && cy != null) apply(cx, cy);
-  };
-
-  const onLeave = () => {
-    const el = ref.current;
-    if (!el) return;
-    el.classList.remove('is-tilting');
-    el.style.setProperty('--rx', '0deg');
-    el.style.setProperty('--ry', '0deg');
-  };
-
-  return (
-    <div
-      ref={ref}
-      className={`aura-tilt-card relative h-full w-full ${className}`}
-      onMouseMove={onMove}
-      onMouseLeave={onLeave}
-      onTouchMove={onMove}
-      onTouchEnd={onLeave}
-    >
-      {children}
-      <span className="aura-card-spot" aria-hidden="true" />
-    </div>
   );
 }
 
@@ -477,83 +430,78 @@ export default function IntroScreen() {
       {showContent && (
       <div
         ref={contentRef}
-        className="relative z-10 text-center px-4 sm:px-6 max-w-6xl mx-auto py-16 sm:py-20"
+        className="relative z-10 text-left px-4 sm:px-6 max-w-6xl mx-auto py-16 sm:py-20"
       >
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: showContent ? 1 : 0, y: showContent ? 0 : 24 }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
         >
-          <p className="aura-label mb-4">Next-gen learning platform</p>
-          <ParallaxElement speed={0.08}>
-            <h1
-              className="aura-headline aura-glitch-logo text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight"
-              data-text="HSCAura"
-            >
-              <span className="aura-glow-text aura-display">HSCAura</span>
-              <span className="aura-glitch-scan" aria-hidden="true" />
-            </h1>
-          </ParallaxElement>
+          <div className="hero-split">
+            {/* LEFT — copy column (reference structure, our glitch/typewriter/beam magic) */}
+            <div className="hero-copy">
+              <p className="aura-eyebrow"><span className="pulse-dot" /> THE NEXT ERA OF STUDYING</p>
+              <ParallaxElement speed={0.08}>
+                <h1
+                  className="aura-headline aura-glitch-logo"
+                  data-text="Train your mind at full speed."
+                >
+                  Train your mind<br />
+                  <em className="aura-glow-text aura-display">at full speed.</em>
+                  <span className="aura-glitch-scan" aria-hidden="true" />
+                </h1>
+              </ParallaxElement>
 
-          <TypewriterText
-            text="Unleash your inner genius"
-            active={showContent}
-            className="mt-5 text-xl sm:text-2xl md:text-3xl font-light text-slate-200 tracking-wide"
-          />
+              <TypewriterText
+                text="Unleash your inner genius"
+                active={showContent}
+                className="aura-typewriter-line"
+              />
 
-          <p className="aura-subhead text-base sm:text-lg mt-6 max-w-2xl mx-auto leading-relaxed">
-            Real-time battles, adaptive quizzes, and AI-powered insights — built for students who refuse to learn in slow mode.
-          </p>
+              <div className="status-strip">
+                <span><i className="pulse-dot" /> LIVE BATTLES</span>
+                <i className="strip-sep" />
+                <span>ADAPTIVE AI</span>
+                <i className="strip-sep" />
+                <span>MEMORY TRACKING</span>
+              </div>
 
-          <div className="flex flex-wrap justify-center gap-3 mt-8">
-            <span className="aura-chip">Live Battles</span>
-            <span className="aura-chip">NeuraX AI</span>
-            <span className="aura-chip">Progress Tracking</span>
+              <div className="hero-actions">
+                {isAuthenticated ? (
+                  <Button size="lg" beam shockwave onClick={() => navigate('/dashboard')} className="min-w-[200px]">
+                    <FaRocket className="mr-1" /> Enter HSCAura
+                  </Button>
+                ) : (
+                  <Button size="lg" beam shockwave onClick={() => navigate('/register')} className="min-w-[200px]">
+                    <FaRocket className="mr-1" /> Enter HSCAura
+                  </Button>
+                )}
+                <a className="cta-secondary" href="#features">
+                  <span className="play-icon">▶</span> Watch the experience
+                </a>
+                <button
+                  type="button"
+                  aria-label="Change visual theme"
+                  onClick={() => setShowThemeSelector(true)}
+                  className="aura-theme-orb"
+                >
+                  <FaPalette />
+                </button>
+              </div>
+            </div>
+
+            {/* RIGHT — live battle demo card (interactive, 3D tilt + edge spotlight) */}
+            <div className="hero-visual">
+              <QuizBattlePreview active={showContent} />
+            </div>
           </div>
 
-          <motion.div
-            className="flex flex-col sm:flex-row gap-4 justify-center items-stretch sm:items-center mt-10 px-2"
-            onMouseEnter={() => setIsHovering(true)}
-            onMouseLeave={() => setIsHovering(false)}
-          >
-            {isAuthenticated ? (
-              <Button size="lg" beam shockwave onClick={() => navigate('/dashboard')} className="w-full sm:w-auto min-w-[200px]">
-                <FaRocket className="mr-1" /> Launch Dashboard
-              </Button>
-            ) : (
-              <>
-                <Button size="lg" onClick={() => navigate('/login')} className="w-full sm:w-auto min-w-[180px]">
-                  Sign In
-                </Button>
-                <Button size="lg" variant="magenta" onClick={() => navigate('/register')} className="w-full sm:w-auto min-w-[180px]">
-                  Join Now
-                </Button>
-              </>
-            )}
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: showContent ? 1 : 0 }}
-            transition={{ delay: 0.8 }}
-            className="mt-10 inline-flex justify-center"
-          >
-            <button
-              type="button"
-              aria-label="Change visual theme"
-              onClick={() => setShowThemeSelector(true)}
-              className="aura-glass inline-flex items-center justify-center w-12 h-12 rounded-full hover:border-cyan-400/40 transition-colors"
-            >
-              <FaPalette className="text-cyan-400" />
-            </button>
-          </motion.div>
-
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+          <div className="feature-row" id="features">
             {[
-              { Icon: FaBrain, title: 'Smart Quizzes', desc: 'Adaptive challenges tuned to how you think.' },
-              { Icon: FaBolt, title: 'Live Battles', desc: 'Compete in real time with friends and rivals.' },
-              { Icon: FaRocket, title: 'Instant Insights', desc: 'Feedback and analytics the moment you finish.' },
-            ].map(({ Icon, title, desc }, index) => (
+              { Icon: FaBrain, eyebrow: '01 / ADAPTIVE', title: 'Learning that evolves.', desc: 'Difficulty follows your focus, so every question hits the edge of your ability.' },
+              { Icon: FaBolt, eyebrow: '02 / LIVE', title: 'Study, but make it social.', desc: 'Challenge sharp minds, climb the ranks, and make progress feel electric.' },
+              { Icon: FaRocket, eyebrow: '03 / AURA AI', title: 'Know what to fix next.', desc: 'Instant feedback surfaces the gaps that matter before they become blockers.' },
+            ].map(({ Icon, eyebrow, title, desc }, index) => (
               <motion.div
                 key={title}
                 className="aura-glass aura-glass-card text-left group"
@@ -563,14 +511,24 @@ export default function IntroScreen() {
                 whileHover={{ y: -4 }}
               >
                 <TiltCard>
-                  <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center mb-4 group-hover:shadow-aura-cyan transition-shadow">
+                  <div className="feature-card-top">
+                    <span className="feature-eyebrow">{eyebrow}</span>
+                    <span className="feature-arrow" aria-hidden="true">↗</span>
+                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center my-4 group-hover:shadow-aura-cyan transition-shadow">
                     <Icon className="text-xl text-cyan-400" />
                   </div>
-                  <h3 className="aura-display text-sm text-white mb-2">{title}</h3>
+                  <h3 className="aura-display text-base text-white mb-2">{title}</h3>
                   <p className="text-sm text-slate-400 leading-relaxed">{desc}</p>
                 </TiltCard>
               </motion.div>
             ))}
+          </div>
+
+          {/* Footer strip (reference structure) */}
+          <div className="site-footer-strip">
+            <span>HSCAURA / FOCUS WITHOUT LIMITS</span>
+            <span>SCROLL TO ENTER <b>↓</b></span>
           </div>
         </motion.div>
       </div>
