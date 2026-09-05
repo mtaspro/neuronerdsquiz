@@ -11,7 +11,7 @@ export const useDarkMode = () => {
 };
 
 export const DarkModeProvider = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -21,10 +21,9 @@ export const DarkModeProvider = ({ children }) => {
     if (savedTheme) {
       setIsDarkMode(savedTheme === 'dark');
     } else {
-      // Check system preference
-      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setIsDarkMode(systemPrefersDark);
-      localStorage.setItem('theme', systemPrefersDark ? 'dark' : 'light');
+      // Default to dark theme for HSCAura
+      setIsDarkMode(true);
+      localStorage.setItem('theme', 'dark');
     }
     
     setIsLoaded(true);

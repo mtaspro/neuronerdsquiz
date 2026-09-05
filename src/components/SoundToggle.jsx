@@ -18,11 +18,11 @@ const SoundToggle = ({ className = '' }) => {
   return (
     <button
       onClick={toggleSound}
-      className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+      className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors border ${
         soundEnabled 
-          ? 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400' 
-          : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
-      } hover:bg-opacity-80 ${className}`}
+          ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25' 
+          : 'bg-slate-800/80 border-slate-700 text-slate-400 hover:bg-slate-700/80 hover:text-slate-200'
+      } ${className}`}
       title={soundEnabled ? 'Disable sounds' : 'Enable sounds'}
     >
       {soundEnabled ? <FaVolumeUp /> : <FaVolumeMute />}

@@ -758,7 +758,7 @@ const Dashboard = () => {
                      (battleMode === 'multi' && multiChapterSelection.length > 0 && multiChapterSelection.reduce((total, item) => total + item.questions, 0) >= 5)) &&
                     (!activeBattleRoom || activeBattleRoom.status !== 'waiting')
                       ? 'premium-button' 
-                      : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                      : 'bg-slate-800/60 border border-slate-700/50 text-slate-500 cursor-not-allowed'
                   }`}
                   style={
                     ((battleMode === 'single' && selectedBattleChapter) || 
@@ -815,15 +815,15 @@ const Dashboard = () => {
             {/* Join Battle - For all users */}
             <div className="space-y-3">
               {activeBattleRoom && (
-                <div className={`border rounded-lg p-3 mb-3 ${
+                <div className={`border rounded-lg p-3 mb-3 backdrop-blur-sm ${
                   userInBattle 
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                    : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                    ? 'bg-blue-950/40 border-blue-500/40 text-blue-200'
+                    : 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
                 }`}>
                   <div className={`text-sm font-semibold mb-1 ${
                     userInBattle 
-                      ? 'text-blue-800 dark:text-blue-200'
-                      : 'text-green-800 dark:text-green-200'
+                      ? 'text-blue-300'
+                      : 'text-emerald-300'
                   }`}>
                     {userInBattle ? '🔄 Your Active Battle!' : '⚔️ Battle Available!'}
                     {activeBattleRoom.mode === 'multi' && (
@@ -832,8 +832,8 @@ const Dashboard = () => {
                   </div>
                   <div className={`text-xs ${
                     userInBattle 
-                      ? 'text-blue-600 dark:text-blue-300'
-                      : 'text-green-600 dark:text-green-300'
+                      ? 'text-blue-300/80'
+                      : 'text-emerald-300/80'
                   }`}>
                     {activeBattleRoom.mode === 'multi' ? (
                       <div>
@@ -858,7 +858,7 @@ const Dashboard = () => {
                 className={`w-full font-bold py-4 px-6 rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                   activeBattleRoom && (activeBattleRoom.status === 'waiting' || (activeBattleRoom.status === 'started' && userInBattle))
                     ? 'premium-button animate-pulse'
-                    : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                    : 'bg-slate-800/60 border border-slate-700/50 text-slate-500 cursor-not-allowed'
                 }`}
                 style={
                   activeBattleRoom && (activeBattleRoom.status === 'waiting' || (activeBattleRoom.status === 'started' && userInBattle))
@@ -884,19 +884,19 @@ const Dashboard = () => {
                 </div>
               </motion.button>
               {!activeBattleRoom ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                <p className="text-sm text-slate-400 text-center">
                   Waiting for an admin to create a battle room...
                 </p>
               ) : userInBattle ? (
-                <p className="text-sm text-blue-500 dark:text-blue-400 text-center">
+                <p className="text-sm text-cyan-400 text-center">
                   You can rejoin your active battle anytime! Your progress is saved.
                 </p>
               ) : activeBattleRoom.status === 'started' ? (
-                <p className="text-sm text-orange-500 dark:text-orange-400 text-center">
+                <p className="text-sm text-orange-400 text-center">
                   Battle has started. Only participants can rejoin.
                 </p>
               ) : activeBattleRoom.status === 'ended' && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                <p className="text-sm text-slate-400 text-center">
                   Battle has ended. Wait for the next one!
                 </p>
               )}
@@ -928,7 +928,7 @@ const Dashboard = () => {
             <h4 className="aura-display text-lg text-white mb-4">Available Quizzes</h4>
             {chaptersLoading ? (
               <div className="text-center py-8">
-                <div className="text-cyan-600 dark:text-cyan-400">Loading quizzes...</div>
+                <div className="text-cyan-400 font-medium">Loading quizzes...</div>
               </div>
             ) : (
               <div className="space-y-4 max-h-96 overflow-y-auto pr-2 aura-scrollbar">
@@ -943,11 +943,11 @@ const Dashboard = () => {
                   acc[subject].push(chapter);
                   return acc;
                 }, {})).map(([subject, subjectChapters]) => (
-                  <div key={subject} className="bg-gray-100/80 dark:bg-gray-700/80 rounded-lg p-4 border border-gray-200/50 dark:border-gray-600/50">
-                    <h5 className="font-bold text-purple-600 dark:text-purple-400 mb-3">{subject}</h5>
+                  <div key={subject} className="bg-slate-900/60 rounded-xl p-4 border border-slate-700/60 backdrop-blur-sm">
+                    <h5 className="font-bold text-purple-400 mb-3 tracking-wide">{subject}</h5>
                     <div className="space-y-2">
                       {subjectChapters.map(chapter => (
-                        <div key={chapter._id || chapter.name} className="bg-black/20 rounded p-3 border border-cyan-500/10">
+                        <div key={chapter._id || chapter.name} className="bg-slate-800/60 hover:bg-slate-800/90 rounded-lg p-3 border border-cyan-500/20 transition-all">
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
                               <h6 className="font-semibold text-cyan-300">{chapter.name}</h6>
@@ -960,7 +960,7 @@ const Dashboard = () => {
                                 {chapter.questionCount || 0} questions
                               </div>
                               {chapter.practiceMode && (
-                                <div className="text-xs text-orange-400">Practice Mode</div>
+                                <div className="text-xs text-orange-400 font-medium">Practice Mode</div>
                               )}
                             </div>
                           </div>

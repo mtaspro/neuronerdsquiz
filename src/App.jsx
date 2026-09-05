@@ -211,7 +211,6 @@ function Navbar() {
               <Link to={isAuthenticated ? "/dashboard" : "/login"} className={navLinkClass('/dashboard')}>Dashboard</Link>
               <Link to={isAuthenticated ? "/leaderboard" : "/login"} className={navLinkClass('/leaderboard')}>Leaderboard</Link>
               <Link to={isAuthenticated ? "/badges" : "/login"} className={navLinkClass('/badges')}>Badges</Link>
-              <Link to={isAuthenticated ? "/progress" : "/login"} className={navLinkClass('/progress')}>Progress</Link>
               {isAuthenticated && (
                 <Link to="/virtual-lab" className={navLinkClass('/virtual-lab')}>Virtual Lab</Link>
               )}
@@ -261,7 +260,6 @@ function Navbar() {
                 <Link to={isAuthenticated ? "/dashboard" : "/login"} onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Dashboard</Link>
                 <Link to={isAuthenticated ? "/leaderboard" : "/login"} onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Leaderboard</Link>
                 <Link to={isAuthenticated ? "/badges" : "/login"} onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Badges</Link>
-                <Link to={isAuthenticated ? "/progress" : "/login"} onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Progress</Link>
                 {isAuthenticated && (
                   <Link to="/virtual-lab" onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Virtual Lab</Link>
                 )}
