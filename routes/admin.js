@@ -565,10 +565,8 @@ router.post('/parse-bulk-questions', sessionMiddleware, requireAdmin, async (req
       let currentSection = 'question';
       
       for (const line of lines) {
-        if (line.match(/^[কখগঘA-D]\./)) {
         if (line.match(/^[কখগঘA-Da-d][\.\)]/)) {
           currentSection = 'options';
-          options.push(line.substring(2).trim());
           const optionText = line.replace(/^[কখগঘA-Da-d][\.\)]\s*/, '').trim();
           options.push(optionText);
         } else if (line.startsWith('Correct Answer:')) {
@@ -609,20 +607,16 @@ router.post('/parse-bulk-questions', sessionMiddleware, requireAdmin, async (req
         cleanAnswer = matchingOpt;
       }
       
-      if (question && options.length >= 2) {
       if (cleanQuestion && options.length >= 2) {
         questions.push({
-          question: question,
           question: cleanQuestion,
           options: options,
-          correctAnswer: correctAnswer,
           correctAnswer: cleanAnswer,
           explanation: explanation
         });
       }
     }
     
-    console.log('Parsed', questions.length, 'questions using regex parser');
     console.log('Parsed', questions.length, 'questions using math-aware regex parser');
     res.json({ questions });
     
