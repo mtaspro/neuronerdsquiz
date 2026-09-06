@@ -1,32 +1,19 @@
-import React from 'react';
-import { MathJax, MathJaxContext } from 'better-react-mathjax';
+import React, { useMemo } from 'react';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
 
-// MathJax configuration
-const mathJaxConfig = {
-  loader: { load: ['[tex]/html'] },
-  tex: {
-    packages: { '[+]': ['html'] },
-    inlineMath: [['$', '$'], ['\\(', '\\)'], ['( ', ' )']],
-    displayMath: [['$$', '$$'], ['\\[', '\\]'], ['[ ', ' ]']],
-    processEscapes: true,
-    processEnvironments: true
-  },
-  options: {
-    ignoreHtmlClass: 'tex2jax_ignore',
-    processHtmlClass: 'tex2jax_process'
-  }
-};
-
-// Context provider component
-export function MathProvider({ children }) {
-  return (
-    <MathJaxContext config={mathJaxConfig}>
-      {children}
-    </MathJaxContext>
-  );
+// Escape HTML special characters in non-math segments
+function escapeHtml(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
-// Helper to ensure LaTeX formulas have standard MathJax delimiters
+// Helper to ensure LaTeX formulas have standard delimiters
 export function normalizeMathDelimiters(str) {
   if (!str || typeof str !== 'string') return str;
 
@@ -58,24 +45,82 @@ export function normalizeMathDelimiters(str) {
   return content;
 }
 
-// Main MathText component
-export default function MathText({ children, inline = false, className = "" }) {
-  if (!children) return null;
-  
-  let content = typeof children === 'string' ? children : String(children);
-  content = normalizeMathDelimiters(content);
-  
-  // Convert NeuraX format to standard LaTeX delimiters
-  content = content
-    .replace(/\( ([^)]+) \)/g, '\\($1\\)')
-    .replace(/\[ ([^\]]+) \]/g, '\\[$1\\]');
-  
+// Convert mixed text + math string into KaTeX HTML
+export function renderWithKatex(rawStr, inline = false) {
+  if (!rawStr || typeof rawStr !== 'string') return '';
+
+  let str = normalizeMathDelimiters(rawStr);
+
+  // Match $$...$$, $...$, \[...\], \(...\)
+  const mathRegex = /(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\))/g;
+
+  let lastIndex = 0;
+  let html = '';
+  let match;
+
+  while ((match = mathRegex.exec(str)) !== null) {
+    // Text before match
+    const textBefore = str.substring(lastIndex, match.index);
+    if (textBefore) {
+      html += escapeHtml(textBefore);
+    }
+
+    const fullMatch = match[0];
+    const isDisplay = fullMatch.startsWith('$$') || fullMatch.startsWith('\\[');
+    let formula = '';
+
+    if (fullMatch.startsWith('$$')) {
+      formula = fullMatch.slice(2, -2);
+    } else if (fullMatch.startsWith('$')) {
+      formula = fullMatch.slice(1, -1);
+    } else if (fullMatch.startsWith('\\[')) {
+      formula = fullMatch.slice(2, -2);
+    } else if (fullMatch.startsWith('\\(')) {
+      formula = fullMatch.slice(2, -2);
+    }
+
+    try {
+      const rendered = katex.renderToString(formula.trim(), {
+        displayMode: isDisplay && !inline,
+        throwOnError: false,
+        strict: false
+      });
+      html += rendered;
+    } catch {
+      html += escapeHtml(fullMatch);
+    }
+
+    lastIndex = mathRegex.lastIndex;
+  }
+
+  // Trailing text after last match
+  const remaining = str.substring(lastIndex);
+  if (remaining) {
+    html += escapeHtml(remaining);
+  }
+
+  return html;
+}
+
+// Context provider component (kept for backward compatibility with App.jsx)
+export function MathProvider({ children }) {
+  return <>{children}</>;
+}
+
+// Main MathText component using KaTeX
+export default function MathText({ children, inline = false, className = '' }) {
+  if (!children && children !== 0) return null;
+
+  const content = typeof children === 'string' ? children : String(children);
+
+  const renderedHtml = useMemo(() => {
+    return renderWithKatex(content, inline);
+  }, [content, inline]);
+
   return (
-    <MathJax 
-      inline={inline} 
-      className={`math-text ${className}`}
-    >
-      {content}
-    </MathJax>
+    <span
+      className={`math-text ${inline ? 'inline' : 'inline-block'} ${className}`}
+      dangerouslySetInnerHTML={{ __html: renderedHtml }}
+    />
   );
 }

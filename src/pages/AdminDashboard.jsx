@@ -529,8 +529,6 @@ export default function AdminDashboard() {
       ];
     }
     
-    // Find correct answer index
-    const correctAnswerIndex = options.findIndex(opt => opt === parsedQ.correctAnswer);
     // Find correct answer index (exact, delimiter-tolerant, or letter-based)
     let correctAnswerIndex = options.findIndex(opt => opt && opt.trim() === parsedQ.correctAnswer?.trim());
     if (correctAnswerIndex === -1 && parsedQ.correctAnswer) {
@@ -577,7 +575,6 @@ export default function AdminDashboard() {
       ];
       
       const validOptions = options.filter(opt => opt && opt.trim());
-      const hasValidCorrectAnswer = pq.correctAnswer && validOptions.includes(pq.correctAnswer);
       
       let correctAnswerIndex = validOptions.findIndex(opt => opt.trim() === pq.correctAnswer?.trim());
       if (correctAnswerIndex === -1 && pq.correctAnswer) {
@@ -595,7 +592,6 @@ export default function AdminDashboard() {
       const hasValidCorrectAnswer = correctAnswerIndex >= 0;
       
       if (pq.question && pq.question.trim() && validOptions.length >= 2 && hasValidCorrectAnswer) {
-        validQuestions.push({ pq, index });
         validQuestions.push({ pq, index, resolvedAnswer: validOptions[correctAnswerIndex] });
       } else {
         invalidQuestions.push(index);
@@ -610,7 +606,6 @@ export default function AdminDashboard() {
     if (!window.confirm(`Add ${validQuestions.length} valid questions to "${selectedChapter}"? ${invalidQuestions.length} invalid questions will remain for manual fixing.`)) return;
     
     try {
-      const questionsToAdd = validQuestions.map(({ pq }) => {
       const questionsToAdd = validQuestions.map(({ pq, resolvedAnswer }) => {
         const options = Array.isArray(pq.options) ? pq.options : [
           pq.options['ক'] || pq.options['A'] || '',
@@ -620,12 +615,10 @@ export default function AdminDashboard() {
         ];
         
         const validOptions = options.filter(opt => opt && opt.trim());
-        const correctAnswerIndex = validOptions.findIndex(opt => opt === pq.correctAnswer);
         
         return sanitizeObject({
           question: pq.question,
           options: validOptions,
-          correctAnswer: validOptions[correctAnswerIndex],
           correctAnswer: resolvedAnswer,
           chapter: selectedChapter,
           duration: 60,
@@ -1258,7 +1251,6 @@ export default function AdminDashboard() {
                     <h4 className="font-semibold text-gray-800 dark:text-white">📋 Step-by-Step Instructions:</h4>
                     <button
                       onClick={() => {
-                        const script = `javascript:(function () {\n    function extractChorchaQuestions() {\n        const questions = [];\n        console.log('Starting extraction (new layout)...');\n\n        // Each question card\n        const questionCards = document.querySelectorAll(\n            'div.space-y-4 > div > div.w-full > div.border.rounded-xl'\n        );\n\n        questionCards.forEach((card, index) => {\n            try {\n                if (index % 10 === 0) console.log(\`Processing question \${index + 1}...\`);\n\n                // --- Question text ---\n                const questionTextWrapper = card.querySelector(\n                    '.text-card-foreground .px-1'\n                );\n                if (!questionTextWrapper) return;\n\n                // Join all <p> elements inside as one question (with line breaks)\n                const questionParts = Array.from(\n                    questionTextWrapper.querySelectorAll('p')\n                ).map(p => p.textContent.trim()).filter(Boolean);\n\n                const questionText = questionParts.join('\\n');\n                if (!questionText) return;\n\n                // --- Options ---\n                const optionButtons = card.querySelectorAll(\n                    '.grid.md\\\\:grid-cols-2.grid-cols-1.gap-2 button'\n                );\n                if (!optionButtons.length) return;\n\n                const options = {};\n                let correctAnswer = '';\n\n                optionButtons.forEach(button => {\n                    const letterSpan = button.querySelector('span');\n                    const optionTextWrapper = button.querySelector('.flex-1 .px-1');\n\n                    if (!letterSpan || !optionTextWrapper) return;\n\n                    const letter = letterSpan.textContent.trim();\n                    const optionText = optionTextWrapper.textContent.trim();\n\n                    if (!letter || !optionText) return;\n\n                    options[letter] = optionText;\n\n                    // Detect correct option:\n                    // Correct one has orange-ish classes like bg-[#F59E0B1F], border-[#F59E0B]\n                    const btnClass = button.className || '';\n                    const spanClass = letterSpan.className || '';\n\n                    const isCorrect =\n                        btnClass.includes('F59E0B') ||\n                        spanClass.includes('F59E0B');\n\n                    if (isCorrect) {\n                        correctAnswer = optionText;\n                    }\n                });\n\n                // --- Explanation ---\n                let explanation = '';\n                const explanationContainer = card.querySelector('.card-bekkha');\n                if (explanationContainer) {\n                    explanation = explanationContainer.textContent\n                        .replace(/\\s+\\n/g, '\\n')\n                        .replace(/\\n\\s+/g, '\\n')\n                        .trim();\n                }\n\n                if (questionText && Object.keys(options).length >= 2) {\n                    questions.push({\n                        question: questionText,\n                        options,\n                        correctAnswer,\n                        explanation\n                    });\n                }\n            } catch (err) {\n                console.log(\`Error processing question \${index + 1}:\`, err);\n            }\n        });\n\n        return questions;\n    }\n\n    const questions = extractChorchaQuestions();\n\n    const formattedText = questions.map((q, idx) => {\n        const optionsText = Object.entries(q.options)\n            .map(([letter, text]) => \`\${letter}. \${text}\`)\n            .join('\\n');\n\n        return \`Q\${idx + 1}. \${q.question}\\n\${optionsText}\\nCorrect Answer: \${q.correctAnswer || '(not detected)'}\\nExplanation: \${q.explanation || ''}\`;\n    }).join('\\n\\n---\\n\\n');\n\n    const popup = window.open('', '_blank', 'width=900,height=700,scrollbars=yes');\n    popup.document.write(\`\\n        <html>\\n        <head><title>Extracted Questions (\${questions.length})</title></head>\\n        <body style="font-family: Arial; padding: 20px;">\\n            <h2>Extracted \${questions.length} Questions</h2>\\n            <button onclick="navigator.clipboard.writeText(document.getElementById('questions').textContent); alert('Copied!');"\\n                    style="background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 20px;">\\n                Copy All Questions\\n            </button>\\n            <pre id="questions" style="background: #f5f5f5; padding: 15px; border-radius: 5px; white-space: pre-wrap;">\${formattedText}</pre>\\n        </body>\\n        </html>\\n    \`);\n})();`;
                         const script = `javascript:(function () {
     function extractMathText(node) {
         if (!node) return '';
@@ -1551,43 +1543,18 @@ export default function AdminDashboard() {
 
             {/* Parsed Questions Preview */}
             {parsedQuestions.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 mb-6">
               <div className="bg-slate-900/80 p-6 rounded-lg shadow-lg border border-slate-700/60 mb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Parsed Questions ({parsedQuestions.length})</h3>
                   <h3 className="text-xl font-semibold text-white">Parsed Questions ({parsedQuestions.length})</h3>
                   <button
                     onClick={handleAddAllQuestions}
                     disabled={!selectedChapter || loading}
-                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors"
                     className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors font-medium shadow"
                   >
                     {loading ? 'Adding...' : 'Add All Questions'}
                   </button>
                 </div>
-                <div className="space-y-4 max-h-96 overflow-y-auto" data-lenis-prevent>
-                  {parsedQuestions.map((pq, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded border">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium text-gray-800 dark:text-white">{pq.question}</h4>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleAddParsedQuestion(pq, index)}
-                            className={`px-2 py-1 rounded text-xs text-white ${
-                              usedQuestions.has(index)
-                                ? 'bg-green-700 cursor-default'
-                                : 'bg-green-600 hover:bg-green-700'
-                            }`}
-                            disabled={usedQuestions.has(index)}
-                          >
-                            {usedQuestions.has(index) ? 'Used' : 'Use'}
-                          </button>
-                          <button
-                            onClick={() => handleRemoveParsedQuestion(index)}
-                            className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs text-white"
-                          >
-                            Remove
-                          </button>
+                <div className="space-y-4 max-h-[600px] overflow-y-auto" data-lenis-prevent>
                   {parsedQuestions.map((pq, index) => {
                     const optionsList = Array.isArray(pq.options)
                       ? pq.options.map((opt, i) => [(['ক', 'খ', 'গ', 'ঘ'][i] || i + 1), opt])
@@ -1638,14 +1605,6 @@ export default function AdminDashboard() {
                           )}
                         </div>
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                        {Object.entries(pq.options).map(([key, value]) => (
-                          <div key={key}>{key}. {value}</div>
-                        ))}
-                        {pq.explanation && <div className="text-blue-600 dark:text-blue-400 mt-2">💡 {pq.explanation}</div>}
-                      </div>
-                    </div>
-                  ))}
                     );
                   })}
                 </div>
