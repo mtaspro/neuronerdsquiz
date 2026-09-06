@@ -11,9 +11,25 @@ const sanitizeConfig = {
 };
 
 // Sanitize user input to prevent XSS
+// Sanitize user input to prevent XSS while preserving LaTeX/MathJax formulas
 export const sanitizeInput = (input) => {
   if (typeof input !== 'string') return input;
   return DOMPurify.sanitize(input, sanitizeConfig);
+
+  // Protect math blocks from DOMPurify stripping < or > in formulas (e.g. $x < 5$)
+  const mathTokens = [];
+  const protectedInput = input.replace(/(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\))/g, (match) => {
+    const placeholder = `___MATH_TOKEN_${mathTokens.length}___`;
+    mathTokens.push(match);
+    return placeholder;
+  });
+
+  const sanitized = DOMPurify.sanitize(protectedInput, sanitizeConfig);
+
+  // Restore protected math blocks
+  return sanitized.replace(/___MATH_TOKEN_(\d+)___/g, (_, index) => {
+    return mathTokens[parseInt(index, 10)] ?? '';
+  });
 };
 
 // Sanitize HTML content (for rich text)

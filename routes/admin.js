@@ -566,8 +566,11 @@ router.post('/parse-bulk-questions', sessionMiddleware, requireAdmin, async (req
       
       for (const line of lines) {
         if (line.match(/^[কখগঘA-D]\./)) {
+        if (line.match(/^[কখগঘA-Da-d][\.\)]/)) {
           currentSection = 'options';
           options.push(line.substring(2).trim());
+          const optionText = line.replace(/^[কখগঘA-Da-d][\.\)]\s*/, '').trim();
+          options.push(optionText);
         } else if (line.startsWith('Correct Answer:')) {
           correctAnswer = line.replace('Correct Answer:', '').trim();
           currentSection = 'answer';
@@ -580,18 +583,47 @@ router.post('/parse-bulk-questions', sessionMiddleware, requireAdmin, async (req
           explanation += (explanation ? ' ' : '') + line;
         }
       }
+
+      // Clean leading question numbering like "1. ", "Q1. ", "৫. "
+      let cleanQuestion = question.trim().replace(/^(?:Q\d+[\.\:\s]+|\d+[\.\:\s]+|[০-৯]+[\.\:\s]+)+/i, '').trim();
+      if (!cleanQuestion) cleanQuestion = question.trim();
+
+      // Clean correct answer and match against options
+      let cleanAnswer = correctAnswer.trim();
+      const prefixMatch = cleanAnswer.match(/^[কখগঘA-Da-d][\.\)]\s*(.+)$/);
+      if (prefixMatch && prefixMatch[1]) {
+        cleanAnswer = prefixMatch[1].trim();
+      } else {
+        const letterMap = { 'ক': 0, 'খ': 1, 'গ': 2, 'ঘ': 3, 'A': 0, 'B': 1, 'C': 2, 'D': 3, 'a': 0, 'b': 1, 'c': 2, 'd': 3 };
+        if (letterMap[cleanAnswer] !== undefined && options[letterMap[cleanAnswer]]) {
+          cleanAnswer = options[letterMap[cleanAnswer]];
+        }
+      }
+
+      // Match option exactly, or delimiter-tolerant ($10^{39}$ vs 10^{39})
+      const matchingOpt = options.find(opt => 
+        opt.trim() === cleanAnswer || 
+        opt.replace(/\$/g, '').trim() === cleanAnswer.replace(/\$/g, '').trim()
+      );
+      if (matchingOpt) {
+        cleanAnswer = matchingOpt;
+      }
       
       if (question && options.length >= 2) {
+      if (cleanQuestion && options.length >= 2) {
         questions.push({
           question: question,
+          question: cleanQuestion,
           options: options,
           correctAnswer: correctAnswer,
+          correctAnswer: cleanAnswer,
           explanation: explanation
         });
       }
     }
     
     console.log('Parsed', questions.length, 'questions using regex parser');
+    console.log('Parsed', questions.length, 'questions using math-aware regex parser');
     res.json({ questions });
     
   } catch (error) {

@@ -531,6 +531,20 @@ export default function AdminDashboard() {
     
     // Find correct answer index
     const correctAnswerIndex = options.findIndex(opt => opt === parsedQ.correctAnswer);
+    // Find correct answer index (exact, delimiter-tolerant, or letter-based)
+    let correctAnswerIndex = options.findIndex(opt => opt && opt.trim() === parsedQ.correctAnswer?.trim());
+    if (correctAnswerIndex === -1 && parsedQ.correctAnswer) {
+      correctAnswerIndex = options.findIndex(opt => 
+        opt && opt.replace(/\$/g, '').trim() === parsedQ.correctAnswer.replace(/\$/g, '').trim()
+      );
+    }
+    if (correctAnswerIndex === -1 && parsedQ.correctAnswer) {
+      const letterMap = { 'ক': 0, 'খ': 1, 'গ': 2, 'ঘ': 3, 'A': 0, 'B': 1, 'C': 2, 'D': 3, 'a': 0, 'b': 1, 'c': 2, 'd': 3 };
+      const mappedIdx = letterMap[parsedQ.correctAnswer.trim()];
+      if (mappedIdx !== undefined && mappedIdx < options.length) {
+        correctAnswerIndex = mappedIdx;
+      }
+    }
     
     setNewQuestion({
       question: parsedQ.question,
@@ -565,8 +579,24 @@ export default function AdminDashboard() {
       const validOptions = options.filter(opt => opt && opt.trim());
       const hasValidCorrectAnswer = pq.correctAnswer && validOptions.includes(pq.correctAnswer);
       
+      let correctAnswerIndex = validOptions.findIndex(opt => opt.trim() === pq.correctAnswer?.trim());
+      if (correctAnswerIndex === -1 && pq.correctAnswer) {
+        correctAnswerIndex = validOptions.findIndex(opt => 
+          opt.replace(/\$/g, '').trim() === pq.correctAnswer.replace(/\$/g, '').trim()
+        );
+      }
+      if (correctAnswerIndex === -1 && pq.correctAnswer) {
+        const letterMap = { 'ক': 0, 'খ': 1, 'গ': 2, 'ঘ': 3, 'A': 0, 'B': 1, 'C': 2, 'D': 3, 'a': 0, 'b': 1, 'c': 2, 'd': 3 };
+        const mappedIdx = letterMap[pq.correctAnswer.trim()];
+        if (mappedIdx !== undefined && mappedIdx < validOptions.length) {
+          correctAnswerIndex = mappedIdx;
+        }
+      }
+      const hasValidCorrectAnswer = correctAnswerIndex >= 0;
+      
       if (pq.question && pq.question.trim() && validOptions.length >= 2 && hasValidCorrectAnswer) {
         validQuestions.push({ pq, index });
+        validQuestions.push({ pq, index, resolvedAnswer: validOptions[correctAnswerIndex] });
       } else {
         invalidQuestions.push(index);
       }
@@ -581,6 +611,7 @@ export default function AdminDashboard() {
     
     try {
       const questionsToAdd = validQuestions.map(({ pq }) => {
+      const questionsToAdd = validQuestions.map(({ pq, resolvedAnswer }) => {
         const options = Array.isArray(pq.options) ? pq.options : [
           pq.options['ক'] || pq.options['A'] || '',
           pq.options['খ'] || pq.options['B'] || '',
@@ -595,6 +626,7 @@ export default function AdminDashboard() {
           question: pq.question,
           options: validOptions,
           correctAnswer: validOptions[correctAnswerIndex],
+          correctAnswer: resolvedAnswer,
           chapter: selectedChapter,
           duration: 60,
           explanation: pq.explanation || '',
@@ -1227,6 +1259,214 @@ export default function AdminDashboard() {
                     <button
                       onClick={() => {
                         const script = `javascript:(function () {\n    function extractChorchaQuestions() {\n        const questions = [];\n        console.log('Starting extraction (new layout)...');\n\n        // Each question card\n        const questionCards = document.querySelectorAll(\n            'div.space-y-4 > div > div.w-full > div.border.rounded-xl'\n        );\n\n        questionCards.forEach((card, index) => {\n            try {\n                if (index % 10 === 0) console.log(\`Processing question \${index + 1}...\`);\n\n                // --- Question text ---\n                const questionTextWrapper = card.querySelector(\n                    '.text-card-foreground .px-1'\n                );\n                if (!questionTextWrapper) return;\n\n                // Join all <p> elements inside as one question (with line breaks)\n                const questionParts = Array.from(\n                    questionTextWrapper.querySelectorAll('p')\n                ).map(p => p.textContent.trim()).filter(Boolean);\n\n                const questionText = questionParts.join('\\n');\n                if (!questionText) return;\n\n                // --- Options ---\n                const optionButtons = card.querySelectorAll(\n                    '.grid.md\\\\:grid-cols-2.grid-cols-1.gap-2 button'\n                );\n                if (!optionButtons.length) return;\n\n                const options = {};\n                let correctAnswer = '';\n\n                optionButtons.forEach(button => {\n                    const letterSpan = button.querySelector('span');\n                    const optionTextWrapper = button.querySelector('.flex-1 .px-1');\n\n                    if (!letterSpan || !optionTextWrapper) return;\n\n                    const letter = letterSpan.textContent.trim();\n                    const optionText = optionTextWrapper.textContent.trim();\n\n                    if (!letter || !optionText) return;\n\n                    options[letter] = optionText;\n\n                    // Detect correct option:\n                    // Correct one has orange-ish classes like bg-[#F59E0B1F], border-[#F59E0B]\n                    const btnClass = button.className || '';\n                    const spanClass = letterSpan.className || '';\n\n                    const isCorrect =\n                        btnClass.includes('F59E0B') ||\n                        spanClass.includes('F59E0B');\n\n                    if (isCorrect) {\n                        correctAnswer = optionText;\n                    }\n                });\n\n                // --- Explanation ---\n                let explanation = '';\n                const explanationContainer = card.querySelector('.card-bekkha');\n                if (explanationContainer) {\n                    explanation = explanationContainer.textContent\n                        .replace(/\\s+\\n/g, '\\n')\n                        .replace(/\\n\\s+/g, '\\n')\n                        .trim();\n                }\n\n                if (questionText && Object.keys(options).length >= 2) {\n                    questions.push({\n                        question: questionText,\n                        options,\n                        correctAnswer,\n                        explanation\n                    });\n                }\n            } catch (err) {\n                console.log(\`Error processing question \${index + 1}:\`, err);\n            }\n        });\n\n        return questions;\n    }\n\n    const questions = extractChorchaQuestions();\n\n    const formattedText = questions.map((q, idx) => {\n        const optionsText = Object.entries(q.options)\n            .map(([letter, text]) => \`\${letter}. \${text}\`)\n            .join('\\n');\n\n        return \`Q\${idx + 1}. \${q.question}\\n\${optionsText}\\nCorrect Answer: \${q.correctAnswer || '(not detected)'}\\nExplanation: \${q.explanation || ''}\`;\n    }).join('\\n\\n---\\n\\n');\n\n    const popup = window.open('', '_blank', 'width=900,height=700,scrollbars=yes');\n    popup.document.write(\`\\n        <html>\\n        <head><title>Extracted Questions (\${questions.length})</title></head>\\n        <body style="font-family: Arial; padding: 20px;">\\n            <h2>Extracted \${questions.length} Questions</h2>\\n            <button onclick="navigator.clipboard.writeText(document.getElementById('questions').textContent); alert('Copied!');"\\n                    style="background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 20px;">\\n                Copy All Questions\\n            </button>\\n            <pre id="questions" style="background: #f5f5f5; padding: 15px; border-radius: 5px; white-space: pre-wrap;">\${formattedText}</pre>\\n        </body>\\n        </html>\\n    \`);\n})();`;
+                        const script = `javascript:(function () {
+    function extractMathText(node) {
+        if (!node) return '';
+        var clone = node.cloneNode(true);
+
+        // 1. Process KaTeX math containers
+        var katexList = clone.querySelectorAll('.katex');
+        katexList.forEach(function(kEl) {
+            var tex = '';
+            var annotation = kEl.querySelector('annotation');
+            if (annotation && annotation.textContent) {
+                tex = annotation.textContent.trim();
+            } else {
+                var mathml = kEl.querySelector('.katex-mathml');
+                if (mathml && mathml.textContent) {
+                    tex = mathml.textContent.trim();
+                }
+            }
+            if (tex) {
+                tex = tex.replace(/^\\$+|\\$+$/g, '').trim();
+                var isDisplay = kEl.classList.contains('katex-display') || kEl.closest('.katex-display') !== null;
+                var delimiter = isDisplay ? '$$' : '$';
+                kEl.replaceWith(document.createTextNode(' ' + delimiter + tex + delimiter + ' '));
+            } else {
+                var kHtml = kEl.querySelector('.katex-html');
+                if (kHtml) kHtml.remove();
+            }
+        });
+
+        // 2. Process MathJax v3 / v2 containers
+        var mjxContainers = clone.querySelectorAll('mjx-container, .MathJax, [class*="MathJax"]');
+        mjxContainers.forEach(function(mEl) {
+            var tex = mEl.getAttribute('aria-label') || mEl.getAttribute('alt') || '';
+            if (!tex) {
+                var annotation = mEl.querySelector('annotation');
+                if (annotation) tex = annotation.textContent;
+            }
+            if (!tex) {
+                var scriptTag = mEl.querySelector('script[type*="math/tex"]');
+                if (scriptTag) tex = scriptTag.textContent;
+            }
+            if (tex) {
+                tex = tex.replace(/^\\$+|\\$+$/g, '').trim();
+                var isDisplay = mEl.hasAttribute('display');
+                var delimiter = isDisplay ? '$$' : '$';
+                mEl.replaceWith(document.createTextNode(' ' + delimiter + tex + delimiter + ' '));
+            }
+        });
+
+        // 3. Process raw math tags
+        var mathTags = clone.querySelectorAll('math');
+        mathTags.forEach(function(mTag) {
+            var annotation = mTag.querySelector('annotation');
+            if (annotation && annotation.textContent) {
+                var tex = annotation.textContent.replace(/^\\$+|\\$+$/g, '').trim();
+                mTag.replaceWith(document.createTextNode(' $' + tex + '$ '));
+            }
+        });
+
+        // 4. Preserve line breaks
+        var brs = clone.querySelectorAll('br');
+        brs.forEach(function(br) { br.replaceWith(document.createTextNode('\\n')); });
+
+        var text = clone.textContent || '';
+        return text
+            .replace(/\\u00a0/g, ' ')
+            .split('\\n')
+            .map(function(l) { return l.replace(/[ \\t]+/g, ' ').trim(); })
+            .filter(Boolean)
+            .join('\\n')
+            .trim();
+    }
+
+    function extractChorchaQuestions() {
+        var questions = [];
+        console.log('Extracting Chorcha questions with LaTeX preservation...');
+
+        var questionCards = document.querySelectorAll(
+            'div.space-y-4 > div > div.w-full > div.border.rounded-xl'
+        );
+        if (!questionCards.length) {
+            questionCards = document.querySelectorAll('.border.rounded-xl');
+        }
+
+        questionCards.forEach(function(card, index) {
+            try {
+                // --- Question text ---
+                var questionTextWrapper = card.querySelector('.text-card-foreground .px-1') ||
+                                          card.querySelector('.text-card-foreground') ||
+                                          card.querySelector('.font-medium');
+                if (!questionTextWrapper) return;
+
+                var pElements = Array.from(questionTextWrapper.querySelectorAll('p'));
+                var questionText = pElements.length > 0
+                    ? pElements.map(function(p) { return extractMathText(p); }).filter(Boolean).join('\\n')
+                    : extractMathText(questionTextWrapper);
+
+                if (!questionText) return;
+
+                // Strip leading question numbering like "5. ", "Q5. ", "৫. "
+                questionText = questionText.replace(/^(?:Q?\\d+|[০-৯]+)[\\.\\:\\)]\\s*/i, '').trim();
+
+                // --- Options ---
+                var optionButtons = card.querySelectorAll(
+                    '.grid.md\\\\:grid-cols-2.grid-cols-1.gap-2 button, .grid button'
+                );
+                if (!optionButtons.length) return;
+
+                var options = {};
+                var correctAnswer = '';
+                var defaultLetters = ['ক', 'খ', 'গ', 'ঘ'];
+
+                optionButtons.forEach(function(button, btnIdx) {
+                    var letterSpan = button.querySelector('span');
+                    var optionTextWrapper = button.querySelector('.flex-1 .px-1') ||
+                                              button.querySelector('.flex-1') ||
+                                              button;
+
+                    var letter = letterSpan ? letterSpan.textContent.trim() : (defaultLetters[btnIdx] || ('Option ' + (btnIdx + 1)));
+                    letter = letter.replace(/[\\.\\)]/g, '').trim();
+
+                    var optionText = extractMathText(optionTextWrapper);
+                    optionText = optionText.replace(/^[কখগঘA-Da-d][\\.\\)]\\s*/, '').trim();
+
+                    if (!optionText) return;
+
+                    options[letter] = optionText;
+
+                    var btnClass = button.className || '';
+                    var spanClass = letterSpan ? letterSpan.className : '';
+                    var isCorrect =
+                        btnClass.includes('F59E0B') || spanClass.includes('F59E0B') ||
+                        btnClass.includes('amber') || spanClass.includes('amber') ||
+                        btnClass.includes('emerald') || spanClass.includes('emerald') ||
+                        btnClass.includes('green') || spanClass.includes('green') ||
+                        btnClass.includes('10B981') || btnClass.includes('22C55E') ||
+                        btnClass.includes('10b981') || btnClass.includes('22c55e') ||
+                        button.querySelector('svg[class*=\"amber\"], svg[class*=\"green\"], svg[class*=\"emerald\"]') !== null;
+
+                    if (isCorrect) {
+                        correctAnswer = optionText;
+                    }
+                });
+
+                // --- Explanation ---
+                var explanation = '';
+                var explanationContainer = card.querySelector('.card-bekkha') ||
+                                             card.querySelector('[class*=\"bekkha\"]') ||
+                                             card.querySelector('[class*=\"explanation\"]');
+                if (explanationContainer) {
+                    explanation = extractMathText(explanationContainer);
+                }
+
+                if (questionText && Object.keys(options).length >= 2) {
+                    questions.push({
+                        question: questionText,
+                        options: options,
+                        correctAnswer: correctAnswer,
+                        explanation: explanation
+                    });
+                }
+            } catch (err) {
+                console.log('Error processing question ' + (index + 1) + ':', err);
+            }
+        });
+
+        return questions;
+    }
+
+    var questions = extractChorchaQuestions();
+
+    var formattedText = questions.map(function(q, idx) {
+        var optionsText = Object.entries(q.options)
+            .map(function(entry) { return entry[0] + '. ' + entry[1]; })
+            .join('\\n');
+
+        return (idx + 1) + '. ' + q.question + '\\n' + optionsText + '\\nCorrect Answer: ' + (q.correctAnswer || '(not detected)') + '\\nExplanation: ' + (q.explanation || '');
+    }).join('\\n\\n---\\n\\n');
+
+    var popup = window.open('', '_blank', 'width=920,height=750,scrollbars=yes');
+    if (popup) {
+        var escaped = formattedText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        popup.document.write(
+            '<!DOCTYPE html><html><head><title>Extracted Questions (' + questions.length + ') with LaTeX</title>' +
+            '<meta charset=\"utf-8\">' +
+            '<style>' +
+            'body { font-family: system-ui, -apple-system, sans-serif; padding: 24px; background: #0f172a; color: #f8fafc; }' +
+            'h2 { color: #38bdf8; margin-bottom: 8px; }' +
+            '.subtitle { color: #94a3b8; margin-bottom: 20px; font-size: 14px; }' +
+            '.btn { background: #0284c7; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; }' +
+            '.btn:hover { background: #0369a1; }' +
+            '.btn-success { background: #16a34a; }' +
+            'pre { background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 8px; border: 1px solid #334155; white-space: pre-wrap; font-family: monospace; font-size: 13px; line-height: 1.6; max-height: 550px; overflow-y: auto; }' +
+            '</style></head><body>' +
+            '<h2>🚀 Extracted ' + questions.length + ' Questions (with LaTeX formulas)</h2>' +
+            '<p class=\"subtitle\">Formulas have been converted to standard $...$ notation for textbook rendering in HSCAura.</p>' +
+            '<div style=\"margin-bottom: 16px;\">' +
+            '<button class=\"btn\" id=\"copyBtn\" onclick=\"navigator.clipboard.writeText(document.getElementById(\\'questions\\').textContent); this.innerText = \\'✓ Copied!\\'; this.className = \\'btn btn-success\\'; setTimeout(() => { this.innerText = \\'📋 Copy All Questions\\'; this.className = \\'btn\\'; }, 2500);\">📋 Copy All Questions</button>' +
+            '</div>' +
+            '<pre id=\"questions\">' + escaped + '</pre>' +
+            '</body></html>'
+        );
+        popup.document.close();
+    } else {
+        alert('Popup blocked! Please allow popups or check console for extracted questions.');
+        console.log(formattedText);
+    }
+})();`;
                         navigator.clipboard.writeText(script).then(() => {
                           alert('Chorcha extractor script copied to clipboard! Paste it in browser console.');
                         }).catch(() => {
@@ -1251,6 +1491,7 @@ export default function AdminDashboard() {
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded border border-yellow-200 dark:border-yellow-700">
                   <p className="text-sm text-yellow-800 dark:text-yellow-300">
                     <strong>💡 Pro Tip:</strong> The script automatically extracts correct answers from the colored options!
+                    <strong>💡 Pro Tip:</strong> The script automatically extracts LaTeX & MathJax formulas (converting KaTeX annotations to clean <code>$...$</code> format) and detects correct answers!
                   </p>
                 </div>
               </div>
@@ -1311,12 +1552,15 @@ export default function AdminDashboard() {
             {/* Parsed Questions Preview */}
             {parsedQuestions.length > 0 && (
               <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 mb-6">
+              <div className="bg-slate-900/80 p-6 rounded-lg shadow-lg border border-slate-700/60 mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Parsed Questions ({parsedQuestions.length})</h3>
+                  <h3 className="text-xl font-semibold text-white">Parsed Questions ({parsedQuestions.length})</h3>
                   <button
                     onClick={handleAddAllQuestions}
                     disabled={!selectedChapter || loading}
                     className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors"
+                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors font-medium shadow"
                   >
                     {loading ? 'Adding...' : 'Add All Questions'}
                   </button>
@@ -1344,6 +1588,54 @@ export default function AdminDashboard() {
                           >
                             Remove
                           </button>
+                  {parsedQuestions.map((pq, index) => {
+                    const optionsList = Array.isArray(pq.options)
+                      ? pq.options.map((opt, i) => [(['ক', 'খ', 'গ', 'ঘ'][i] || i + 1), opt])
+                      : Object.entries(pq.options);
+                    return (
+                      <div key={index} className="bg-slate-800/80 border border-slate-700/60 p-4 rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium text-slate-100">
+                            <MathText>{pq.question}</MathText>
+                          </h4>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleAddParsedQuestion(pq, index)}
+                              className={`px-2.5 py-1 rounded text-xs text-white font-medium transition-colors ${
+                                usedQuestions.has(index)
+                                  ? 'bg-green-700 cursor-default'
+                                  : 'bg-green-600 hover:bg-green-700'
+                              }`}
+                              disabled={usedQuestions.has(index)}
+                            >
+                              {usedQuestions.has(index) ? 'Used' : 'Use'}
+                            </button>
+                            <button
+                              onClick={() => handleRemoveParsedQuestion(index)}
+                              className="bg-red-600 hover:bg-red-700 px-2.5 py-1 rounded text-xs text-white font-medium transition-colors"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                        <div className="text-sm text-slate-300 space-y-1.5 mt-2">
+                          {optionsList.map(([key, value]) => {
+                            const isCorrect = pq.correctAnswer && (
+                              value.trim() === pq.correctAnswer.trim() ||
+                              value.replace(/\$/g, '').trim() === pq.correctAnswer.replace(/\$/g, '').trim()
+                            );
+                            return (
+                              <div key={key} className={`flex items-center gap-1.5 ${isCorrect ? 'text-emerald-400 font-semibold' : ''}`}>
+                                <span className="font-mono text-slate-400">{key}.</span> <MathText inline>{value}</MathText>
+                                {isCorrect && <span className="text-xs bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded ml-2">✓ Correct</span>}
+                              </div>
+                            );
+                          })}
+                          {pq.explanation && (
+                            <div className="text-cyan-400 mt-2 text-xs border-t border-slate-700/50 pt-2">
+                              💡 <MathText>{pq.explanation}</MathText>
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
@@ -1354,6 +1646,8 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
