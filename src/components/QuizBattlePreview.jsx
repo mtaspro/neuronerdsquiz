@@ -32,7 +32,7 @@ export default function QuizBattlePreview({ active = true }) {
           <span className="aura-versus">VS</span>
           <div className="aura-player-right">
             <span className="aura-avatar aura-avatar-opp">A</span>
-            <strong>Alex Chen</strong>
+            <strong>Sakib</strong>
             <small>6 streak</small>
           </div>
         </div>
