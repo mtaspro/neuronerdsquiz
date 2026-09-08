@@ -30,7 +30,16 @@ const userSchema = new mongoose.Schema({
   whatsappNotifications: { type: Boolean, default: false },
   gender: { type: String, enum: ['male', 'female'], default: null },
   blockedFromBot: { type: Boolean, default: false },
-  hasSeenWhatsNew: { type: Boolean, default: false }
+  hasSeenWhatsNew: { type: Boolean, default: false },
+
+  // Verification & Subscription (HSC Aura)
+  sscRoll: { type: String, default: null },
+  sscRegistration: { type: String, default: null },
+  isVerifiedStudent: { type: Boolean, default: false },
+  subscription: {
+    isPro: { type: Boolean, default: false },
+    expiresAt: { type: Date, default: null }
+  }
 });
 
 // Hash password before saving

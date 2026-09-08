@@ -92,6 +92,99 @@ const userStatsSchema = new mongoose.Schema({
     },
     lostTo: String // username who took the badge
   }],
+
+  // Gamification & Economy (HSC Aura)
+  auraPoints: {
+    type: Number,
+    default: 0
+  },
+  inGameTokens: {
+    type: Number,
+    default: 0
+  },
+
+  // Scholarship Vault (Milestone Scholarship Rewards)
+  scholarshipVault: {
+    lockedAmount: {
+      type: Number,
+      default: 0
+    },
+    claimableAmount: {
+      type: Number,
+      default: 0
+    },
+    claimedTotal: {
+      type: Number,
+      default: 0
+    },
+    milestonesCompleted: {
+      type: [String],
+      default: []
+    } // e.g. ['hsc_1st_paper_all']
+  },
+
+  // Cosmetic Inventory (Roblox-style Cosmetics & Lifelines)
+  inventory: {
+    nameplates: {
+      type: [String],
+      default: ['default']
+    },
+    frames: {
+      type: [String],
+      default: ['default']
+    },
+    titles: {
+      type: [String],
+      default: ['Novice Adventurer']
+    },
+    lifelines: {
+      timeFreeze: {
+        type: Number,
+        default: 2
+      },
+      hintScroll: {
+        type: Number,
+        default: 2
+      },
+      fiftyFifty: {
+        type: Number,
+        default: 2
+      }
+    }
+  },
+
+  // Currently Equipped Cosmetics
+  equipped: {
+    nameplate: {
+      type: String,
+      default: 'default'
+    },
+    frame: {
+      type: String,
+      default: 'default'
+    },
+    title: {
+      type: String,
+      default: 'Novice Adventurer'
+    }
+  },
+
+  // Campaign Progress (Gamified Story Mode)
+  campaignProgress: [{
+    chapterId: {
+      type: String,
+      required: true
+    },
+    completedLevels: {
+      type: [Number],
+      default: []
+    },
+    stars: {
+      type: Map,
+      of: Number,
+      default: {}
+    }
+  }],
   
   lastUpdated: {
     type: Date,
@@ -109,4 +202,6 @@ userStatsSchema.index({ averageScore: -1 });
 userStatsSchema.index({ battlesWon: -1 });
 userStatsSchema.index({ averageTimePerQuiz: 1 });
 
-export default mongoose.model('UserStats', userStatsSchema);
+const UserStats = mongoose.model('UserStats', userStatsSchema);
+
+export default UserStats;
