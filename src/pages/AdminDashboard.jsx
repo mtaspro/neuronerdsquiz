@@ -10,6 +10,7 @@ import { useVirtualization } from '../hooks/useVirtualization';
 import { sanitizeInput, sanitizeObject } from '../utils/sanitizer';
 import GlobalLoader from '../components/GlobalLoader';
 import { useGlobalLoader } from '../hooks/useGlobalLoader';
+import { chorcha2Script } from '../utils/chorcha2Script';
 
 // Lazy load heavy components
 const AILatexGenerator = lazy(() => import('../components/AILatexGenerator'));
@@ -114,7 +115,7 @@ export default function AdminDashboard() {
   }, [navigate]);
   const [selectedChapter, setSelectedChapter] = useState('');
   const [adminVisibleForChapter, setAdminVisibleForChapter] = useState(true);
-  const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60, explanation: '' });
+  const [newQuestion, setNewQuestion] = useState({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: '', duration: 60, explanation: '', examReference: '' });
   const [newSubject, setNewSubject] = useState({ name: '', description: '', order: 0, visible: true });
   const [newChapter, setNewChapter] = useState({ name: '', description: '', order: 0, visible: true, practiceMode: false, subject: '' });
   const [editingId, setEditingId] = useState(null);
@@ -457,7 +458,7 @@ export default function AdminDashboard() {
       };
       const result = await questionsCRUD.create(sanitizeObject(questionData));
       if (result) {
-        setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: selectedChapter, duration: 60, explanation: '' });
+        setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: 0, chapter: selectedChapter, duration: 60, explanation: '', examReference: '' });
       }
     } finally {
       setAddingQuestion(false);
@@ -514,6 +515,17 @@ export default function AdminDashboard() {
     }
   }
 
+  // Copy the new-layout Chorcha extraction script (also extracts the Exam Reference field)
+  async function handleCopyChorcha2Script() {
+    try {
+      await navigator.clipboard.writeText(chorcha2Script);
+      alert('New Chorcha extractor script (with Exam Reference) copied! Paste it in the browser console on the Chorcha review page.');
+    } catch (err) {
+      console.error('Copy failed:', err);
+      alert('Failed to copy. Please copy manually from src/utils/chorcha2Script.js');
+    }
+  }
+
   // Add parsed question to form
   function handleAddParsedQuestion(parsedQ, index) {
     // Handle both object and array format for options
@@ -550,7 +562,8 @@ export default function AdminDashboard() {
       correctAnswer: correctAnswerIndex >= 0 ? correctAnswerIndex : 0,
       chapter: selectedChapter,
       duration: 60,
-      explanation: parsedQ.explanation || ''
+      explanation: parsedQ.explanation || '',
+      examReference: parsedQ.examReference || ''
     });
     
     setUsedQuestions(prev => new Set([...prev, index]));
@@ -623,6 +636,7 @@ export default function AdminDashboard() {
           chapter: selectedChapter,
           duration: 60,
           explanation: pq.explanation || '',
+          examReference: pq.examReference || '',
           adminVisible: adminVisibleForChapter
         });
       });
@@ -1249,7 +1263,15 @@ export default function AdminDashboard() {
                 <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-600">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold text-gray-800 dark:text-white">📋 Step-by-Step Instructions:</h4>
-                    <button
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={handleCopyChorcha2Script}
+                        className="bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded text-sm text-white transition-colors"
+                        title="For the NEW Chorcha layout — also extracts the Exam Reference (e.g. DCU A 24-25)"
+                      >
+                        📋 Copy Script (New + Exam Ref)
+                      </button>
+                      <button
                       onClick={() => {
                         const script = `javascript:(function () {
     function extractMathText(node) {
@@ -1469,6 +1491,7 @@ export default function AdminDashboard() {
                     >
                       📋 Copy Script
                     </button>
+                    </div>
                   </div>
                   <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700 dark:text-gray-300">
                     <li>Go to <strong>Chorcha app</strong> and start any MCQ test</li>
@@ -1565,6 +1588,11 @@ export default function AdminDashboard() {
                           <h4 className="font-medium text-slate-100">
                             <MathText>{pq.question}</MathText>
                           </h4>
+                          {pq.examReference && (
+                            <span className="text-xs font-medium px-2 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 whitespace-nowrap self-start">
+                              📌 {pq.examReference}
+                            </span>
+                          )}
                           <div className="flex space-x-2">
                             <button
                               onClick={() => handleAddParsedQuestion(pq, index)}
@@ -1741,6 +1769,16 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Exam Reference (Optional)</label>
+                  <input
+                    type="text"
+                    value={newQuestion.examReference || ''}
+                    onChange={e => setNewQuestion({...newQuestion, examReference: e.target.value})}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none text-gray-900 dark:text-white transition-colors"
+                    placeholder="e.g. DCU A 24-25"
+                  />
                 </div>
                 <button type="submit" disabled={addingQuestion} className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded disabled:opacity-50 text-white transition-colors">
                   {addingQuestion ? 'Adding...' : 'Add Question'}

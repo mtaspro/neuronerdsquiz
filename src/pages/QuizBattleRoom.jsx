@@ -469,6 +469,7 @@ const QuizBattleRoom = () => {
                   options: q.options,
                   correctAnswer: typeof q.correctAnswer === 'string' ? q.options.indexOf(q.correctAnswer) : q.correctAnswer,
                   explanation: q.explanation,
+                  examReference: q.examReference || '',
                   chapter: chapterConfig.chapter
                 }));
                 
@@ -528,7 +529,8 @@ const QuizBattleRoom = () => {
                 question: q.question,
                 options: q.options,
                 correctAnswer: typeof q.correctAnswer === 'string' ? q.options.indexOf(q.correctAnswer) : q.correctAnswer,
-                explanation: q.explanation
+                explanation: q.explanation,
+                examReference: q.examReference || ''
               }));
               
               console.log('✅ Questions transformed:', questionsToUse.length, 'Sample:', questionsToUse[0]);
@@ -1426,6 +1428,14 @@ const QuizBattleRoom = () => {
                   <h3 className="aura-display text-xl mb-6">
                     <MathText>{questions?.[currentQuestion]?.question || 'Loading question...'}</MathText>
                   </h3>
+                  {/* Exam Reference (e.g. DCU A 24-25) — shown top-right under the question */}
+                  {questions?.[currentQuestion]?.examReference && (
+                    <div className="flex justify-end mb-4 -mt-3">
+                      <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 whitespace-nowrap">
+                        📌 {questions?.[currentQuestion]?.examReference}
+                      </span>
+                    </div>
+                  )}
                   
                   {/* Inappropriate Question Report */}
                   <div className="mb-4">

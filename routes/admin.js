@@ -561,6 +561,7 @@ router.post('/parse-bulk-questions', sessionMiddleware, requireAdmin, async (req
       const options = [];
       let correctAnswer = '';
       let explanation = '';
+      let examReference = '';
       
       let currentSection = 'question';
       
@@ -575,6 +576,9 @@ router.post('/parse-bulk-questions', sessionMiddleware, requireAdmin, async (req
         } else if (line.startsWith('Explanation:')) {
           explanation = line.replace('Explanation:', '').trim();
           currentSection = 'explanation';
+        } else if (/^Exam Reference:/i.test(line)) {
+          examReference = line.replace(/^Exam Reference:/i, '').trim();
+          currentSection = 'examReference';
         } else if (currentSection === 'question') {
           question += (question ? ' ' : '') + line;
         } else if (currentSection === 'explanation') {
@@ -612,7 +616,8 @@ router.post('/parse-bulk-questions', sessionMiddleware, requireAdmin, async (req
           question: cleanQuestion,
           options: options,
           correctAnswer: cleanAnswer,
-          explanation: explanation
+          explanation: explanation,
+          examReference: examReference && examReference !== '(none)' ? examReference : ''
         });
       }
     }

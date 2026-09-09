@@ -699,6 +699,14 @@ export default function QuizPage() {
               <h2 className="text-base sm:text-lg md:text-xl font-semibold text-slate-200 mb-4 leading-tight">
                 <MathText>{currentQuestion.question}</MathText>
               </h2>
+              {/* Exam Reference (e.g. DCU A 24-25) — shown top-right under the question */}
+              {currentQuestion.examReference && (
+                <div className="flex justify-end mb-4 -mt-1">
+                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 whitespace-nowrap">
+                    📌 {currentQuestion.examReference}
+                  </span>
+                </div>
+              )}
               {helpUsed && (
                 <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-4">
                   <p className="text-yellow-300 text-sm">
