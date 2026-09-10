@@ -1,6 +1,9 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaPlay, FaRedo, FaAtom, FaRadiation, FaBolt } from 'react-icons/fa';
+import { VECTOR_SCENES } from '../../data/vectorScenes';
+import ScenePortrait from './ScenePortrait';
+import SceneBanner from './SceneBanner';
 
 /**
  * VectorCalculusChallengeModal
@@ -14,6 +17,13 @@ import { FaTimes, FaPlay, FaRedo, FaAtom, FaRadiation, FaBolt } from 'react-icon
  *
  * Ships with mock defaults for instant preview: <VectorCalculusChallengeModal />.
  */
+
+// ── Scene assets (central CDN config) ───────────────────────────────────────
+const SCENE = VECTOR_SCENES.scene3;
+const CHARACTER_BY_SPEAKER = {
+  [SCENE.characters.aiCore.name]: SCENE.characters.aiCore,
+  [SCENE.characters.player.name]: SCENE.characters.player,
+};
 
 // ── Physics constants ───────────────────────────────────────────────────────
 const TOL = 0.1;   // acceptable |div| and |curl|
@@ -187,6 +197,9 @@ export default function VectorCalculusChallengeModal({
             </div>
 
             <div className="overflow-y-auto px-4 py-4 sm:px-6">
+              {/* ── Scene banner (16:9 · responsive CDN art) ── */}
+              <SceneBanner title={SCENE.title} bannerUrl={SCENE.bannerUrl} className="mb-4" />
+
               {/* ── Webtoon story panel (tap to continue) ── */}
               <AnimatePresence mode="wait" initial={false}>
                 {!storyDone ? (
@@ -200,14 +213,18 @@ export default function VectorCalculusChallengeModal({
                     exit={{ opacity: 0, x: 24 }}
                     transition={{ duration: 0.25 }}
                   >
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-600 text-3xl shadow-lg">
-                      <motion.span
-                        animate={{ rotate: [0, 8, -8, 0], y: [0, -3, 0] }}
-                        transition={{ repeat: Infinity, duration: 2.6, ease: 'easeInOut' }}
-                      >
-                        {line.portrait}
-                      </motion.span>
-                    </div>
+                    <motion.div
+                      className="shrink-0"
+                      animate={{ rotate: [0, 8, -8, 0], y: [0, -3, 0] }}
+                      transition={{ repeat: Infinity, duration: 2.6, ease: 'easeInOut' }}
+                    >
+                      <ScenePortrait
+                        name={line.speaker}
+                        emoji={line.portrait}
+                        avatarUrl={CHARACTER_BY_SPEAKER[line.speaker]?.avatarUrl}
+                        sizeClass="w-14 h-14"
+                      />
+                    </motion.div>
                     <div className="min-w-0">
                       <p className="font-display text-xs font-bold uppercase tracking-widest text-violet-300">
                         {line.speaker}
@@ -235,7 +252,13 @@ export default function VectorCalculusChallengeModal({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
-                    <span className="text-lg">🤖</span>
+                    <ScenePortrait
+                      name={SCENE.characters.aiCore.name}
+                      emoji={SCENE.characters.aiCore.emoji}
+                      avatarUrl={SCENE.characters.aiCore.avatarUrl}
+                      sizeClass="w-8 h-8"
+                      emojiClass="text-lg"
+                    />
                     <span className="truncate">NeuraCore: “কোর অস্থির — টিউনিং মান সেট করো, দ্রুত!”</span>
                   </motion.div>
                 )}

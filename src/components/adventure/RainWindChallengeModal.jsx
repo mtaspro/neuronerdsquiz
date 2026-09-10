@@ -1,6 +1,9 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaPlay, FaRedo, FaCloudRain, FaTachometerAlt, FaUmbrella } from 'react-icons/fa';
+import { VECTOR_SCENES } from '../../data/vectorScenes';
+import ScenePortrait from './ScenePortrait';
+import SceneBanner from './SceneBanner';
 
 /**
  * RainWindChallengeModal
@@ -18,6 +21,13 @@ import { FaTimes, FaPlay, FaRedo, FaCloudRain, FaTachometerAlt, FaUmbrella } fro
  *
  * Ships with mock defaults for instant preview: <RainWindChallengeModal />.
  */
+
+// ── Scene assets (central CDN config) ───────────────────────────────────────
+const SCENE = VECTOR_SCENES.scene2;
+const CHARACTER_BY_SPEAKER = {
+  [SCENE.characters.pilot.name]: SCENE.characters.pilot,
+  [SCENE.characters.player.name]: SCENE.characters.player,
+};
 
 // ── Physics constants ───────────────────────────────────────────────────────
 const V_RAIN = 10;      // m/s, downwards
@@ -171,6 +181,9 @@ export default function RainWindChallengeModal({
             </div>
 
             <div className="overflow-y-auto px-4 py-4 sm:px-6">
+              {/* ── Scene banner (16:9 · responsive CDN art) ── */}
+              <SceneBanner title={SCENE.title} bannerUrl={SCENE.bannerUrl} className="mb-4" />
+
               {/* ── Webtoon story panel (tap to continue) ── */}
               <AnimatePresence mode="wait" initial={false}>
                 {!storyDone ? (
@@ -184,14 +197,18 @@ export default function RainWindChallengeModal({
                     exit={{ opacity: 0, x: 24 }}
                     transition={{ duration: 0.25 }}
                   >
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-indigo-600 text-3xl shadow-lg">
-                      <motion.span
-                        animate={{ y: [0, -4, 0] }}
-                        transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
-                      >
-                        {line.portrait}
-                      </motion.span>
-                    </div>
+                    <motion.div
+                      className="shrink-0"
+                      animate={{ y: [0, -4, 0] }}
+                      transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
+                    >
+                      <ScenePortrait
+                        name={line.speaker}
+                        emoji={line.portrait}
+                        avatarUrl={CHARACTER_BY_SPEAKER[line.speaker]?.avatarUrl}
+                        sizeClass="w-14 h-14"
+                      />
+                    </motion.div>
                     <div className="min-w-0">
                       <p className="font-display text-xs font-bold uppercase tracking-widest text-sky-300">
                         {line.speaker}
@@ -219,7 +236,13 @@ export default function RainWindChallengeModal({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
-                    <span className="text-lg">🚁</span>
+                    <ScenePortrait
+                      name={SCENE.characters.pilot.name}
+                      emoji={SCENE.characters.pilot.emoji}
+                      avatarUrl={SCENE.characters.pilot.avatarUrl}
+                      sizeClass="w-8 h-8"
+                      emojiClass="text-lg"
+                    />
                     <span className="truncate">বৈমানিক: “ঝড় তীব্র হচ্ছে — ছাতার কোণ সেট করো, দ্রুত!”</span>
                   </motion.div>
                 )}
