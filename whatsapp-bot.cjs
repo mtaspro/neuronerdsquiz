@@ -3,7 +3,7 @@ const {
     DisconnectReason, 
     useMultiFileAuthState,
     fetchLatestBaileysVersion 
-} = require('@whiskeysockets/baileys');
+} = require('baileys');
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 const path = require('path');

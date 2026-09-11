@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FaAtom, FaFlask, FaArrowLeft } from 'react-icons/fa';
+import { FaAtom, FaFlask, FaArrowLeft, FaCompass } from 'react-icons/fa';
 import PageShell from '../components/ui/PageShell';
 import Button from '../components/ui/Button';
 
@@ -24,6 +24,16 @@ const VirtualLabHub = () => {
       shadow: 'shadow-emerald-500/10',
       iconBg: 'bg-emerald-100 dark:bg-emerald-950/80',
       iconText: 'text-emerald-700 dark:text-emerald-400',
+    },
+    {
+      title: 'HSC Aura Adventure',
+      description: 'Story-driven chapter quests — vector physics scenes and UV chemistry levels with aura rewards.',
+      icon: FaCompass,
+      to: '/adventure',
+      border: 'border-violet-500/10',
+      shadow: 'shadow-violet-500/10',
+      iconBg: 'bg-violet-100 dark:bg-violet-950/80',
+      iconText: 'text-violet-700 dark:text-violet-400',
     },
   ];
 

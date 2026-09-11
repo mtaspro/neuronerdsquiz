@@ -30,6 +30,7 @@ const UserProfile = lazy(() => import("./pages/UserProfile"));
 const ProgressTracking = lazy(() => import('./pages/ProgressTracking'));
 const ProgressEditor = lazy(() => import('./pages/ProgressEditor'));
 const SecretChat = lazy(() => import('./pages/SecretChat'));
+const AdventureLevelPage = lazy(() => import('./pages/AdventureLevelPage'));
 
 import UserWhatsApp from './pages/UserWhatsApp';
 import UserInbox from './pages/UserInbox';
@@ -42,6 +43,7 @@ import NeuraflowAIChat from './pages/NeuraflowAIChat';
 import VirtualLabHub from './pages/VirtualLabHub';
 import PhysicsLab from './pages/PhysicsLab';
 import ChemistryLab from './pages/ChemistryLab';
+import AdventureHub from './pages/AdventureHub';
 import PostOfficeBoxExperiment from './pages/PostOfficeBoxExperiment';
 import SharedConversation from './pages/SharedConversation';
 import DarkModeToggle from './components/DarkModeToggle';
@@ -212,6 +214,9 @@ function Navbar() {
               <Link to={isAuthenticated ? "/leaderboard" : "/login"} className={navLinkClass('/leaderboard')}>Leaderboard</Link>
               <Link to={isAuthenticated ? "/badges" : "/login"} className={navLinkClass('/badges')}>Badges</Link>
               {isAuthenticated && (
+                <Link to="/adventure" className={navLinkClass('/adventure')}>Adventure</Link>
+              )}
+              {isAuthenticated && (
                 <Link to="/virtual-lab" className={navLinkClass('/virtual-lab')}>Virtual Lab</Link>
               )}
               <Link to="/about" className={navLinkClass('/about')}>About</Link>
@@ -260,6 +265,9 @@ function Navbar() {
                 <Link to={isAuthenticated ? "/dashboard" : "/login"} onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Dashboard</Link>
                 <Link to={isAuthenticated ? "/leaderboard" : "/login"} onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Leaderboard</Link>
                 <Link to={isAuthenticated ? "/badges" : "/login"} onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Badges</Link>
+                {isAuthenticated && (
+                  <Link to="/adventure" onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Adventure</Link>
+                )}
                 {isAuthenticated && (
                   <Link to="/virtual-lab" onClick={() => setMenuOpen(false)} className="block aura-nav-link text-base py-2.5">Virtual Lab</Link>
                 )}
@@ -481,6 +489,24 @@ function AnimatedRoutes() {
               element={
                 <ProtectedRoute>
                   <PostOfficeBoxExperiment />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/adventure"
+              element={
+                <ProtectedRoute>
+                  <AdventureHub />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/adventure/:levelKey"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div></div>}>
+                    <AdventureLevelPage />
+                  </Suspense>
                 </ProtectedRoute>
               }
             />

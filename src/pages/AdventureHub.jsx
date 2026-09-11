@@ -19,7 +19,6 @@ import Button from '../components/ui/Button';
 const LEVELS = [
   {
     group: 'পদার্থবিজ্ঞান · ভেক্টর অধ্যায়',
-    subject: 'physics',
     items: [
       {
         levelKey: 'vector-level-1',
@@ -65,7 +64,6 @@ const LEVELS = [
   },
   {
     group: 'রসায়ন · গুণগত বিশ্লেষণ',
-    subject: 'chemistry',
     items: [
       {
         levelKey: 'chem-level-1',
@@ -104,7 +102,7 @@ const AdventureHub = () => {
             </h2>
             <div className="grid gap-6 sm:grid-cols-2">
               {items.map((item) => {
-                const { levelKey, title, description, to, icon: Icon } = item;
+                const { levelKey, title, description, icon: Icon } = item;
                 const route = `/adventure/${levelKey}`;
                 return (
                   <Link
