@@ -120,14 +120,9 @@ async function startWhatsAppBot() {
         socket.ev.on('messages.upsert', async (m) => {
             console.log(`\n📨 [MESSAGE EVENT] Type: ${m.type}, Messages count: ${m.messages.length}`);
             
-            const message = m.messages[0];
-            console.log(`📨 [MESSAGE DETAILS] fromMe: ${message.key.fromMe}, messageType: ${m.type}`);
-            console.log(`📨 [MESSAGE DETAILS] remoteJid: ${message.key.remoteJid}`);
-            console.log(`📨 [MESSAGE DETAILS] hasConversation: ${!!message.message?.conversation}`);
-            console.log(`📨 [MESSAGE DETAILS] hasExtendedText: ${!!message.message?.extendedTextMessage}`);
-            
             // Process all incoming messages (not from bot) - removed m.type === 'notify' filter
-            if (!message.key.fromMe) {
+            for (const message of m.messages) {
+              if (!message.key.fromMe) {
                 const messageText = message.message?.conversation || 
                                    message.message?.extendedTextMessage?.text || '';
                 const sender = message.pushName || 'Unknown';
@@ -166,7 +161,7 @@ async function startWhatsAppBot() {
                     } catch (error) {
                         console.error('Failed to forward private message:', error.message);
                     }
-                    return;
+                    continue;
                 }
                 
                 // Handle group messages with @n mention
@@ -335,8 +330,9 @@ Deliver ChatGPT-quality responses with excellent formatting! ✨`,
                     }
                     
                     // No AI reply - just save the message
-                    return;
+                    continue;
                 }
+              }
             }
         });
 
