@@ -1,10 +1,12 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 import AdventureLevelModal from '../components/adventure/AdventureLevelModal';
 import ChemLevel1Modal from '../components/adventure/ChemLevel1Modal';
 import DotCrossChallengeModal from '../components/adventure/DotCrossChallengeModal';
 import RainWindChallengeModal from '../components/adventure/RainWindChallengeModal';
 import VectorCalculusChallengeModal from '../components/adventure/VectorCalculusChallengeModal';
+import OrganicQuizModal from '../components/adventure/OrganicQuizModal';
 
 /**
  * AdventureLevelPage
@@ -24,6 +26,7 @@ const LEVELS = {
   'vector-scene-2': RainWindChallengeModal,
   'vector-scene-3': VectorCalculusChallengeModal,
   'chem-level-1': ChemLevel1Modal,
+  'chem-organic-quest': OrganicQuizModal,
 };
 
 export default function AdventureLevelPage() {
@@ -32,11 +35,16 @@ export default function AdventureLevelPage() {
 
   const Level = LEVELS[levelKey] || AdventureLevelModal;
 
-  const handleComplete = (result) => {
-    // Persistence hook — payload `result` carries { success, accuracy/score } plus
-    // the level's numeric rewards. Backend endpoint (UserStats.auraPoints /
-    // inGameTokens / campaignProgress incl. stars) is a separate task.
-    console.log('[AdventureLevelPage] onLevelComplete', levelKey, result);
+    const handleComplete = async (result) => {
+    try {
+      await api.post('/api/adventure/complete', {
+        levelKey,
+        success: result?.success === true,
+        stars: result?.stars ?? (result?.accuracy >= 90 ? 3 : result?.accuracy >= 75 ? 2 : 1),
+      });
+    } catch (err) {
+      console.error('[AdventureLevelPage] persist failed:', err?.response?.data?.error || err.message);
+    }
   };
 
   return (

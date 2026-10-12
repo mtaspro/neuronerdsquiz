@@ -1,6 +1,7 @@
 import express from 'express';
 import axios from 'axios';
 import { Pinecone } from '@pinecone-database/pinecone';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 import { sessionMiddleware } from '../middleware/sessionMiddleware.js';
 import ChatHistory from '../models/ChatHistory.js';
@@ -21,7 +22,9 @@ const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
 const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME;
 const PINECONE_NAMESPACE = process.env.PINECONE_NAMESPACE || '';
 const PINECONE_TOP_K = Math.min(Math.max(parseInt(process.env.PINECONE_TOP_K || '5', 10), 3), 5);
-const PINECONE_EMBEDDING_MODEL = process.env.PINECONE_EMBEDDING_MODEL || 'openai/text-embedding-3-small';
+// Must match hscaura-rag-ingestion/index.js (gemini-embedding-2, 768-dim)
+const GEMINI_EMBEDDING_MODEL = process.env.GEMINI_EMBEDDING_MODEL || 'gemini-embedding-2';
+const EMBEDDING_DIMENSIONS = parseInt(process.env.EMBEDDING_DIMENSIONS || '768', 10);
 const MAX_TOKENS = 2000;
 
 const OPENROUTER_AUTO_FREE_MODEL = 'openrouter/free';
@@ -42,6 +45,7 @@ const HSC_RAG_INSTRUCTIONS = `
 `.trim();
 
 let pineconeClient = null;
+let geminiClient = null;
 
 function getPineconeClient() {
   if (!PINECONE_API_KEY || !PINECONE_INDEX_NAME) {
@@ -54,30 +58,23 @@ function getPineconeClient() {
 }
 
 async function embedQuery(text) {
-  if (!OPENROUTER_API_KEY) {
-    throw new Error('OpenRouter API key required for query embeddings');
+  if (!GEMINI_API_KEY) {
+    throw new Error('Gemini API key required for query embeddings');
   }
 
-  const response = await axios.post(
-    'https://openrouter.ai/api/v1/embeddings',
-    {
-      model: PINECONE_EMBEDDING_MODEL,
-      input: text.trim()
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://github.com/mtaspro/neuronerds-quiz',
-        'X-Title': 'NeuraX RAG Embeddings'
-      },
-      timeout: 15000
-    }
-  );
+  if (!geminiClient) {
+    geminiClient = new GoogleGenerativeAI(GEMINI_API_KEY);
+  }
 
-  const embedding = response.data?.data?.[0]?.embedding;
+  const model = geminiClient.getGenerativeModel({ model: GEMINI_EMBEDDING_MODEL });
+  const result = await model.embedContent({
+    content: { parts: [{ text: text.trim() }] },
+    outputDimensionality: EMBEDDING_DIMENSIONS
+  });
+
+  const embedding = result?.embedding?.values;
   if (!embedding?.length) {
-    throw new Error('Empty embedding returned from OpenRouter');
+    throw new Error('Empty embedding returned from Gemini');
   }
   return embedding;
 }

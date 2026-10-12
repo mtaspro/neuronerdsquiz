@@ -1,7 +1,18 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaArrowRight, FaCompass, FaFlask, FaLock, FaStar } from 'react-icons/fa';
 import PageShell from '../components/ui/PageShell';
 import Button from '../components/ui/Button';
+import api from '../utils/api';
+
+const LEVEL_ORDER = ['vector-level-1', 'vector-scene-1', 'vector-scene-2', 'vector-scene-3', 'chem-level-1', 'chem-organic-quest'];
+
+function rankFor(points) {
+  if (points >= 800) return 'AURA MASTER';
+  if (points >= 400) return 'AURA ADEPT';
+  if (points >= 150) return 'AURA SEEKER';
+  return 'AURA INITIATE';
+}
 
 const LEVELS = [
   {
@@ -23,6 +34,13 @@ const LEVELS = [
     icon: FaFlask,
     items: [{ levelKey: 'chem-level-1', number: '05', title: 'ইউভি পাসপোর্ট', description: 'UV বাতির তরঙ্গদৈর্ঘ্য ও তীব্রতা সামঞ্জস্য করে গোপন নিরাপত্তা-সূত্র উন্মোচন করো।', tag: 'UV analysis', live: true }],
   },
+  {
+    subject: 'রসায়ন',
+    chapter: 'জৈব রসায়ন',
+    accent: 'violet',
+    icon: FaFlask,
+    items: [{ levelKey: 'chem-organic-quest', number: '06', title: 'বোর্ড MCQ মিশন', description: 'NCTB প্যাটার্নে জৈব রসায়নের ৮টি বোর্ড প্রশ্ন — নামকরণ, কার্যকরী মূলক, শনাক্তকরণ পরীক্ষা।', tag: 'Organic · CQ/MCQ', live: true }],
+  },
 ];
 
 const accentClasses = {
@@ -30,28 +48,53 @@ const accentClasses = {
   violet: { line: 'from-violet-300/80', text: 'text-violet-300', border: 'border-violet-300/20', glow: 'shadow-violet-500/10', icon: 'bg-violet-300/10 text-violet-200' },
 };
 
-function MissionCard({ item, accent }) {
+function MissionCard({ item, accent, locked, stars }) {
   const colors = accentClasses[accent];
   const Icon = accent === 'violet' ? FaFlask : FaCompass;
-  return (
-    <Link to={`/adventure/${item.levelKey}`} className={`group relative overflow-hidden rounded-2xl border ${colors.border} ${colors.glow} bg-slate-950/35 p-5 shadow-xl transition duration-300 hover:-translate-y-1 hover:bg-slate-900/60 hover:shadow-2xl`}>
+  const inner = (
+    <>
       <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${colors.line} to-transparent opacity-70`} />
       <div className="mb-8 flex items-start justify-between gap-3">
-        <span className={`grid h-11 w-11 place-items-center rounded-xl ${colors.icon}`}><Icon aria-hidden /></span>
+        <span className={`grid h-11 w-11 place-items-center rounded-xl ${colors.icon}`}>{locked ? <FaLock aria-hidden /> : <Icon aria-hidden />}</span>
         <span className={`rounded-full border ${colors.border} px-2.5 py-1 font-mono text-[10px] font-bold ${colors.text}`}>{item.number}</span>
       </div>
       <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">{item.tag}</p>
       <h3 className="aura-headline text-xl text-slate-100 transition group-hover:text-white">{item.title}</h3>
       <p className="mt-3 min-h-[72px] text-sm leading-6 text-slate-400">{item.description}</p>
       <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-4 text-[10px] font-bold uppercase tracking-[0.18em]">
-        <span className="flex items-center gap-2 text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_10px_currentColor]" />Mission ready</span>
-        <FaArrowRight className={`${colors.text} transition group-hover:translate-x-1`} aria-hidden />
+        {locked ? (
+          <span className="flex items-center gap-2 text-slate-500"><span className="h-1.5 w-1.5 rounded-full bg-slate-500" />Locked</span>
+        ) : stars > 0 ? (
+          <span className="flex items-center gap-1 text-amber-300">{'★'.repeat(stars)}{'☆'.repeat(3 - stars)}</span>
+        ) : (
+          <span className="flex items-center gap-2 text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_10px_currentColor]" />Mission ready</span>
+        )}
+        {!locked && <FaArrowRight className={`${colors.text} transition group-hover:translate-x-1`} aria-hidden />}
       </div>
-    </Link>
+    </>
   );
+  const cls = `group relative overflow-hidden rounded-2xl border ${colors.border} ${colors.glow} bg-slate-950/35 p-5 shadow-xl transition duration-300 ${locked ? 'opacity-60 cursor-not-allowed' : 'hover:-translate-y-1 hover:bg-slate-900/60 hover:shadow-2xl'}`;
+  return locked
+    ? <div className={cls} aria-disabled="true">{inner}</div>
+    : <Link to={`/adventure/${item.levelKey}`} className={cls}>{inner}</Link>;
 }
 
-const AdventureHub = () => (
+const AdventureHub = () => {
+  const [state, setState] = useState({ auraPoints: 0, inGameTokens: 0, completedLevels: [], stars: {} });
+
+  useEffect(() => {
+    api.get('/api/adventure/state')
+      .then(({ data }) => setState(data))
+      .catch((err) => console.error('Adventure state fetch failed:', err?.response?.data?.error || err.message));
+  }, []);
+
+  const done = new Set(state.completedLevels);
+  const isUnlocked = (levelKey) => {
+    const idx = LEVEL_ORDER.indexOf(levelKey);
+    return idx === 0 || done.has(LEVEL_ORDER[idx - 1]);
+  };
+
+  return (
   <PageShell className="min-h-[calc(100vh-3.5rem)] overflow-hidden text-slate-100">
     <div className="relative mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-12">
       <div className="pointer-events-none absolute -left-24 top-12 h-72 w-72 rounded-full bg-cyan-500/10 blur-[90px]" />
@@ -63,7 +106,7 @@ const AdventureHub = () => (
           <h1 className="aura-headline text-4xl leading-tight text-slate-100 sm:text-6xl">জ্ঞানকে <span className="bg-gradient-to-r from-cyan-200 via-cyan-300 to-violet-300 bg-clip-text text-transparent">অস্ত্রে</span> পরিণত করো।</h1>
           <p className="aura-subhead mt-5 max-w-xl text-sm leading-7 text-slate-400 sm:text-base">একটি অধ্যায়-মানচিত্র। গল্প খোলো, চ্যালেঞ্জ সমাধান করো, আর প্রতিটি সঠিক সিদ্ধান্তে নিজের Aura শক্তিশালী করো।</p>
         </div>
-        <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/35 px-4 py-3 backdrop-blur-md"><FaStar className="text-amber-300" aria-hidden /><div><p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Current rank</p><p className="font-mono text-sm font-bold text-slate-100">AURA INITIATE</p></div></div>
+        <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/35 px-4 py-3 backdrop-blur-md"><FaStar className="text-amber-300" aria-hidden /><div><p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Current rank</p><p className="font-mono text-sm font-bold text-slate-100">{rankFor(state.auraPoints)}</p><p className="font-mono text-[10px] text-slate-500">{state.auraPoints} aura · {state.inGameTokens} tokens</p></div></div>
       </header>
 
       <main className="relative space-y-12">
@@ -71,7 +114,7 @@ const AdventureHub = () => (
           const colors = accentClasses[accent];
           return <section key={chapter} aria-labelledby={chapter.replaceAll(' ', '-')}>
             <div className="mb-5 flex items-center gap-4"><div className={`grid h-10 w-10 place-items-center rounded-xl ${colors.icon}`}><SubjectIcon aria-hidden /></div><div><p className={`text-[10px] font-bold uppercase tracking-[0.22em] ${colors.text}`}>{subject}</p><h2 id={chapter.replaceAll(' ', '-')} className="aura-headline mt-1 text-2xl text-slate-100">{chapter}</h2></div><div className={`ml-2 h-px flex-1 bg-gradient-to-r ${colors.line} to-transparent opacity-30`} /></div>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{items.map((item) => <MissionCard key={item.levelKey} item={item} accent={accent} />)}</div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{items.map((item) => <MissionCard key={item.levelKey} item={item} accent={accent} locked={!isUnlocked(item.levelKey)} stars={state.stars[item.levelKey] || 0} />)}</div>
           </section>;
         })}
       </main>
@@ -80,5 +123,6 @@ const AdventureHub = () => (
     </div>
   </PageShell>
 );
+};
 
 export default AdventureHub;

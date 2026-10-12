@@ -169,14 +169,14 @@ const userStatsSchema = new mongoose.Schema({
     }
   },
 
-  // Campaign Progress (Gamified Story Mode)
+    // Campaign Progress (Gamified Story Mode)
   campaignProgress: [{
     chapterId: {
       type: String,
       required: true
     },
     completedLevels: {
-      type: [Number],
+      type: [String], // levelKey strings e.g. 'vector-level-1'
       default: []
     },
     stars: {
