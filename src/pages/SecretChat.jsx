@@ -262,10 +262,10 @@ export default function SecretChat() {
                   onClick={() => setShowFields(!showFields)}
                   className="glass-panel px-3 py-2 rounded text-sm"
                 >
-                  ⚙️ Config
+                  GE
                 </button>
                 <button onClick={fetchFromWhatsApp} className="glass-panel px-4 py-2 rounded">
-                  📥 Sync
+                  MINAI
                 </button>
                 <button
                   type="button"
@@ -275,7 +275,7 @@ export default function SecretChat() {
                   title="Mark latest messages as read on WhatsApp (blue ticks for your friend)"
                   aria-label="Mark as read on WhatsApp"
                 >
-                  {markingRead ? '…' : '✓✓'}
+                  {markingRead ? '…' : 'AI'}
                 </button>
               </div>
               {showFields && (
