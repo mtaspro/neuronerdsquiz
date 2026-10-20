@@ -7,6 +7,14 @@ import '../styles/premium-glass.css';
 const SKIN = 'assistant';
 const SHOW_HINT = false;
 const NUMBER_FROM = 'bottom';
+const LAYOUT = 'stream';
+const MARKER = 'bullet';
+
+const BULLET_CHAR = '•';
+
+const isEmptyContent = (text) => {
+  return !text || /^[.?\s]*$/.test(text);
+};
 
 const rot13 = (str) => {
   return str.replace(/[a-zA-Z]/g, c => 
@@ -279,6 +287,55 @@ export default function SecretChat() {
     setShowDecrypted(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const groupMessages = (msgs) => {
+    const turns = [];
+    msgs.forEach(msg => {
+      const isFriend = msg.sender === 'friend';
+      const lastTurn = turns[turns.length - 1];
+      if (lastTurn && lastTurn.isFriend === isFriend) {
+        lastTurn.messages.push(msg);
+      } else {
+        turns.push({ isFriend, messages: [msg] });
+      }
+    });
+    return turns;
+  };
+
+  const renderStreamMessage = (msg) => {
+    const isFriend = msg.sender === 'friend';
+    const visibleText = showDecrypted[msg._id] ? msg.message : msg.encrypted;
+    const isEmpty = isEmptyContent(visibleText);
+
+    if (MARKER === 'apostrophe') {
+      return (
+        <span
+          key={msg._id}
+          className="sc-stream-text sc-stream-text-apostrophe"
+          onClick={() => toggleDecrypt(msg._id)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleDecrypt(msg._id); }}
+        >
+          {visibleText}
+          {isFriend && <span className="sc-apostrophe">'</span>}
+        </span>
+      );
+    }
+
+    return (
+      <span
+        key={msg._id}
+        className={`sc-stream-text ${isEmpty ? 'sc-empty' : ''}`}
+        onClick={() => toggleDecrypt(msg._id)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleDecrypt(msg._id); }}
+      >
+        {visibleText}
+      </span>
+    );
+  };
+
   useEffect(() => {
     if (!showFields) return;
     const handleClickOutside = (e) => {
@@ -388,38 +445,138 @@ export default function SecretChat() {
         onScroll={updateStickToBottom}
         className="sc-list"
       >
-        {messages.map((msg, index) => {
-          const isFriend = msg.sender === 'friend';
-          const isLatest = index === messages.length - 1;
-          return (
-            <li
-              key={msg._id}
-              className={`sc-msg ${isFriend ? 'friend' : 'mine'}`}
-            >
-              {!isFriend && <span className="sc-avatar"></span>}
-              <span
-                className={`sc-msg-text ${isFriend ? 'friend' : 'mine'}`}
-              >
-                {showDecrypted[msg._id] ? msg.message : msg.encrypted}
-              </span>
-              {isFriend && isLatest && (
-                <div className="sc-action-row">
-                  <span className="sc-action-icon" aria-label="like"><ThumbUpIcon /></span>
-                  <span className="sc-action-icon" aria-label="dislike"><ThumbDownIcon /></span>
-                  <span className="sc-action-icon" aria-label="refresh"><RefreshIcon /></span>
-                  <span className="sc-action-icon" aria-label="share"><ShareIcon /></span>
-                  <span
-                    className="sc-action-icon"
-                    aria-label="copy"
-                    onClick={(e) => { e.stopPropagation(); toggleDecrypt(msg._id); }}
+        {LAYOUT === 'stream'
+          ? (() => {
+              const turns = groupMessages(messages);
+              let ownGroup = [];
+              const items = [];
+              const flushOwn = () => {
+                if (ownGroup.length > 0) {
+                  items.push(
+                    <ul key={`own-${ownGroup[0]._id}`} className="sc-stream-bullets">
+                      {ownGroup.map(msg => (
+                        <li key={msg._id} className="sc-bullet-item">
+                          {renderStreamMessage(msg)}
+                        </li>
+                      ))}
+                    </ul>
+                  );
+                  ownGroup = [];
+                }
+              };
+              turns.forEach(turn => {
+                if (turn.isFriend) {
+                  flushOwn();
+                  items.push(
+                    <p key={`f-${turn.messages[0]._id}`} className="sc-stream-paragraph">
+                      {turn.messages.map(msg => renderStreamMessage(msg))}
+                    </p>
+                  );
+                } else {
+                  ownGroup.push(...turn.messages);
+                }
+              });
+              flushOwn();
+
+              const lastMsg = messages[messages.length - 1];
+              const isLastFriend = lastMsg?.sender === 'friend';
+
+              return (
+                <>
+                  {items}
+                  {isLastFriend && (
+                    <div className="sc-action-row">
+                      <span className="sc-action-icon" aria-label="like"><ThumbUpIcon /></span>
+                      <span className="sc-action-icon" aria-label="dislike"><ThumbDownIcon /></span>
+                      <span className="sc-action-icon" aria-label="refresh"><RefreshIcon /></span>
+                      <span className="sc-action-icon" aria-label="share"><ShareIcon /></span>
+                      <span
+                        className="sc-action-icon"
+                        aria-label="copy"
+                        onClick={(e) => { e.stopPropagation(); toggleDecrypt(lastMsg._id); }}
+                      >
+                        <CopyIcon />
+                      </span>
+                    </div>
+                  )}
+                </>
+              );
+            })()
+          : LAYOUT === 'single'
+          ? (() => {
+              const turns = groupMessages(messages);
+              const lastFriendTurnIdx = turns.findLastIndex(t => t.isFriend);
+              return turns.map((turn, turnIdx) => {
+                const isFriend = turn.isFriend;
+                const isLastFriendTurn = isFriend && turnIdx === lastFriendTurnIdx;
+                return (
+                  <li
+                    key={`${turnIdx}`}
+                    className={`sc-turn ${isFriend ? 'friend' : 'mine'}`}
                   >
-                    <CopyIcon />
+                    {turn.messages.map(msg => (
+                      <p
+                        key={msg._id}
+                        className="sc-msg-paragraph"
+                        onClick={() => toggleDecrypt(msg._id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleDecrypt(msg._id); }}
+                      >
+                        {showDecrypted[msg._id] ? msg.message : msg.encrypted}
+                      </p>
+                    ))}
+                    {isLastFriendTurn && (
+                      <div className="sc-action-row">
+                        <span className="sc-action-icon" aria-label="like"><ThumbUpIcon /></span>
+                        <span className="sc-action-icon" aria-label="dislike"><ThumbDownIcon /></span>
+                        <span className="sc-action-icon" aria-label="refresh"><RefreshIcon /></span>
+                        <span className="sc-action-icon" aria-label="share"><ShareIcon /></span>
+                        <span
+                          className="sc-action-icon"
+                          aria-label="copy"
+                          onClick={(e) => { e.stopPropagation(); toggleDecrypt(turn.messages[turn.messages.length - 1]._id); }}
+                        >
+                          <CopyIcon />
+                        </span>
+                      </div>
+                    )}
+                  </li>
+                );
+              });
+            })()
+          : messages.map((msg, index) => {
+              const isFriend = msg.sender === 'friend';
+              const isLatest = index === messages.length - 1;
+              return (
+                <li
+                  key={msg._id}
+                  className={`sc-msg ${isFriend ? 'friend' : 'mine'}`}
+                >
+                  {!isFriend && <span className="sc-avatar"></span>}
+                  <span
+                    className={`sc-msg-text ${isFriend ? 'friend' : 'mine'}`}
+                  >
+                    {showDecrypted[msg._id] ? msg.message : msg.encrypted}
                   </span>
-                </div>
-              )}
-            </li>
-          );
-        })}
+                  {isFriend && isLatest && (
+                    <div className="sc-action-row">
+                      <span className="sc-action-icon" aria-label="like"><ThumbUpIcon /></span>
+                      <span className="sc-action-icon" aria-label="dislike"><ThumbDownIcon /></span>
+                      <span className="sc-action-icon" aria-label="refresh"><RefreshIcon /></span>
+                      <span className="sc-action-icon" aria-label="share"><ShareIcon /></span>
+                      <span
+                        className="sc-action-icon"
+                        aria-label="copy"
+                        onClick={(e) => { e.stopPropagation(); toggleDecrypt(msg._id); }}
+                      >
+                        <CopyIcon />
+                      </span>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
         <div ref={messagesEndRef} />
       </ol>
 
