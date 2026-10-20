@@ -4,8 +4,9 @@ import { createSocket, addSocketListeners } from '../utils/socket.js';
 import { secureStorage } from '../utils/secureStorage';
 import '../styles/premium-glass.css';
 
-const SKIN = 'notes-dark';
+const SKIN = 'assistant';
 const SHOW_HINT = false;
+const NUMBER_FROM = 'bottom';
 
 const rot13 = (str) => {
   return str.replace(/[a-zA-Z]/g, c => 
@@ -19,6 +20,74 @@ const rot13 = (str) => {
   });
 };
 
+const HamburgerIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+const CaretIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const ComposeIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+const ThreeDotIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="6" cy="12" r="2" fill="currentColor" />
+    <circle cx="12" cy="12" r="2" fill="currentColor" />
+    <circle cx="18" cy="12" r="2" fill="currentColor" />
+  </svg>
+);
+
+const PlusIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+const MicIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 15V4m0 0l3 3m-3-3l-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const ThumbUpIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 7v14M12 7l-3 3m3-3l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const ThumbDownIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 17V3m0 0l-3 3m3-3l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const RefreshIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 12a8 8 0 0112.9-.7M4 12l3-3m-3 3l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const ShareIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.74 19.74 0 01-8.63-3.07 19.1 19.1 0 01-5-5 19.25 19.25 0 01-3-5 2 2 0 01.94-2.46 19.7 19.7 0 018.62-.87A11.84 11.84 0 0121 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const CopyIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 5H5a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-4M9 5l6 6M9 5V3a2 2 0 012-2h7a2 2 0 012 2v5a2 2 0 01-2 2v0a2 2 0 01-2-2V5a2 2 0 00-2-2h-3z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 export default function SecretChat() {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -30,10 +99,9 @@ export default function SecretChat() {
   const [showFields, setShowFields] = useState(false);
   const [mode, setMode] = useState('chat');
   const [markingRead, setMarkingRead] = useState(false);
-  const [newMessageIds, setNewMessageIds] = useState({});
-  const newMessageIdsRef = useRef({});
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const topBarRef = useRef(null);
   /** When true, message updates scroll to bottom; set false when user scrolls up to read older messages */
   const stickToBottomRef = useRef(true);
 
@@ -45,28 +113,7 @@ export default function SecretChat() {
       const res = await axios.get(`${API_URL}/api/secret-chat/history/${phoneNumber}?limit=20`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const incomingIds = new Set(res.data.messages.map(m => m._id));
-      setMessages(prev => {
-        const prevIds = new Set(prev.map(m => m._id));
-        const newMap = { ...newMessageIdsRef.current };
-        res.data.messages.forEach(m => {
-          if (!prevIds.has(m._id)) {
-            newMap[m._id] = Date.now();
-            setTimeout(() => setNewMessageIds(nm => { const n = { ...nm }; delete n[m._id]; return n; }), 4000);
-          }
-        });
-        newMessageIdsRef.current = newMap;
-        setNewMessageIds(newMap);
-        return res.data.messages;
-      });
-      setNewMessageIds(prev => {
-        const next = { ...prev };
-        Object.keys(next).forEach(id => {
-          if (!incomingIds.has(id)) delete next[id];
-        });
-        newMessageIdsRef.current = next;
-        return next;
-      });
+      setMessages(res.data.messages);
     } catch (error) {
       console.error('Load error:', error);
     }
@@ -118,23 +165,27 @@ export default function SecretChat() {
       if (mode === 'chat' && e.ctrlKey) {
         if (!isNaN(e.key) && e.key !== '0') {
           e.preventDefault();
-          const index = parseInt(e.key) - 1;
+          const slot = parseInt(e.key) - 1;
+          const index = NUMBER_FROM === 'bottom' ? messages.length - 1 - slot : slot;
           if (messages[index]) {
             toggleDecrypt(messages[index]._id);
           }
         }
         else if (e.key === '0') {
           e.preventDefault();
-          if (messages[9]) {
-            toggleDecrypt(messages[9]._id);
+          const slot = 9;
+          const index = NUMBER_FROM === 'bottom' ? messages.length - 1 - slot : slot;
+          if (messages[index]) {
+            toggleDecrypt(messages[index]._id);
           }
         }
         else if ('QWERTYUIOP'.includes(e.key.toUpperCase())) {
           e.preventDefault();
           const keyIndex = 'QWERTYUIOP'.indexOf(e.key.toUpperCase());
-          const messageIndex = 10 + keyIndex;
-          if (messages[messageIndex]) {
-            toggleDecrypt(messages[messageIndex]._id);
+          const slot = 10 + keyIndex;
+          const index = NUMBER_FROM === 'bottom' ? messages.length - 1 - slot : slot;
+          if (messages[index]) {
+            toggleDecrypt(messages[index]._id);
           }
         }
       }
@@ -227,11 +278,21 @@ export default function SecretChat() {
     setShowDecrypted(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const handleClickOutside = useCallback((e) => {
+    if (showFields && topBarRef.current && !topBarRef.current.contains(e.target)) {
+      setShowFields(false);
+    }
+  }, [showFields]);
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [handleClickOutside]);
+
   if (!authenticated) {
     return (
       <div className="sc-root sc-auth" data-skin={SKIN}>
         <div className="sc-auth-panel">
-          <h2 className="sc-header-label">You are in the wrong way dude, what's your code?</h2>
           <form onSubmit={handlePasswordSubmit}>
             <input
               type="password"
@@ -256,132 +317,127 @@ export default function SecretChat() {
 
   return (
     <div className="sc-root" data-skin={SKIN}>
-      <div className="sc-header-bar">
-        <span className="sc-header-label">Notes</span>
-        <div className="sc-buttons">
-          <button
+      <div className="sc-top-bar" ref={topBarRef}>
+        <div
+          className="sc-top-icon sc-icon-btn"
+          onClick={() => setShowFields(!showFields)}
+          aria-label="Menu"
+          title="Menu"
+        >
+          <HamburgerIcon />
+        </div>
+        <div className="sc-title">
+          <span>Assistant</span>
+          <span className="sc-dim">Auto</span>
+          <span
+            className="sc-title-caret"
             onClick={() => setMode(mode === 'chat' ? 'encoder' : 'chat')}
-            className="sc-button sc-button-active"
+            aria-label="Model"
+            title="Model"
+            role="button"
           >
-            {mode === 'chat' ? 'Chat' : 'Encoder'}
-          </button>
+            <CaretIcon />
+          </span>
+        </div>
+        <div className="sc-top-icons">
+          <div
+            className="sc-top-icon"
+            onClick={fetchFromWhatsApp}
+            aria-label="New chat"
+            title="New chat"
+          >
+            <ComposeIcon />
+          </div>
+          <div
+            className="sc-top-icon"
+            onClick={markAsReadOnWhatsApp}
+            aria-label="More"
+            title="More"
+            style={{ opacity: markingRead ? 0.5 : 1 }}
+          >
+            <ThreeDotIcon />
+          </div>
         </div>
       </div>
 
-      {mode === 'chat' ? (
-        <>
-          <div className="sc-config-panel">
-            <div className="sc-buttons">
-              <button
-                onClick={() => setShowFields(!showFields)}
-                className={`sc-button ${showFields ? 'sc-button-active' : ''}`}
-              >
-                GE
-              </button>
-              <button
-                onClick={fetchFromWhatsApp}
-                className="sc-button"
-              >
-                MINAI
-              </button>
-              <button
-                type="button"
-                onClick={markAsReadOnWhatsApp}
-                disabled={markingRead}
-                className={`sc-button ${markingRead ? 'sc-button-disabled' : ''}`}
-                title="Mark latest messages as read on WhatsApp (blue ticks for your friend)"
-                aria-label="Mark as read on WhatsApp"
-              >
-                {markingRead ? '…' : 'AI'}
-              </button>
-            </div>
-            {showFields && (
-              <div className="sc-config">
-                <input
-                  type="text"
-                  placeholder="Target ID (LID)"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="sc-input"
-                />
-                <input
-                  type="text"
-                  placeholder="Real number"
-                  value={realNumber}
-                  onChange={(e) => setRealNumber(e.target.value)}
-                  className="sc-input"
-                />
-              </div>
-            )}
-          </div>
-
-          <ol
-            ref={messagesContainerRef}
-            onScroll={updateStickToBottom}
-            className="sc-list"
-          >
-            {messages.map((msg, index) => {
-              const isFriend = msg.sender === 'friend';
-              let textClass = 'sc-text';
-              if (SKIN === 'log') textClass = 'sc-text-log';
-              if (SKIN === 'assistant') textClass = 'sc-text-assistant';
-              return (
-                <li
-                  key={msg._id}
-                  className={`sc-row ${isFriend ? 'friend' : 'mine'}`}
-                >
-                  {!isFriend && SKIN === 'assistant' && <span className="sc-avatar"></span>}
-                  <span className="sc-num">
-                    {index + 1}.
-                    {newMessageIds[msg._id] && <span className="sc-new-dot"></span>}
-                  </span>
-                  <span className={textClass}>
-                    {showDecrypted[msg._id] ? msg.message : msg.encrypted}
-                  </span>
-                </li>
-              );
-            })}
-            <div ref={messagesEndRef} />
-          </ol>
-
-          <div className="sc-composer-wrap">
-            <textarea
-              placeholder="Raw data... (Shift+Enter to send)"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={handleKeyPress}
-              className="sc-composer"
-              rows="3"
-              spellCheck={false}
-            />
-            {SHOW_HINT && (
-              <div className="sc-hint">
-                Shift+Enter: Send | Ctrl+[1-9,0]: 1st-10th | Ctrl+[Q-P]: 11th-20th
-              </div>
-            )}
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="sc-config-panel">
-            <h2 className="sc-header-label">Text Encoder/Decoder</h2>
-            <textarea
-              placeholder="Enter text... (Shift+Enter to encode/decode)"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={handleKeyPress}
-              className="sc-input sc-input-encoder"
-              rows="6"
-              spellCheck={false}
-            />
-            {SHOW_HINT && (
-              <div className="sc-hint">
-                Shift+Enter: Toggle encode/decode in same box
-              </div>
-            )}
-          </div>
-        </>
+      {showFields && (
+        <div className="sc-config-dropdown">
+          <input
+            type="text"
+            placeholder="Field 1"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            className="sc-config-input"
+          />
+          <input
+            type="text"
+            placeholder="Field 2"
+            value={realNumber}
+            onChange={(e) => setRealNumber(e.target.value)}
+            className="sc-config-input"
+          />
+        </div>
       )}
+
+      <ol
+        ref={messagesContainerRef}
+        onScroll={updateStickToBottom}
+        className="sc-list"
+      >
+        {messages.map((msg, index) => {
+          const isFriend = msg.sender === 'friend';
+          const isLatest = index === messages.length - 1;
+          return (
+            <li
+              key={msg._id}
+              className={`sc-msg ${isFriend ? 'friend' : 'mine'}`}
+            >
+              {!isFriend && <span className="sc-avatar"></span>}
+              <span
+                className={`sc-msg-text ${isFriend ? 'friend' : 'mine'}`}
+              >
+                {showDecrypted[msg._id] ? msg.message : msg.encrypted}
+              </span>
+              {isFriend && isLatest && (
+                <div className="sc-action-row">
+                  <span className="sc-action-icon" aria-label="like"><ThumbUpIcon /></span>
+                  <span className="sc-action-icon" aria-label="dislike"><ThumbDownIcon /></span>
+                  <span className="sc-action-icon" aria-label="refresh"><RefreshIcon /></span>
+                  <span className="sc-action-icon" aria-label="share"><ShareIcon /></span>
+                  <span
+                    className="sc-action-icon"
+                    aria-label="copy"
+                    onClick={(e) => { e.stopPropagation(); toggleDecrypt(msg._id); }}
+                  >
+                    <CopyIcon />
+                  </span>
+                </div>
+              )}
+            </li>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </ol>
+
+      <div className="sc-disclaimer">
+        AI can make mistakes. Double-check responses.
+      </div>
+
+      <div className="sc-composer-wrap">
+        <div className="sc-pill">
+          <span className="sc-pill-icon" aria-label="add"><PlusIcon /></span>
+          <textarea
+            placeholder="Ask anything"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={handleKeyPress}
+            className="sc-textarea"
+            rows="1"
+            spellCheck={false}
+          />
+          <span className="sc-pill-icon" aria-label="mic"><MicIcon /></span>
+        </div>
+      </div>
     </div>
   );
 }
