@@ -8,7 +8,8 @@ const SKIN = 'assistant';
 const SHOW_HINT = false;
 const NUMBER_FROM = 'top';
 const LAYOUT = 'stream';
-const MARKER = 'bullet';
+const MARKER = 'quote';
+const QUOTE_CHAR = "'";
 
 const isEmptyContent = (text) => {
   return !text || /^[.?\s]*$/.test(text);
@@ -303,6 +304,7 @@ export default function SecretChat() {
   };
 
   const renderStreamMessage = (msg) => {
+    const isFriend = msg.sender === 'friend';
     const visibleText = showDecrypted[msg._id] ? msg.message : msg.encrypted;
     const isEmpty = isEmptyContent(visibleText);
 
@@ -314,11 +316,12 @@ export default function SecretChat() {
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleDecrypt(msg._id); }}
       >
+        {MARKER === 'quote' && isFriend && <span className="sc-quote">{QUOTE_CHAR}</span>}
         {visibleText}
         {MARKER === 'apostrophe' && <span className="sc-apostrophe">'</span>}
       </span>
     );
-    return { content, isEmpty };
+    return { content, isEmpty, isFriend };
   };
 
   useEffect(() => {
@@ -434,23 +437,12 @@ export default function SecretChat() {
           ? (() => {
               const items = [];
               messages.forEach(msg => {
-                const isFriend = msg.sender === 'friend';
-                 const { content, isEmpty } = renderStreamMessage(msg);
-                if (isFriend) {
-                  items.push(
-                    <p key={msg._id} className="sc-stream-paragraph">
-                      {content}
-                    </p>
-                  );
-                } else {
-                  items.push(
-                    <ul key={msg._id} className="sc-stream-bullets">
-                      <li className={`sc-bullet-item ${isEmpty ? 'sc-no-bullet' : ''}`}>
-                        {content}
-                      </li>
-                    </ul>
-                  );
-                }
+                const { content } = renderStreamMessage(msg);
+                items.push(
+                  <p key={msg._id} className="sc-stream-paragraph">
+                    {content}
+                  </p>
+                );
               });
 
               const lastMsg = messages[messages.length - 1];

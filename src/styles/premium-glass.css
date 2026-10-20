@@ -89,12 +89,18 @@
 }
 
 .sc-top-icon {
-  color: #c4c7c5;
+  color: #8a8a92;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: color 120ms ease;
   cursor: pointer;
+  font-size: 18px;
+}
+
+.sc-top-icon svg {
+  width: 18px;
+  height: 18px;
 }
 
 .sc-top-icon:hover {
@@ -105,7 +111,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 15px;
+  font-size: 13px;
   color: var(--sc-text);
 }
 
@@ -173,11 +179,11 @@
 
 /* Stream layout styles */
 .sc-stream-paragraph {
-  font-size: 15px;
-  line-height: 1.65;
-  color: var(--sc-text);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #a3a3ab;
   word-break: break-word;
-  margin: 0 0 14px 0;
+  margin: 0 0 8px 0;
   display: block;
 }
 
@@ -185,53 +191,18 @@
   margin-bottom: 0;
 }
 
-.sc-stream-bullets {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 14px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.sc-stream-bullets:last-child {
-  margin-bottom: 0;
-}
-
-.sc-bullet-item {
-  font-size: 15px;
-  line-height: 1.65;
-  color: var(--sc-text);
-  word-break: break-word;
-  margin: 0;
-  display: inline-flex;
-  align-items: flex-start;
-}
-
-.sc-bullet-item:before {
-  content: '';
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background-color: var(--sc-text-dim);
-  display: inline-block;
-  margin-left: -12px;
-  margin-right: 8px;
-  flex-shrink: 0;
-  margin-top: 0.3em;
-}
-
-.sc-bullet-item.sc-no-bullet:before {
-  content: none;
-  margin-left: 0;
-  margin-right: 0;
+.sc-quote {
+  color: #6b6b73;
+  font-size: 12px;
+  font-weight: normal;
+  margin-right: 2px;
 }
 
 .sc-stream-text {
   font-family: var(--sc-sans-family);
-  font-size: 15px;
-  line-height: 1.65;
-  color: var(--sc-text);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #a3a3ab;
   word-break: break-word;
   cursor: pointer;
   user-select: text;
@@ -244,7 +215,7 @@
 }
 
 .sc-stream-text.sc-empty {
-  min-height: 1.65em;
+  min-height: 1.5em;
   display: inline-block;
 }
 
@@ -256,18 +227,24 @@
 .sc-action-row {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   margin-top: 8px;
   padding: 0;
 }
 
 .sc-action-icon {
-  color: var(--sc-text-dim);
+  color: #6b6b73;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: default;
   transition: color 120ms ease;
+  font-size: 14px;
+}
+
+.sc-action-icon svg {
+  width: 14px;
+  height: 14px;
 }
 
 .sc-action-icon:hover {
@@ -276,8 +253,8 @@
 
 .sc-disclaimer {
   text-align: center;
-  font-size: 12px;
-  color: var(--sc-text-dim);
+  font-size: 10px;
+  color: #6b6b73;
   padding: 8px 16px;
   flex-shrink: 0;
 }
@@ -303,10 +280,16 @@
   justify-content: center;
   transition: color 120ms ease;
   flex-shrink: 0;
+  font-size: 18px;
+}
+
+.sc-pill-icon svg {
+  width: 18px;
+  height: 18px;
 }
 
 .sc-pill-icon:hover {
-  color: #c4c7c5;
+  color: var(--sc-accent);
 }
 
 .sc-textarea {
@@ -316,7 +299,7 @@
   outline: none;
   color: var(--sc-input-text);
   font-family: var(--sc-sans-family);
-  font-size: 15px;
+  font-size: 12.5px;
   line-height: 1.5;
   resize: none;
   padding: 0;
