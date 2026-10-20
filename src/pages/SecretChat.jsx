@@ -101,7 +101,8 @@ export default function SecretChat() {
   const [markingRead, setMarkingRead] = useState(false);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
-  const topBarRef = useRef(null);
+  const configDropdownRef = useRef(null);
+  const hamburgerRef = useRef(null);
   /** When true, message updates scroll to bottom; set false when user scrolls up to read older messages */
   const stickToBottomRef = useRef(true);
 
@@ -278,16 +279,18 @@ export default function SecretChat() {
     setShowDecrypted(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleClickOutside = useCallback((e) => {
-    if (showFields && topBarRef.current && !topBarRef.current.contains(e.target)) {
-      setShowFields(false);
-    }
-  }, [showFields]);
-
   useEffect(() => {
+    if (!showFields) return;
+    const handleClickOutside = (e) => {
+      const isInsideDropdown = configDropdownRef.current?.contains(e.target);
+      const isHamburger = hamburgerRef.current?.contains(e.target);
+      if (!isInsideDropdown && !isHamburger) {
+        setShowFields(false);
+      }
+    };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [handleClickOutside]);
+  }, [showFields]);
 
   if (!authenticated) {
     return (
@@ -317,9 +320,10 @@ export default function SecretChat() {
 
   return (
     <div className="sc-root" data-skin={SKIN}>
-      <div className="sc-top-bar" ref={topBarRef}>
+      <div className="sc-top-bar">
         <div
           className="sc-top-icon sc-icon-btn"
+          ref={hamburgerRef}
           onClick={() => setShowFields(!showFields)}
           aria-label="Menu"
           title="Menu"
@@ -361,7 +365,7 @@ export default function SecretChat() {
       </div>
 
       {showFields && (
-        <div className="sc-config-dropdown">
+        <div className="sc-config-dropdown" ref={configDropdownRef}>
           <input
             type="text"
             placeholder="Field 1"
