@@ -6,11 +6,9 @@ import '../styles/premium-glass.css';
 
 const SKIN = 'assistant';
 const SHOW_HINT = false;
-const NUMBER_FROM = 'bottom';
+const NUMBER_FROM = 'top';
 const LAYOUT = 'stream';
 const MARKER = 'bullet';
-
-const BULLET_CHAR = '•';
 
 const isEmptyContent = (text) => {
   return !text || /^[.?\s]*$/.test(text);
@@ -68,31 +66,34 @@ const MicIcon = () => (
 
 const ThumbUpIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 7v14M12 7l-3 3m3-3l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 7v14M12 7l-3 3m3-3l3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 7V3m-4 4l2-2m4-2v2m-2 0l2 2m-2-2l-2 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const ThumbDownIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 17V3m0 0l-3 3m3-3l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 17V3M12 3l3 3m-3-3l-3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 17v4m4-4l-2-2m-4 2l2 2m-2-2l2-2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const RefreshIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M4 12a8 8 0 0112.9-.7M4 12l3-3m-3 3l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M4 12a8 8 0 0112.9-.7M4 12l3-3m-3 3l3 3m6.9-11.7A8 8 0 0120 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const ShareIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.74 19.74 0 01-8.63-3.07 19.1 19.1 0 01-5-5 19.25 19.25 0 01-3-5 2 2 0 01.94-2.46 19.7 19.7 0 018.62-.87A11.84 11.84 0 0121 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.74 19.74 0 01-8.63-3.07 19.1 19.1 0 01-5-5 19.25 19.25 0 01-3-5 2 2 0 01.94-2.46 19.7 19.7 0 018.62-.87A11.84 11.84 0 0121 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const CopyIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M9 5H5a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-4M9 5l6 6M9 5V3a2 2 0 012-2h7a2 2 0 012 2v5a2 2 0 01-2 2v0a2 2 0 01-2-2V5a2 2 0 00-2-2h-3z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M9 5H5a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M9 5l6 6M9 5V3a2 2 0 012-2h7a2 2 0 012 2v5a2 2 0 01-2 2v0a2 2 0 01-2-2V5a2 2 0 00-2-2h-3z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -302,29 +303,11 @@ export default function SecretChat() {
   };
 
   const renderStreamMessage = (msg) => {
-    const isFriend = msg.sender === 'friend';
     const visibleText = showDecrypted[msg._id] ? msg.message : msg.encrypted;
     const isEmpty = isEmptyContent(visibleText);
 
-    if (MARKER === 'apostrophe') {
-      return (
-        <span
-          key={msg._id}
-          className="sc-stream-text sc-stream-text-apostrophe"
-          onClick={() => toggleDecrypt(msg._id)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleDecrypt(msg._id); }}
-        >
-          {visibleText}
-          {isFriend && <span className="sc-apostrophe">'</span>}
-        </span>
-      );
-    }
-
-    return (
+    const content = (
       <span
-        key={msg._id}
         className={`sc-stream-text ${isEmpty ? 'sc-empty' : ''}`}
         onClick={() => toggleDecrypt(msg._id)}
         role="button"
@@ -332,8 +315,10 @@ export default function SecretChat() {
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleDecrypt(msg._id); }}
       >
         {visibleText}
+        {MARKER === 'apostrophe' && <span className="sc-apostrophe">'</span>}
       </span>
     );
+    return { content, isEmpty };
   };
 
   useEffect(() => {
@@ -447,36 +432,26 @@ export default function SecretChat() {
       >
         {LAYOUT === 'stream'
           ? (() => {
-              const turns = groupMessages(messages);
-              let ownGroup = [];
               const items = [];
-              const flushOwn = () => {
-                if (ownGroup.length > 0) {
+              messages.forEach(msg => {
+                const isFriend = msg.sender === 'friend';
+                 const { content, isEmpty } = renderStreamMessage(msg);
+                if (isFriend) {
                   items.push(
-                    <ul key={`own-${ownGroup[0]._id}`} className="sc-stream-bullets">
-                      {ownGroup.map(msg => (
-                        <li key={msg._id} className="sc-bullet-item">
-                          {renderStreamMessage(msg)}
-                        </li>
-                      ))}
-                    </ul>
-                  );
-                  ownGroup = [];
-                }
-              };
-              turns.forEach(turn => {
-                if (turn.isFriend) {
-                  flushOwn();
-                  items.push(
-                    <p key={`f-${turn.messages[0]._id}`} className="sc-stream-paragraph">
-                      {turn.messages.map(msg => renderStreamMessage(msg))}
+                    <p key={msg._id} className="sc-stream-paragraph">
+                      {content}
                     </p>
                   );
                 } else {
-                  ownGroup.push(...turn.messages);
+                  items.push(
+                    <ul key={msg._id} className="sc-stream-bullets">
+                      <li className={`sc-bullet-item ${isEmpty ? 'sc-no-bullet' : ''}`}>
+                        {content}
+                      </li>
+                    </ul>
+                  );
                 }
               });
-              flushOwn();
 
               const lastMsg = messages[messages.length - 1];
               const isLastFriend = lastMsg?.sender === 'friend';
