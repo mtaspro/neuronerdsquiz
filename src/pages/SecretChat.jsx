@@ -4,15 +4,17 @@ import { createSocket, addSocketListeners } from '../utils/socket.js';
 import { secureStorage } from '../utils/secureStorage';
 import '../styles/premium-glass.css';
 
+const SKIN = 'notes-dark';
+const SHOW_HINT = false;
+
 const rot13 = (str) => {
   return str.replace(/[a-zA-Z]/g, c => 
     String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26)
   ).replace(/[অ-হ]/g, c => {
-    // Bengali vowels and consonants (অ-হ)
     const code = c.charCodeAt(0);
-    const base = 0x0985; // Start of Bengali block
+    const base = 0x0985;
     const offset = code - base;
-    const newOffset = (offset + 13) % 53; // 53 Bengali characters
+    const newOffset = (offset + 13) % 53;
     return String.fromCharCode(base + newOffset);
   });
 };
@@ -28,6 +30,8 @@ export default function SecretChat() {
   const [showFields, setShowFields] = useState(false);
   const [mode, setMode] = useState('chat');
   const [markingRead, setMarkingRead] = useState(false);
+  const [newMessageIds, setNewMessageIds] = useState({});
+  const newMessageIdsRef = useRef({});
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   /** When true, message updates scroll to bottom; set false when user scrolls up to read older messages */
@@ -41,7 +45,28 @@ export default function SecretChat() {
       const res = await axios.get(`${API_URL}/api/secret-chat/history/${phoneNumber}?limit=20`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setMessages(res.data.messages);
+      const incomingIds = new Set(res.data.messages.map(m => m._id));
+      setMessages(prev => {
+        const prevIds = new Set(prev.map(m => m._id));
+        const newMap = { ...newMessageIdsRef.current };
+        res.data.messages.forEach(m => {
+          if (!prevIds.has(m._id)) {
+            newMap[m._id] = Date.now();
+            setTimeout(() => setNewMessageIds(nm => { const n = { ...nm }; delete n[m._id]; return n; }), 4000);
+          }
+        });
+        newMessageIdsRef.current = newMap;
+        setNewMessageIds(newMap);
+        return res.data.messages;
+      });
+      setNewMessageIds(prev => {
+        const next = { ...prev };
+        Object.keys(next).forEach(id => {
+          if (!incomingIds.has(id)) delete next[id];
+        });
+        newMessageIdsRef.current = next;
+        return next;
+      });
     } catch (error) {
       console.error('Load error:', error);
     }
@@ -168,7 +193,7 @@ export default function SecretChat() {
       if (mode === 'encoder') {
         if (!inputText.trim()) return;
         const result = rot13(inputText);
-        setInputText(result); // Replace text in same box
+        setInputText(result);
         return;
       }
       
@@ -204,31 +229,24 @@ export default function SecretChat() {
 
   if (!authenticated) {
     return (
-      <div className="premium-glass-background min-h-screen text-white flex items-center justify-center relative">
-        {/* Mesh Gradient Effect */}
-        <div className="mesh-gradient-purple"></div>
-        <div className="mesh-gradient-green"></div>
-        <div className="mesh-gradient-blue"></div>
-        
-        <div className="glass-panel p-8 max-w-md w-full relative z-10">
-          <h2 className="premium-font premium-heading text-2xl mb-6 text-center text-red-500">
-            You are in the wrong way dude, what's your code?
-          </h2>
+      <div className="sc-root sc-auth" data-skin={SKIN}>
+        <div className="sc-auth-panel">
+          <h2 className="sc-header-label">You are in the wrong way dude, what's your code?</h2>
           <form onSubmit={handlePasswordSubmit}>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter code..."
-              className="w-full bg-gray-700/50 border border-gray-600/50 px-4 py-3 rounded mb-4 text-center text-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="sc-input"
               autoFocus
             />
             <button
               type="submit"
-              className="w-full premium-button py-3 rounded font-bold"
-              style={{ background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.8), rgba(153, 27, 27, 0.8))', boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)' }}
+              className="sc-button"
+              style={{ marginTop: '16px' }}
             >
-              🔓 Unlock
+              Unlock
             </button>
           </form>
         </div>
@@ -237,120 +255,133 @@ export default function SecretChat() {
   }
 
   return (
-    <div className="premium-glass-background min-h-screen text-white p-4 sm:p-8 relative">
-      {/* Mesh Gradient Effect */}
-      <div className="mesh-gradient-purple"></div>
-      <div className="mesh-gradient-green"></div>
-      <div className="mesh-gradient-blue"></div>
-      
-      <div className="max-w-4xl mx-auto relative z-10">
-        <div className="flex items-center gap-4 mb-4">
-          <h1 className="premium-font premium-heading text-3xl">🔐 X-Protocol</h1>
+    <div className="sc-root" data-skin={SKIN}>
+      <div className="sc-header-bar">
+        <span className="sc-header-label">Notes</span>
+        <div className="sc-buttons">
           <button
             onClick={() => setMode(mode === 'chat' ? 'encoder' : 'chat')}
-            className="premium-button-purple px-4 py-2 rounded text-sm"
+            className="sc-button sc-button-active"
           >
-            {mode === 'chat' ? '💬 Chat' : '🔐 Encoder'}
+            {mode === 'chat' ? 'Chat' : 'Encoder'}
           </button>
         </div>
-        
-        {mode === 'chat' ? (
-          <>
-            <div className="glass-panel p-4 rounded mb-4">
-              <div className="flex gap-2 mb-2">
-                <button 
-                  onClick={() => setShowFields(!showFields)}
-                  className="glass-panel px-3 py-2 rounded text-sm"
-                >
-                  GE
-                </button>
-                <button onClick={fetchFromWhatsApp} className="glass-panel px-4 py-2 rounded">
-                  MINAI
-                </button>
-                <button
-                  type="button"
-                  onClick={markAsReadOnWhatsApp}
-                  disabled={markingRead}
-                  className="glass-panel px-4 py-2 rounded text-lg font-semibold disabled:opacity-50 leading-none"
-                  title="Mark latest messages as read on WhatsApp (blue ticks for your friend)"
-                  aria-label="Mark as read on WhatsApp"
-                >
-                  {markingRead ? '…' : 'AI'}
-                </button>
-              </div>
-              {showFields && (
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    placeholder="Target ID (LID)"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full bg-white text-black placeholder:text-gray-500 border border-gray-400 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 caret-black"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Real number"
-                    value={realNumber}
-                    onChange={(e) => setRealNumber(e.target.value)}
-                    className="w-full bg-white text-black placeholder:text-gray-500 border border-gray-400 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 caret-black"
-                  />
-                </div>
-              )}
-            </div>
+      </div>
 
-            <div
-              ref={messagesContainerRef}
-              onScroll={updateStickToBottom}
-              className="glass-panel p-4 rounded mb-4 h-96 overflow-y-auto"
-            >
-              {messages.map((msg, index) => (
-                <div key={msg._id} className="mb-2 text-left">
-                  <span className="text-gray-500 mr-2">
-                    {index + 1}{msg.sender === 'friend' ? "'" : ''}.
+      {mode === 'chat' ? (
+        <>
+          <div className="sc-config-panel">
+            <div className="sc-buttons">
+              <button
+                onClick={() => setShowFields(!showFields)}
+                className={`sc-button ${showFields ? 'sc-button-active' : ''}`}
+              >
+                GE
+              </button>
+              <button
+                onClick={fetchFromWhatsApp}
+                className="sc-button"
+              >
+                MINAI
+              </button>
+              <button
+                type="button"
+                onClick={markAsReadOnWhatsApp}
+                disabled={markingRead}
+                className={`sc-button ${markingRead ? 'sc-button-disabled' : ''}`}
+                title="Mark latest messages as read on WhatsApp (blue ticks for your friend)"
+                aria-label="Mark as read on WhatsApp"
+              >
+                {markingRead ? '…' : 'AI'}
+              </button>
+            </div>
+            {showFields && (
+              <div className="sc-config">
+                <input
+                  type="text"
+                  placeholder="Target ID (LID)"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="sc-input"
+                />
+                <input
+                  type="text"
+                  placeholder="Real number"
+                  value={realNumber}
+                  onChange={(e) => setRealNumber(e.target.value)}
+                  className="sc-input"
+                />
+              </div>
+            )}
+          </div>
+
+          <ol
+            ref={messagesContainerRef}
+            onScroll={updateStickToBottom}
+            className="sc-list"
+          >
+            {messages.map((msg, index) => {
+              const isFriend = msg.sender === 'friend';
+              let textClass = 'sc-text';
+              if (SKIN === 'log') textClass = 'sc-text-log';
+              if (SKIN === 'assistant') textClass = 'sc-text-assistant';
+              return (
+                <li
+                  key={msg._id}
+                  className={`sc-row ${isFriend ? 'friend' : 'mine'}`}
+                >
+                  {!isFriend && SKIN === 'assistant' && <span className="sc-avatar"></span>}
+                  <span className="sc-num">
+                    {index + 1}.
+                    {newMessageIds[msg._id] && <span className="sc-new-dot"></span>}
                   </span>
-                  <span className="font-mono text-sm text-gray-300">
+                  <span className={textClass}>
                     {showDecrypted[msg._id] ? msg.message : msg.encrypted}
                   </span>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
+                </li>
+              );
+            })}
+            <div ref={messagesEndRef} />
+          </ol>
 
-            <div className="glass-panel p-4 rounded">
-              <textarea
-                placeholder="Raw data... (Shift+Enter to send)"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={handleKeyPress}
-                className="w-full bg-white text-black placeholder:text-gray-500 border border-gray-400 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 caret-black font-mono text-sm selection:bg-purple-200"
-                rows="3"
-                spellCheck={false}
-              />
-              <div className="text-xs text-gray-500 mt-2">
+          <div className="sc-composer-wrap">
+            <textarea
+              placeholder="Raw data... (Shift+Enter to send)"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={handleKeyPress}
+              className="sc-composer"
+              rows="3"
+              spellCheck={false}
+            />
+            {SHOW_HINT && (
+              <div className="sc-hint">
                 Shift+Enter: Send | Ctrl+[1-9,0]: 1st-10th | Ctrl+[Q-P]: 11th-20th
               </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="glass-panel p-4 rounded mb-4">
-              <h2 className="premium-font premium-heading text-lg mb-3">🔐 Text Encoder/Decoder</h2>
-              <textarea
-                placeholder="Enter text... (Shift+Enter to encode/decode)"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={handleKeyPress}
-                className="w-full bg-white text-black placeholder:text-gray-500 border border-gray-400 px-3 py-2 rounded mb-3 focus:outline-none focus:ring-2 focus:ring-purple-500 caret-black font-mono text-sm selection:bg-purple-200"
-                rows="6"
-                spellCheck={false}
-              />
-              <div className="text-xs text-gray-500">
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="sc-config-panel">
+            <h2 className="sc-header-label">Text Encoder/Decoder</h2>
+            <textarea
+              placeholder="Enter text... (Shift+Enter to encode/decode)"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={handleKeyPress}
+              className="sc-input sc-input-encoder"
+              rows="6"
+              spellCheck={false}
+            />
+            {SHOW_HINT && (
+              <div className="sc-hint">
                 Shift+Enter: Toggle encode/decode in same box
               </div>
-            </div>
-          </>
-        )}
-      </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
