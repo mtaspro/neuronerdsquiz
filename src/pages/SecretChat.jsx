@@ -8,8 +8,9 @@ const SKIN = 'assistant';
 const SHOW_HINT = false;
 const NUMBER_FROM = 'top';
 const LAYOUT = 'stream';
-const MARKER = 'quote';
-const QUOTE_CHAR = "'";
+const MARKER = 'bullet';
+const MESSAGES_AREA_HEIGHT = 280;
+const FONT_STACK = "'Google Sans', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 
 const isEmptyContent = (text) => {
   return !text || /^[.?\s]*$/.test(text);
@@ -113,6 +114,7 @@ export default function SecretChat() {
   const messagesContainerRef = useRef(null);
   const configDropdownRef = useRef(null);
   const hamburgerRef = useRef(null);
+  const messageRefsRef = useRef({});
   /** When true, message updates scroll to bottom; set false when user scrolls up to read older messages */
   const stickToBottomRef = useRef(true);
 
@@ -179,7 +181,7 @@ export default function SecretChat() {
           const slot = parseInt(e.key) - 1;
           const index = NUMBER_FROM === 'bottom' ? messages.length - 1 - slot : slot;
           if (messages[index]) {
-            toggleDecrypt(messages[index]._id);
+            toggleDecrypt(messages[index]._id, true);
           }
         }
         else if (e.key === '0') {
@@ -187,7 +189,7 @@ export default function SecretChat() {
           const slot = 9;
           const index = NUMBER_FROM === 'bottom' ? messages.length - 1 - slot : slot;
           if (messages[index]) {
-            toggleDecrypt(messages[index]._id);
+            toggleDecrypt(messages[index]._id, true);
           }
         }
         else if ('QWERTYUIOP'.includes(e.key.toUpperCase())) {
@@ -196,7 +198,7 @@ export default function SecretChat() {
           const slot = 10 + keyIndex;
           const index = NUMBER_FROM === 'bottom' ? messages.length - 1 - slot : slot;
           if (messages[index]) {
-            toggleDecrypt(messages[index]._id);
+            toggleDecrypt(messages[index]._id, true);
           }
         }
       }
@@ -285,8 +287,16 @@ export default function SecretChat() {
     }
   };
 
-  const toggleDecrypt = (id) => {
+  const toggleDecrypt = (id, scrollIntoView = false) => {
     setShowDecrypted(prev => ({ ...prev, [id]: !prev[id] }));
+    if (scrollIntoView) {
+      setTimeout(() => {
+        const el = messageRefsRef.current[id];
+        if (el) {
+          el.scrollIntoView({ block: 'nearest' });
+        }
+      }, 0);
+    }
   };
 
   const groupMessages = (msgs) => {
@@ -304,7 +314,6 @@ export default function SecretChat() {
   };
 
   const renderStreamMessage = (msg) => {
-    const isFriend = msg.sender === 'friend';
     const visibleText = showDecrypted[msg._id] ? msg.message : msg.encrypted;
     const isEmpty = isEmptyContent(visibleText);
 
@@ -316,12 +325,11 @@ export default function SecretChat() {
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleDecrypt(msg._id); }}
       >
-        {MARKER === 'quote' && isFriend && <span className="sc-quote">{QUOTE_CHAR}</span>}
         {visibleText}
         {MARKER === 'apostrophe' && <span className="sc-apostrophe">'</span>}
       </span>
     );
-    return { content, isEmpty, isFriend };
+    return { content, isEmpty };
   };
 
   useEffect(() => {
@@ -339,7 +347,7 @@ export default function SecretChat() {
 
   if (!authenticated) {
     return (
-      <div className="sc-root sc-auth" data-skin={SKIN}>
+      <div className="sc-root sc-auth" data-skin={SKIN} style={{ fontFamily: FONT_STACK }}>
         <div className="sc-auth-panel">
           <form onSubmit={handlePasswordSubmit}>
             <input
@@ -364,7 +372,7 @@ export default function SecretChat() {
   }
 
   return (
-    <div className="sc-root" data-skin={SKIN}>
+    <div className="sc-root" data-skin={SKIN} style={{ fontFamily: FONT_STACK }}>
       <div className="sc-top-bar">
         <div
           className="sc-top-icon sc-icon-btn"
@@ -432,17 +440,36 @@ export default function SecretChat() {
         ref={messagesContainerRef}
         onScroll={updateStickToBottom}
         className="sc-list"
+        style={{ height: MESSAGES_AREA_HEIGHT }}
       >
         {LAYOUT === 'stream'
           ? (() => {
               const items = [];
-              messages.forEach(msg => {
-                const { content } = renderStreamMessage(msg);
-                items.push(
-                  <p key={msg._id} className="sc-stream-paragraph">
-                    {content}
-                  </p>
-                );
+               messages.forEach(msg => {
+                const isFriend = msg.sender === 'friend';
+                 const { content, isEmpty } = renderStreamMessage(msg);
+                if (isFriend) {
+                  items.push(
+                    <p
+                      key={msg._id}
+                      className="sc-stream-paragraph"
+                      ref={(el) => { messageRefsRef.current[msg._id] = el; }}
+                    >
+                      {content}
+                    </p>
+                  );
+                } else {
+                  items.push(
+                    <ul key={msg._id} className="sc-stream-bullets">
+                      <li
+                        className={`sc-bullet-item ${isEmpty ? 'sc-no-bullet' : ''}`}
+                        ref={(el) => { messageRefsRef.current[msg._id] = el; }}
+                      >
+                        {content}
+                      </li>
+                    </ul>
+                  );
+                }
               });
 
               const lastMsg = messages[messages.length - 1];
