@@ -5,11 +5,11 @@
   --sc-panel: #1e1f20;
   --sc-border: #3c4043;
   --sc-accent: #7d8a9a;
-  --sc-text: #e3e3e3;
-  --sc-text-dim: #9aa0a6;
+  --sc-text: #c4c7c5;
+  --sc-text-dim: #7a7f84;
   --sc-number: #55555e;
   --sc-input-bg: #1e1f20;
-  --sc-input-text: #e3e3e3;
+  --sc-input-text: #c4c7c5;
   --sc-placeholder: #7a7f84;
   --sc-mono-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   --sc-font: 'Google Sans', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -205,8 +205,8 @@
   position: absolute;
   left: 0;
   top: 0.3em;
-  width: 5px;
-  height: 5px;
+  width: 3px;
+  height: 3px;
   border-radius: 50%;
   background-color: var(--sc-text-dim);
   transform: translateY(-0.1em);
@@ -338,7 +338,7 @@
   border: 1px solid var(--sc-border);
   border-radius: 12px;
   padding: 24px;
-  max-width: 280px;
+  max-width: 380px;
   width: 100%;
 }
 
