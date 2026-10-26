@@ -1,8 +1,15 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { FaPowerOff, FaArrowLeft, FaCheck, FaTimes, FaInfoCircle } from 'react-icons/fa';
 import PageShell from '../components/ui/PageShell';
 import Button from '../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
+
+const BOARD_IMAGE_OFF = 'https://res.cloudinary.com/dxqtqnfgf/image/upload/v1793035024/89d494cf-feaf-4395-bf85-42bd6213532e.png';
+const BOARD_IMAGE_POWER_ON_OVERLAY = 'https://res.cloudinary.com/dxqtqnfgf/image/upload/v1793025957/fe4f87ca-683e-493e-aeee-bd3ef11ff1fc.png';
+
+const BOARD_NATURAL_W = 1280;
+const BOARD_NATURAL_H = 800;
+const CANVAS_W = 800;
 
 const GATE_CONFIG = {
   NOT: {
@@ -86,35 +93,68 @@ const COORDINATES = {
   powerSupply: { pctX: 36.714, pctY: 43.537 },
 };
 
-const BOARD_WIDTH = 1000;
-const BOARD_HEIGHT = 600;
+const pct = (value, dimension) => (value / 100) * dimension;
 
-const pctToPx = (pct, dimension) => (pct / 100) * dimension;
+const TrainerBoard = ({ boardState, switchStates, onToggle, ledStates }) => {
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
-const TrainerBoard = ({ boardState, switchStates, onToggle, ledStates, onSelectSwitch }) => {
-  const activeSwitches = Object.keys(switchStates);
+  const canvasW = CANVAS_W;
+  const canvasH = (CANVAS_W / BOARD_NATURAL_W) * BOARD_NATURAL_H;
+
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => setImgLoaded(true);
+    img.onerror = () => setImgError(true);
+    img.src = BOARD_IMAGE_OFF;
+  }, []);
 
   return (
     <div
-      className={`relative rounded-xl shadow-2xl transition-all duration-500 ${
+      className={`relative rounded-xl shadow-2xl transition-all duration-500 overflow-hidden ${
         boardState
           ? 'ring-2 ring-cyan-400/50 shadow-cyan-500/30'
           : 'ring-1 ring-slate-600/30'
       }`}
-      style={{ width: BOARD_WIDTH, height: BOARD_HEIGHT, maxWidth: '100%', margin: '0 auto' }}
+      style={{ width: canvasW, maxWidth: '100%', margin: '0 auto' }}
     >
+      {imgError ? (
+        <div className="flex items-center justify-center h-64 text-red-400">Failed to load board image</div>
+      ) : (
+        <>
+          <img
+            src={BOARD_IMAGE_OFF}
+            alt="Logic trainer board"
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+            onLoad={() => setImgLoaded(true)}
+            className={boardState ? 'opacity-0' : 'opacity-100'}
+          />
+          {boardState && (
+            <img
+              src={BOARD_IMAGE_POWER_ON_OVERLAY}
+              alt="Power ON overlay"
+              className="absolute top-0 left-0 w-full h-auto opacity-100"
+              style={{ pointerEvents: 'none' }}
+            />
+          )}
+          {!boardState && (
+            <img
+              src={BOARD_IMAGE_POWER_ON_OVERLAY}
+              alt="Power ON overlay (hidden)"
+              className="absolute top-0 left-0 w-full h-auto opacity-0"
+              style={{ pointerEvents: 'none' }}
+            />
+          )}
+        </>
+      )}
+
       <svg
-        width={BOARD_WIDTH}
-        height={BOARD_HEIGHT}
-        viewBox={`0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}`}
-        className="w-full h-full"
-        style={{ display: 'block' }}
+        className="absolute inset-0 w-full h-full"
+        style={{ pointerEvents: boardState ? 'auto' : 'none', zIndex: 10 }}
+        viewBox={`0 0 ${canvasW} ${canvasH}`}
       >
         <defs>
-          <linearGradient id="boardGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#0f172a" />
-            <stop offset="100%" stopColor="#020617" />
-          </linearGradient>
           <filter id="ledGlow">
             <feGaussianBlur stdDeviation="4" result="blur" />
             <feMerge>
@@ -131,99 +171,70 @@ const TrainerBoard = ({ boardState, switchStates, onToggle, ledStates, onSelectS
           </filter>
         </defs>
 
-        <rect x={0} y={0} width={BOARD_WIDTH} height={BOARD_HEIGHT} fill="url(#boardGradient)" rx={12} ry={12} />
+        {imgLoaded && (
+          <>
+            {Object.entries(COORDINATES.leds).map(([id, pos]) => {
+              const isActive = ledStates[id];
+              const cx = pct(pos.pctX, canvasW);
+              const cy = pct(pos.pctY, canvasH);
+              return (
+                <g key={id}>
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={isActive ? 14 : 11}
+                    fill={isActive ? '#f59e0b' : '#374151'}
+                    filter={isActive ? 'url(#ledGlow)' : 'none'}
+                  />
+                  <text
+                    x={cx}
+                    y={cy + 30}
+                    textAnchor="middle"
+                    fill="#94a3b8"
+                    fontSize={9}
+                    fontFamily="monospace"
+                  >
+                    {id}
+                  </text>
+                </g>
+              );
+            })}
 
-        {boardState ? (
-          <g opacity={0.9}>
-            <rect x={60} y={20} width={880} height={60} rx={8} ry={8} fill="#1e293b" stroke="#06b6d4" strokeWidth={2} />
-            <text x={BOARD_WIDTH / 2} y={55} textAnchor="middle" fill="#06b6d4" fontSize={16} fontWeight="bold" fontFamily="monospace">
-              LOGIC TRAINER - POWER ON
-            </text>
-            <circle cx={pctToPx(COORDINATES.powerSupply.pctX, BOARD_WIDTH)} cy={pctToPx(COORDINATES.powerSupply.pctY, BOARD_HEIGHT)} r={14} fill="#10b981" />
-            <text
-              x={pctToPx(COORDINATES.powerSupply.pctX, BOARD_WIDTH)}
-              y={pctToPx(COORDINATES.powerSupply.pctY, BOARD_HEIGHT) + 35}
-              textAnchor="middle"
-              fill="#10b981"
-              fontSize={11}
-              fontFamily="monospace"
-            >
-              +5V / GND
-            </text>
-          </g>
-        ) : (
-          <g opacity={0.3}>
-            <rect x={60} y={20} width={880} height={60} rx={8} ry={8} fill="#1e293b" stroke="#334155" strokeWidth={1} />
-            <text x={BOARD_WIDTH / 2} y={55} textAnchor="middle" fill="#64748b" fontSize={16} fontWeight="bold" fontFamily="monospace">
-              LOGIC TRAINER - POWER OFF
-            </text>
-            <circle cx={pctToPx(COORDINATES.powerSupply.pctX, BOARD_WIDTH)} cy={pctToPx(COORDINATES.powerSupply.pctY, BOARD_HEIGHT)} r={14} fill="#475569" />
-          </g>
+            {Object.keys(switchStates).map((sId) => {
+              const togglePos = COORDINATES.toggles[sId];
+              const isOn = switchStates[sId];
+              const tx = pct(togglePos.pctX, canvasW);
+              const ty = pct(togglePos.pctY, canvasH);
+              return (
+                <g key={sId}>
+                  <rect
+                    x={tx - 14}
+                    y={ty - 8}
+                    width={28}
+                    height={16}
+                    rx={8}
+                    fill={isOn ? '#10b981' : '#475569'}
+                    stroke={isOn ? '#22c55e' : '#64748b'}
+                    strokeWidth={2}
+                    filter={isOn ? 'url(#switchGlow)' : 'none'}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => onToggle(sId)}
+                  />
+                  <text
+                    x={tx}
+                    y={ty + 22}
+                    textAnchor="middle"
+                    fill="#94a3b8"
+                    fontSize={9}
+                    fontFamily="monospace"
+                  >
+                    {sId}
+                  </text>
+                </g>
+              );
+            })}
+          </>
         )}
-
-        <g opacity={boardState ? 1 : 0.4}>
-          {Object.entries(COORDINATES.leds).map(([id, pos]) => {
-            const isActive = ledStates[id];
-            const cx = pctToPx(pos.pctX, BOARD_WIDTH);
-            const cy = pctToPx(pos.pctY, BOARD_HEIGHT);
-            return (
-              <g key={id}>
-                <circle cx={cx} cy={cy} r={12} fill={isActive ? '#f59e0b' : '#374151'} filter={isActive ? 'url(#ledGlow)' : 'none'} />
-                <text x={cx} y={cy + 30} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
-                  {id}
-                </text>
-              </g>
-            );
-          })}
-
-          {activeSwitches.map((sId) => {
-            const togglePos = COORDINATES.toggles[sId];
-            const holePos = COORDINATES.holes[sId];
-            const isOn = switchStates[sId];
-            const tx = pctToPx(togglePos.pctX, BOARD_WIDTH);
-            const ty = pctToPx(togglePos.pctY, BOARD_HEIGHT);
-            const hx = pctToPx(holePos.pctX, BOARD_WIDTH);
-            const hy = pctToPx(holePos.pctY, BOARD_HEIGHT);
-            return (
-              <g key={sId}>
-                <line x1={hx} y1={hy} x2={tx} y2={ty + 8} stroke={isOn ? '#f59e0b' : '#64748b'} strokeWidth={2} strokeDasharray="2,2" />
-                <rect
-                  x={tx - 12}
-                  y={ty - 6}
-                  width={24}
-                  height={12}
-                  rx={6}
-                  fill={isOn ? '#10b981' : '#475569'}
-                  stroke={isOn ? '#22c55e' : '#64748b'}
-                  strokeWidth={2}
-                  filter={isOn ? 'url(#switchGlow)' : 'none'}
-                  style={{ cursor: boardState ? 'pointer' : 'not-allowed' }}
-                  onClick={() => boardState && onToggle(sId)}
-                />
-                <text x={tx} y={ty + 25} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
-                  {sId}
-                </text>
-              </g>
-            );
-          })}
-
-          {Object.entries(COORDINATES.holes).map(([id, pos]) => {
-            const cx = pctToPx(pos.pctX, BOARD_WIDTH);
-            const cy = pctToPx(pos.pctY, BOARD_HEIGHT);
-            return (
-              <g key={id}>
-                <circle cx={cx} cy={cy} r={8} fill={switchStates[id] ? '#10b981' : '#475569'} stroke="#06b6d4" strokeWidth={1} />
-              </g>
-            );
-          })}
-        </g>
-
-        <g>
-          <circle cx={pctToPx(COORDINATES.powerButton.pctX, BOARD_WIDTH)} cy={pctToPx(COORDINATES.powerButton.pctY, BOARD_HEIGHT)} r={18} fill={boardState ? '#10b981' : '#475569'} stroke={boardState ? '#22c55e' : '#64748b'} strokeWidth={2} filter={boardState ? 'url(#switchGlow)' : 'none'} style={{ cursor: 'pointer' }} onClick={onSelectSwitch} />
-          <text x={pctToPx(COORDINATES.powerButton.pctX, BOARD_WIDTH)} y={pctToPx(COORDINATES.powerButton.pctY, BOARD_HEIGHT) + 35} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="monospace">
-            POWER
-          </text>
-        </g>
       </svg>
     </div>
   );
@@ -313,7 +324,6 @@ const LogicGateExperiment = ({ gateType = 'NOT' }) => {
               switchStates={switchStates}
               onToggle={toggleSwitch}
               ledStates={ledStates}
-              onSelectSwitch={togglePower}
             />
 
             <div className="flex gap-4 justify-center">
