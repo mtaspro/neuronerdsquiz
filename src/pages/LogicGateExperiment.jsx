@@ -128,24 +128,13 @@ const TrainerBoard = ({ boardState, switchStates, onToggle, ledStates }) => {
             alt="Logic trainer board"
             style={{ width: '100%', height: 'auto', display: 'block' }}
             onLoad={() => setImgLoaded(true)}
-            className={boardState ? 'opacity-0' : 'opacity-100'}
           />
-          {boardState && (
-            <img
-              src={BOARD_IMAGE_POWER_ON_OVERLAY}
-              alt="Power ON overlay"
-              className="absolute top-0 left-0 w-full h-auto opacity-100"
-              style={{ pointerEvents: 'none' }}
-            />
-          )}
-          {!boardState && (
-            <img
-              src={BOARD_IMAGE_POWER_ON_OVERLAY}
-              alt="Power ON overlay (hidden)"
-              className="absolute top-0 left-0 w-full h-auto opacity-0"
-              style={{ pointerEvents: 'none' }}
-            />
-          )}
+          <img
+            src={BOARD_IMAGE_POWER_ON_OVERLAY}
+            alt="Power ON overlay"
+            className="absolute top-0 left-0 w-full h-auto"
+            style={{ opacity: boardState ? 1 : 0, pointerEvents: 'none', transition: 'opacity 0.3s ease' }}
+          />
         </>
       )}
 
