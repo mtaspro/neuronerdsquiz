@@ -46,6 +46,7 @@ import ChemistryLab from './pages/ChemistryLab';
 import AdventureHub from './pages/AdventureHub';
 import PostOfficeBoxExperiment from './pages/PostOfficeBoxExperiment';
 import CoordinatePickerDebug from './pages/CoordinatePickerDebug';
+import LogicGateExperiment from './pages/LogicGateExperiment';
 import SharedConversation from './pages/SharedConversation';
 import DarkModeToggle from './components/DarkModeToggle';
 import ThemeSelector from './components/ThemeSelector';
@@ -498,6 +499,30 @@ function AnimatedRoutes() {
                element={
                  <ProtectedRoute>
                    <CoordinatePickerDebug />
+                 </ProtectedRoute>
+               }
+             />
+             <Route
+               path="/virtual-lab/physics/not-gate"
+               element={
+                 <ProtectedRoute>
+                   <LogicGateExperiment gateType="NOT" />
+                 </ProtectedRoute>
+               }
+             />
+             <Route
+               path="/virtual-lab/physics/and-gate"
+               element={
+                 <ProtectedRoute>
+                   <LogicGateExperiment gateType="AND" />
+                 </ProtectedRoute>
+               }
+             />
+             <Route
+               path="/virtual-lab/physics/or-gate"
+               element={
+                 <ProtectedRoute>
+                   <LogicGateExperiment gateType="OR" />
                  </ProtectedRoute>
                }
              />

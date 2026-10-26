@@ -9,6 +9,21 @@ const experiments = [
     description: 'Determine the resistance of a wire using a Post Office Box (meter bridge) setup.',
     to: '/virtual-lab/physics/post-office-box',
   },
+  {
+    title: 'NOT Gate Experiment',
+    description: 'Investigate the inverting behaviour of a NOT (inverter) logic gate.',
+    to: '/virtual-lab/physics/not-gate',
+  },
+  {
+    title: 'AND Gate Experiment',
+    description: 'Explore how an AND gate produces HIGH output only when both inputs are HIGH.',
+    to: '/virtual-lab/physics/and-gate',
+  },
+  {
+    title: 'OR Gate Experiment',
+    description: 'Examine how an OR gate produces HIGH output when any input is HIGH.',
+    to: '/virtual-lab/physics/or-gate',
+  },
 ];
 
 const PhysicsLab = () => {
