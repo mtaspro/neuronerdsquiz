@@ -45,6 +45,7 @@ import PhysicsLab from './pages/PhysicsLab';
 import ChemistryLab from './pages/ChemistryLab';
 import AdventureHub from './pages/AdventureHub';
 import PostOfficeBoxExperiment from './pages/PostOfficeBoxExperiment';
+import CoordinatePickerDebug from './pages/CoordinatePickerDebug';
 import SharedConversation from './pages/SharedConversation';
 import DarkModeToggle from './components/DarkModeToggle';
 import ThemeSelector from './components/ThemeSelector';
@@ -492,8 +493,16 @@ function AnimatedRoutes() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/adventure"
+             <Route
+               path="/virtual-lab/physics/coordinate-picker"
+               element={
+                 <ProtectedRoute>
+                   <CoordinatePickerDebug />
+                 </ProtectedRoute>
+               }
+             />
+             <Route
+               path="/adventure"
               element={
                 <ProtectedRoute>
                   <AdventureHub />
