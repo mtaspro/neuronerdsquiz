@@ -537,56 +537,55 @@ const LogicGateExperiment = ({ gateType = 'NOT' }) => {
   });
 
   return (
-    <div className="fixed inset-0 bg-slate-900 text-slate-100 overflow-hidden">
-      <PageShell className="h-screen min-h-0 text-slate-100">
-        <div className="h-full flex flex-col max-w-7xl mx-auto px-3 py-3 sm:px-4 sm:py-3 gap-2">
-          <div className="flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-400">
-                <span className="text-lg">🔌</span>
-              </span>
-              <div>
-                <h1 className="aura-headline text-lg sm:text-xl">{config.name} Experiment</h1>
-                <p className="aura-subhead text-xs mt-0.5">{config.description}</p>
-              </div>
+    <PageShell className="min-h-0 h-full text-slate-100" showMesh={false}>
+      <div className="h-full flex flex-col max-w-7xl mx-auto px-3 py-2 sm:px-4 sm:py-2 gap-1.5">
+        <div className="flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-400">
+              <span className="text-lg">🔌</span>
+            </span>
+            <div>
+              <h1 className="aura-headline text-lg sm:text-xl">{config.name} Experiment</h1>
+              <p className="aura-subhead text-xs mt-0.5">{config.description}</p>
             </div>
-            <Button to="/virtual-lab/physics" variant="secondary" size="sm">
-              <FaArrowLeft className="h-3 w-3 mr-1" aria-hidden />
-              Back
-            </Button>
           </div>
+          <Button to="/virtual-lab/physics" variant="secondary" size="sm">
+            <FaArrowLeft className="h-3 w-3 mr-1" aria-hidden />
+            Back
+          </Button>
+        </div>
 
-          <div className="flex-1 grid grid-cols-1 xl:grid-cols-3 gap-2 min-h-0">
-            <div className="xl:col-span-2 flex flex-col gap-2 min-h-0">
-              <div className="flex justify-center gap-2 flex-shrink-0">
-                {!workflowState.icPlaced && (
-                  <Button onClick={placeIC} variant="secondary" size="sm">
-                    Place {IC_INFO[config.ic].name} IC
-                  </Button>
-                )}
-                {workflowState.icPlaced && !connectionSet.has('vcc') && (
-                  <Button onClick={() => handleConnect('vcc')} variant="secondary" size="sm" disabled={!workflowState.icPlaced}>
-                    Connect VCC
-                  </Button>
-                )}
-                {connectionSet.has('vcc') && !connectionSet.has('gnd') && (
-                  <Button onClick={() => handleConnect('gnd')} variant="secondary" size="sm">
-                    Connect GND
-                  </Button>
-                )}
-                {connectionSet.has('gnd') && !connectionSet.has('input') && (
-                  <Button onClick={() => handleConnect('input')} variant="secondary" size="sm">
-                    Connect Input Wire
-                  </Button>
-                )}
-                {connectionSet.has('input') && !connectionSet.has('output') && (
-                  <Button onClick={() => handleConnect('output')} variant="secondary" size="sm">
-                    Connect Output Wire
-                  </Button>
-                )}
-              </div>
+        <div className="flex-1 grid grid-cols-1 xl:grid-cols-3 gap-2 min-h-0">
+          <div className="xl:col-span-2 flex flex-col gap-2 min-h-0">
+            <div className="flex justify-center gap-2 flex-shrink-0">
+              {!workflowState.icPlaced && (
+                <Button onClick={placeIC} variant="secondary" size="sm">
+                  Place {IC_INFO[config.ic].name} IC
+                </Button>
+              )}
+              {workflowState.icPlaced && !connectionSet.has('vcc') && (
+                <Button onClick={() => handleConnect('vcc')} variant="secondary" size="sm" disabled={!workflowState.icPlaced}>
+                  Connect VCC
+                </Button>
+              )}
+              {connectionSet.has('vcc') && !connectionSet.has('gnd') && (
+                <Button onClick={() => handleConnect('gnd')} variant="secondary" size="sm">
+                  Connect GND
+                </Button>
+              )}
+              {connectionSet.has('gnd') && !connectionSet.has('input') && (
+                <Button onClick={() => handleConnect('input')} variant="secondary" size="sm">
+                  Connect Input Wire
+                </Button>
+              )}
+              {connectionSet.has('input') && !connectionSet.has('output') && (
+                <Button onClick={() => handleConnect('output')} variant="secondary" size="sm">
+                  Connect Output Wire
+                </Button>
+              )}
+            </div>
 
-              <div className="flex-1 overflow-auto flex justify-center">
+            <div className="flex-1 overflow-auto flex justify-center">
               <TrainerBoard
                 boardState={boardState}
                 switchStates={switchStates}
@@ -596,179 +595,178 @@ const LogicGateExperiment = ({ gateType = 'NOT' }) => {
                 connections={connectionSet}
                 config={config}
               />
-              </div>
-
-              <div className="flex justify-center gap-2 flex-shrink-0">
-                <Button
-                  onClick={togglePower}
-                  variant={boardState ? 'primary' : 'secondary'}
-                  size="sm"
-                  disabled={!allStepsComplete}
-                >
-                  <FaPowerOff className="h-3 w-3 mr-1" />
-                  {boardState ? 'Power ON' : 'Power OFF'}
-                </Button>
-                <Button onClick={resetExperiment} variant="ghost" size="sm">
-                  <FaTrash className="h-3 w-3 mr-1" />
-                  Reset
-                </Button>
-              </div>
             </div>
 
-            <div className="space-y-2 min-h-0 overflow-y-auto">
-              <div className="aura-glass aura-glass-card rounded-xl border border-cyan-500/10 shadow-lg shadow-cyan-500/10 p-3">
-                <h3 className="aura-headline text-sm mb-2">Truth Table — {config.symbol}</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-cyan-500/10">
-                        {inputSwitches.map((s) => (
-                          <th key={s} className="py-1 px-2 text-slate-400 font-medium">
-                            {s}
-                          </th>
-                        ))}
-                        <th className="py-1 px-2 text-slate-400 font-medium">Y</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {config.truthTable.map((row, idx) => {
-                        const inputKeys = Object.keys(row).filter((k) => k !== 'Y');
-                        return (
-                          <tr
-                            key={idx}
-                            className={`border-b border-cyan-500/5 transition-colors ${
-                              idx === currentTruthTableRow ? 'bg-cyan-500/10 font-bold' : 'hover:bg-black/20'
-                            }`}
-                          >
-                            {inputKeys.map((k) => (
-                              <td key={k} className="py-1 px-2 text-center font-mono text-cyan-300">
-                                {row[k]}
-                              </td>
-                            ))}
-                            <td className="py-1 px-2 text-center font-mono text-emerald-300">{row.Y}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-center">
-                  <div className="rounded-lg bg-black/20 border border-cyan-500/10 p-2">
-                    <p className="text-xs text-slate-400">Input A</p>
-                    <p className="font-mono text-sm text-cyan-300">{inputValues[0] || 0}</p>
-                  </div>
-                  {gateType !== 'NOT' && (
-                    <div className="rounded-lg bg-black/20 border border-cyan-500/10 p-2">
-                      <p className="text-xs text-slate-400">Input B</p>
-                      <p className="font-mono text-sm text-cyan-300">{inputValues[1] || 0}</p>
-                    </div>
-                  )}
-                  <div className="rounded-lg bg-black/20 border border-emerald-500/20 p-2 col-span-2">
-                    <p className="text-xs text-slate-400">Output Y = {config.symbol}</p>
-                    <p className={`font-mono text-base ${outputValue === 1 ? 'text-amber-400' : 'text-slate-500'}`}>
-                      {outputValue === 1 ? '1 (HIGH)' : '0 (LOW)'}
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <div className="flex justify-center gap-2 flex-shrink-0">
+              <Button
+                onClick={togglePower}
+                variant={boardState ? 'primary' : 'secondary'}
+                size="sm"
+                disabled={!allStepsComplete}
+              >
+                <FaPowerOff className="h-3 w-3 mr-1" />
+                {boardState ? 'Power ON' : 'Power OFF'}
+              </Button>
+              <Button onClick={resetExperiment} variant="ghost" size="sm">
+                <FaTrash className="h-3 w-3 mr-1" />
+                Reset
+              </Button>
+            </div>
+          </div>
 
-              <div className="aura-glass aura-glass-card rounded-xl border border-cyan-500/10 shadow-lg shadow-cyan-500/10 p-3">
-                <h3 className="aura-headline text-sm mb-2">Procedure Checklist</h3>
-                <div className="space-y-1">
-                  {WORKFLOW_STEPS[gateType].map((step, idx) => {
-                    const isComplete = step.check(workflowState);
-                    return (
-                      <div
-                        key={step.id}
-                        className={`flex items-center gap-2 p-2 rounded-lg border text-xs transition-all ${
-                          isComplete
-                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                            : 'bg-black/20 border-cyan-500/10 text-slate-400'
-                        }`}
-                      >
-                        <span
-                          className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${
-                            isComplete ? 'bg-emerald-500 text-black' : 'bg-slate-700 text-slate-400'
+          <div className="space-y-2 min-h-0 overflow-y-auto">
+            <div className="aura-glass aura-glass-card rounded-xl border border-cyan-500/10 shadow-lg shadow-cyan-500/10 p-3">
+              <h3 className="aura-headline text-sm mb-2">Truth Table — {config.symbol}</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-cyan-500/10">
+                      {inputSwitches.map((s) => (
+                        <th key={s} className="py-1 px-2 text-slate-400 font-medium">
+                          {s}
+                        </th>
+                      ))}
+                      <th className="py-1 px-2 text-slate-400 font-medium">Y</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {config.truthTable.map((row, idx) => {
+                      const inputKeys = Object.keys(row).filter((k) => k !== 'Y');
+                      return (
+                        <tr
+                          key={idx}
+                          className={`border-b border-cyan-500/5 transition-colors ${
+                            idx === currentTruthTableRow ? 'bg-cyan-500/10 font-bold' : 'hover:bg-black/20'
                           }`}
                         >
-                          {isComplete ? <FaCheck className="h-2 w-2" /> : idx + 1}
-                        </span>
-                        <span className="flex-1">{step.label}</span>
-                        {!isComplete && idx < WORKFLOW_STEPS[gateType].length - 1 && (
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-slate-700/30 text-slate-500">
-                            Pending
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
+                          {inputKeys.map((k) => (
+                            <td key={k} className="py-1 px-2 text-center font-mono text-cyan-300">
+                              {row[k]}
+                            </td>
+                          ))}
+                          <td className="py-1 px-2 text-center font-mono text-emerald-300">{row.Y}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-center">
+                <div className="rounded-lg bg-black/20 border border-cyan-500/10 p-2">
+                  <p className="text-xs text-slate-400">Input A</p>
+                  <p className="font-mono text-sm text-cyan-300">{inputValues[0] || 0}</p>
                 </div>
-                <div className="mt-2 pt-2 border-t border-cyan-500/10">
-                  <p className="text-xs text-slate-400">
-                    Progress: {WORKFLOW_STEPS[gateType].filter((s) => s.check(workflowState)).length} / {WORKFLOW_STEPS[gateType].length}
+                {gateType !== 'NOT' && (
+                  <div className="rounded-lg bg-black/20 border border-cyan-500/10 p-2">
+                    <p className="text-xs text-slate-400">Input B</p>
+                    <p className="font-mono text-sm text-cyan-300">{inputValues[1] || 0}</p>
+                  </div>
+                )}
+                <div className="rounded-lg bg-black/20 border border-emerald-500/20 p-2 col-span-2">
+                  <p className="text-xs text-slate-400">Output Y = {config.symbol}</p>
+                  <p className={`font-mono text-base ${outputValue === 1 ? 'text-amber-400' : 'text-slate-500'}`}>
+                    {outputValue === 1 ? '1 (HIGH)' : '0 (LOW)'}
                   </p>
                 </div>
               </div>
+            </div>
 
-              <div className="aura-glass aura-glass-card rounded-xl border border-cyan-500/10 shadow-lg shadow-cyan-500/10 p-3">
-                <h3 className="aura-headline text-sm mb-2">Circuit Status</h3>
-                <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">IC Placed</span>
-                    <span className={`font-mono ${workflowState.icPlaced ? 'text-emerald-400' : 'text-slate-500'}`}>
-                      {workflowState.icPlaced ? IC_INFO[config.ic].name : '—'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">VCC Wire</span>
-                    <span className={`font-mono ${connectionSet.has('vcc') ? 'text-red-400' : 'text-slate-600'}`}>
-                      {connectionSet.has('vcc') ? 'Connected' : 'Not connected'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">GND Wire</span>
-                    <span className={`font-mono ${connectionSet.has('gnd') ? 'text-slate-400' : 'text-slate-600'}`}>
-                      {connectionSet.has('gnd') ? 'Connected' : 'Not connected'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Input Wire</span>
-                    <span className={`font-mono ${connectionSet.has('input') ? 'text-green-400' : 'text-slate-600'}`}>
-                      {connectionSet.has('input') ? 'Connected' : 'Not connected'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Output Wire</span>
-                    <span className={`font-mono ${connectionSet.has('output') ? 'text-amber-400' : 'text-slate-600'}`}>
-                      {connectionSet.has('output') ? 'Connected' : 'Not connected'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Power</span>
-                    <span className={`font-mono ${boardState ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {boardState ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
+            <div className="aura-glass aura-glass-card rounded-xl border border-cyan-500/10 shadow-lg shadow-cyan-500/10 p-3">
+              <h3 className="aura-headline text-sm mb-2">Procedure Checklist</h3>
+              <div className="space-y-1">
+                {WORKFLOW_STEPS[gateType].map((step, idx) => {
+                  const isComplete = step.check(workflowState);
+                  return (
+                    <div
+                      key={step.id}
+                      className={`flex items-center gap-2 p-2 rounded-lg border text-xs transition-all ${
+                        isComplete
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                          : 'bg-black/20 border-cyan-500/10 text-slate-400'
+                      }`}
+                    >
+                      <span
+                        className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${
+                          isComplete ? 'bg-emerald-500 text-black' : 'bg-slate-700 text-slate-400'
+                        }`}
+                      >
+                        {isComplete ? <FaCheck className="h-2 w-2" /> : idx + 1}
+                      </span>
+                      <span className="flex-1">{step.label}</span>
+                      {!isComplete && idx < WORKFLOW_STEPS[gateType].length - 1 && (
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-slate-700/30 text-slate-500">
+                          Pending
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-2 pt-2 border-t border-cyan-500/10">
+                <p className="text-xs text-slate-400">
+                  Progress: {WORKFLOW_STEPS[gateType].filter((s) => s.check(workflowState)).length} / {WORKFLOW_STEPS[gateType].length}
+                </p>
+              </div>
+            </div>
+
+            <div className="aura-glass aura-glass-card rounded-xl border border-cyan-500/10 shadow-lg shadow-cyan-500/10 p-3">
+              <h3 className="aura-headline text-sm mb-2">Circuit Status</h3>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">IC Placed</span>
+                  <span className={`font-mono ${workflowState.icPlaced ? 'text-emerald-400' : 'text-slate-500'}`}>
+                    {workflowState.icPlaced ? IC_INFO[config.ic].name : '—'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">VCC Wire</span>
+                  <span className={`font-mono ${connectionSet.has('vcc') ? 'text-red-400' : 'text-slate-600'}`}>
+                    {connectionSet.has('vcc') ? 'Connected' : 'Not connected'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">GND Wire</span>
+                  <span className={`font-mono ${connectionSet.has('gnd') ? 'text-slate-400' : 'text-slate-600'}`}>
+                    {connectionSet.has('gnd') ? 'Connected' : 'Not connected'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Input Wire</span>
+                  <span className={`font-mono ${connectionSet.has('input') ? 'text-green-400' : 'text-slate-600'}`}>
+                    {connectionSet.has('input') ? 'Connected' : 'Not connected'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Output Wire</span>
+                  <span className={`font-mono ${connectionSet.has('output') ? 'text-amber-400' : 'text-slate-600'}`}>
+                    {connectionSet.has('output') ? 'Connected' : 'Not connected'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Power</span>
+                  <span className={`font-mono ${boardState ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {boardState ? 'ON' : 'OFF'}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
-
-          <div className="flex justify-center gap-2 flex-shrink-0 pb-1">
-            {Object.entries(GATE_CONFIG).map(([key, cfg]) => (
-              <Button
-                key={key}
-                onClick={() => navigate(`/virtual-lab/physics/${key.toLowerCase()}-gate`)}
-                variant="ghost"
-                size="sm"
-              >
-                {cfg.name}
-              </Button>
-            ))}
-          </div>
         </div>
-      </PageShell>
-    </div>
+
+        <div className="flex justify-center gap-2 flex-shrink-0 pb-1">
+          {Object.entries(GATE_CONFIG).map(([key, cfg]) => (
+            <Button
+              key={key}
+              onClick={() => navigate(`/virtual-lab/physics/${key.toLowerCase()}-gate`)}
+              variant="ghost"
+              size="sm"
+            >
+              {cfg.name}
+            </Button>
+          ))}
+        </div>
+      </div>
+    </PageShell>
   );
 };
 
